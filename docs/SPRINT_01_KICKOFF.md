@@ -14,7 +14,7 @@ No domain, hosted service, subscription, wallet or payment provider has been pur
 - [x] Initial Next.js App Router, TypeScript and CSS scaffolding authored on a review branch.
 - [x] Navigation to a non-transactional placeholder catalog; no product, ordering or checkout route.
 - [x] Unit smoke/guardrail tests and GitHub CI workflow authored.
-- [ ] Verify lint, typecheck, tests and build on GitHub CI; code is not considered tested until passing.
+- [x] GitHub Actions [PR CI run 40968759178](https://github.com/zanibethel/apex/actions/runs/40968759178) passed lint, typecheck, guardrail tests and Next.js production build on the initial code commit. Run checks again on every subsequent change.
 - [ ] Review/merge planning PR #1 and this dependent implementation PR.
 - [ ] Verify a preview site once a Vercel project is authorized.
 - [ ] Record approved supplier inputs and hosting/domain owner privately before activating dependent services.
