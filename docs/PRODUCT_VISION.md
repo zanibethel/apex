@@ -22,6 +22,10 @@ The founding supplier is the only seller on the launch domain; a future supplier
 6. Bitcoin test invoices and **experimental** 90/10 payout allocation with robust records and reconciliation.
 7. Security controls, backup/recovery instructions, monitoring, and a signoff checklist.
 
+## Partner UX and design direction
+
+The founding partner explicitly prioritizes a **premium, beautiful, easy-to-navigate** shopping experience. Product discovery, clean mobile layout, clear checkout steps and consistent brand styling are MVP acceptance criteria—not optional post-launch polish. See [partner design brief](UX_AND_DESIGN_BRIEF.md), with anonymized feedback and concrete review tests.
+
 ## Deliberately out of scope
 Multi-supplier self-service onboarding; vendor-to-vendor crypto payouts; Lightning and altcoins; complex promotions; AI product recommendation services; mobile native apps; advanced BI; recurring subscriptions. Consider these only after MVP acceptance.
 

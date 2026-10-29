@@ -11,6 +11,12 @@
 | **5 — Hardening** | Security checks, role/tenant isolation, audit trail, refund accounting, replay/idempotency, backups, restore rehearsal, server administration controls and monitoring. | Critical paths tested; documented blockers |
 | **6 — Technical acceptance** | Fix critical findings; supplier walk-through; documentation; staging smoke test; rollback/recovery exercise; launch-readiness decision. | MVP signoff for technical scope, **not automatic authorization for live sales** |
 
+## Partner visual and usability checkpoints
+
+- **Week 2:** Show mobile and desktop branded storefront against [UX and design brief](UX_AND_DESIGN_BRIEF.md): legible catalog cards, search, simple navigation and clear product detail.
+- **Week 5:** Verify mobile responsiveness, keyboard access, contrast, clear mock checkout and actionable loading/error states.
+- **Week 6:** Include partner visual review and observed find-a-product/complete-a-mock-order walkthrough. Record feedback as actionable issues, not open-ended aesthetic redesign.
+
 ## Conditions to maintain six-week target
 - One founding supplier, one storefront/domain and the fixed MVP scope above.
 - Supplier materials (approved product list, media, descriptions, policies) arrive promptly.
