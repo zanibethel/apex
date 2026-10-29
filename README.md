@@ -15,6 +15,9 @@
 | [Product vision](docs/PRODUCT_VISION.md) | Users, first-launch features, exclusions, future expansion |
 | [Partner UX and design brief](docs/UX_AND_DESIGN_BRIEF.md) | Anonymized partner feedback; premium mobile storefront design criteria |
 | [Six-week roadmap](docs/ROADMAP.md) | Weekly goals, acceptance checks, critical dependencies |
+| [Six-week execution contract](docs/EXECUTION_PLAN_6_WEEKS.md) | Daily tasks, weekly exit gates, scope discipline and work cadence |
+| [Weekly check-in template](docs/WEEKLY_CHECKIN_TEMPLATE.md) | Repeatable progress and acceptance evidence |
+| [Critical-path risk register](docs/CRITICAL_PATH_RISKS.md) | BTC payout, funding, security, launch dependencies |
 | [December launch and seasonal promotions](docs/DECEMBER_LAUNCH_AND_PROMOTIONS.md) | Partner's pre-Dec 10 target and narrow 24-hour sale candidate |
 | [Project status](docs/PROJECT_STATUS.md) | What exists, what is only proposed, and next action |
 | [Architecture](docs/ARCHITECTURE.md) | Services, boundaries, data flow and hosting |

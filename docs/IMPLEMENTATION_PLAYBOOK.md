@@ -2,6 +2,8 @@
 
 This project uses the same small-pass discipline as our other repositories: **inspect, plan, implement one bounded change, test, open PR, review, then merge**.
 
+The **authoritative daily/weekly work schedule** is [EXECUTION_PLAN_6_WEEKS.md](EXECUTION_PLAN_6_WEEKS.md). Record a daily check-in and Day 7 gate using [WEEKLY_CHECKIN_TEMPLATE.md](WEEKLY_CHECKIN_TEMPLATE.md). No unplanned feature jumps.
+
 ## Every work session
 1. Read `docs/PROJECT_STATUS.md`, the open PR/issue list and `docs/ROADMAP.md`.
 2. Pick the smallest deliverable with an observable acceptance test.

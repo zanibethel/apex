@@ -18,6 +18,13 @@
 - Partner requested capacity for 24-hour holiday flash sales, with New Year's as a possible second campaign; a single scheduled discount is an **optional MVP candidate** pending scope tradeoff, not implemented or approved.
 - Developer compensated via ongoing proposed sales share rather than separate upfront labor invoice; partner terms not finalized here.
 
+## Delivery discipline
+
+- Follow [six-week execution contract](EXECUTION_PLAN_6_WEEKS.md), with **7 daily 1–2h sessions per week**, short PRs, Day 7 demo/acceptance and explicit stop/deferral rules.
+- [Weekly progress template](WEEKLY_CHECKIN_TEMPLATE.md) and [critical-path risks](CRITICAL_PATH_RISKS.md) are the standard tracking tools.
+- **Funding is not yet verified** based on received evidence. The six-week clock starts after actual funding, scope agreement and supplier inputs, not simply when partners express willingness to fund.
+- BTCPay/Prism architecture research moves into Week 1 and viability gate into Week 2; do not wait until Week 4.
+
 ## Next actions while partner review is pending
 1. Merge documentation PR after checking public-repository privacy.
 2. Establish Next.js/TypeScript baseline with minimal lint/test/CI (separate PR).

@@ -1,11 +1,15 @@
 # Six-week technical MVP roadmap
 
+**Detailed daily schedule and non-negotiable exit gates:** [Six-week execution contract](EXECUTION_PLAN_6_WEEKS.md). Weekly reviews use [the check-in template](WEEKLY_CHECKIN_TEMPLATE.md) and [risk register](CRITICAL_PATH_RISKS.md).
+
+**Critical sequencing change:** BTCPay + Prism feasibility investigation begins in **Week 1**, with an explicit technical viability checkpoint in **Week 2**; Week 4 remains the full two-destination test. Do **not** wait until Week 4 to discover a blocker.
+
 **Trigger:** Week 1 begins only after funding, a scope freeze and usable supplier materials. **Capacity assumption:** ~1–2 developer hours/day, about **42–84 total hours over six weeks**. This is an aggressive, scoped target for technical readiness, not a guarantee of legally cleared live checkout.
 
 | Week | Work | Review checkpoint |
 |---|---|---|
-| **1 — Foundations** | Confirm scope; choose architecture; receive supplier product/catalog materials; settle brand/domain path; create project skeleton, Vercel/Supabase staging and issue/PR workflow. Start compliance/processor review immediately. | Repo CI and staging skeleton; supplier inputs checklist |
-| **2 — Storefront** | Mobile-first layout, brand tokens, listing/detail views, catalog content, basic inventory editing, supplier authentication/RLS. | Clickable private supplier storefront |
+| **1 — Foundations** | Confirm scope; choose architecture; receive supplier product/catalog materials; settle brand/domain path; create project skeleton, Vercel/Supabase staging and issue/PR workflow. Start processor/Prism signer-feasibility and product-approval review immediately. | Repo CI and staging skeleton; supplier inputs checklist |
+| **2 — Storefront** | Mobile-first layout, brand tokens, listing/detail views, catalog content, basic inventory editing, supplier authentication/RLS and BTC splitting feasibility spike. | Clickable private supplier storefront and documented split viability/risks |
 | **3 — Order operations** | Cart, order and inventory records, supplier fulfillment queue, transaction-neutral order states, email notifications and daily/weekly report queries. | End-to-end **mock** order, correct dashboard counts |
 | **4 — Bitcoin test flow** | Isolated BTCPay/Prism test server; invoice integration; confirmation webhooks; **90/10 test payout** attempt and actual-destination reconciliation; underpayment/expiry tests. | Evidence-backed Bitcoin test ledger and payout result; unresolved split limitations documented |
 | **5 — Hardening** | Security checks, role/tenant isolation, audit trail, refund accounting, replay/idempotency, backups, restore rehearsal, server administration controls and monitoring. | Critical paths tested; documented blockers |
