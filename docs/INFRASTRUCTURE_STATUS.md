@@ -18,14 +18,16 @@
 - No custom domain has been purchased or attached. No Supabase runtime variables or payment credentials have been set.
 - Subsequent source reviews must pass CI and receive explicit deployment/visibility approval before changing protection or opening commercial traffic.
 
-## Supabase: separate Apex project created, no schema migration
+## Supabase: Apex catalog foundation migrated and verified
 - Four connected projects exist: CreatorHub, RaiseHub, Teacher Test Studio, CoOperative. **Do not migrate Apex SQL into them.**
 - One visible organization: `zanibethel's Org` ID `lapovwewsjmkuhvyowtv`.
 - **Created and verified October 29, 2026:** project `Apex`, ID/ref `fhqpkpztercadcxspdkg`, in organization `lapovwewsjmkuhvyowtv`, region `us-east-1`. Supabase reports `ACTIVE_HEALTHY`, PostgreSQL 17.11.0.003 GA. [Apex dashboard](https://supabase.com/dashboard/project/fhqpkpztercadcxspdkg).
 - API URL (not a secret): `https://fhqpkpztercadcxspdkg.supabase.co`.
-- Verified via direct project inspection: `public` tables **0**, migrations **0**. **Explicit user hold: do not run database migrations yet.**
+- Pre-migration baseline: public tables **0**, migrations **0**. After the user's explicit follow-up authorization (“Ok go”), the initial catalog migration was applied successfully October 29, 2026.
+- **Deployed migration:** `20261029233701_apex_initial_catalog_readonly` (recorded by Supabase). Exact executed SQL bytes are preserved in [supabase/migrations/20261029233701_apex_initial_catalog_readonly.sql](../supabase/migrations/20261029233701_apex_initial_catalog_readonly.sql) and the reviewed original [SQL source](../database/sql/apex_catalog_foundation_review.sql). These SQL headers reflect their original pre-deployment review state; this registry records the current deployment state.
+- **Post-migration verification:** six empty tables in `public`: `suppliers`, `stores`, `supplier_memberships`, `categories`, `products`, `inventory_items`; RLS is enabled on all six; no `INSERT`, `UPDATE`, or `DELETE` privilege is granted to the `authenticated` application role; anonymous reads are limited to public catalog tables and by RLS to published records; no anonymous stock/supplier access. Supabase project status `ACTIVE_HEALTHY`.
 - The organization is on Pro. Supabase quoted an additional **$10/month** for project creation; user explicitly approved this recurring cost prior to creation. Potential usage charges depend on actual consumption.
-- The tenant-isolated first schema is saved in [Supabase review](SUPABASE_FOUNDATION_REVIEW.md) and must receive database integration tests before migrations are applied.
+- The tenant-isolated first schema is now deployed. PostgreSQL tenant-isolation CI passed before deployment. The Supabase post-deployment catalog/RLS/privilege checks passed; actual cross-supplier RLS with real Supabase Auth accounts remains an integration gate before onboarding suppliers.
 
 ## Cost and shipping posture
 - User reports an initial **$150** secured; bank receipt/terms not independently verified.
@@ -35,8 +37,8 @@
 
 ## Next checkpoints
 1. Review the three stacked PRs in order and preserve their approval history.
-2. **Completed:** New Apex project created and verified (healthy, no public tables or migrations). Keep it isolated from all other projects.
-3. **On hold per user instruction:** Review SQL and RLS test matrix; only after a separate go-ahead generate a formal migration via Supabase CLI, apply it to the Apex project, test multi-supplier RLS and run advisors.
+2. **Completed:** Dedicated Apex project and six-table, RLS-enabled catalog migration. Migration history is `20261029233701_apex_initial_catalog_readonly`.
+3. **Completed:** Disposable PostgreSQL 17 multi-supplier RLS tests and post-deployment Supabase catalog/RLS/privilege checks. Supabase security advisor has **0 findings**; no actual supplier data added. **Next gate:** integration testing against Supabase Auth with synthetic accounts before real onboarding.
 4. Populate the preview-only Supabase publishable URL/key in Vercel; no service/secret key in client code.
 5. Walk through protected mobile demo, then develop searchable sample catalog.
 
@@ -45,6 +47,6 @@
 - Proposed SQL and RLS integration tests are in draft [PR #14](https://github.com/zanibethel/apex/pull/14), updated with a second PostgreSQL 17 CI job.
 - Both GitHub CI jobs passed for commit `1c9871a` ([run 40973052156](https://github.com/zanibethel/apex/actions/runs/40973052156)).
 - The CI instance is disposable: it creates only synthetic Alpha/Beta suppliers and mock auth accounts, never uses Apex Supabase credentials, and never pushes data to the hosted project.
-- Read-only post-test Apex project inspection reconfirmed **zero public tables, zero migrations, ACTIVE_HEALTHY**.
-- The Supabase security advisor returned zero findings for the empty database; performance advisor returned a single informational Auth DB connection-allocation notice ([guidance](https://supabase.com/docs/guides/deployment/going-into-prod)). Actual schema has not been analyzed by Supabase advisors because it has **not been applied**.
-- **Do not run migrations without renewed, explicit user authorization.**
+- Historical pre-migration check confirmed **zero public tables, zero migrations, ACTIVE_HEALTHY**. The subsequent explicitly approved migration is documented above.
+- Supabase post-migration security advisor returned **0 findings**. Performance advisor returned three WARN findings for **multiple permissive SELECT policies** (on stores, categories and products), five INFO notices for indexes unused on the empty schema, and an existing INFO notice about Auth connection allocation. Optimize overlapping policies in a separately reviewed follow-up; do not alter them in this migration. [Policy performance advisor guidance](https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies); [index guidance](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
+- **No additional migrations, real data imports or permission changes are authorized by this pass.**

@@ -22,3 +22,8 @@ test("catalog publication and supplier isolation are explicit", () => {
   assert.match(sql, /products_category_same_store foreign key \(store_id, category_id\)/i);
   assert.match(sql, /create policy "member_inventory_read"/i);
 });
+
+const versionedMigration = readFileSync(join(process.cwd(), "supabase/migrations/20261029233701_apex_initial_catalog_readonly.sql"), "utf8");
+test("checked-in Supabase migration matches reviewed SQL byte-for-byte", () => {
+  assert.equal(versionedMigration, sql);
+});
