@@ -15,6 +15,7 @@
 | [Product vision](docs/PRODUCT_VISION.md) | Users, first-launch features, exclusions, future expansion |
 | [Partner UX and design brief](docs/UX_AND_DESIGN_BRIEF.md) | Anonymized partner feedback; premium mobile storefront design criteria |
 | [Six-week roadmap](docs/ROADMAP.md) | Weekly goals, acceptance checks, critical dependencies |
+| [December 1 accelerated plan](docs/DECEMBER_1_ACCELERATED_PLAN.md) | Optional 3–4-hour/day sprint to earlier technical acceptance |
 | [Six-week execution contract](docs/EXECUTION_PLAN_6_WEEKS.md) | Daily tasks, weekly exit gates, scope discipline and work cadence |
 | [Weekly check-in template](docs/WEEKLY_CHECKIN_TEMPLATE.md) | Repeatable progress and acceptance evidence |
 | [Critical-path risk register](docs/CRITICAL_PATH_RISKS.md) | BTC payout, funding, security, launch dependencies |
