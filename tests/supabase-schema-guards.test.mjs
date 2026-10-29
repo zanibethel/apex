@@ -12,7 +12,7 @@ test("all six exposed tables explicitly enable RLS", () => {
   }
 });
 test("client roles have no write permissions or write policies in review SQL", () => {
-  assert.match(sql, /revoke all on public\.suppliers[\s\S]*from anon, authenticated/i);
+  assert.match(sql, /revoke all on public\.suppliers[\s\S]*from PUBLIC, anon, authenticated/i);
   assert.doesNotMatch(sql, /create policy[^;]+for\s+(?:insert|update|delete|all)\s+to\s+(?:anon|authenticated)/i);
   assert.doesNotMatch(sql, /grant\s+(?:insert|update|delete|all)\s+on\s+public\./i);
 });

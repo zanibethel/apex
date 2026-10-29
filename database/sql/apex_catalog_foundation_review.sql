@@ -91,7 +91,7 @@ alter table public.inventory_items enable row level security;
 -- Data API privileges are deliberately SELECT-only; mutations require a future,
 -- audited authorization design, not merely an authenticated session.
 revoke all on public.suppliers, public.stores, public.supplier_memberships,
-  public.categories, public.products, public.inventory_items from anon, authenticated;
+  public.categories, public.products, public.inventory_items from PUBLIC, anon, authenticated;
 grant select on public.suppliers, public.stores, public.supplier_memberships,
   public.categories, public.products, public.inventory_items to authenticated;
 grant select on public.stores, public.categories, public.products to anon;

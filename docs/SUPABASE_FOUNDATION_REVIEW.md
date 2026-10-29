@@ -36,3 +36,18 @@ File: [database/sql/apex_catalog_foundation_review.sql](../database/sql/apex_cat
 | Supplier B member | Supplier B / self membership | Yes | Supplier B only | Supplier B only | No |
 
 **Important:** SQL is review-only. It has not been run or integration-tested against Supabase. Static source guardrail tests are not a substitute for PostgreSQL/RLS tests.
+
+## Executable PostgreSQL isolation tests (review change)
+
+The initial node tests merely checked SQL strings. The updated CI now includes a **second, disposable PostgreSQL 17 job** running `database/tests/catalog_rls_integration.sql` against the actual proposed SQL file. It does not connect to Supabase, use account credentials, or create persistent infrastructure.
+
+The harness creates synthetic roles/users and two synthetic suppliers, executes the reviewed SQL, and checks:
+- RLS enabled for every new public table.
+- Anonymous readers see public stores and published categories/products only.
+- An authenticated non-member sees no protected inventory, memberships or supplier records.
+- Supplier Alpha and Beta can read their own draft catalogs and stock, but not each other's.
+- A public product in an unpublished category and a product in a private store are not exposed.
+- Cross-store category references and over-reservation are rejected.
+- Anonymous and authenticated application roles have no write rights, and stock/supplier identity is hidden from anonymous callers.
+
+**No migration applied.** Run the SQL only in ephemeral CI PostgreSQL; the fixture creates test roles and must never be used in the Apex production Supabase instance. The live Apex project `fhqpkpztercadcxspdkg` remains migration-free until explicitly approved.
