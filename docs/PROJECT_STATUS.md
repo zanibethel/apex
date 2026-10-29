@@ -45,3 +45,9 @@ Developer proposed increasing to **3–4 focused hours per day** and aiming for 
 - First code branch: Next.js/TypeScript shell, branded mobile-first concept pages, demo-only catalog placeholder, source-level tests and GitHub CI. These are authored for review; [GitHub Actions initial verification passed](https://github.com/zanibethel/apex/actions/runs/40968759178) (lint, typecheck, tests and build), but the code is **not merged or deployed**.
 - Funding ledger and exact sprint scope: [Sprint 01](SPRINT_01_KICKOFF.md).
 - No catalog inventory, checkout or payment code is activated.
+
+## Connected infrastructure update (October 29)
+
+- Vercel `apex` is Git-linked to this repository, built Next.js 22 successfully from the unmerged application branch and reports READY. **The initial deployment was assigned a production target**, so Vercel Authentication was enabled for **all** Apex deployments; it is not public or commercially active.
+- Connected Supabase projects were inventoried; **no Apex project exists**. An isolated Apex schema is review-only in PR #14, not applied to any database.
+- Provider IDs, review chain, protection and next gates are in [infrastructure registry](INFRASTRUCTURE_STATUS.md).
