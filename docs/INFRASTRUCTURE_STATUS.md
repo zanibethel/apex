@@ -50,3 +50,11 @@
 - Historical pre-migration check confirmed **zero public tables, zero migrations, ACTIVE_HEALTHY**. The subsequent explicitly approved migration is documented above.
 - Supabase post-migration security advisor returned **0 findings**. Performance advisor returned three WARN findings for **multiple permissive SELECT policies** (on stores, categories and products), five INFO notices for indexes unused on the empty schema, and an existing INFO notice about Auth connection allocation. Optimize overlapping policies in a separately reviewed follow-up; do not alter them in this migration. [Policy performance advisor guidance](https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies); [index guidance](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
 - **No additional migrations, real data imports or permission changes are authorized by this pass.**
+
+## Preview integration PR #15 — October 29, 2026
+
+- Vercel Development/Preview env configured with public Supabase URL, Supabase publishable key and `NEXT_PUBLIC_APP_MODE=demo`; no production variable changes, no privileged keys.
+- [PR #15](https://github.com/zanibethel/apex/pull/15) adds read-only public catalog browsing and `/api/catalog-health`; staged on PR #14, itself stacked on PR #13 and PR #1.
+- GitHub checks passed for `47e5b20` ([CI](https://github.com/zanibethel/apex/actions/runs/40976412218)); [Vercel protected preview](https://apex-p6bg4l7xp-zanibethels-projects.vercel.app/catalog) reports READY from that same commit, target=preview.
+- A hosted PostgreSQL **rollback-only** synthetic A/B supplier authorization test passed; follow-up query confirmed zero persisted Auth/catalog/inventory records. It simulated JWT identity at the SQL role level, **not** actual Auth-issued sessions.
+- Protected preview HTTP runtime testing and real Supabase Auth-user login remain outstanding acceptance gates.
