@@ -49,5 +49,5 @@ Developer proposed increasing to **3–4 focused hours per day** and aiming for 
 ## Connected infrastructure update (October 29)
 
 - Vercel `apex` is Git-linked to this repository, built Next.js 22 successfully from the unmerged application branch and reports READY. **The initial deployment was assigned a production target**, so Vercel Authentication was enabled for **all** Apex deployments; it is not public or commercially active.
-- Connected Supabase projects were inventoried; **no Apex project exists**. An isolated Apex schema is review-only in PR #14, not applied to any database.
+- The dedicated Supabase **Apex** project now exists under `zanibethel's Org` in `us-east-1`, ref `fhqpkpztercadcxspdkg`, verified `ACTIVE_HEALTHY`; **0 public tables, 0 migrations**. The user approved Supabase's **$10/month** recurring project quote. No migration applied, per explicit user instruction. The isolated SQL schema remains review-only in PR #14.
 - Provider IDs, review chain, protection and next gates are in [infrastructure registry](INFRASTRUCTURE_STATUS.md).

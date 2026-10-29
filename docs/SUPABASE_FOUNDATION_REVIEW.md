@@ -1,9 +1,9 @@
 # Apex Supabase database foundation — review gate
 
-**Status:** SQL source drafted on GitHub. **Not migrated or linked to a database.**
+**Status:** SQL source drafted on GitHub. **Not migrated or executed.** A dedicated Apex project now exists, but has **zero public tables and zero migrations**.
 
 ## Account inventory, October 29, 2026
-The connected Supabase account currently contains CreatorHub, RaiseHub, Teacher Test Studio and CoOperative. No `Apex` project was found. Never apply this SQL to one of the other projects. The existing single visible organization is **zanibethel's Org** (`lapovwewsjmkuhvyowtv`); creation and billing require explicit organization selection and the provider's actual cost confirmation.
+The connected Supabase account currently contains CreatorHub, RaiseHub, Teacher Test Studio and CoOperative. A dedicated **Apex** project was created later on October 29 after the user approved Supabase's quoted **$10/month** recurring cost: `fhqpkpztercadcxspdkg`, region `us-east-1`, organization **zanibethel's Org** (`lapovwewsjmkuhvyowtv`). Supabase confirms `ACTIVE_HEALTHY`, zero public tables and zero migrations. Never apply this SQL to any of the four existing unrelated projects.
 
 ## SQL scope
 
@@ -19,8 +19,8 @@ File: [database/sql/apex_catalog_foundation_review.sql](../database/sql/apex_cat
 
 ## Before any migration
 
-1. Confirm the Supabase organization, project creation cost, region and account payer.
-2. Create a **dedicated** Apex project with no shared database.
+1. **Done:** Project created in `zanibethel's Org` with user approval of $10/month; region `us-east-1`.
+2. **Done:** A dedicated Apex project exists and has no shared tables. **User explicitly says do not run migrations yet.**
 3. Generate a proper migration filename using the Supabase CLI `supabase migration new apex_initial_catalog`, place this reviewed SQL inside it, and add the CLI-generated file to source control.
 4. Apply via a separately reviewed migration action, verify all six RLS flags and role grants, and run authenticated/anon isolation tests with at least two synthetic supplier identities.
 5. Run Supabase security/performance advisors, then capture pass/fail evidence. **Do not** permit real supplier data until isolation tests pass.
