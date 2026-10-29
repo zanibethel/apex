@@ -27,7 +27,7 @@ The founding supplier is the only seller on the launch domain; a future supplier
 The founding partner explicitly prioritizes a **premium, beautiful, easy-to-navigate** shopping experience. Product discovery, clean mobile layout, clear checkout steps and consistent brand styling are MVP acceptance criteria—not optional post-launch polish. See [partner design brief](UX_AND_DESIGN_BRIEF.md), with anonymized feedback and concrete review tests.
 
 ## Deliberately out of scope
-Multi-supplier self-service onboarding; vendor-to-vendor crypto payouts; Lightning and altcoins; complex promotions; AI product recommendation services; mobile native apps; advanced BI; recurring subscriptions. Consider these only after MVP acceptance.
+Multi-supplier self-service onboarding; vendor-to-vendor crypto payouts; Lightning and altcoins; **complex** promotional engines; AI product recommendation services; mobile native apps; advanced BI; recurring subscriptions. A **single scheduled 24-hour flash-sale rule** is a conditional candidate for the MVP if core payment/security work stays on track. See [December launch and promotions](DECEMBER_LAUNCH_AND_PROMOTIONS.md).
 
 ## Product-finder idea (later)
 A rule-based, catalog-backed helper rather than a paid AI model. It can suggest browsing categories using documented non-medical product attributes. Do not generate unsupported medical claims or individualized treatment guidance.

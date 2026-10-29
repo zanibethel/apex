@@ -11,6 +11,12 @@
 | **5 — Hardening** | Security checks, role/tenant isolation, audit trail, refund accounting, replay/idempotency, backups, restore rehearsal, server administration controls and monitoring. | Critical paths tested; documented blockers |
 | **6 — Technical acceptance** | Fix critical findings; supplier walk-through; documentation; staging smoke test; rollback/recovery exercise; launch-readiness decision. | MVP signoff for technical scope, **not automatic authorization for live sales** |
 
+## December date alignment (partner preference)
+
+The founding partner wants the site ready **before December 10, 2026** to consider holiday promotions. Six weeks from October 29 lands on December 10; if funding and complete inputs are available on October 29, aim for **December 7–9** as the stretch technical-readiness review. If funding starts later, recalculate the six-week schedule instead of implying the original date is guaranteed. A commercial launch requires separate explicit approval; see [December launch plan](DECEMBER_LAUNCH_AND_PROMOTIONS.md).
+
+A single 24-hour scheduled percentage-off sale is a **conditional small feature request**. Reassess after the Week 3 core order/reporting checkpoint, and do not trade away privacy, correct payment accounting, security or mandatory release gates to meet a promotion date.
+
 ## Partner visual and usability checkpoints
 
 - **Week 2:** Show mobile and desktop branded storefront against [UX and design brief](UX_AND_DESIGN_BRIEF.md): legible catalog cards, search, simple navigation and clear product detail.

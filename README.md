@@ -15,6 +15,7 @@
 | [Product vision](docs/PRODUCT_VISION.md) | Users, first-launch features, exclusions, future expansion |
 | [Partner UX and design brief](docs/UX_AND_DESIGN_BRIEF.md) | Anonymized partner feedback; premium mobile storefront design criteria |
 | [Six-week roadmap](docs/ROADMAP.md) | Weekly goals, acceptance checks, critical dependencies |
+| [December launch and seasonal promotions](docs/DECEMBER_LAUNCH_AND_PROMOTIONS.md) | Partner's pre-Dec 10 target and narrow 24-hour sale candidate |
 | [Project status](docs/PROJECT_STATUS.md) | What exists, what is only proposed, and next action |
 | [Architecture](docs/ARCHITECTURE.md) | Services, boundaries, data flow and hosting |
 | [Bitcoin payments](docs/PAYMENTS_AND_LEDGER.md) | 90/10 target, reconciliation, refunds, failure handling |

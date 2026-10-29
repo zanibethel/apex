@@ -40,6 +40,10 @@ Final typography, imagery, contrast ratios, buttons and spacing require visual r
 - [ ] A partner walkthrough of staging is included in the Week 2 demo and Week 6 acceptance.
 - [ ] Actual usability findings are recorded and addressed; a polished appearance alone isn't treated as proof of conversion performance.
 
+## Holiday launch usability feedback
+
+The partner would like technical readiness before December 10 and describes 24-hour holiday promotions as a familiar business pattern. If we build a simple scheduled sale, use a compact banner and clearly marked prices—**never** intrusive overlays, confusing timers, or checkout pressure. See [December launch and promotions](DECEMBER_LAUNCH_AND_PROMOTIONS.md).
+
 ## Timeline boundaries
 This brief refines the **existing six-week MVP**, rather than adding a new standalone design phase. Week 2 delivers the branded interactive storefront; Week 5 tests accessibility/usability; Week 6 includes partner design acceptance. Keep advanced animations, complex promotional systems and redesign of supplier operations out of MVP unless agreed as a scope tradeoff.
 

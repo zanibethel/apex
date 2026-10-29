@@ -14,7 +14,8 @@
 - Next.js + Vercel; Supabase Auth/Postgres/RLS; separate BTCPay + Prism on VPS.
 - Bitcoin-only initial payment *test*, with proposed 90/10 forwarding; direct one-transaction/two-wallet split must **not** be assumed.
 - Proton Workspace for business mail/VPN; separate WireGuard or equivalent restricted server administration; Resend optional; GitHub for source control.
-- Six-week technical readiness target with a narrow first release.
+- Six-week technical readiness target with a narrow first release. Partner's preferred **pre-Dec 10** demo/announcement window is only feasible if funding and inputs are immediately available; **Dec 7–9** is a stretch technical target, not an approved live sale date.
+- Partner requested capacity for 24-hour holiday flash sales, with New Year's as a possible second campaign; a single scheduled discount is an **optional MVP candidate** pending scope tradeoff, not implemented or approved.
 - Developer compensated via ongoing proposed sales share rather than separate upfront labor invoice; partner terms not finalized here.
 
 ## Next actions while partner review is pending

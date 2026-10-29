@@ -16,6 +16,8 @@ Use `DECIDED FOR BUILD`, `PROPOSED`, `VERIFIED`, or `APPROVED FOR LIVE`. Only a 
 | ADR-010 | Timeline | PROPOSED | Six weeks after funding and complete inputs to a technically reviewable MVP, not unconditional live go-live. |
 | ADR-011 | Funding/compensation | PROPOSED | Founding supplier funds infrastructure; developer takes agreed transaction share in lieu of separate upfront development labor. Terms require contract. |
 | ADR-012 | Repository privacy | VERIFIED | Repo was public on 2026-10-29. Never publish partner contracts, wallet keys, account secrets or identity data. |
+| ADR-013 | December target | PROPOSED | Partner prefers technical readiness **before Dec 10, 2026** for possible holiday launch. Dec 7–9 stretch assumes immediate funding/inputs; live sales remain gated. |
+| ADR-014 | Holiday promotions | PROPOSED | Simple 24-hour, scheduled, single-rule sale is a priority candidate only if it fits the scoped six-week plan. New Year's campaign may follow approval. |
 
 ## Important unresolved design questions
 1. Can Prism payout signing be configured without undue custody/security risk?
