@@ -39,3 +39,12 @@
 3. **On hold per user instruction:** Review SQL and RLS test matrix; only after a separate go-ahead generate a formal migration via Supabase CLI, apply it to the Apex project, test multi-supplier RLS and run advisors.
 4. Populate the preview-only Supabase publishable URL/key in Vercel; no service/secret key in client code.
 5. Walk through protected mobile demo, then develop searchable sample catalog.
+
+## Isolated SQL review CI — October 29
+
+- Proposed SQL and RLS integration tests are in draft [PR #14](https://github.com/zanibethel/apex/pull/14), updated with a second PostgreSQL 17 CI job.
+- Both GitHub CI jobs passed for commit `1c9871a` ([run 40973052156](https://github.com/zanibethel/apex/actions/runs/40973052156)).
+- The CI instance is disposable: it creates only synthetic Alpha/Beta suppliers and mock auth accounts, never uses Apex Supabase credentials, and never pushes data to the hosted project.
+- Read-only post-test Apex project inspection reconfirmed **zero public tables, zero migrations, ACTIVE_HEALTHY**.
+- The Supabase security advisor returned zero findings for the empty database; performance advisor returned a single informational Auth DB connection-allocation notice ([guidance](https://supabase.com/docs/guides/deployment/going-into-prod)). Actual schema has not been analyzed by Supabase advisors because it has **not been applied**.
+- **Do not run migrations without renewed, explicit user authorization.**

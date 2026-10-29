@@ -51,3 +51,13 @@ The harness creates synthetic roles/users and two synthetic suppliers, executes 
 - Anonymous and authenticated application roles have no write rights, and stock/supplier identity is hidden from anonymous callers.
 
 **No migration applied.** Run the SQL only in ephemeral CI PostgreSQL; the fixture creates test roles and must never be used in the Apex production Supabase instance. The live Apex project `fhqpkpztercadcxspdkg` remains migration-free until explicitly approved.
+
+## Verification result — October 29, 2026
+
+- [GitHub Actions run 40973052156](https://github.com/zanibethel/apex/actions/runs/40973052156): **both verify and rls-integration jobs passed** on source commit `1c9871a`.
+- Real PostgreSQL 17 test SQL executed successfully in disposable GitHub CI. No connection to the actual Apex Supabase database was made by CI.
+- Post-test read-only inspection of Apex `fhqpkpztercadcxspdkg`: `ACTIVE_HEALTHY`, **0 public tables, 0 migrations**.
+- Supabase security advisors returned **no findings** on the still-empty project. Performance advisors returned an **INFO** alert about fixed Auth DB connection allocation ([Supabase production readiness guidance](https://supabase.com/docs/guides/deployment/going-into-prod)); this is not a finding about the proposed RLS because that schema is not deployed.
+- The proposed schema has passed isolated PostgreSQL security tests, but still needs an explicitly authorized migration plus post-migration Supabase-specific access tests before real data is onboarded.
+
+**Standing hold: no migrations applied until a separate explicit approval from the user.**
