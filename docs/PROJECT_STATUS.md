@@ -18,6 +18,10 @@
 - Partner requested capacity for 24-hour holiday flash sales, with New Year's as a possible second campaign; a single scheduled discount is an **optional MVP candidate** pending scope tradeoff, not implemented or approved.
 - Developer compensated via ongoing proposed sales share rather than separate upfront labor invoice; partner terms not finalized here.
 
+## Proposed accelerated delivery — October 29
+
+Developer proposed increasing to **3–4 focused hours per day** and aiming for **December 1, 2026 technical readiness**. See [accelerated sprint plan](DECEMBER_1_ACCELERATED_PLAN.md). This is a stretch goal, conditional on an approximately October 30 funded/ready kickoff; neither funding receipt nor production approval is confirmed. Existing six-week timeline remains the contingency, not additional feature scope. Live commercial activation continues to require independent approval.
+
 ## Delivery discipline
 
 - Follow [six-week execution contract](EXECUTION_PLAN_6_WEEKS.md), with **7 daily 1–2h sessions per week**, short PRs, Day 7 demo/acceptance and explicit stop/deferral rules.
