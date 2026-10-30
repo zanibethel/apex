@@ -74,3 +74,8 @@
 .apex-menu-section .notice{padding:8px 12px}
 .apex-menu-logout{background:transparent;border:0;width:100%;font-family:inherit;cursor:pointer}
 @media(max-width:550px){.apex-header{padding-block:12px}.apex-header-right{gap:8px}.apex-menu>summary{padding:8px 10px}.apex-menu-panel{right:0}}
+
+.apex-profile-stack{display:grid;gap:24px;margin-top:24px}
+.apex-profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.apex-profile-field{display:grid;gap:6px}
+@media(max-width:600px){.apex-profile-grid{grid-template-columns:minmax(0,1fr)}}

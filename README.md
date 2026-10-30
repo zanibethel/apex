@@ -1,6 +1,6 @@
 # Apex — founding-supplier marketplace
 
-**Status: planning / partner review; no live checkout.** This repository is the source of truth for the planned application and its technical decisions. Planning was captured first; the initial Next.js non-transactional preview is now proposed in [implementation PR #13](https://github.com/zanibethel/apex/pull/13).
+**Status (October 30, 2026): application merged to main and deployed in concept/demo mode; no live checkout.** This repository is the source of truth for the planned application and its technical decisions. Planning was captured first; the initial Next.js non-transactional preview is now proposed in [implementation PR #13](https://github.com/zanibethel/apex/pull/13).
 
 ## Product at a glance
 - Working brand: **Apex Anabolics** (brand rights and domain **not yet confirmed**).
@@ -35,7 +35,7 @@
 **This GitHub repository is public.** Do not commit private partner proposals, signed contracts, customer or supplier PII, credentials, wallet recovery material, private keys, API keys, or actual wallet addresses. Keep sensitive negotiated terms in a private approved system. This repository may document proposed technical economics; it does not constitute a signed agreement.
 
 ## Implementation status
-An initial Next.js App Router / TypeScript demo has been authored in [PR #13](https://github.com/zanibethel/apex/pull/13) and passed [lint, typecheck, guardrail and build CI](https://github.com/zanibethel/apex/actions/runs/40968759178). It is not merged or deployed. Run locally after checking out the implementation branch:
+A Next.js 16 app, Supabase-backed private supplier/admin workspace and demo-only navigation have merged through PR #28. Latest main CI passed in [run 41115863656](https://github.com/zanibethel/apex/actions/runs/41115863656); Vercel deployed the main branch on the verified domain. New unified-login/customer profile features are proposed in a separate review PR. Run locally:
 
 ```sh
 npm install
@@ -43,4 +43,8 @@ npm run dev
 npm run check
 ```
 
-No real supplier catalog, transactional checkout, payment server or production service is provisioned or authorized by this source code. Further changes will follow separately reviewed PRs. Do not infer that a design decision, price estimate, approval, wallet, or domain has been finalized merely because it is documented here.
+The private database currently has 63 unverified supplier source variants and no actual retail products. No transactional checkout or live payment server is provisioned or authorized. Supplier dashboard, product drafts, inventory and pricing controls are reviewable but need authenticated browser acceptance. Additional customer account/profile functionality has its own security and migration gate. Further changes follow separately reviewed PRs. Do not infer that a design decision, price estimate, approval, wallet, or domain has been finalized merely because it is documented here.
+
+## Account and navigation next pass
+
+See [role-aware customer accounts](docs/ROLE_AWARE_CUSTOMER_ACCOUNTS.md) for the public hamburger menu, unified login, authenticated role routing, private contact profiles, staff-only tools, and remaining release gates.
