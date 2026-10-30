@@ -67,6 +67,11 @@ BEGIN
   THEN RAISE EXCEPTION 'Duplicate failure left orphan product'; END IF;
 END $check$;
 
+-- Keep the real source UUID for the cross-supplier denial test even after RLS hides Beta rows.
+SELECT set_config('apex.test_candidate_id',candidate_id::text,false)
+FROM public.supplier_candidate_drafts
+WHERE store_id='20000000-0000-4000-8000-000000000003';
+
 -- Another supplier has no access to Beta candidate/store.
 SELECT set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',false);
 DO $check$
@@ -75,7 +80,7 @@ BEGIN
   BEGIN
     PERFORM public.create_draft_from_supplier_candidate(
       '20000000-0000-4000-8000-000000000003',
-      (SELECT candidate_id FROM public.supplier_candidate_drafts LIMIT 1),
+      current_setting('apex.test_candidate_id')::uuid,
       'CROSS-STORE-DRAFT',10000,0,'');
     succeeded:=true;
   EXCEPTION WHEN OTHERS THEN NULL; END;
