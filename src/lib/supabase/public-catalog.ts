@@ -7,7 +7,7 @@ export type CatalogResult =
 
 const EXPECTED_APEX_ORIGIN = "https://fhqpkpztercadcxspdkg.supabase.co";
 
-export async function readPublishedCatalog(): Promise<CatalogResult> {
+export async function readPublishedCatalog(categoryId?: string): Promise<CatalogResult> {
   const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!projectUrl || !publishableKey) return { state: "unconfigured", products: [] };
@@ -21,6 +21,7 @@ export async function readPublishedCatalog(): Promise<CatalogResult> {
     const url = new URL("/rest/v1/products", projectUrl);
     url.searchParams.set("select", "id,name,description");
     url.searchParams.set("is_published", "eq.true");
+    if (categoryId && /^[0-9a-f-]{36}$/i.test(categoryId)) url.searchParams.set("category_id", "eq." + categoryId);
     url.searchParams.set("order", "name.asc");
     url.searchParams.set("limit", "24");
 
@@ -51,4 +52,25 @@ export async function readPublishedCatalog(): Promise<CatalogResult> {
     // Do not leak API keys, response bodies or provider errors to the UI.
     return { state: "unavailable", products: [] };
   }
+}
+
+export type PublishedCategory = { id: string; name: string };
+export async function readPublishedCategories(): Promise<PublishedCategory[]> {
+  const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (projectUrl !== EXPECTED_APEX_ORIGIN || !key?.startsWith("sb_publishable_")) return [];
+  try {
+    const url = new URL("/rest/v1/categories", projectUrl);
+    url.searchParams.set("select", "id,name");
+    url.searchParams.set("is_published", "eq.true");
+    url.searchParams.set("order", "name.asc");
+    url.searchParams.set("limit", "40");
+    // Anonymous request plus RLS: members' unpublished categories never enter the public menu.
+    const response = await fetch(url, {headers:{apikey:key,Accept:"application/json"},cache:"no-store",signal:AbortSignal.timeout(6000)});
+    if (!response.ok) return [];
+    const rows: unknown = await response.json();
+    if (!Array.isArray(rows) || rows.some(row =>
+        !row || typeof row !== "object" || typeof row.id !== "string" || typeof row.name !== "string")) return [];
+    return rows.map(row => ({id:row.id as string,name:row.name as string}));
+  } catch { return []; }
 }
