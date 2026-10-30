@@ -8,7 +8,7 @@ type Result = { label: string; amount: bigint; percentage: number };
 function calculate(amount: string, rows: Row[]): Result[] {
   if (!/^\d+$/.test(amount)) throw new Error("Enter a whole number of satoshis.");
   const sats = BigInt(amount);
-  if (sats > 2100000000000000n) throw new Error("Amount exceeds the Bitcoin supply.");
+  if (sats > BigInt('2100000000000000')) throw new Error("Amount exceeds the Bitcoin supply.");
   if (!rows.length || rows.length > 100) throw new Error("Add between 1 and 100 recipients.");
   const names = new Set<string>();
   let sum = 0;
@@ -22,14 +22,14 @@ function calculate(amount: string, rows: Row[]): Result[] {
     if (!Number.isSafeInteger(bp) || bp > 10000) throw new Error("Percentages must be between 0 and 100.");
     sum += bp;
     const weighted = sats * BigInt(bp);
-    return { key: row.key, label: name, percentage: bp / 100, amount: weighted / 10000n, remainder: weighted % 10000n };
+    return { key: row.key, label: name, percentage: bp / 100, amount: weighted / BigInt(10000), remainder: weighted % BigInt(10000) };
   });
   if (sum !== 10000) throw new Error("Split percentages must total exactly 100%.");
-  let leftover = sats - parts.reduce((n, p) => n + p.amount, 0n);
+  let leftover = sats - parts.reduce((n, p) => n + p.amount, BigInt(0));
   for (const p of [...parts].sort((a, b) => a.remainder === b.remainder ? a.key - b.key : a.remainder > b.remainder ? -1 : 1)) {
     if (!leftover) break;
-    p.amount += 1n;
-    leftover -= 1n;
+    p.amount += BigInt(1);
+    leftover -= BigInt(1);
   }
   return parts.map(({ label, amount, percentage }) => ({ label, amount, percentage }));
 }
