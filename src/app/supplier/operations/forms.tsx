@@ -8,7 +8,7 @@ import {
 
 const initial = { ok:false, message:"" };
 
-export function NewProductForm({storeId,enabled}:{storeId:string;enabled:boolean}) {
+export function NewProductForm({storeId,enabled,categories}:{storeId:string;enabled:boolean;categories:{id:string;name:string}[]}) {
   const [state,action,pending]=useActionState(createDraftProduct,initial);
   return <section className="supplier-panel" style={{maxWidth:"none"}}>
     <h2>Create draft product</h2>
@@ -21,6 +21,11 @@ export function NewProductForm({storeId,enabled}:{storeId:string;enabled:boolean
       <input id="draft-product-sku" name="sku" maxLength={60} required disabled={!enabled}/>
       <label htmlFor="draft-product-price">Price (USD)</label>
       <input id="draft-product-price" name="price" type="number" min="0" max="9999999.99" step=".01" required disabled={!enabled}/>
+      <label htmlFor="draft-product-category">Category</label>
+      <select id="draft-product-category" name="categoryId" disabled={!enabled}>
+        <option value="">Uncategorized</option>
+        {categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+      </select>
       <label htmlFor="draft-product-description">Description</label>
       <textarea id="draft-product-description" name="description" maxLength={1500} rows={3} disabled={!enabled}/>
       <button type="submit" className="button primary" disabled={!enabled||pending}>{pending?"Saving…":"Create draft"}</button>
@@ -44,8 +49,8 @@ export function NewCategoryForm({storeId,enabled}:{storeId:string;enabled:boolea
   </section>;
 }
 
-export function ProductRowEditor({storeId,productId,name,price,enabled}:{
-  storeId:string;productId:string;name:string;price:string;enabled:boolean;
+export function ProductRowEditor({storeId,productId,name,price,categoryId,categories,enabled}:{
+  storeId:string;productId:string;name:string;price:string;categoryId:string|null;categories:{id:string;name:string}[];enabled:boolean;
 }) {
   const [state,action,pending]=useActionState(updateDraftProduct,initial);
   const uid=useId();
@@ -56,6 +61,11 @@ export function ProductRowEditor({storeId,productId,name,price,enabled}:{
     <input id={uid+"n"} name="name" defaultValue={name} maxLength={120} required disabled={!enabled}/>
     <label htmlFor={uid+"p"}>USD price</label>
     <input id={uid+"p"} name="price" defaultValue={price} type="number" min="0" step=".01" max="9999999.99" required disabled={!enabled}/>
+    <label htmlFor={uid+"c"}>Category</label>
+    <select id={uid+"c"} name="categoryId" defaultValue={categoryId??""} disabled={!enabled}>
+      <option value="">Uncategorized</option>
+      {categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+    </select>
     <button type="submit" className="button secondary" disabled={!enabled||pending}>Save product</button>
     {state.message && <p role="status">{state.message}</p>}
   </form>;
