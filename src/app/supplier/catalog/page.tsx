@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupplierServerClient } from "@/lib/supabase/server";
+import { NewCategoryForm, NewProductForm, ProductRowEditor } from "../operations/forms";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Shared Catalog | Apex", robots: { index: false, follow: false } };
@@ -46,6 +47,7 @@ export default async function SharedCatalog() {
   </main>;
 
   const ids = stores.map(store => store.id);
+  const canWrite = process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED === "true" && stores.length === 1 && !stores[0].is_public;
   // RLS plus explicit store_id filters: no broad product/inventory reads.
   const [products, categories, inventory] = await Promise.all([
     client.from("products")
@@ -75,7 +77,12 @@ export default async function SharedCatalog() {
     <p className="eyebrow">APEX / PRIVATE SUPPLIER CATALOG</p>
     <h1>Shared catalog.</h1>
     <p className="lead">The same catalog is visible to every authorized member of your supplier team.</p>
-    <p className="notice">Read-only preview. Product and inventory changes are disabled.</p>
+    <p className="notice">Private draft catalog. Products are not published or sold through these controls.</p>
+    <div className="actions"><Link className="button secondary" href="/supplier/inventory">Manage inventory</Link><Link className="button secondary" href="/supplier/reports">Sales history</Link></div>
+    {stores.length === 1 && <div className="feature-grid" style={{gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",marginBottom:24}}>
+      <NewProductForm storeId={stores[0].id} enabled={canWrite}/>
+      <NewCategoryForm storeId={stores[0].id} enabled={canWrite}/>
+    </div>}
     {!products.data?.length ? <section className="supplier-panel">
       <h2>No products yet.</h2>
       <p>Approved catalog data has not been imported for this storefront.</p>
@@ -88,6 +95,7 @@ export default async function SharedCatalog() {
           <th scope="col" style={{ textAlign: "left" }}>Price</th>
           <th scope="col" style={{ textAlign: "left" }}>Inventory</th>
           <th scope="col" style={{ textAlign: "left" }}>Status</th>
+          <th scope="col" style={{ textAlign: "left" }}>Draft editing</th>
         </tr></thead>
         <tbody>{products.data.map(product => {
           const inv = stock.get(product.id);
@@ -101,10 +109,11 @@ export default async function SharedCatalog() {
             <td>{money(price, product.currency)}</td>
             <td>{inv ? `${inv.quantity_on_hand} on hand · ${inv.quantity_reserved} reserved` : "Not tracked"}</td>
             <td>{product.is_published ? "Published record" : "Draft"}</td>
+            <td>{!product.is_published ? <ProductRowEditor storeId={product.store_id} productId={product.id} name={product.name} price={(price/100).toFixed(2)} enabled={canWrite}/> : "Locked"}</td>
           </tr>;
         })}</tbody>
       </table>
     </div>}
-    <p className="notice">Publishing records does not make a private storefront public. Changes, checkout, and payments remain disabled in this preview.</p>
+    <p className="notice">No public publishing, checkout, payments, or order creation is enabled. Editing is gated by audited database write permissions.</p>
   </main>;
 }
