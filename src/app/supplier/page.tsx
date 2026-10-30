@@ -43,12 +43,18 @@ export default async function SupplierWorkspace() {
     client.from("products").select("id", { count: "exact", head: true }).in("store_id", storeIds),
     client.from("categories").select("id", { count: "exact", head: true }).in("store_id", storeIds),
     client.from("inventory_items").select("product_id", { count: "exact", head: true }).in("store_id", storeIds),
+    client.from("supplier_import_candidates").select("id", { count: "exact", head: true }).in("store_id", storeIds),
+    client.from("supplier_sales_history").select("id", { count: "exact", head: true }).in("store_id", storeIds),
+    client.from("supplier_wallet_requests").select("id", { count: "exact", head: true }).in("store_id", storeIds),
   ]) : null;
 
   const metrics = [
-    { label: "Products", value: !summary || summary[0].error ? "—" : String(summary[0].count ?? 0) },
-    { label: "Categories", value: !summary || summary[1].error ? "—" : String(summary[1].count ?? 0) },
-    { label: "Inventory records", value: !summary || summary[2].error ? "—" : String(summary[2].count ?? 0) },
+    { label: "Imported variants to review", value: !summary || summary[3].error ? "—" : String(summary[3].count ?? 0), href: "/supplier/imports" },
+    { label: "Draft / internal product records", value: !summary || summary[0].error ? "—" : String(summary[0].count ?? 0), href: "/supplier/catalog" },
+    { label: "Inventory records", value: !summary || summary[2].error ? "—" : String(summary[2].count ?? 0), href: "/supplier/inventory" },
+    { label: "Categories", value: !summary || summary[1].error ? "—" : String(summary[1].count ?? 0), href: "/supplier/catalog" },
+    { label: "Sales history entries", value: !summary || summary[4].error ? "—" : String(summary[4].count ?? 0), href: "/supplier/reports" },
+    { label: "Test wallet requests", value: !summary || summary[5].error ? "—" : String(summary[5].count ?? 0), href: "/supplier/wallets" },
   ];
 
   return <main className="container supplier-shell">
@@ -81,12 +87,14 @@ export default async function SupplierWorkspace() {
         {metrics.map(metric => <article className="feature-card" key={metric.label}>
           <p className="eyebrow">{metric.label}</p>
           <h2>{metric.value}</h2>
+          <Link className="button secondary" href={metric.href}>Manage / review</Link>
         </article>)}
       </div>
     </section>}
 
     <section className="supplier-panel" style={{ marginTop: 24 }}>
       <h2>Store operations</h2>
+      <p className="notice">Imported source variants are kept separate from drafted products and actual stock. No unverified source cost is treated as a retail price.</p>
       <p>Draft product editing, stock adjustments and wallet requests are gated. Live order handling and payments are not enabled in this technical preview.</p>
       <div className="actions"><Link href="/supplier/catalog" className="button primary">Products</Link><Link href="/supplier/imports" className="button secondary">Supplier import review</Link><Link href="/supplier/inventory" className="button secondary">Inventory</Link><Link href="/supplier/reports" className="button secondary">Sales history</Link><Link href="/supplier/wallets" className="button secondary">Bitcoin wallets</Link><Link href="/account/profile" className="button secondary">My profile and password</Link></div>
     </section>
