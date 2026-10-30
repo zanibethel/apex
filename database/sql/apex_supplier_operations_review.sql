@@ -185,6 +185,10 @@ for insert to authenticated with check (
  )
 );
 
+-- Admins can view stores without becoming supplier members; protected by trusted app role.
+create policy "platform_admin_store_read" on public.stores
+for select to authenticated using ((select auth.jwt()->'app_metadata'->>'apex_role')='platform_admin');
+
 -- Admin percentage proposals cannot affect payment execution (no payment processor reads this table).
 create table if not exists public.store_split_drafts (
  store_id uuid primary key references public.stores(id),
