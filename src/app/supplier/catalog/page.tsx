@@ -69,6 +69,7 @@ export default async function SharedCatalog() {
   }
 
   const categoryNames = new Map(categories.data?.map(c => [c.id, c.name]) ?? []);
+  const choices = (categories.data ?? []).map(c => ({id:c.id,name:c.name}));
   const stock = new Map(inventory.data?.map(item => [item.product_id, item]) ?? []);
   const storeNames = new Map(stores.map(s => [s.id, s.display_name]));
 
@@ -80,7 +81,7 @@ export default async function SharedCatalog() {
     <p className="notice">Read-only preview by default. Draft editing unlocks only after reviewed database permissions and an explicit staging flag. Products are not published or sold through these controls.</p>
     <div className="actions"><Link className="button secondary" href="/supplier/inventory">Manage inventory</Link><Link className="button secondary" href="/supplier/reports">Sales history</Link></div>
     {stores.length === 1 && <div className="feature-grid" style={{gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",marginBottom:24}}>
-      <NewProductForm storeId={stores[0].id} enabled={canWrite}/>
+      <NewProductForm storeId={stores[0].id} enabled={canWrite} categories={choices}/>
       <NewCategoryForm storeId={stores[0].id} enabled={canWrite}/>
     </div>}
     {!products.data?.length ? <section className="supplier-panel">
@@ -109,7 +110,7 @@ export default async function SharedCatalog() {
             <td>{money(price, product.currency)}</td>
             <td>{inv ? `${inv.quantity_on_hand} on hand · ${inv.quantity_reserved} reserved` : "Not tracked"}</td>
             <td>{product.is_published ? "Published record" : "Draft"}</td>
-            <td>{!product.is_published ? <ProductRowEditor storeId={product.store_id} productId={product.id} name={product.name} price={(price/100).toFixed(2)} enabled={canWrite}/> : "Locked"}</td>
+            <td>{!product.is_published ? <ProductRowEditor storeId={product.store_id} productId={product.id} name={product.name} price={(price/100).toFixed(2)} categoryId={product.category_id} categories={choices} enabled={canWrite}/> : "Locked"}</td>
           </tr>;
         })}</tbody>
       </table>
