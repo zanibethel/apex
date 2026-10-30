@@ -41,7 +41,7 @@ export default function Home() {
         <div>
           <p className="eyebrow">BUILD STATUS</p>
           <h2>Foundation in progress.</h2>
-          <p>Actual catalog data, supplier sign-in and transaction features remain disabled while the technical foundation is reviewed.</p>
+          <p>Private supplier management and verified account access are available for testing. Public products, checkout and payments are not yet enabled.</p>
         </div>
         <Link href="/catalog">View the placeholder catalog →</Link>
       </section>

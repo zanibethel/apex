@@ -1,19 +1,28 @@
 import Link from "next/link";
-import { readPublishedCatalog } from "@/lib/supabase/public-catalog";
+import { readPublishedCatalog, readPublishedCategories } from "@/lib/supabase/public-catalog";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Catalog Preview | Apex", robots: { index: false, follow: false } };
 
 const previewCollections = ["Collection 01", "Collection 02", "Collection 03"];
 
-export default async function CatalogPreview() {
-  const result = await readPublishedCatalog();
+export default async function CatalogPreview({searchParams}: {searchParams: Promise<{category?: string}>}) {
+  const params = await searchParams;
+  const categories = await readPublishedCategories();
+  const selected = categories.find(category => category.id === params.category);
+  const result = await readPublishedCatalog(selected?.id);
   return (
     <main className="container catalog">
       <Link className="back" href="/">← Home</Link>
       <p className="eyebrow">CATALOG / STRUCTURE PREVIEW</p>
       <h1>Find it quickly.<br /><em>Understand it clearly.</em></h1>
       <p className="lead">A protected technical preview of the public catalog. No checkout or live inventory is available.</p>
+      {categories.length > 0 && <nav aria-label="Product categories" className="actions">
+        <Link className="button secondary" href="/catalog">All products</Link>
+        {categories.map(category => <Link className="button secondary" key={category.id}
+          href={"/catalog?category=" + encodeURIComponent(category.id)}>{category.name}</Link>)}
+      </nav>}
+      {selected && <p className="eyebrow">Category: {selected.name}</p>}
       {result.state === "connected" ? (
         result.products.length > 0 ? (
           <div className="catalog-grid">
