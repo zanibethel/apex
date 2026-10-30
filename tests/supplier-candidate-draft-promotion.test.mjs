@@ -37,7 +37,7 @@ test("supplier action accepts price and stock separately from source cost",()=>{
   assert.match(action,/confirmedStock/);
   assert.match(action,/confirmedPrice!=="on"/);
   assert.match(action,/stockVerified!=="on"/);
-  assert.match(action,/\.rpc\("create_draft_from_supplier_candidate"/);
+  assert.match(action,/\.rpc\("create_draft_from_candidate_with_compare"/);
   assert.match(action,/p_retail_price_cents:retailCents/);
   assert.match(action,/p_quantity_on_hand:quantity/);
   assert.doesNotMatch(action,/wholesale_cost_cents|service_role|auth\.admin|is_published:true/);

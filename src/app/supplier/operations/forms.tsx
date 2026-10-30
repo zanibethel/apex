@@ -19,7 +19,10 @@ export function NewProductForm({storeId,enabled,categories}:{storeId:string;enab
       <input id="draft-product-name" name="name" maxLength={120} required disabled={!enabled}/>
       <label htmlFor="draft-product-sku">SKU</label>
       <input id="draft-product-sku" name="sku" maxLength={60} required disabled={!enabled}/>
-      <label htmlFor="draft-product-price">Price (USD)</label>
+      <label htmlFor="draft-product-source-cost">Source cost (USD, private, optional)</label>
+      <input id="draft-product-source-cost" name="directSourceCost" type="number" min="0"
+        max="9999999.99" step=".01" disabled={!enabled}/>
+      <label htmlFor="draft-product-price">Customer purchase price (USD)</label>
       <input id="draft-product-price" name="price" type="number" min="0" max="9999999.99" step=".01" required disabled={!enabled}/>
       <label htmlFor="draft-compare-price">Compare-at price (USD, optional)</label>
       <input id="draft-compare-price" name="comparePrice" type="number" step=".01" min="0"
@@ -52,9 +55,10 @@ export function NewCategoryForm({storeId,enabled}:{storeId:string;enabled:boolea
   </section>;
 }
 
-export function ProductRowEditor({storeId,productId,name,description,price,comparePrice,isActive,categoryId,categories,enabled}:{
+export function ProductRowEditor({storeId,productId,name,description,price,comparePrice,directSourceCost,isActive,categoryId,categories,enabled}:{
   storeId:string;productId:string;name:string;description:string;price:string;comparePrice:string;
-  isActive:boolean;categoryId:string|null;categories:{id:string;name:string}[];enabled:boolean;
+  directSourceCost?:string;isActive:boolean;categoryId:string|null;
+  categories:{id:string;name:string}[];enabled:boolean;
 }) {
   const [state,action,pending]=useActionState(updateDraftProduct,initial);
   const uid=useId();
@@ -66,7 +70,12 @@ export function ProductRowEditor({storeId,productId,name,description,price,compa
     <label htmlFor={uid+"d"}>Description</label>
     <textarea id={uid+"d"} name="description" defaultValue={description} rows={3}
       maxLength={1500} disabled={!enabled}/>
-    <label htmlFor={uid+"p"}>USD price</label>
+    {directSourceCost!==undefined && <>
+      <label htmlFor={uid+"source"}>Source cost (USD, private)</label>
+      <input id={uid+"source"} name="directSourceCost" type="number" min="0"
+        max="9999999.99" step=".01" defaultValue={directSourceCost} disabled={!enabled}/>
+    </>}
+    <label htmlFor={uid+"p"}>Customer purchase price (USD)</label>
     <input id={uid+"p"} name="price" defaultValue={price} type="number" min="0" step=".01" max="9999999.99" required disabled={!enabled}/>
     <label htmlFor={uid+"cmp"}>Compare-at price (optional)</label>
     <input id={uid+"cmp"} name="comparePrice" defaultValue={comparePrice}

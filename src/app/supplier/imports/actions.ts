@@ -36,7 +36,7 @@ export async function createDraftFromReviewedVariant(
     return {ok:false,message:"Draft creation is disabled outside the protected preview."};
   }
   const storeId=form.get("storeId"), candidateId=form.get("candidateId"), sku=form.get("sku"),
-    price=form.get("retailPrice"), stock=form.get("confirmedStock"),
+    price=form.get("retailPrice"), compareRaw=form.get("comparePrice"), stock=form.get("confirmedStock"),
     confirmedPrice=form.get("confirmedPrice"), stockVerified=form.get("stockVerified"),
     description=form.get("description");
 
@@ -44,6 +44,8 @@ export async function createDraftFromReviewedVariant(
       typeof candidateId!=="string" || !uuid.test(candidateId) ||
       typeof sku!=="string" || sku.trim().length<1 || sku.trim().length>60 ||
       typeof price!=="string" || !/^\d{1,7}(\.\d{1,2})?$/.test(price) ||
+      typeof compareRaw!=="string" ||
+      (compareRaw!=="" && !/^\d{1,7}(\.\d{1,2})?$/.test(compareRaw)) ||
       typeof stock!=="string" || !/^(0|[1-9]\d{0,6})$/.test(stock) ||
       confirmedPrice!=="on" || (Number(stock)>0 && stockVerified!=="on") ||
       typeof description!=="string" || description.length>1500) {
@@ -52,9 +54,15 @@ export async function createDraftFromReviewedVariant(
 
   const [whole,cents=""]=price.split(".");
   const retailCents=Number(whole)*100+Number(cents.padEnd(2,"0"));
+  const compareCents=compareRaw===""?null:(()=>{
+    const [cWhole,cFraction=""]=compareRaw.split(".");
+    return Number(cWhole)*100+Number(cFraction.padEnd(2,"0"));
+  })();
   const quantity=Number(stock);
   if (!Number.isSafeInteger(retailCents) || retailCents<1 || retailCents>999999999 ||
-      !Number.isSafeInteger(quantity) || quantity>1000000) {
+      !Number.isSafeInteger(quantity) || quantity>1000000 ||
+      (compareCents!==null && (!Number.isSafeInteger(compareCents) ||
+       compareCents<=retailCents || compareCents>999999999))) {
     return {ok:false,message:"Retail price or quantity is outside the allowed range."};
   }
 
@@ -66,14 +74,14 @@ export async function createDraftFromReviewedVariant(
 
   // SECURITY INVOKER RPC executes source-status verification, insert, stock creation
   // and one-to-one source association in a single RLS-scoped DB transaction.
-  const {data,error}=await w.client.rpc("create_draft_from_supplier_candidate",{
+  const {data,error}=await w.client.rpc("create_draft_from_candidate_with_compare",{
     p_store_id:storeId,
     p_candidate_id:candidateId,
     p_sku:sku.trim(),
     p_retail_price_cents:retailCents,
     p_quantity_on_hand:quantity,
     p_description:description.trim(),
-    p_category_id:null,
+    p_compare_at_price_cents:compareCents,
   });
   if(error || !data) {
     return {ok:false,message:"Draft not created. Check review approval, SKU uniqueness, and whether this variant was already imported."};

@@ -22,9 +22,14 @@ export function PromoteReviewedVariantForm({storeId,candidateId,productName,stre
       <label htmlFor={id+"sku"}>New SKU</label>
       <input id={id+"sku"} name="sku" maxLength={60} autoComplete="off" required disabled={!enabled}
         placeholder="Unique internal SKU"/>
-      <label htmlFor={id+"price"}>Confirmed draft retail price (USD)</label>
+      <label htmlFor={id+"price"}>Customer purchase price (USD)</label>
       <input id={id+"price"} name="retailPrice" type="number" min="0.01" max="9999999.99" step="0.01"
         required disabled={!enabled} placeholder="Not the wholesale cost"/>
+      <label htmlFor={id+"compare"}>Compare-at price (optional, USD)</label>
+      <input id={id+"compare"} name="comparePrice" type="number" min="0.01"
+        max="9999999.99" step="0.01" disabled={!enabled}
+        placeholder="A genuine higher reference price"/>
+      <p className="notice">Do not use the source cost as a comparison price.</p>
       <label htmlFor={id+"quantity"}>Actual on-hand quantity (0 if unknown)</label>
       <input id={id+"quantity"} name="confirmedStock" type="number" min={0} max={1000000} step={1}
         defaultValue={0} required disabled={!enabled}/>

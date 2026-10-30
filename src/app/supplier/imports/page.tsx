@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSupplierWorkspace } from "@/lib/auth/supplier-workspace";
 import { ImportReviewForm } from "./review-form";
 import { PromoteReviewedVariantForm } from "./promote-form";
+import {SourceCostEditor} from "../catalog/source-cost-editor";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Supplier Import Review | Apex",robots:{index:false,follow:false}};
@@ -31,27 +32,27 @@ export default async function SupplierImportReviewPage() {
     {error ? <section className="supplier-panel"><h2>Import records unavailable</h2><p>The private review queue has not been configured.</p></section>
       : mappings.error ? <section className="supplier-panel"><h2>Draft linkage unavailable</h2><p>Try again after the draft-link migration is verified.</p></section>
       : !data?.length ? <section className="supplier-panel"><h2>No source entries available.</h2><p>No supplier variants have been imported yet.</p></section>
-      : <section className="supplier-panel" style={{maxWidth:"none",overflowX:"auto"}}>
+      : <section aria-label="Private supplier source variants">
         <h2>{data.length} imported variants</h2>
-        <table style={{width:"100%",minWidth:760}}>
-          <thead><tr><th scope="col">Source #</th><th scope="col">Product</th>
-            <th scope="col">Strength</th><th scope="col">Unverified source cost</th>
-            <th scope="col">Review</th><th scope="col">Draft product</th></tr></thead>
-          <tbody>{data.map(item=><tr key={item.id} id={item.id}>
-            <td>{item.source_index+1}</td><td><strong>{item.product_name}</strong></td>
-            <td>{item.strength}</td>
-            <td>{(Number(item.wholesale_cost_cents)/100).toLocaleString("en-US",{style:"currency",currency:"USD"})}</td>
-            <td><ImportReviewForm storeId={item.store_id} candidateId={item.id}
-               status={item.review_status} enabled={enabled}/></td>
-            <td style={{minWidth:280}}>
-              {linked.has(item.id) ? <p>Private draft already created</p>
-              : item.review_status==="approved_for_draft"
+        <div className="apex-product-grid">
+          {data.map(item=><article className="apex-product-card" key={item.id} id={item.id}>
+            <div className="apex-product-card-head">
+              <span className="eyebrow">SOURCE #{item.source_index+1} · {item.strength}</span>
+              <h3>{item.product_name}</h3>
+            </div>
+            <SourceCostEditor storeId={item.store_id} candidateId={item.id}
+              costCents={Number(item.wholesale_cost_cents)} enabled={enabled}/>
+            <ImportReviewForm storeId={item.store_id} candidateId={item.id}
+              status={item.review_status} enabled={enabled}/>
+            {linked.has(item.id) ? <p className="notice">
+              Private draft already created. <Link href="/supplier/catalog">Edit product, purchase price, image and compare-at price</Link>
+            </p>
+            : item.review_status==="approved_for_draft"
               ? <PromoteReviewedVariantForm storeId={item.store_id} candidateId={item.id}
-                   productName={item.product_name} strength={item.strength} enabled={enabled}/>
-              : <p className="notice">Mark ready for draft first, then provide a verified retail price and stock.</p>}
-            </td>
-          </tr>)}</tbody>
-        </table>
+                  productName={item.product_name} strength={item.strength} enabled={enabled}/>
+              : <p className="notice">Mark ready for draft first. Then enter purchase price, compare-at price and confirmed stock.</p>}
+          </article>)}
+        </div>
       </section>}
     <p className="notice">Only reviewed entries can create private drafts. Wholesale costs never become retail prices; source variants are not assumed to be in stock.</p>
   </main>;

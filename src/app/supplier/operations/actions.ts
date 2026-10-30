@@ -45,6 +45,8 @@ export async function createDraftProduct(_previous: Result, form: FormData): Pro
   const price_cents=dollarsToCents(form.get("price"));
   const compareRaw=form.get("comparePrice");
   const compare_at_price_cents=compareRaw===""?null:dollarsToCents(compareRaw);
+  const sourceRaw=form.get("directSourceCost");
+  const internal_source_cost_cents=sourceRaw===""?null:dollarsToCents(sourceRaw);
   const description=String(form.get("description")??"").trim().slice(0,1500);
   const categoryRaw=form.get("categoryId");
   if (typeof categoryRaw!=="string" || (categoryRaw!=="" && !uuid.test(categoryRaw)))
@@ -52,11 +54,12 @@ export async function createDraftProduct(_previous: Result, form: FormData): Pro
   const category_id=categoryRaw||null;
   if (!name || !sku || price_cents === null || price_cents<1 ||
       (compare_at_price_cents!==null&&compare_at_price_cents<=price_cents) ||
-      (compareRaw!==""&&compare_at_price_cents===null))
-    return {ok:false,message:"Enter a title, SKU, valid price and an optional higher compare-at price."};
+      (compareRaw!==""&&compare_at_price_cents===null) ||
+      (sourceRaw!==""&&internal_source_cost_cents===null))
+    return {ok:false,message:"Enter a title, SKU, valid purchase price, source cost and an optional higher compare-at price."};
   const {data,error} = await store.client.from("products")
     .insert({store_id:store.storeId,name,sku,description,price_cents,currency:"USD",
-      category_id,compare_at_price_cents,is_active:false})
+      category_id,compare_at_price_cents,internal_source_cost_cents,is_active:false})
     .select("id").single();
   if (error || !data) return {ok:false,message:"Draft product was not saved. The SKU may already be in use."};
   const inventory=await store.client.from("inventory_items")
@@ -77,6 +80,8 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
   const compareRaw=form.get("comparePrice");
   const compare_at_price_cents=compareRaw===""?null:dollarsToCents(compareRaw);
   const description=String(form.get("description")??"").trim();
+  const sourceRaw=form.get("directSourceCost");
+  const internal_source_cost_cents=sourceRaw===""?null:dollarsToCents(sourceRaw);
   const is_active=form.get("isActive")==="on";
   const categoryRaw=form.get("categoryId");
   if(typeof categoryRaw!=="string" || (categoryRaw!=="" && !uuid.test(categoryRaw)))
@@ -85,11 +90,23 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
   if(typeof productId!=="string" || !uuid.test(productId) || !name ||
     price_cents===null || price_cents<1 || description.length>1500 ||
     (compareRaw!==""&&compare_at_price_cents===null) ||
-    (compare_at_price_cents!==null&&compare_at_price_cents<=price_cents)) {
+    (compare_at_price_cents!==null&&compare_at_price_cents<=price_cents) ||
+    (sourceRaw!==null&&sourceRaw!==""&&internal_source_cost_cents===null)) {
     return {ok:false,message:"Invalid product details."};
   }
+  const updates:{
+    name:string;description:string;price_cents:number;compare_at_price_cents:number|null;
+    is_active:boolean;category_id:string|null;internal_source_cost_cents?:number|null;
+  }={name,description,price_cents,compare_at_price_cents,is_active,category_id};
+  if(sourceRaw!==null){
+    // Never create a second, conflicting source-cost value for a linked variant.
+    const {data:source,error:sourceError}=await store.client.from("supplier_candidate_drafts")
+      .select("candidate_id").eq("store_id",store.storeId).eq("product_id",productId).maybeSingle();
+    if(sourceError||source)return {ok:false,message:"Use the source cost field on the linked source card."};
+    updates.internal_source_cost_cents=internal_source_cost_cents;
+  }
   const {data,error}=await store.client.from("products")
-    .update({name,description,price_cents,compare_at_price_cents,is_active,category_id})
+    .update(updates)
     .eq("id",productId).eq("store_id",store.storeId).eq("is_published",false)
     .select("id").maybeSingle();
   if(error || !data) return {ok:false,message:"Draft not updated. Check your membership or product status."};
