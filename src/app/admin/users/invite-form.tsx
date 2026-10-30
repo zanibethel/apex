@@ -11,7 +11,7 @@ export function InviteAccountForm({ enabled }: { enabled: boolean }) {
     <>
       <p className="notice">Invitations create ordinary login users, never administrators.</p>
       <form action={action} className="supplier-form">
-        <label htmlFor="new-user-email">New user's email address</label>
+        <label htmlFor="new-user-email">New account email address</label>
         <input id="new-user-email" name="email" type="email" maxLength={254} autoComplete="off" disabled={!enabled} required />
         <button className="button primary" type="submit" disabled={!enabled || pending}>
           {pending ? "Requesting invitation…" : "Send invitation"}
