@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupplierServerClient } from "@/lib/supabase/server";
 import { NewCategoryForm, NewProductForm, ProductRowEditor } from "../operations/forms";
+import { ImportReviewForm } from "../imports/review-form";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Shared Catalog | Apex", robots: { index: false, follow: false } };
@@ -49,7 +50,7 @@ export default async function SharedCatalog() {
   const ids = stores.map(store => store.id);
   const canWrite = process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED === "true" && stores.length === 1 && !stores[0].is_public;
   // RLS plus explicit store_id filters: no broad product/inventory reads.
-  const [products, categories, inventory] = await Promise.all([
+  const [products, categories, inventory, candidates] = await Promise.all([
     client.from("products")
       .select("id,store_id,category_id,sku,name,price_cents,currency,is_published")
       .in("store_id", ids).order("name", { ascending: true }).limit(100),
@@ -58,6 +59,9 @@ export default async function SharedCatalog() {
     client.from("inventory_items")
       .select("product_id,store_id,quantity_on_hand,quantity_reserved")
       .in("store_id", ids).limit(100),
+    client.from("supplier_import_candidates")
+      .select("id,store_id,product_name,strength,wholesale_cost_cents,review_status", { count: "exact" })
+      .in("store_id", ids).order("source_index", {ascending: true}).limit(12),
   ]);
 
   if (products.error || categories.error || inventory.error) {
@@ -80,6 +84,27 @@ export default async function SharedCatalog() {
     <p className="lead">The same catalog is visible to every authorized member of your supplier team.</p>
     <p className="notice">Read-only preview by default. Draft editing unlocks only after reviewed database permissions and an explicit staging flag. Products are not published or sold through these controls.</p>
     <div className="actions"><Link className="button secondary" href="/supplier/inventory">Manage inventory</Link><Link className="button secondary" href="/supplier/reports">Sales history</Link></div>
+    <section className="supplier-panel" style={{maxWidth:"none", marginBottom:24,overflowX:"auto"}}>
+      <h2>Imported source variants ({candidates.error ? "unavailable" : candidates.count ?? 0})</h2>
+      <p className="notice">These are supplier-provided, unverified product variants—not published catalog items, confirmed inventory, or retail prices.</p>
+      {candidates.error ? <p>Source review information is unavailable.</p>
+      : !candidates.data?.length ? <p>No imported variants to review.</p>
+      : <table style={{width:"100%",minWidth:680}}>
+          <thead><tr>
+            <th scope="col">Product variant</th>
+            <th scope="col">Unverified wholesale cost</th>
+            <th scope="col">Supplier review</th>
+          </tr></thead>
+          <tbody>{candidates.data.map(item=><tr key={item.id}>
+            <td><strong>{item.product_name}</strong><p>{item.strength}</p></td>
+            <td>{money(Number(item.wholesale_cost_cents),"USD")}</td>
+            <td><ImportReviewForm storeId={item.store_id} candidateId={item.id}
+                status={item.review_status} enabled={canWrite}/></td>
+          </tr>)}</tbody>
+        </table>}
+      <p className="notice">Showing up to 12 variants here. Use the full review screen to manage all imported variants.</p>
+      <Link className="button secondary" href="/supplier/imports">Review all source variants</Link>
+    </section>
     {stores.length === 1 && <div className="feature-grid" style={{gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",marginBottom:24}}>
       <NewProductForm storeId={stores[0].id} enabled={canWrite} categories={choices}/>
       <NewCategoryForm storeId={stores[0].id} enabled={canWrite}/>
