@@ -87,7 +87,7 @@ export default async function SupplierWorkspace() {
 
     <section className="supplier-panel" style={{ marginTop: 24 }}>
       <h2>Store operations</h2>
-      <p>Draft product editing, stock adjustments and wallet requests are gated. Live order handling and payments remain disabled.</p>
+      <p>Draft product editing, stock adjustments and wallet requests are gated. Live order handling and payments are not enabled in this technical preview.</p>
       <div className="actions"><Link href="/supplier/catalog" className="button primary">Products</Link><Link href="/supplier/inventory" className="button secondary">Inventory</Link><Link href="/supplier/reports" className="button secondary">Sales history</Link><Link href="/supplier/wallets" className="button secondary">Bitcoin wallets</Link><Link href="/account/profile" className="button secondary">My profile and password</Link></div>
     </section>
   </main>;
