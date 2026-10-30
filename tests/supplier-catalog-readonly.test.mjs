@@ -16,11 +16,11 @@ test("catalog requires a verified Supabase user and scoped membership", () => {
 
 test("catalog scopes every table to the member's storefront", () => {
   assert.match(page, /\.from\("stores"\)/);
-  assert.match(page, /\.in\("supplier_id", memberships\.map\(/);
-  for (const table of ["products", "categories", "inventory_items", "supplier_import_candidates"]) {
+  assert.match(page, /\.in\("supplier_id",memberships\.map\(/);
+  for (const table of ["products", "categories", "inventory_items", "supplier_import_candidates", "supplier_candidate_drafts"]) {
     assert.match(page, new RegExp('\\.from\\("'+table+'"\\)'));
   }
-  assert.equal((page.match(/\.in\("store_id", ids\)/g) ?? []).length, 4);
+  assert.equal((page.match(/\.in\("store_id",\s*ids\)/g) ?? []).length, 5);
   assert.match(page, /limit\(100\)/);
   assert.doesNotMatch(page, /\.insert\(|\.update\(|\.delete\(|\.upsert\(|service_role|auth\.admin|NEXT_PUBLIC_SUPABASE_SECRET/);
 });
