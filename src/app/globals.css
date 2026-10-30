@@ -18,3 +18,42 @@
 .supplier-form select:focus-visible,.supplier-form textarea:focus-visible{outline:3px solid #f5c46c;outline-offset:3px}
 .supplier-panel table th,.supplier-panel table td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 .supplier-panel table th{color:var(--silver);font-size:12px}
+
+/* Mobile-first shared supplier product manager */
+.apex-products-page{overflow-x:clip}
+.apex-products-heading{display:grid;gap:4px;margin:36px 0 20px}
+.apex-products-heading h2{font-size:clamp(24px,4vw,32px);margin:0}
+.apex-products-heading p{margin:0}
+.apex-product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:18px;align-items:start;min-width:0}
+.apex-product-card{min-width:0;overflow-wrap:anywhere;background:#19191e;border:1px solid var(--line);border-radius:12px;padding:clamp(14px,3vw,22px);display:flex;flex-direction:column;gap:18px}
+.apex-product-card-head{display:grid;gap:7px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.apex-product-card-head h3{margin:0;font-size:clamp(19px,4vw,24px);line-height:1.23;overflow-wrap:anywhere}
+.apex-product-card-head .eyebrow{margin:0}
+.apex-product-card .supplier-panel{padding:0;border:0;background:transparent;max-width:none}
+.apex-product-card .supplier-form{margin-top:10px;gap:10px}
+.apex-product-card .supplier-form button{margin-top:3px}
+.apex-product-card .supplier-form input,.apex-product-card .supplier-form textarea,.apex-product-card .supplier-form select{min-width:0}
+.apex-product-card .notice{overflow-wrap:anywhere}
+.apex-product-card .button{white-space:normal;text-align:center}
+.apex-product-fields{display:grid;gap:12px;min-width:0;border-top:1px solid var(--line);padding-top:16px}
+.apex-product-photo{width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#111115;border:1px dashed #51515b}
+.apex-photo-placeholder{height:100%;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.apex-product-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;color:var(--muted);font-size:12px}
+.apex-product-price{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.apex-product-price strong{font-size:16px}
+.apex-product-price s{color:var(--muted)}
+.apex-cost-edit{display:grid;gap:9px;min-width:0}
+.apex-cost-edit label{font-size:13px;font-weight:700;color:var(--silver)}
+.apex-cost-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
+.apex-cost-row input{min-width:0;width:100%;background:#0c0c0f;border:1px solid #666b76;border-radius:4px;color:#fff;padding:10px;font:inherit}
+.apex-cost-row button{margin:0;min-width:90px;padding-inline:10px}
+.apex-product-review{border-top:1px solid var(--line);padding-top:12px}
+.apex-product-awaiting{background:#111115;border:1px dashed var(--line);border-radius:8px;padding:12px}
+.apex-product-create{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;margin-top:30px}
+.apex-product-create .supplier-panel{max-width:none}
+@media(max-width:540px){
+ .apex-product-grid,.apex-product-create{grid-template-columns:minmax(0,1fr)}
+ .apex-product-card{padding:16px;gap:14px}
+ .apex-cost-row{grid-template-columns:minmax(0,1fr)}
+ .apex-cost-row button{width:100%}
+}
