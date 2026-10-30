@@ -1,7 +1,7 @@
 -- Run only on disposable Postgres after all three migrations.
 with s as (insert into public.suppliers(slug,display_name) values('test-supplier','Test supplier') returning id)
-insert into public.stores(id,supplier_id,slug,display_name)
-select '30000000-0000-0000-0000-000000000001',s.id,'test-store','Test store' from s;
+insert into public.stores(id,supplier_id,slug,display_name,is_public)
+select '30000000-0000-0000-0000-000000000001',s.id,'test-store','Test store',true from s;
 -- Test the RPC as a real RLS-constrained authenticated role.
 begin;
 set local role authenticated;
