@@ -16,6 +16,7 @@ alter table public.products
        image_path ~ ('^' || store_id::text || '/' || id::text ||
          '/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}\.(png|jpg|webp)$')));
 
+grant insert (compare_at_price_cents, is_active) on public.products to authenticated;
 grant update (description, compare_at_price_cents, is_active, image_path)
   on public.products to authenticated;
 
