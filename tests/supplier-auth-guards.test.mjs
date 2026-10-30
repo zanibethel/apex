@@ -22,7 +22,7 @@ test("login is invitation-only and a missing membership revokes session", () => 
 test("Next 16 proxy validates claims and protects cache headers", () => {
   assert.match(read("src/lib/supabase/supplier-proxy.ts"), /getClaims\(\)/);
   assert.match(read("src/lib/supabase/supplier-proxy.ts"), /Cache-Control/);
-  assert.match(read("src/proxy.ts"), /matcher: \["\/supplier\/:path\*", "\/admin\/:path\*"\]/);
+  assert.match(read("src/proxy.ts"), /matcher: \["\/supplier\/:path\*", "\/admin\/:path\*", "\/account\/:path\*"\]/);
 });
 test("auth config fails closed for other projects, environments and secret keys", () => {
   const config = read("src/lib/supabase/session-config.ts");
