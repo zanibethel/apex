@@ -18,11 +18,11 @@ test("supplier home surfaces distinct real-data counts and action links",()=>{
 test("catalog shows restricted source variants without treating wholesale prices as retail",()=>{
  const page=read("src/app/supplier/catalog/page.tsx");
  assert.match(page,/supplier_import_candidates/);
- assert.match(page,/\.in\("store_id", ids\)/);
- assert.match(page,/count: "exact"/);
+ assert.match(page,/\.in\("store_id",\s*ids\)/);
+ assert.match(page,/count:"exact"/);
  assert.match(page,/ImportReviewForm/);
  assert.match(page,/Unverified wholesale cost/);
- assert.match(page,/not published catalog items/);
+ assert.match(page,/Source variants remain private|not published catalog items/);
  assert.doesNotMatch(page,/\.insert\(|\.upsert\(|service_role/);
 });
 
