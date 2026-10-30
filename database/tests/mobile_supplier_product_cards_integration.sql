@@ -14,6 +14,14 @@ END $check$;
 
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
+UPDATE public.products SET internal_source_cost_cents=995
+WHERE store_id='20000000-0000-4000-8000-000000000003' AND sku='B-NEW-DRAFT';
+DO $check$
+BEGIN
+ IF NOT EXISTS (SELECT 1 FROM public.products WHERE sku='B-NEW-DRAFT'
+   AND internal_source_cost_cents=995)
+ THEN RAISE EXCEPTION 'Direct product internal cost was not saved';END IF;
+END $check$;
 UPDATE public.supplier_import_candidates SET wholesale_cost_cents=1799
 WHERE store_id='20000000-0000-4000-8000-000000000003' AND source_index=9;
 DO $check$
@@ -62,6 +70,8 @@ BEGIN
   IF FOUND THEN succeeded:=true;END IF;
  EXCEPTION WHEN insufficient_privilege THEN NULL;END;
  IF succeeded THEN RAISE EXCEPTION 'Cross-supplier source cost change';END IF;
+ IF EXISTS (SELECT 1 FROM public.products WHERE sku='B-NEW-DRAFT')
+ THEN RAISE EXCEPTION 'Cross-supplier product price or cost leaked';END IF;
  IF (SELECT count(*) FROM public.supplier_source_cost_audit) <> 0
  THEN RAISE EXCEPTION 'Cross-supplier source cost audit leaked';END IF;
 END $check$;
