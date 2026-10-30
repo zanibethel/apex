@@ -15,7 +15,7 @@ import { previewAllocationSats } from "../src/lib/payments/btcpay-sandbox.mjs";
 
 const compose = ["compose", "-p", "apex-regtest",
   "-f", "infra/regtest/compose.yml", "exec", "-T", "node",
-  "bitcoin-cli", "-regtest"];
+  "bitcoin-cli", "-datadir=/home/bitcoin/.bitcoin", "-regtest"];
 
 export function btcToSats(value) {
   const text = String(value);
