@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
 import { useActionState } from "react";
-import { changeOwnPassword } from "./actions";
+import { changeOwnPassword, requestPasswordCode } from "./actions";
 
 export function ProfileForm() {
   const [state, action, pending] = useActionState(changeOwnPassword, { ok: false, message: "" });
+  const [codeState, sendCode, sendingCode] = useActionState(requestPasswordCode, { ok: false, message: "" });
   return <section className="supplier-panel">
     <h2>Change Apex password</h2>
     <p className="notice">Your Proton email password is separate. Use a unique password of at least 12 characters.</p>
@@ -19,6 +20,8 @@ export function ProfileForm() {
       <input id="nonce" name="nonce" type="text" pattern="[0-9]{6}" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="Optional 6-digit code" />
       <button className="button primary" type="submit" disabled={pending}>{pending ? "Updating…" : "Save new password"}</button>
     </form>}
+    {!state.ok && <form action={sendCode} className="supplier-form"><button type="submit" className="button secondary" disabled={sendingCode}>{sendingCode ? "Sending…" : "Email me a security code"}</button></form>}
+    {codeState.message && <p role="status" className={codeState.ok ? "notice" : "supplier-error"}>{codeState.message}</p>}
     {state.message && <p role="status" className={state.ok ? "notice" : "supplier-error"}>{state.message}</p>}
     {state.ok && <Link className="button primary" href="/admin/sign-in">Sign in again</Link>}
     <p className="notice">Changing your password signs you out of Apex. Password recovery by email will be added after SMTP configuration.</p>

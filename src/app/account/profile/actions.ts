@@ -64,3 +64,22 @@ export async function changeOwnPassword(
     ? { ok: true, message: "Password updated, but we could not confirm all sessions were revoked. Sign out on your devices and sign in again." }
     : { ok: true, message: "Your Apex password was changed. Sign in again using the new password." };
 }
+
+export type SecurityCodeState = { ok: boolean; message: string };
+
+export async function requestPasswordCode(
+  _previous: SecurityCodeState,
+): Promise<SecurityCodeState> {
+  const client = await createSupplierServerClient();
+  if (!client) return { ok: false, message: "Security code delivery is unavailable." };
+  const { data, error } = await client.auth.getUser();
+  if (error || !data.user || data.user.is_anonymous || !data.user.email_confirmed_at) {
+    return { ok: false, message: "Sign in with a verified Apex account first." };
+  }
+  // Explicit opt-in from the signed-in user's profile. Supabase enforces its OTP rate limits.
+  const { error: sendError } = await client.auth.reauthenticate();
+  if (sendError) {
+    return { ok: false, message: "Unable to send a code. Email delivery may not be configured." };
+  }
+  return { ok: true, message: "A security code was requested for your Apex account email." };
+}

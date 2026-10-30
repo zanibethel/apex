@@ -44,3 +44,11 @@ test("profile navigation is available for authorized admins and suppliers", () =
   assert.match(read("src/app/admin/page.tsx"), /href="\/account\/profile"/);
   assert.match(read("src/app/supplier/page.tsx"), /href="\/account\/profile"/);
 });
+
+test("reauthentication security code is requested only for a verified signed-in account", () => {
+  const source = read("src/app/account/profile/actions.ts");
+  assert.match(source, /auth.reauthenticate\(\)/);
+  assert.match(source, /requestPasswordCode/);
+  assert.match(source, /email_confirmed_at/);
+  assert.match(read("src/app/account/profile/form.tsx"), /action=\{sendCode\}/);
+});
