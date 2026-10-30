@@ -43,8 +43,8 @@ export async function createDraftFromReviewedVariant(
   if (typeof storeId!=="string" || !uuid.test(storeId) ||
       typeof candidateId!=="string" || !uuid.test(candidateId) ||
       typeof sku!=="string" || sku.trim().length<1 || sku.trim().length>60 ||
-      typeof price!=="string" || !/^\\d{1,7}(\\.\\d{1,2})?$/.test(price) ||
-      typeof stock!=="string" || !/^(0|[1-9]\\d{0,6})$/.test(stock) ||
+      typeof price!=="string" || !/^\d{1,7}(\\.\d{1,2})?$/.test(price) ||
+      typeof stock!=="string" || !/^(0|[1-9]\d{0,6})$/.test(stock) ||
       confirmedPrice!=="on" || (Number(stock)>0 && stockVerified!=="on") ||
       typeof description!=="string" || description.length>1500) {
     return {ok:false,message:"Enter a draft SKU, an approved retail price and a confirmed stock quantity. Check the required confirmations."};
