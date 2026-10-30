@@ -36,3 +36,10 @@ test("runtime dependency versions are exact pins", () => {
   assert.equal(pkg.dependencies["@supabase/ssr"], "0.12.7");
   assert.equal(pkg.dependencies["@supabase/supabase-js"], "2.118.0");
 });
+
+test("package lock and CI install from pinned dependencies", () => {
+  const lock = JSON.parse(read("package-lock.json"));
+  assert.equal(lock.packages[""].dependencies["@supabase/ssr"], "0.12.7");
+  assert.equal(lock.packages[""].dependencies["@supabase/supabase-js"], "2.118.0");
+  assert.match(read(".github/workflows/ci.yml"), /npm ci --no-audit --no-fund/);
+});

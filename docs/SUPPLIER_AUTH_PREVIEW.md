@@ -19,3 +19,7 @@
 - Live password-form submission through the protected Vercel preview and the user's real browser remains unverified until those accounts exist.
 - Before real supplier onboarding: explicit admin provisioning flow with audit, MFA for admins, rate-limit/CAPTCHA review, stale-session handling and supplier invitation approval. **No new database migrations or production deployment in this pass.**
 - PR review chain: planning #1 → app #13 → SQL foundation #14 → catalog preview #15 → this supplier-auth PR.
+
+## Dependency and review note
+
+The exact pinned dependency graph is checked in via `package-lock.json`, created by a temporary one-shot GitHub Action. That temporary write-enabled workflow was removed after successful generation. CI now installs with `npm ci` to verify the lockfile rather than resolving fresh versions.
