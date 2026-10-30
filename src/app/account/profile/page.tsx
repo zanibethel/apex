@@ -14,7 +14,7 @@ export default async function ProfilePage() {
     redirect("/admin/sign-in");
 
   return <main className="container supplier-shell">
-    <Link href="/admin" className="back">← Control room</Link>
+    <Link href={data.user.app_metadata?.apex_role === "platform_admin" ? "/admin" : "/supplier"} className="back">← Workspace</Link>
     <p className="eyebrow">APEX / MY PROFILE</p>
     <h1>Account settings</h1>
     <section className="supplier-panel">

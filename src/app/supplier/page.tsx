@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupplierServerClient } from "@/lib/supabase/server";
 import { signOutSupplier } from "./actions";
@@ -42,6 +43,7 @@ export default async function SupplierWorkspace() {
           ))}</ul>
         ) : <p>No stores have been assigned yet.</p>}
         <p className="notice">Preview only. Inventory changes, orders, checkout and payouts are disabled.</p>
+        <Link href="/account/profile" className="button secondary">My profile</Link>
       </section>
     </main>
   );

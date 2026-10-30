@@ -59,6 +59,8 @@ export async function changeOwnPassword(
   }
 
   // Revoke the active session and all other Supabase sessions.
-  await client.auth.signOut({ scope: "global" });
-  return { ok: true, message: "Your Apex password was changed. Sign in again using the new password." };
+  const { error: signOutError } = await client.auth.signOut({ scope: "global" });
+  return signOutError
+    ? { ok: true, message: "Password updated, but we could not confirm all sessions were revoked. Sign out on your devices and sign in again." }
+    : { ok: true, message: "Your Apex password was changed. Sign in again using the new password." };
 }
