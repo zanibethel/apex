@@ -45,3 +45,9 @@ Developer proposed increasing to **3–4 focused hours per day** and aiming for 
 - First code branch: Next.js/TypeScript shell, branded mobile-first concept pages, demo-only catalog placeholder, source-level tests and GitHub CI. These are authored for review; [GitHub Actions initial verification passed](https://github.com/zanibethel/apex/actions/runs/40968759178) (lint, typecheck, tests and build), but the code is **not merged or deployed**.
 - Funding ledger and exact sprint scope: [Sprint 01](SPRINT_01_KICKOFF.md).
 - No catalog inventory, checkout or payment code is activated.
+
+## Connected infrastructure update (October 29)
+
+- Vercel `apex` is Git-linked to this repository, built Next.js 22 successfully from the unmerged application branch and reports READY. **The initial deployment was assigned a production target**, so Vercel Authentication was enabled for **all** Apex deployments; it is not public or commercially active.
+- The dedicated Supabase **Apex** project now exists under `zanibethel's Org` in `us-east-1`, ref `fhqpkpztercadcxspdkg`, verified `ACTIVE_HEALTHY`. The user approved Supabase's **$10/month** recurring project quote. Following a separate “Ok go” authorization after RLS review, the six-table catalog schema was applied as Supabase migration **`20261029233701_apex_initial_catalog_readonly`**. All six tables are empty and RLS-enabled; no app write grants; Supabase security advisor returned zero findings. The schema PR #14 is still unmerged and should be reviewed before merging; no checkout or payment capabilities have been activated.
+- Provider IDs, review chain, protection and next gates are in [infrastructure registry](INFRASTRUCTURE_STATUS.md).

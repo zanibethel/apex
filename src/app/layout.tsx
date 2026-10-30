@@ -18,6 +18,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <nav aria-label="Main navigation">
               <Link href="/catalog">Catalog</Link>
               <Link href="/#approach">Approach</Link>
+              <Link href="/supplier/sign-in">Supplier login</Link>
+              <Link href="/admin/sign-in">Admin</Link>
             </nav>
             <span className="demo-chip">DEMO ONLY</span>
           </div>
