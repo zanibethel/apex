@@ -1,0 +1,39 @@
+name: Bitcoin regtest smoke (test coins only)
+
+on:
+  pull_request:
+    paths:
+      - "infra/regtest/**"
+      - "scripts/regtest-smoke.mjs"
+      - "tests/regtest-smoke.test.mjs"
+      - "src/lib/payments/btcpay-sandbox.mjs"
+      - ".github/workflows/regtest.yml"
+  push:
+    branches:
+      - "feat/bitcoin-regtest-node-and-split-smoke-2026-10-30"
+    paths:
+      - "infra/regtest/**"
+      - "scripts/regtest-smoke.mjs"
+      - "tests/regtest-smoke.test.mjs"
+      - "src/lib/payments/btcpay-sandbox.mjs"
+      - ".github/workflows/regtest.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  bitcoin-regtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Start isolated Bitcoin Core regtest container
+        run: docker compose -p apex-regtest -f infra/regtest/compose.yml up -d --wait
+      - name: Verify a synthetic BTC payment and two output destinations
+        run: node scripts/regtest-smoke.mjs
+      - name: Destroy disposable test wallets and chain
+        if: always()
+        run: docker compose -p apex-regtest -f infra/regtest/compose.yml down --volumes --remove-orphans
