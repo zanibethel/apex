@@ -45,7 +45,7 @@ export default async function SharedCatalog() {
 
   const [products,categories,inventory,candidates,mappings]=await Promise.all([
     client.from("products")
-      .select("id,store_id,category_id,sku,name,description,price_cents,compare_at_price_cents,is_active,image_path,currency,is_published")
+      .select("id,store_id,category_id,sku,name,description,price_cents,internal_source_cost_cents,compare_at_price_cents,is_active,image_path,currency,is_published")
       .in("store_id",ids).order("name",{ascending:true}).limit(100),
     client.from("categories").select("id,store_id,name").in("store_id",ids).limit(100),
     client.from("inventory_items").select("product_id,store_id,quantity_on_hand,quantity_reserved")
@@ -77,7 +77,7 @@ export default async function SharedCatalog() {
   const linkedProductIds=new Set(mappings.data?.map(m=>m.product_id)??[]);
   type ProductRow=NonNullable<typeof products.data>[number];
 
-  function productFields(product:ProductRow) {
+  function productFields(product:ProductRow,allowDirectSourceEdit=false) {
     const price=Number(product.price_cents);
     const compare=product.compare_at_price_cents==null?null:Number(product.compare_at_price_cents);
     const inv=stock.get(product.id);
@@ -108,6 +108,10 @@ export default async function SharedCatalog() {
         ? <ProductRowEditor
           storeId={product.store_id} productId={product.id} name={product.name}
           description={product.description??""} price={(price/100).toFixed(2)}
+          directSourceCost={allowDirectSourceEdit
+            ? product.internal_source_cost_cents==null?""
+              :(Number(product.internal_source_cost_cents)/100).toFixed(2)
+            : undefined}
           comparePrice={compare===null?"":(compare/100).toFixed(2)}
           isActive={product.is_active} categoryId={product.category_id}
           categories={choices} enabled={canWrite}/>
@@ -177,8 +181,8 @@ export default async function SharedCatalog() {
                 <span className="eyebrow">{product.sku}</span>
                 <h3>{product.name}</h3>
               </div>
-              <p className="notice">No source cost linked to this product.</p>
-              {productFields(product)}
+              <p className="notice">This product has its own private, editable source cost.</p>
+              {productFields(product,true)}
             </article>
           )}
         </div>}
