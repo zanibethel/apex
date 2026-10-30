@@ -88,7 +88,7 @@ export default async function SupplierWorkspace() {
     <section className="supplier-panel" style={{ marginTop: 24 }}>
       <h2>Store operations</h2>
       <p>Product editing, stock adjustments, order handling, and payments are not enabled in this technical preview.</p>
-      <Link href="/account/profile" className="button secondary">My profile and password</Link>
+      <div className="actions"><Link href="/supplier/catalog" className="button primary">View shared catalog</Link><Link href="/account/profile" className="button secondary">My profile and password</Link></div>
     </section>
   </main>;
 }
