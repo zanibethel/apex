@@ -24,11 +24,19 @@ export async function saveDraftPayoutSplit(_previous:Result,form:FormData):Promi
   // RLS additionally requires trusted app_metadata and the exact signed-in editor.
   const check=await client.from("stores").select("id").eq("id",storeId).maybeSingle();
   if(check.error || !check.data) return {ok:false,message:"Storefront unavailable."};
-  const updated=await client.from("store_split_drafts").upsert({
-    store_id:storeId, supplier_percent:percent, edited_by:data.user!.id,
-    updated_at:new Date().toISOString(),
-  },{onConflict:"store_id"});
-  if(updated.error) return {ok:false,message:"The draft payout proposal could not be saved."};
+  const existing=await client.from("store_split_drafts")
+    .select("store_id").eq("store_id",storeId).maybeSingle();
+  if(existing.error) return {ok:false,message:"Could not verify existing draft split."};
+  const updated=existing.data
+    ? await client.from("store_split_drafts")
+      .update({supplier_percent:percent,edited_by:data.user!.id,
+        updated_at:new Date().toISOString()})
+      .eq("store_id",storeId).select("store_id").maybeSingle()
+    : await client.from("store_split_drafts")
+      .insert({store_id:storeId,supplier_percent:percent,edited_by:data.user!.id})
+      .select("store_id").maybeSingle();
+  if(updated.error || !updated.data)
+    return {ok:false,message:"The draft payout proposal could not be saved."};
   revalidatePath("/admin/splits");
   return {ok:true,message:"Proposed split saved with an audit entry. No live payout configuration changed."};
 }
