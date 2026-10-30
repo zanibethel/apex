@@ -18,7 +18,7 @@ services:
     networks:
       - isolated_regtest
     healthcheck:
-      test: ["CMD", "bitcoin-cli", "-regtest", "getblockchaininfo"]
+      test: ["CMD", "bitcoin-cli", "-datadir=/home/bitcoin/.bitcoin", "-regtest", "getblockchaininfo"]
       interval: 3s
       timeout: 5s
       retries: 30
