@@ -21,6 +21,9 @@ export function NewProductForm({storeId,enabled,categories}:{storeId:string;enab
       <input id="draft-product-sku" name="sku" maxLength={60} required disabled={!enabled}/>
       <label htmlFor="draft-product-price">Price (USD)</label>
       <input id="draft-product-price" name="price" type="number" min="0" max="9999999.99" step=".01" required disabled={!enabled}/>
+      <label htmlFor="draft-compare-price">Compare-at price (USD, optional)</label>
+      <input id="draft-compare-price" name="comparePrice" type="number" step=".01" min="0"
+        max="9999999.99" disabled={!enabled} placeholder="Only if a truthful, substantiated reference price"/>
       <label htmlFor="draft-product-category">Category</label>
       <select id="draft-product-category" name="categoryId" disabled={!enabled}>
         <option value="">Uncategorized</option>
@@ -49,8 +52,9 @@ export function NewCategoryForm({storeId,enabled}:{storeId:string;enabled:boolea
   </section>;
 }
 
-export function ProductRowEditor({storeId,productId,name,price,categoryId,categories,enabled}:{
-  storeId:string;productId:string;name:string;price:string;categoryId:string|null;categories:{id:string;name:string}[];enabled:boolean;
+export function ProductRowEditor({storeId,productId,name,description,price,comparePrice,isActive,categoryId,categories,enabled}:{
+  storeId:string;productId:string;name:string;description:string;price:string;comparePrice:string;
+  isActive:boolean;categoryId:string|null;categories:{id:string;name:string}[];enabled:boolean;
 }) {
   const [state,action,pending]=useActionState(updateDraftProduct,initial);
   const uid=useId();
@@ -59,8 +63,18 @@ export function ProductRowEditor({storeId,productId,name,price,categoryId,catego
     <input type="hidden" name="productId" value={productId}/>
     <label htmlFor={uid+"n"}>Draft name</label>
     <input id={uid+"n"} name="name" defaultValue={name} maxLength={120} required disabled={!enabled}/>
+    <label htmlFor={uid+"d"}>Description</label>
+    <textarea id={uid+"d"} name="description" defaultValue={description} rows={3}
+      maxLength={1500} disabled={!enabled}/>
     <label htmlFor={uid+"p"}>USD price</label>
     <input id={uid+"p"} name="price" defaultValue={price} type="number" min="0" step=".01" max="9999999.99" required disabled={!enabled}/>
+    <label htmlFor={uid+"cmp"}>Compare-at price (optional)</label>
+    <input id={uid+"cmp"} name="comparePrice" defaultValue={comparePrice}
+      type="number" min="0" max="9999999.99" step=".01" disabled={!enabled}/>
+    <p className="notice">Only use a genuine reference price; this is not the supplier wholesale cost.</p>
+    <label htmlFor={uid+"active"}>Active in internal catalog</label>
+    <input id={uid+"active"} name="isActive" type="checkbox" defaultChecked={isActive} disabled={!enabled}/>
+    <p className="notice">Inactive products are hidden from future checkout; active does not publish a draft.</p>
     <label htmlFor={uid+"c"}>Category</label>
     <select id={uid+"c"} name="categoryId" defaultValue={categoryId??""} disabled={!enabled}>
       <option value="">Uncategorized</option>
