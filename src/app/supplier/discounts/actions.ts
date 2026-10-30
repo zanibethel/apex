@@ -105,6 +105,6 @@ export async function previewSupplierDiscount(_prev:State,form:FormData):Promise
   if(error)return {ok:false,message:"Could not preview discount."};
   const result=quoteDiscount(data,subtotal);
   if(!result.eligible)return {ok:false,message:result.reason};
-  const fmt=n=>(n/100).toLocaleString("en-US",{style:"currency",currency:"USD"});
+  const fmt=(n:number)=>(n/100).toLocaleString("en-US",{style:"currency",currency:"USD"});
   return {ok:true,message:`Test quote: ${fmt(subtotal)} − ${fmt(result.discountCents)} = ${fmt(result.totalCents)}. No checkout or redemption occurred.`};
 }
