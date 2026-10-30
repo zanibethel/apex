@@ -77,7 +77,7 @@ export default async function SharedCatalog() {
     <p className="eyebrow">APEX / PRIVATE SUPPLIER CATALOG</p>
     <h1>Shared catalog.</h1>
     <p className="lead">The same catalog is visible to every authorized member of your supplier team.</p>
-    <p className="notice">Private draft catalog. Products are not published or sold through these controls.</p>
+    <p className="notice">Read-only preview by default. Draft editing unlocks only after reviewed database permissions and an explicit staging flag. Products are not published or sold through these controls.</p>
     <div className="actions"><Link className="button secondary" href="/supplier/inventory">Manage inventory</Link><Link className="button secondary" href="/supplier/reports">Sales history</Link></div>
     {stores.length === 1 && <div className="feature-grid" style={{gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",marginBottom:24}}>
       <NewProductForm storeId={stores[0].id} enabled={canWrite}/>
