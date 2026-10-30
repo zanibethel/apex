@@ -19,6 +19,7 @@ export default async function MultiSplitConfigurationPage() {
     <p className="eyebrow">APEX / ADMIN / PAYMENTS</p>
     <h1>Multi-recipient split preview</h1>
     <p className="notice">Planning mode only. Changes are not saved, published, or sent to a Bitcoin processor.</p>
+    <p><Link href="/admin/recipients">Manage payout recipients →</Link></p>
     <MultiSplitPreview />
     {recipientError && <p className="notice">Recipient directory is unavailable until the payout schema is installed.</p>}
     <SaveSplitDraft enabled={process.env.APEX_MULTI_SPLIT_DRAFT_WRITES_ENABLED === "true" && !recipientError} recipients={recipients ?? []} />
