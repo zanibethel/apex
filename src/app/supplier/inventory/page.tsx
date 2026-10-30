@@ -10,9 +10,10 @@ export default async function InventoryPage() {
   const w = await getSupplierWorkspace();
   if (!w) redirect("/supplier/sign-in");
   const ids = w.stores.map(s => s.id);
-  const [items, products] = await Promise.all([
+  const [items, products, candidates] = await Promise.all([
     w.client.from("inventory_items").select("store_id,product_id,quantity_on_hand,quantity_reserved").in("store_id",ids).limit(100),
     w.client.from("products").select("id,store_id,sku,name,is_published").in("store_id",ids).limit(100),
+    w.client.from("supplier_import_candidates").select("id", {count:"exact",head:true}).in("store_id",ids),
   ]);
   const names = new Map(products.data?.map(p => [p.id,p]) ?? []);
   const enabled = process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED === "true";
@@ -24,7 +25,10 @@ export default async function InventoryPage() {
     <p className="lead">Both suppliers see the same inventory records. Changes require matching current counts and are audited.</p>
     {items.error || products.error ? <p>Inventory data is temporarily unavailable.</p>
       : !items.data?.length ? <section className="supplier-panel">
-        <h2>No inventory yet.</h2><p>Create a draft product to begin tracking stock.</p>
+        <h2>No confirmed inventory yet.</h2>
+        <p>{!candidates.error && candidates.count != null ? `${candidates.count} source variants are awaiting supplier review. Their actual stock quantities have not been provided.` : "Supplier source quantities have not yet been verified."}</p>
+        <p>Create a draft product and enter confirmed quantities to begin stock management.</p>
+        <Link className="button secondary" href="/supplier/imports">Review source variants</Link>
         <Link className="button secondary" href="/supplier/catalog">Products</Link>
       </section>
       : <section className="supplier-panel" style={{maxWidth:"none"}}>
