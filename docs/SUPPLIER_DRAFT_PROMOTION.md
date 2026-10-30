@@ -24,7 +24,7 @@ The shared supplier cost sheet contains 63 variants and 47 distinct product name
 - Disposable PostgreSQL CI: `database/tests/supplier_candidate_draft_promotion_integration.sql` extends the existing tenant isolation fixtures and tests approved-only, duplicate rollback, explicit retail price/quantity, internal audit and cross-member denial.
 - JS guardrail tests verify RLS-invoker semantics, unique mapping, server-side membership, explicit confirmation and UI conditions.
 - Use a controlled verified supplier account to test full page flow in the protected preview. Do **not** use unverified supplier data as a stand-in for real retail/stock validation.
-- Proposed SQL should be applied to the Apex **development** Supabase project only after tests pass and the review gate is satisfied. Apply via a guarded migration; do not put secrets or wholesale price rows into the repository.
+- The migration was dry-run in a rolled-back transaction with the real existing member permission model. It passed approved-only creation, explicit $34.99 price / 2-unit count, duplicate rollback and non-supplier denial. After successful rollback verification, it was applied to the dedicated Apex **development** Supabase project. RLS and SECURITY INVOKER were checked; all 63 import candidates remained and zero products, inventory records or source links were created by applying the schema. No secrets or wholesale cost rows are in the repository.
 - After applying staging migration, enable `APEX_DRAFT_CATALOG_WRITES_ENABLED=true` **on this feature preview branch only**; retain production off. Validate direct URL and unauthorized access fail closed.
 
 ## Current-state caution
