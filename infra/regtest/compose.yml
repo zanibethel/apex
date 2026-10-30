@@ -1,0 +1,32 @@
+# Isolated, disposable Bitcoin Core REGTEST node.
+# NEVER reuse this file, its wallets, or test image for real funds.
+# No published ports; RPC stays inside the container and is accessed through docker compose exec.
+services:
+  node:
+    image: bitcoin/bitcoin:28.0
+    restart: "no"
+    command:
+      - -regtest=1
+      - -server=1
+      - -printtoconsole=1
+      - -txindex=1
+      - -fallbackfee=0.0002
+      - -listen=0
+      - -discover=0
+    volumes:
+      - regtest_chain:/home/bitcoin/.bitcoin
+    networks:
+      - isolated_regtest
+    healthcheck:
+      test: ["CMD", "bitcoin-cli", "-regtest", "getblockchaininfo"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+networks:
+  isolated_regtest:
+    internal: true
+
+volumes:
+  regtest_chain:
