@@ -103,6 +103,11 @@ export async function adjustInventory(_previous: Result, form: FormData): Promis
      expected<0||target<0||target>1000000||target===expected) {
     return {ok:false,message:"Enter a different valid stock quantity."};
   }
+  const { data: draft, error: draftError } = await store.client.from("products")
+    .select("id").eq("id", productId).eq("store_id", store.storeId)
+    .eq("is_published", false).maybeSingle();
+  if (draftError || !draft) return {ok:false,message:"Only private draft products can have their stock adjusted here."};
+
   // CAS avoids silently overwriting a colleague's concurrent inventory adjustment.
   // Database trigger atomically records before/after counts and actor.
   const {data,error}=await store.client.from("inventory_items")
