@@ -61,3 +61,4 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f database/tests/catalog_rls_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_operations_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_import_review_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_candidate_draft_promotion_integration.sql
