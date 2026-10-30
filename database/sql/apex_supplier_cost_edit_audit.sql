@@ -5,6 +5,13 @@ alter table public.supplier_import_candidates
   add constraint supplier_source_cost_range check (wholesale_cost_cents between 0 and 999999999);
 grant update (wholesale_cost_cents) on public.supplier_import_candidates to authenticated;
 
+-- Products created manually can carry their own private acquisition cost.
+-- Reviewed source-linked drafts use the candidate's audited source cost instead.
+alter table public.products add column internal_source_cost_cents bigint
+  check (internal_source_cost_cents is null or internal_source_cost_cents between 0 and 999999999);
+grant insert (internal_source_cost_cents) on public.products to authenticated;
+grant update (internal_source_cost_cents) on public.products to authenticated;
+
 create table public.supplier_source_cost_audit (
   id bigint generated always as identity primary key,
   candidate_id uuid not null references public.supplier_import_candidates(id),
