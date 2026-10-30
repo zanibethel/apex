@@ -62,25 +62,35 @@ with check (is_published=false and exists (
 create policy "supplier_inventory_insert" on public.inventory_items
 for insert to authenticated with check (
  quantity_on_hand >= quantity_reserved and exists (
-  select 1 from public.stores s join public.supplier_memberships sm
-   on s.supplier_id=sm.supplier_id
+  select 1 from public.stores s join public.supplier_memberships sm on s.supplier_id=sm.supplier_id
   where s.id=inventory_items.store_id and s.is_public=false
    and sm.user_id=(select auth.uid()) and sm.role in ('owner','manager')
+ ) and exists (
+  select 1 from public.products p where p.id=inventory_items.product_id
+   and p.store_id=inventory_items.store_id and p.is_published=false
  )
 );
 create policy "supplier_inventory_update" on public.inventory_items
-for update to authenticated using (exists (
- select 1 from public.stores s join public.supplier_memberships sm
-  on s.supplier_id=sm.supplier_id
- where s.id=inventory_items.store_id and s.is_public=false
-  and sm.user_id=(select auth.uid()) and sm.role in ('owner','manager')
-))
-with check (quantity_on_hand >= quantity_reserved and exists (
- select 1 from public.stores s join public.supplier_memberships sm
-  on s.supplier_id=sm.supplier_id
- where s.id=inventory_items.store_id and s.is_public=false
-  and sm.user_id=(select auth.uid()) and sm.role in ('owner','manager')
-));
+for update to authenticated using (
+ exists (
+  select 1 from public.stores s join public.supplier_memberships sm on s.supplier_id=sm.supplier_id
+  where s.id=inventory_items.store_id and s.is_public=false
+   and sm.user_id=(select auth.uid()) and sm.role in ('owner','manager')
+ ) and exists (
+  select 1 from public.products p where p.id=inventory_items.product_id
+   and p.store_id=inventory_items.store_id and p.is_published=false
+ )
+)
+with check (
+ quantity_on_hand >= quantity_reserved and exists (
+  select 1 from public.stores s join public.supplier_memberships sm on s.supplier_id=sm.supplier_id
+  where s.id=inventory_items.store_id and s.is_public=false
+   and sm.user_id=(select auth.uid()) and sm.role in ('owner','manager')
+ ) and exists (
+  select 1 from public.products p where p.id=inventory_items.product_id
+   and p.store_id=inventory_items.store_id and p.is_published=false
+ )
+);
 
 -- Append-only audit records maintained by non-exposed, locked-down trigger code.
 create schema if not exists apex_internal;
