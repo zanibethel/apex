@@ -27,7 +27,7 @@ export default async function AdminSplitsPage() {
 
   return <main className="container supplier-shell">
     <Link className="back" href="/admin">← Admin dashboard</Link>
-    <p className="eyebrow">APEX / PLATFORM CONTROLS</p><h1>Payout allocations.</h1>
+    <p className="eyebrow">APEX / PLATFORM CONTROLS</p><h1>Payout allocations.</h1>\n    <p><Link className="button secondary" href="/admin/splits/configure">Preview configurable multi-recipient splits</Link></p>
     <p className="lead">Prepare proposed storefront revenue splits. Only platform administrators can change these drafts.</p>
     <p className="notice">Neither draft changes nor their audit history alter the BTCPay/Prism payout configuration. No live transfers are enabled.</p>
     {storeError ? <p>Storefronts could not be loaded.</p>
