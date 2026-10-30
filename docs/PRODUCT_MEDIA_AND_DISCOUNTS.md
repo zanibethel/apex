@@ -29,3 +29,11 @@ Do not enable actual code redemption, payments, order placement, Bitcoin payouts
 4. Lily and Tierra test the same draft catalog. Nonmember must be denied. Verify source variants remain unverified without explicit supplier review.
 5. Review screenshot/visual quality and protect against malicious uploads (image signatures, resize/transcode and abandoned-object cleanup can be added before public publishing).
 6. Keep production branch and live commerce separate until product authorization, payment provider eligibility, MFA, rate limits, wallet-signing controls and audit/reconciliation are verified.
+
+## Development installation status — October 30, 2026
+- GitHub Actions combined application/DB CI passed for the implementation after the strict TypeScript correction.
+- The product/discount and Storage RLS migrations have been **applied to the dedicated Apex development Supabase project only**. Verified `products`, `supplier_discount_codes`, and `supplier_discount_audit` have RLS; Storage bucket `apex-draft-product-images` is **private**, 3 MiB limited and accepts JPEG/PNG/WebP, with scoped INSERT/SELECT policies and no write/delete policies.
+- Post-installation verification: **63 supplier import candidates**, zero actual product records, zero discount-code records, zero discount audit records.
+- Server feature flags for product edits, private image uploads, draft codes and preexisting test wallet/split features are enabled **only on the feature branch Vercel preview**.
+- A full supplier account-holder browser upload and checkout simulation is still pending. Do not claim live checkout applicability, actual coupon redemption, image propagation or production readiness until explicitly tested.
+- Remaining auth warning: enable Supabase leaked-password protection before release.
