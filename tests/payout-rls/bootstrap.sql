@@ -13,3 +13,8 @@ insert into auth.users(id) values
  ('00000000-0000-0000-0000-000000000001'),
  ('00000000-0000-0000-0000-000000000002'),
  ('00000000-0000-0000-0000-000000000003');
+
+create function auth.jwt() returns jsonb language sql stable as $$
+ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb
+$$;
+grant execute on function auth.jwt() to authenticated;
