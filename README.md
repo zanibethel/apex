@@ -1,6 +1,6 @@
 # Apex — founding-supplier marketplace
 
-**Status: planning / partner review; no live checkout.** This repository is the source of truth for the planned application and its technical decisions. As of 2026-10-29 the repository contains planning documentation only.
+**Status: planning / partner review; no live checkout.** This repository is the source of truth for the planned application and its technical decisions. Planning was captured first; the initial Next.js non-transactional preview is now proposed in [implementation PR #13](https://github.com/zanibethel/apex/pull/13).
 
 ## Product at a glance
 - Working brand: **Apex Anabolics** (brand rights and domain **not yet confirmed**).
@@ -35,4 +35,12 @@
 **This GitHub repository is public.** Do not commit private partner proposals, signed contracts, customer or supplier PII, credentials, wallet recovery material, private keys, API keys, or actual wallet addresses. Keep sensitive negotiated terms in a private approved system. This repository may document proposed technical economics; it does not constitute a signed agreement.
 
 ## Implementation status
-No production service is provisioned or authorized by these documents. Code and configuration will be added through separate reviewed PRs. Do not infer that a design decision, price estimate, approval, wallet, or domain has been finalized merely because it is documented here.
+An initial Next.js App Router / TypeScript demo has been authored in [PR #13](https://github.com/zanibethel/apex/pull/13) and passed [lint, typecheck, guardrail and build CI](https://github.com/zanibethel/apex/actions/runs/40968759178). It is not merged or deployed. Run locally after checking out the implementation branch:
+
+```sh
+npm install
+npm run dev
+npm run check
+```
+
+No real supplier catalog, transactional checkout, payment server or production service is provisioned or authorized by this source code. Further changes will follow separately reviewed PRs. Do not infer that a design decision, price estimate, approval, wallet, or domain has been finalized merely because it is documented here.

@@ -1,0 +1,65 @@
+name: Apex quality checks
+on:
+  push:
+    branches: [main, "docs/**", "feat/**"]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Guardrails
+        run: npm run test
+      - name: Build
+        run: npm run build
+
+  rls-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_ci_only
+          POSTGRES_DB: apex_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d apex_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+      - name: Test catalog SQL and tenant boundaries in disposable PostgreSQL
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGDATABASE: apex_test
+          PGPASSWORD: local_ci_only
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/catalog_rls_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_operations_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_import_review_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_candidate_draft_promotion_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/product_media_promos_integration.sql
