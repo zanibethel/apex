@@ -44,9 +44,13 @@ export async function createDraftProduct(_previous: Result, form: FormData): Pro
   const name=validName(form.get("name"),120), sku=validName(form.get("sku"),60);
   const price_cents=dollarsToCents(form.get("price"));
   const description=String(form.get("description")??"").trim().slice(0,1500);
+  const categoryRaw=form.get("categoryId");
+  if (typeof categoryRaw!=="string" || (categoryRaw!=="" && !uuid.test(categoryRaw)))
+    return {ok:false,message:"Invalid category."};
+  const category_id=categoryRaw||null;
   if (!name || !sku || price_cents === null) return {ok:false,message:"Enter a name, SKU and valid USD price."};
   const {data,error} = await store.client.from("products")
-    .insert({store_id:store.storeId,name,sku,description,price_cents,currency:"USD"})
+    .insert({store_id:store.storeId,name,sku,description,price_cents,currency:"USD",category_id})
     .select("id").single();
   if (error || !data) return {ok:false,message:"Draft product was not saved. The SKU may already be in use."};
   const inventory=await store.client.from("inventory_items")
@@ -64,11 +68,15 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
   const productId=form.get("productId");
   const name=validName(form.get("name"),120);
   const price_cents=dollarsToCents(form.get("price"));
+  const categoryRaw=form.get("categoryId");
+  if(typeof categoryRaw!=="string" || (categoryRaw!=="" && !uuid.test(categoryRaw)))
+    return {ok:false,message:"Invalid category."};
+  const category_id=categoryRaw||null;
   if(typeof productId!=="string" || !uuid.test(productId) || !name || price_cents===null) {
     return {ok:false,message:"Invalid product details."};
   }
   const {data,error}=await store.client.from("products")
-    .update({name,price_cents})
+    .update({name,price_cents,category_id})
     .eq("id",productId).eq("store_id",store.storeId).eq("is_published",false)
     .select("id").maybeSingle();
   if(error || !data) return {ok:false,message:"Draft not updated. Check your membership or product status."};
