@@ -46,3 +46,5 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/direct-write-denial.sql
       - name: Verify invalid payout drafts are rejected
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/draft-rpc-negative.sql
+      - name: Verify active payout rule immutability
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/non-draft-immutable.sql
