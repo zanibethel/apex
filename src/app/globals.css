@@ -256,3 +256,134 @@ body { background:#07080b; }
  .site-header .apex-logo-link { width:142px; height:62px; flex-basis:142px; }
  .apex-profile-grid { grid-template-columns:1fr; }
 }
+
+
+/* Phase 2: compact private supplier product cards. Native details keep controls
+   accessible without always displaying several long forms on mobile. */
+.apex-card-editor,.apex-create-details{
+  min-width:0;
+  border:1px solid rgba(204,207,217,.22);
+  border-radius:10px;
+  background:#111217;
+  overflow:visible;
+}
+.apex-card-editor > summary,.apex-create-details > summary{
+  display:list-item;
+  cursor:pointer;
+  padding:13px 14px;
+  min-height:48px;
+  color:#eeeef2;
+  font-weight:700;
+  line-height:1.4;
+  list-style-position:inside;
+}
+.apex-card-editor > summary:focus-visible,.apex-create-details > summary:focus-visible{
+  outline:3px solid #f5c46c;
+  outline-offset:3px;
+}
+.apex-card-editor[open] > summary,.apex-create-details[open] > summary{
+  border-bottom:1px solid rgba(204,207,217,.16);
+}
+.apex-card-editor > :not(summary),.apex-create-details > :not(summary){
+  margin:12px;
+}
+.apex-card-editor .supplier-form,.apex-create-details .supplier-panel{
+  min-width:0;
+}
+.apex-content-checklist{
+  border:1px solid rgba(213,102,126,.28);
+  border-radius:9px;
+  background:rgba(135,12,44,.09);
+  padding:12px 14px;
+  font-size:13px;
+}
+.apex-content-checklist strong{color:#f3dbe1}
+.apex-content-checklist p{margin:7px 0 0;line-height:1.5}
+.apex-source-state{color:#bfc0c9;font-size:13px;margin:0;text-transform:capitalize}
+@media(max-width:540px){
+ .apex-product-grid{gap:12px}
+ .apex-product-card{gap:12px;padding:14px}
+ .apex-product-fields{gap:10px}
+ .apex-card-editor > summary,.apex-create-details > summary{padding:12px}
+ .apex-product-create{gap:12px}
+}
+
+
+/* Supplier-facing private draft completion and explicit non-publication steps. */
+.apex-content-checklist h4{font-size:15px;margin:0 0 8px;color:#f4f0f2}
+.apex-setup-count{font-size:13px;color:#ecdae1;font-weight:700;margin:12px 0 8px}
+.apex-setup-missing,.apex-setup-all ul{
+  margin:0;padding:0;list-style:none;display:grid;gap:7px;
+}
+.apex-setup-missing li{
+  display:flex;flex-wrap:wrap;align-items:center;
+  justify-content:space-between;gap:6px 12px;
+  padding:9px 0;border-bottom:1px solid rgba(204,207,217,.13);
+  font-size:13px;
+}
+.apex-setup-missing li:last-child{border-bottom:0}
+.apex-setup-missing a{color:#ff99b3;text-decoration:underline;text-underline-offset:3px;font-weight:700}
+.apex-setup-missing a:focus-visible{outline:3px solid #f5c46c;outline-offset:3px}
+.apex-setup-view-only{color:#a9a9b2;font-size:12px}
+.apex-setup-all{margin-top:12px}
+.apex-setup-all summary{cursor:pointer;font-weight:700;min-height:42px;padding-block:10px}
+.apex-setup-all ul{padding-top:6px}
+.apex-setup-all li{font-size:13px;line-height:1.5;color:#d8d8df}
+.apex-publication-roadmap{
+  margin-top:14px;padding-top:14px;border-top:1px solid rgba(204,207,217,.2);
+}
+.apex-publication-roadmap h4{margin-bottom:8px}
+.apex-publication-roadmap ol{
+  margin:0;padding-left:20px;display:grid;gap:12px;
+}
+.apex-publication-roadmap li{padding-left:2px;font-size:13px;line-height:1.5}
+.apex-publication-roadmap li strong{display:block;color:#f0e4e8}
+.apex-publication-roadmap li span{display:block;color:#bfc0ca}
+.apex-publication-roadmap .notice{margin:12px 0 0;line-height:1.5}
+@media(max-width:540px){
+ .apex-content-checklist{padding:12px}
+ .apex-setup-missing li{align-items:flex-start}
+}
+
+
+/* Reuse of previously saved private product images (supplier-only). */
+.apex-image-picker{min-width:0;gap:11px}
+.apex-image-picker-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.apex-image-picker-tabs .button{min-width:0;min-height:46px;padding:10px 8px;font-size:13px}
+.apex-image-picker-tabs .button[aria-pressed="true"]{
+  border-color:#ed4b77;
+  box-shadow:inset 0 0 0 1px rgba(237,75,119,.6);
+  background:#311520;
+}
+.apex-existing-image-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;max-height:320px;overflow-y:auto;overscroll-behavior:contain;
+}
+.apex-existing-image-option{
+  min-width:0;display:flex;flex-direction:column;gap:5px;
+  text-align:left;color:#e9e9ef;border:1px solid #4a4b56;
+  background:#17181e;border-radius:10px;padding:8px;
+  cursor:pointer;font:inherit;
+}
+.apex-existing-image-option:hover,.apex-existing-image-option[aria-pressed="true"]{
+  border-color:#ed4b77;
+}
+.apex-existing-image-option[aria-pressed="true"]{
+  box-shadow:inset 0 0 0 1px #ed4b77;
+}
+.apex-existing-image-option:focus-visible{
+  outline:3px solid #f5c46c;outline-offset:2px;
+}
+.apex-existing-image-option img{
+  width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;
+  border-radius:6px;background:#0c0c0f;
+}
+.apex-existing-image-option span{
+  font-size:12px;line-height:1.4;overflow-wrap:anywhere;
+}
+.apex-existing-image-option small{
+  color:#bfc0c9;font-size:11px;overflow-wrap:anywhere;
+}
+@media(max-width:420px){
+ .apex-image-picker-tabs{grid-template-columns:1fr}
+}

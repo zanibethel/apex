@@ -7,6 +7,7 @@ import {ImportReviewForm} from "../imports/review-form";
 import {PromoteReviewedVariantForm} from "../imports/promote-form";
 import {ProductImageUploader} from "./image-uploader";
 import {SourceCostEditor} from "./source-cost-editor";
+import {draftContentChecklist,draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Shared Products | Apex",robots:{index:false,follow:false}};
@@ -41,7 +42,9 @@ export default async function SharedCatalog() {
 
   const ids=stores.map(store=>store.id);
   const canWrite=process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true" &&
-    stores.length===1&&!stores[0].is_public;
+    stores.length===1&&!stores[0].is_public &&
+    memberships.some(member=>member.supplier_id===stores[0].supplier_id &&
+      (member.role==="owner"||member.role==="manager"));
 
   const [products,categories,inventory,candidates,mappings]=await Promise.all([
     client.from("products")
@@ -81,6 +84,21 @@ export default async function SharedCatalog() {
     const price=Number(product.price_cents);
     const compare=product.compare_at_price_cents==null?null:Number(product.compare_at_price_cents);
     const inv=stock.get(product.id);
+    const checklist=draftContentChecklist({...product,price_cents:price});
+    const setup=draftSetupSteps({...product,price_cents:price},inv);
+    const missingSteps=setup.steps.filter(step=>!step.complete);
+    const reusableImages=canWrite?(products.data??[])
+      .filter(source=>source.store_id===product.store_id&&source.id!==product.id&&
+        !source.is_published&&Boolean(source.image_path)&&images.has(source.id))
+      .map(source=>({
+        productId:source.id,name:source.name,sku:source.sku,
+        previewUrl:images.get(source.id)!,
+      })):[];
+    function actionHref(action:string) {
+      if(action==="inventory")return "/supplier/inventory";
+      if(action==="category")return choices.length>0?`#details-${product.id}`:"#add-private-category";
+      return `#${action}-${product.id}`;
+    }
     return <div className="apex-product-fields">
       <div className="apex-product-photo">
         {images.get(product.id)
@@ -88,8 +106,6 @@ export default async function SharedCatalog() {
               width={480} height={320} unoptimized style={{width:"100%",height:"100%",objectFit:"cover"}}/>
           : <div className="apex-photo-placeholder">No image uploaded</div>}
       </div>
-      {!product.is_published &&
-        <ProductImageUploader storeId={product.store_id} productId={product.id} enabled={canWrite}/>}
       <div className="apex-product-meta">
         <span>SKU: {product.sku}</span>
         <span>{categoryNames.get(product.category_id??"")??"Uncategorized"}</span>
@@ -105,8 +121,60 @@ export default async function SharedCatalog() {
       <p className="notice">{inv
         ? `Inventory: ${inv.quantity_on_hand} on hand · ${inv.quantity_reserved} reserved`
         : "Inventory not tracked"}</p>
-      {!product.is_published
-        ? <ProductRowEditor
+      {!product.is_published && <section className="apex-content-checklist" aria-label="Product setup and storefront status">
+        <h4>Finish this product</h4>
+        <strong>Content checklist · {checklist.completed}/{checklist.total}</strong>
+        <p className="notice">{checklist.contentComplete
+          ? "Metadata complete for internal review. Not approved or published."
+          : `Still needed: ${checklist.missing.join(", ")}.`}</p>
+        <p className="apex-setup-count">
+          Draft setup: {setup.completed} of {setup.total} steps complete
+        </p>
+        {missingSteps.length>0
+          ? <ul className="apex-setup-missing">
+            {missingSteps.map(step=><li key={step.id}>
+              <span>{step.label}</span>
+              {canWrite ? <Link href={actionHref(step.action)}>
+                {step.action==="inventory"?"Manage inventory"
+                  :step.action==="image"?"Manage image"
+                  :step.action==="category"?(choices.length>0?"Select category":"Add category"):"Edit details"}
+              </Link> : <span className="apex-setup-view-only">Owner/manager action</span>}
+            </li>)}
+          </ul>
+          : <p className="notice">All internal product setup fields are filled. Approval remains separate.</p>}
+        <details className="apex-setup-all">
+          <summary>View all {setup.total} setup checks</summary>
+          <ul>
+            {setup.steps.map(step=><li key={step.id}>
+              <span aria-hidden="true">{step.complete?"✓":"○"}</span>
+              {" "}{step.label}: {step.complete?"Complete":"Needed"}
+            </li>)}
+          </ul>
+        </details>
+        <div className="apex-publication-roadmap">
+          <h4>Storefront: Not published</h4>
+          <ol>
+            <li><strong>Complete product setup</strong>
+              <span>{setup.setupComplete?"Done for internal data entry":"Finish the items above"}</span>
+            </li>
+            <li><strong>Admin and product eligibility review</strong>
+              <span>Not approved. Review process is separate from product editing.</span>
+            </li>
+            <li><strong>Release to storefront</strong>
+              <span>Not enabled. Public listing, category/store visibility and public image delivery require an approved release workflow.</span>
+            </li>
+          </ol>
+          <p className="notice">Active in internal catalog does not publish a product. There is no public publish button in this workspace. Images are private previews until a separately approved public image delivery process exists.</p>
+        </div>
+      </section>}
+      {!product.is_published && canWrite && <details id={`image-${product.id}`} className="apex-card-editor">
+        <summary>Manage product image</summary>
+        <ProductImageUploader storeId={product.store_id} productId={product.id}
+          enabled={canWrite} existingImages={reusableImages}/>
+      </details>}
+      {!product.is_published && <details id={`details-${product.id}`} className="apex-card-editor">
+        <summary>{canWrite?"Edit details, SKU and price":"View product details (read-only)"}</summary>
+        <ProductRowEditor
           storeId={product.store_id} productId={product.id} sku={product.sku} name={product.name}
           description={product.description??""} price={(price/100).toFixed(2)}
           directSourceCost={allowDirectSourceEdit
@@ -116,7 +184,8 @@ export default async function SharedCatalog() {
           comparePrice={compare===null?"":(compare/100).toFixed(2)}
           isActive={product.is_active} categoryId={product.category_id}
           categories={choices} enabled={canWrite}/>
-        : <p className="notice">Published records cannot be changed from the draft editor.</p>}
+      </details>}
+      {product.is_published && <p className="notice">Published records cannot be changed from the draft editor.</p>}
     </div>;
   }
 
@@ -148,12 +217,16 @@ export default async function SharedCatalog() {
                 <span className="eyebrow">SOURCE #{item.source_index+1} · {item.strength}</span>
                 <h3>{item.product_name}</h3>
               </div>
-              <SourceCostEditor storeId={item.store_id} candidateId={item.id}
-                costCents={Number(item.wholesale_cost_cents)} enabled={canWrite}/>
-              <div className="apex-product-review">
-                <ImportReviewForm storeId={item.store_id} candidateId={item.id}
-                  status={item.review_status} enabled={canWrite}/>
-              </div>
+              <p className="apex-source-state">Source review: {item.review_status.replaceAll("_"," ")}</p>
+              <details className="apex-card-editor">
+                <summary>{canWrite?"Review source and cost":"View source review (read-only)"}</summary>
+                <SourceCostEditor storeId={item.store_id} candidateId={item.id}
+                  costCents={Number(item.wholesale_cost_cents)} enabled={canWrite}/>
+                <div className="apex-product-review">
+                  <ImportReviewForm storeId={item.store_id} candidateId={item.id}
+                    status={item.review_status} enabled={canWrite}/>
+                </div>
+              </details>
               {linkedProduct?productFields(linkedProduct)
                :linkedId?<p className="notice">Draft linked. Open the full catalog to locate the product.</p>
                :item.review_status==="approved_for_draft"
@@ -190,8 +263,14 @@ export default async function SharedCatalog() {
     </section>
 
     {stores.length===1&&<div className="apex-product-create">
-      <NewProductForm storeId={stores[0].id} enabled={canWrite} categories={choices}/>
-      <NewCategoryForm storeId={stores[0].id} enabled={canWrite}/>
+      <details className="apex-create-details">
+        <summary>Create private draft product</summary>
+        <NewProductForm storeId={stores[0].id} enabled={canWrite} categories={choices}/>
+      </details>
+      <details id="add-private-category" className="apex-create-details">
+        <summary>Add private category</summary>
+        <NewCategoryForm storeId={stores[0].id} enabled={canWrite}/>
+      </details>
     </div>}
     {!products.data?.length&&<p className="notice">No products yet. Source variants remain private until a reviewed draft is created.</p>}
     <p className="notice">No public publishing, checkout, payments, or order creation is enabled.</p>
