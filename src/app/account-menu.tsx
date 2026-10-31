@@ -1,14 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { signOutAccount } from "@/app/account/sign-out/actions";
 
 export function AccountMenu({ signedIn, admin, supplier }: { signedIn: boolean; admin: boolean; supplier: boolean }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
-  useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
     if (!open) return;
     const closeOutside = (event: PointerEvent) => {
