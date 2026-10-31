@@ -58,7 +58,8 @@ test("unsaved or imported drafts cannot use tile preview to request publication"
  assert.match(inline,/Live preview of your current edits/);
  assert.match(inline,/row\.id/);
  assert.match(inline,/Select this row and choose Save selected to continue/);
- assert.match(inline,/Preview single &amp; publish/);
+ assert.match(inline,/Full preview/);
+ assert.match(inline,/onPublish/);
  assert.match(editor,/const savedSelected=selectedRows\.filter\(r=>Boolean\(r\.id\)&&!r\.needsSave\)/);
  assert.match(editor,/r\.id&&!r\.needsSave/);
  assert.match(editor,/saveBulkProductDrafts/);

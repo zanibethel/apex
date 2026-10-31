@@ -793,3 +793,15 @@ body { background:#07080b; }
    min-width:0;
  }
 }
+
+
+/* Direct private supplier publication request from completed bulk preview tiles. */
+.apex-bulk-inline-publish-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;}
+.apex-bulk-inline-publish-actions .button{display:flex;align-items:center;justify-content:center;min-height:44px;padding:9px;text-align:center;font-size:12px;}
+.apex-bulk-inline-publish-actions .button:disabled{opacity:.56;cursor:not-allowed;}
+.apex-bulk-publish-feedback{margin:0;color:#f1c9d7;font-size:12px;line-height:1.45;}
+.apex-bulk-footer>button{min-height:44px;}
+@media(max-width:500px){
+ .apex-bulk-inline-publish-actions{grid-template-columns:minmax(0,1fr);}
+ .apex-bulk-footer>button{flex:1 1 100%;width:100%;}
+}

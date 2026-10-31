@@ -2,6 +2,8 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {BulkDraftEditor} from "../bulk-editor";
+import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
+import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Bulk Product Editor | Apex Supplier",robots:{index:false,follow:false}};
@@ -27,13 +29,16 @@ export default async function BulkProductWorkspace(){
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
  const store=stores[0];
- const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:inventory,error:inventoryError}]=await Promise.all([
+ const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:inventory,error:inventoryError},{data:listingControls,error:listingError}]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).order("name").limit(100),
   client.from("categories").select("id,name").eq("store_id",store.id).order("name").limit(100),
   client.from("supplier_candidate_drafts").select("product_id").eq("store_id",store.id).limit(500),
   client.from("inventory_items").select("product_id,quantity_on_hand,quantity_reserved").eq("store_id",store.id).limit(250),
+  client.from("supplier_listing_controls")
+   .select("product_id,supplier_wants_listing,admin_gate,republish_approval_required,republish_approved")
+   .eq("store_id",store.id).limit(250),
  ]);
  if(productError||categoryError||linkedError||inventoryError)return <main className="container supplier-shell">
   <h1>Private catalog temporarily unavailable.</h1>
@@ -56,6 +61,20 @@ export default async function BulkProductWorkspace(){
   quantityOnHand:quantities.get(p.id)?.quantity_on_hand,
   quantityReserved:quantities.get(p.id)?.quantity_reserved,
  }));
+ const listingByProduct=new Map((listingControls??[]).map(c=>[c.product_id,c]));
+ const listing=(products??[]).map(p=>{
+  const control=listingByProduct.get(p.id);
+  const status=listingControlStatus(control);
+  const setup=draftSetupSteps(p,quantities.get(p.id));
+  const missing=setup.steps.filter(step=>!step.complete).map(step=>step.label);
+  return {
+   productId:p.id,
+   canRequest:!listingError&&setup.setupComplete&&status.canRequest&&!control?.supplier_wants_listing,
+   requested:!!control?.supplier_wants_listing,
+   status:listingError?"Publication status unavailable":status.label,
+   missing,
+  };
+ });
  const linkedProducts=new Set((linked??[]).map(p=>p.product_id));
  const initialRows=(products??[]).map(p=>({
   key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",
@@ -71,7 +90,7 @@ export default async function BulkProductWorkspace(){
   <p className="lead">Select products, make changes, save them, then choose Preview single or Preview all before publishing.</p>
   <p className="notice">New products begin as private drafts with zero stock. Save a draft to unlock its inline image picker and stock editor, then preview the completed offer. Nothing is made public by saving.</p>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
-   categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary}/>
+   categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}/>
   <p className="notice">Upload a new PNG/JPEG/WebP image or reuse an existing private product image; each reuse makes its own private copy. On-hand inventory updates use expected-count checks and are audited. Private source cost for linked variants still requires Source review. The first 100 private products are shown.</p>
  </main>;
 }
