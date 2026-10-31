@@ -44,7 +44,7 @@ test("reject malformed headers, duplicate columns and unexpected values",()=>{
  assert.match(parseProductCsv("title,price\n=cmd,10.00\n").errors.join(" "),/formula-style/);
  assert.match(parseProductCsv("title,price\nExample,10.00,extra\n").errors.join(" "),/expected/);
  assert.match(parseProductCsv("title,price\n\"Example,10.00\n").errors.join(" "),/unclosed/);
- assert.match(parseProductCsv("title,price\nExample,10.00\n".repeat(101)).errors.join(" "),/Duplicate|Unknown/);
+ assert.match(parseProductCsv("title,price\nExample,10.00\n".repeat(101)).errors.join(" "),/100 product rows/);
 });
 test("limit imported rows and CSV file size",()=>{
  const sample=raw(...Array.from({length:101},(_,i)=>"EX-"+i+",10.00"));
