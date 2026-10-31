@@ -77,3 +77,13 @@
 .apex-admin-card small { display:block; color:#bfc0c8; font-size:.91rem; line-height:1.45; margin-top:6px; }
 .apex-admin-arrow { margin-left:auto; font-size:1.4rem; }
 @media(max-width:600px) { .apex-admin-grid { grid-template-columns:1fr; } .apex-admin-card { min-height:100px; padding:16px; } }
+
+/* Compact allocation calculator */
+.apex-recipient-card { display:grid; gap:12px; width:100%; min-width:0; box-sizing:border-box; border:1px solid #494953; border-radius:14px; padding:16px; margin-top:12px; }
+.apex-recipient-fields { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; min-width:0; }
+.apex-recipient-card input { min-height:44px; }
+.apex-recipient-card button { justify-self:start; min-height:44px; }
+.apex-allocation-summary { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; margin-top:22px; }
+.apex-allocation-bar { display:flex; overflow:hidden; width:100%; height:12px; margin:12px 0 20px; border-radius:999px; background:#383841; }
+.apex-allocation-bar span { display:block; height:100%; }
+@media(max-width:420px) { .apex-recipient-fields { grid-template-columns:1fr; } }
