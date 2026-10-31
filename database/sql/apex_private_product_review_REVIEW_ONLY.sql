@@ -151,7 +151,7 @@ declare
  v_current jsonb;
  v_note text:=nullif(btrim(coalesce(p_note,'')),'');
 begin
- if v_actor is null or (select auth.jwt()) #>> '{app_metadata,apex_role}' <> 'platform_admin'
+ if v_actor is null or (select auth.jwt()) #>> '{app_metadata,apex_role}' is distinct from 'platform_admin'
  then raise exception 'Verified platform administrator access required'; end if;
  if p_decision not in ('changes_requested','approved_internal') or
     char_length(coalesce(p_note,''))>1000 or
