@@ -11,6 +11,7 @@ import {eligiblePrivatePublishIds} from "@/lib/catalog/bulk-publish-selection.mj
 import {CsvProductImport} from "./csv-product-import";
 import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-products.mjs";
 import {reconcileSavedBulkRow} from "@/lib/catalog/bulk-save-revision.mjs";
+import {filterSupplierBulkRows} from "@/lib/catalog/bulk-workspace-filter.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -33,6 +34,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
 }){
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
  const [showOfferTiles,setShowOfferTiles]=useState(true);
+ const [productSearch,setProductSearch]=useState("");
+ const [viewFilter,setViewFilter]=useState("all");
  const router=useRouter();
  const savedMedia=new Map(media.map(m=>[m.productId,m]));
  const [selected,setSelected]=useState<string[]>([]);
@@ -45,7 +48,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [publicationMessage,setPublicationMessage]=useState("");
  const busy=pending||publishPending;
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
- const selectedRows=rows.filter(r=>selectedSet.has(r.key));
+ const newlyRequested=new Set(publishResults.filter(item=>item.ok).map(item=>item.id));
+ const visibleRows=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested);
+ const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key));
  const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
  const selectedIds=savedSelected.map(r=>r.id!);
  const previewSelected=selectedIds.length&&selectedIds.length<=50
@@ -97,12 +102,14 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  }
  function addRows(count:number){
   if(!editable||busy||rows.length+count>250)return;
+  setProductSearch("");setViewFilter("all");
   const added=Array.from({length:count},()=>newRow());
   setRows(prev=>[...prev,...added]);
   setSelected(prev=>[...prev,...added.map(r=>r.key)]);
  }
  function loadFromCsv(imported:BulkEditRow[]){
   if(busy)return;
+  setProductSearch("");setViewFilter("all");
   const incoming=new Set(imported.map(r=>r.key));
   // Put new or updated CSV cards FIRST, so an upload does not disappear
   // beneath up to 100 existing products on narrow/mobile screens.
@@ -116,10 +123,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   setRows(prev=>prev.filter(r=>r.key!==key));setSelected(prev=>prev.filter(k=>k!==key));
  }
  const selectedValid=selectedRows.length>0&&selectedRows.length<=250;
- const allSelected=rows.length>0&&selected.length===rows.length;
+ const allVisibleSelected=visibleRows.length>0&&visibleRows.every(r=>selectedSet.has(r.key));
  const listingByProduct=new Map(listing.map(item=>[item.productId,item]));
  const publicationById=new Map(publishResults.map(item=>[item.id,item]));
- const newlyRequested=new Set(publishResults.filter(item=>item.ok).map(item=>item.id));
  const eligiblePublishIds=eligiblePrivatePublishIds(rows,listing,newlyRequested);
  const eligiblePublishSet=new Set(eligiblePublishIds);
  const eligibleSelectedIds=selectedRows.filter(r=>r.id&&eligiblePublishSet.has(r.id)).map(r=>r.id!);
@@ -148,14 +154,34 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
 
  return <section className="apex-bulk-workspace" aria-label="Bulk product creation and editing">
   <CsvProductImport rows={rows} categories={categories} disabled={!editable||busy} onLoad={loadFromCsv}/>
+  <div className="apex-bulk-filterbar" aria-label="Find and filter private products">
+   <label htmlFor="apex-bulk-search">Find product
+    <input id="apex-bulk-search" type="search" value={productSearch}
+     placeholder="Search title or SKU" autoComplete="off"
+     onChange={e=>{setProductSearch(e.target.value);setSelected([]);}}/>
+   </label>
+   <label htmlFor="apex-bulk-status-filter">Show
+    <select id="apex-bulk-status-filter" value={viewFilter}
+     onChange={e=>{setViewFilter(e.target.value);setSelected([]);}}>
+     <option value="all">All products</option>
+     <option value="unsaved">Unsaved drafts</option>
+     <option value="ready">Ready to request</option>
+     <option value="requested">Publication requested</option>
+     <option value="needs_attention">Needs setup / held</option>
+    </select>
+   </label>
+  </div>
+  <p className="apex-bulk-filter-summary" role="status">
+   Showing {visibleRows.length} of {rows.length} products · {selectedRows.length} selected in this view.
+  </p>
   <div className="apex-bulk-toolbar">
    <button type="button" className="button secondary" onClick={()=>addRows(1)}
     disabled={!editable||busy||rows.length>=250}>+ Add product</button>
    <button type="button" className="button secondary" onClick={()=>addRows(5)}
     disabled={!editable||busy||rows.length>245}>+ Add 5 products</button>
    <button type="button" className="button secondary" onClick={()=>
-    setSelected(allSelected?[]:rows.map(r=>r.key))} disabled={busy}>
-    {allSelected?"Clear selection":"Select all"}
+    setSelected(allVisibleSelected?[]:visibleRows.map(r=>r.key))} disabled={busy||!visibleRows.length}>
+    {allVisibleSelected?"Clear selection":"Select visible"}
    </button>
    <button type="button" className="button secondary"
     aria-pressed={showOfferTiles}
@@ -169,7 +195,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    Review their live previews and choose Save selected when ready.
   </p>}
   <div className="apex-bulk-rows" id="bulk-product-cards">
-   {rows.map((r,i)=>{
+   {visibleRows.length===0&&<p className="notice apex-bulk-no-results" role="status">
+    No products match this view. Clear search or choose All products to see the other cards.
+   </p>}
+   {visibleRows.map((r,i)=>{
     const status=lastSave[r.key];
     const cardMedia=r.id?savedMedia.get(r.id):undefined;
     const availableStock=cardMedia?.quantityOnHand==null||cardMedia.quantityReserved==null
