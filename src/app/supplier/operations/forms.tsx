@@ -17,8 +17,10 @@ export function NewProductForm({storeId,enabled,categories}:{storeId:string;enab
       <input type="hidden" name="storeId" value={storeId}/>
       <label htmlFor="draft-product-name">Name</label>
       <input id="draft-product-name" name="name" maxLength={120} required disabled={!enabled}/>
-      <label htmlFor="draft-product-sku">SKU</label>
-      <input id="draft-product-sku" name="sku" maxLength={60} required disabled={!enabled}/>
+      <label htmlFor="draft-product-sku">SKU (optional)</label>
+      <input id="draft-product-sku" name="sku" maxLength={60} autoComplete="off"
+        placeholder="Auto-generated when blank" disabled={!enabled}/>
+      <p className="notice">A unique SKU is generated on save, or enter your own using letters, numbers, periods, hyphens and underscores.</p>
       <label htmlFor="draft-product-source-cost">Source cost (USD, private, optional)</label>
       <input id="draft-product-source-cost" name="directSourceCost" type="number" min="0"
         max="9999999.99" step=".01" disabled={!enabled}/>
@@ -55,8 +57,8 @@ export function NewCategoryForm({storeId,enabled}:{storeId:string;enabled:boolea
   </section>;
 }
 
-export function ProductRowEditor({storeId,productId,name,description,price,comparePrice,directSourceCost,isActive,categoryId,categories,enabled}:{
-  storeId:string;productId:string;name:string;description:string;price:string;comparePrice:string;
+export function ProductRowEditor({storeId,productId,sku,name,description,price,comparePrice,directSourceCost,isActive,categoryId,categories,enabled}:{
+  storeId:string;productId:string;sku:string;name:string;description:string;price:string;comparePrice:string;
   directSourceCost?:string;isActive:boolean;categoryId:string|null;
   categories:{id:string;name:string}[];enabled:boolean;
 }) {
@@ -65,6 +67,10 @@ export function ProductRowEditor({storeId,productId,name,description,price,compa
   return <form action={action} className="supplier-form" style={{marginTop:6}}>
     <input type="hidden" name="storeId" value={storeId}/>
     <input type="hidden" name="productId" value={productId}/>
+    <label htmlFor={uid+"sku"}>SKU</label>
+    <input id={uid+"sku"} name="sku" defaultValue={sku} maxLength={60}
+      autoComplete="off" required disabled={!enabled}/>
+    <p className="notice">Editable while private. SKUs must be unique within the store.</p>
     <label htmlFor={uid+"n"}>Draft name</label>
     <input id={uid+"n"} name="name" defaultValue={name} maxLength={120} required disabled={!enabled}/>
     <label htmlFor={uid+"d"}>Description</label>
