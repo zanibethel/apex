@@ -87,6 +87,13 @@ export default async function SharedCatalog() {
     const checklist=draftContentChecklist({...product,price_cents:price});
     const setup=draftSetupSteps({...product,price_cents:price},inv);
     const missingSteps=setup.steps.filter(step=>!step.complete);
+    const reusableImages=canWrite?(products.data??[])
+      .filter(source=>source.store_id===product.store_id&&source.id!==product.id&&
+        !source.is_published&&Boolean(source.image_path)&&images.has(source.id))
+      .map(source=>({
+        productId:source.id,name:source.name,sku:source.sku,
+        previewUrl:images.get(source.id)!,
+      })):[];
     function actionHref(action:string) {
       if(action==="inventory")return "/supplier/inventory";
       if(action==="category")return choices.length>0?`#details-${product.id}`:"#add-private-category";
@@ -162,7 +169,8 @@ export default async function SharedCatalog() {
       </section>}
       {!product.is_published && canWrite && <details id={`image-${product.id}`} className="apex-card-editor">
         <summary>Manage product image</summary>
-        <ProductImageUploader storeId={product.store_id} productId={product.id} enabled={canWrite}/>
+        <ProductImageUploader storeId={product.store_id} productId={product.id}
+          enabled={canWrite} existingImages={reusableImages}/>
       </details>}
       {!product.is_published && <details id={`details-${product.id}`} className="apex-card-editor">
         <summary>{canWrite?"Edit details, SKU and price":"View product details (read-only)"}</summary>
