@@ -15,7 +15,9 @@ test("auto SKU includes readable product name and UUID-derived uniqueness",()=>{
  assert.throws(()=>generateDraftSku("test",()=>id.slice(0,-2)),/UUID/);
 });
 test("blank SKU generates; manually overridden SKUs normalize and validate",()=>{
- assert.equal(chooseNewSku("", "5-Amino-1 MQ"),chooseNewSku("", "5-Amino-1 MQ").replace(/-[0-9A-F]{8}$/, "-REDACTED").replace("-REDACTED","").length>0?chooseNewSku("", "5-Amino-1 MQ"):"INVALID");
+ const generated=chooseNewSku("", "5-Amino-1 MQ");
+ assert.match(generated,/^APX-5-AMINO-1-MQ-[0-9A-F]{8}$/);
+ assert.equal(chooseNewSku("apx-custom_20.5", "Ignored"),"APX-CUSTOM_20.5");
 });
 test("manual SKU handles custom, limits, and unsafe characters",()=>{
  assert.equal(normalizeSku("  apx-custom_20.5 "), "APX-CUSTOM_20.5");
