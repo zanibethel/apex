@@ -35,7 +35,10 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261029233701_apex_initial_catalog_readonly.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030222500_payout_reporting_readonly.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030233000_multi_split_draft_rpc.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030234500_payout_recipient_admin.sql
       - name: Verify row isolation and read-only grants
         run: bash tests/payout-rls/check.sh
       - name: Verify atomic draft saving and denial cases
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/draft-rpc.sql
+      - name: Verify recipient directory authorization
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/recipient-admin.sql
