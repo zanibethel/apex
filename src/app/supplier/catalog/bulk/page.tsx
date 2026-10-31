@@ -37,7 +37,7 @@ export default async function BulkProductWorkspace(){
   client.from("supplier_candidate_drafts").select("product_id").eq("store_id",store.id).limit(500),
   client.from("inventory_items").select("product_id,quantity_on_hand,quantity_reserved").eq("store_id",store.id).limit(250),
   client.from("supplier_listing_controls")
-   .select("product_id,supplier_wants_listing,admin_gate,republish_approval_required,republish_approved")
+   .select("product_id,supplier_wants_listing,admin_gate,republish_approval_required,republish_approved,reason")
    .eq("store_id",store.id).limit(250),
  ]);
  if(productError||categoryError||linkedError||inventoryError)return <main className="container supplier-shell">
@@ -73,6 +73,7 @@ export default async function BulkProductWorkspace(){
    requested:!!control?.supplier_wants_listing,
    status:listingError?"Publication status unavailable":status.label,
    kind:listingError?"unavailable":status.kind,
+   reason:!listingError&&["hold","review"].includes(status.kind)?control?.reason??null:null,
    missing,
   };
  });
