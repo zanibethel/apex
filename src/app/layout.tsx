@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         <header className="site-header">
           <div className="container header-inner">
-            <Link href="/" className="brand" aria-label="Apex home"><span aria-hidden="true">▲</span> APEX</Link>
+            <Link href="/" className="brand apex-logo-link" aria-label="Apex Anabolics home"><img src="/apex-brand-mark.svg" alt="Apex Anabolics" width="210" height="50" /></Link>
             <nav aria-label="Main navigation" className="apex-navigation">
               <details className="apex-menu">
                 <summary aria-label="Open navigation menu">☰ <span>Menu</span></summary>
