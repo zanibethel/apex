@@ -87,3 +87,21 @@
 .apex-allocation-bar { display:flex; overflow:hidden; width:100%; height:12px; margin:12px 0 20px; border-radius:999px; background:#383841; }
 .apex-allocation-bar span { display:block; height:100%; }
 @media(max-width:420px) { .apex-recipient-fields { grid-template-columns:1fr; } }
+
+.apex-menu-signout { display:block; width:100%; padding:12px; min-height:44px; border:0; border-radius:8px; background:transparent; color:inherit; text-align:left; font:inherit; cursor:pointer; }
+.apex-menu-signout:hover,.apex-menu-signout:focus-visible { background:#303039; }
+
+/* Fixed, single-row mobile navigation */
+.site-header { position:sticky; top:0; z-index:100; background:#0b0b0e; }
+.header-inner { min-height:64px; flex-wrap:nowrap; justify-content:space-between; }
+.header-inner .brand { display:inline-flex; align-items:center; gap:8px; white-space:nowrap; flex:none; line-height:1; font-size:21px; letter-spacing:.13em; }
+.header-inner .brand span { flex:none; }
+.header-inner .apex-navigation { margin-left:auto; flex:none; }
+.apex-menu summary { width:44px; height:44px; min-height:44px; padding:0; justify-content:center; border:1px solid rgba(255,255,255,.18); border-radius:12px; font-size:20px; }
+.apex-menu summary span { display:none; }
+.apex-menu-panel { right:0; top:calc(100% + 8px); }
+@media(max-width:650px) {
+  .site-header .header-inner { min-height:60px; gap:12px; }
+  .site-header .brand { font-size:20px; letter-spacing:.12em; }
+  .site-header .demo-chip { display:none; }
+}
