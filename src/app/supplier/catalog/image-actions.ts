@@ -57,3 +57,41 @@ export async function attachProductImage(storeId:string,productId:string,path:st
   revalidatePath("/supplier/catalog");
   return {ok:true,message:"Product image saved for private preview."};
 }
+
+
+// Reuse only an image attached to ANOTHER unpublished product in the SAME
+// private store. Both product IDs are independently verified on the server.
+export async function requestProductImageReuse(
+  storeId:string,productId:string,sourceProductId:string,
+):Promise<{ok:boolean;message:string;sourcePath?:string;path?:string;token?:string;mime?:string}> {
+  if(process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED!=="true")
+    return {ok:false,message:"Image management is disabled."};
+  if(!idRe.test(storeId)||!idRe.test(productId)||
+     !idRe.test(sourceProductId)||productId===sourceProductId)
+    return {ok:false,message:"Select another private product image."};
+  const w=await scopedProduct(storeId,productId);
+  if(!w)return {ok:false,message:"Product image permission required."};
+
+  const {data:source,error:sourceError}=await w.client.from("products")
+    .select("image_path").eq("store_id",storeId)
+    .eq("id",sourceProductId).eq("is_published",false).maybeSingle();
+  const sourcePath=source?.image_path;
+  const prefix=storeId+"/"+sourceProductId+"/";
+  if(sourceError||typeof sourcePath!=="string"||
+     !sourcePath.startsWith(prefix)||
+     !imageFileRe.test(sourcePath.slice(prefix.length)))
+    return {ok:false,message:"That existing image is no longer available."};
+
+  const ext=sourcePath.slice(sourcePath.lastIndexOf(".")+1);
+  const extToMime:Record<string,string>={jpg:"image/jpeg",png:"image/png",webp:"image/webp"};
+  const mime=extToMime[ext];
+  if(!mime)return {ok:false,message:"Unsupported source image."};
+
+  // The image_path CHECK constraint requires each destination to have its
+  // own product folder. Copy using a new signed insert, never an overwrite.
+  const path=storeId+"/"+productId+"/"+randomUUID()+"."+ext;
+  const {data,error}=await w.client.storage.from(bucket).createSignedUploadUrl(path);
+  return error||!data?.token
+    ? {ok:false,message:"Private image reuse is not available."}
+    : {ok:true,message:"",sourcePath,path,token:data.token,mime};
+}
