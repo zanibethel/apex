@@ -1,6 +1,7 @@
 "use client";
 import {useState} from "react";
 import {buildProductCsv,parseProductCsv} from "@/lib/catalog/product-csv.mjs";
+import {draftSkuFromUuid} from "@/lib/catalog/sku-format.mjs";
 import type {BulkEditRow} from "./bulk-editor";
 type Category={id:string;name:string};
 type ImportRow={key:string;line:number;row:BulkEditRow;issue?:string};
@@ -13,12 +14,11 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
  rows:BulkEditRow[];categories:Category[];disabled:boolean;onLoad:(rows:BulkEditRow[])=>void;
 }){
  const [staged,setStaged]=useState<ImportRow[]>([]);
- const [selected,setSelected]=useState<string[]>([]);
  const [errors,setErrors]=useState<string[]>([]);
  const [message,setMessage]=useState("");
  const [fileName,setFileName]=useState("");
  async function upload(file?:File){
-  setStaged([]);setSelected([]);setErrors([]);setMessage("");setFileName(file?.name??"");
+  setStaged([]);setErrors([]);setMessage("");setFileName(file?.name??"");
   if(!file)return;
   if(!file.name.toLowerCase().endsWith(".csv")||file.size<1||file.size>256000){
    setErrors(["Choose a .csv file up to 256 KB."]);return;
@@ -47,7 +47,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    if(seen.has(id))issue="Duplicate product in CSV.";seen.add(id);
    const row:BulkEditRow={
     key:target?.key??crypto.randomUUID(),id:target?.id,
-    name:item.title,sku:sku||target?.sku||"",
+    name:item.title,sku:sku||target?.sku||draftSkuFromUuid(item.title,crypto.randomUUID()),
     description:item.description||target?.description||"",price:item.price,
     comparePrice:item.compare_at_price||target?.comparePrice||"",
     sourceCost:item.source_cost||target?.sourceCost||"",
@@ -59,17 +59,17 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
     issue="Linked source cost must be edited in Source review.";
    return {key:row.key,line:item.line,row,issue};
   });
-  setStaged(mapped);setSelected(mapped.filter(r=>!r.issue).map(r=>r.key));
-  setMessage("Review these CSV rows, then load the checked ones into the editor. No records have been saved.");
- }
- function load(){
-  const chosen=staged.filter(r=>selected.includes(r.key)&&!r.issue).map(r=>r.row);
-  if(!chosen.length){setMessage("Select valid rows first.");return;}
-  const keys=new Set(rows.map(r=>r.key));
-  const additions=chosen.filter(r=>!keys.has(r.key)).length;
-  if(rows.length+additions>250){setMessage("The editor supports 250 rows. Load smaller groups.");return;}
-  onLoad(chosen);setStaged([]);setSelected([]);
-  setMessage(String(chosen.length)+" rows loaded. Select them and click Save selected to commit to the private catalog.");
+  setStaged(mapped);
+  const valid=mapped.filter(r=>!r.issue);
+  const known=new Set(rows.map(r=>r.key));
+  const additions=valid.filter(r=>!known.has(r.key)).length;
+  if(rows.length+additions>250){
+   setErrors(previous=>[...previous,"Too many products for this editor. Upload a smaller CSV."]);
+   setMessage("No rows loaded. The editor supports up to 250 rows.");return;
+  }
+  if(valid.length)onLoad(valid.map(r=>r.row));
+  setMessage(valid.length+" product "+(valid.length===1?"card":"cards")+
+   " added to the editor below with SKUs filled in. Review the cards, then Save selected to create or update the private products.");
  }
  function exportSaved(){
   const items=rows.filter(r=>r.id).map(r=>({
@@ -103,25 +103,21 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    <strong>{errors.length} CSV issues</strong>
    <ul>{errors.slice(0,30).map((e,i)=><li key={i}>{e}</li>)}</ul>
   </div>}
-  {staged.length>0&&<>
+  {staged.length>0&&<div className="apex-csv-review">
    <div className="apex-csv-review-toolbar">
-    <strong>Review {staged.length} rows ({staged.filter(r=>r.issue).length} blocked)</strong>
-    <button className="button secondary" type="button"
-     onClick={()=>setSelected(staged.filter(r=>!r.issue).map(r=>r.key))}>Check valid rows</button>
-    <button className="button secondary" type="button" onClick={()=>setSelected([])}>Clear checks</button>
+    <strong>{staged.filter(r=>!r.issue).length} editable cards imported · {staged.filter(r=>r.issue).length} blocked</strong>
+    <a className="button secondary" href="#bulk-product-cards">Review imported product cards</a>
    </div>
-   <div className="apex-csv-review-list">{staged.map(item=><label key={item.key+":"+item.line} className="apex-csv-review-row">
-    <input type="checkbox" checked={selected.includes(item.key)} disabled={disabled||!!item.issue}
-     onChange={e=>setSelected(prev=>e.target.checked?[...prev,item.key]:prev.filter(id=>id!==item.key))}/>
-    <span><strong>Line {item.line}: {item.row.name}</strong>
-     <small>{item.row.id?"Update":"Create"} · SKU {item.row.sku||"Automatic"} · Price {item.row.price}</small>
-     {item.issue&&<small className="apex-bulk-error">{item.issue}</small>}
-    </span>
-   </label>)}</div>
-   <button className="button primary" type="button" disabled={disabled||selected.length===0}
-    onClick={load}>Load checked rows into editor ({selected.length})</button>
-  </>}
+   <div className="apex-csv-review-list">
+    {staged.map(item=><div key={item.key+":"+item.line} className="apex-csv-review-row">
+     <span><strong>Line {item.line}: {item.row.name}</strong>
+      <small>{item.issue?"Not imported":item.row.id?"Existing product card updated in editor":"New product draft card created"} · SKU {item.row.sku} · Price {item.row.price}</small>
+      {item.issue&&<small className="apex-bulk-error">{item.issue}</small>}
+     </span>
+    </div>)}
+   </div>
+  </div>}
   {message&&<p role="status" className="apex-csv-status">{message}</p>}
-  <p className="notice">CSV maximum: 100 rows / 256 KB. Uploading and loading alone never save or publish products. Select the loaded rows and save when ready.</p>
+  <p className="notice">CSV maximum: 100 rows / 256 KB. Valid rows automatically become editable cards with SKUs assigned. Review them, then use Save selected to store drafts. Uploading never publishes or charges customers.</p>
  </section>;
 }
