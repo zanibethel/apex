@@ -18,7 +18,8 @@ test("bulk creation, editing and saved confirmations are selectable and bounded"
  assert.match(bulkEditor,/\+ Add 5 products/);
  assert.match(bulkEditor,/Save selected/);
  assert.match(bulkEditor,/setLastSave/);
- assert.match(bulkEditor,/Saved to your private catalog|Saved product/);
+ assert.match(bulkEditor,/✓ Saved/);
+ assert.match(bulkEditor,/privateBulkReadiness/);
  assert.match(bulkEditor,/Preview selected/);
  assert.match(bulkEditor,/Preview all saved/);
  assert.match(bulkEditor,/Preview single/);
