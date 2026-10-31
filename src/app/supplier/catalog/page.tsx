@@ -89,7 +89,7 @@ export default async function SharedCatalog() {
     const missingSteps=setup.steps.filter(step=>!step.complete);
     function actionHref(action:string) {
       if(action==="inventory")return "/supplier/inventory";
-      if(action==="category")return "#add-private-category";
+      if(action==="category")return choices.length>0?`#details-${product.id}`:"#add-private-category";
       return `#${action}-${product.id}`;
     }
     return <div className="apex-product-fields">
@@ -130,7 +130,7 @@ export default async function SharedCatalog() {
               {canWrite ? <Link href={actionHref(step.action)}>
                 {step.action==="inventory"?"Manage inventory"
                   :step.action==="image"?"Manage image"
-                  :step.action==="category"?"Add a category":"Edit details"}
+                  :step.action==="category"?(choices.length>0?"Select category":"Add category"):"Edit details"}
               </Link> : <span className="apex-setup-view-only">Owner/manager action</span>}
             </li>)}
           </ul>
@@ -157,7 +157,7 @@ export default async function SharedCatalog() {
               <span>Not enabled. Public listing, category/store visibility and public image delivery require an approved release workflow.</span>
             </li>
           </ol>
-          <p className="notice">Active in internal catalog does not publish a product. There is no public publish button in this workspace.</p>
+          <p className="notice">Active in internal catalog does not publish a product. There is no public publish button in this workspace. Images are private previews until a separately approved public image delivery process exists.</p>
         </div>
       </section>}
       {!product.is_published && canWrite && <details id={`image-${product.id}`} className="apex-card-editor">
