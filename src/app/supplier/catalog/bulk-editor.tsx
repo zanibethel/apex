@@ -167,7 +167,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       </div>
      </div>
      {r.id&&!r.needsSave
-      ?<BulkCardMedia key={r.id} storeId={storeId} productId={r.id}
+      ?<BulkCardMedia key={r.id+":"+String(savedMedia.get(r.id)?.quantityOnHand??"missing")} storeId={storeId} productId={r.id}
          enabled={editable&&!pending}
          imageUrl={savedMedia.get(r.id)?.imageUrl}
          quantityOnHand={savedMedia.get(r.id)?.quantityOnHand}
