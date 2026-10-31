@@ -19,6 +19,8 @@ end $preflight$;
 create table public.supplier_listing_controls(
  store_id uuid not null,
  product_id uuid not null,
+ product_name text not null default '',
+ product_sku text not null default '',
  supplier_wants_listing boolean not null default false,
  admin_gate text not null default 'clear'
    check(admin_gate in ('clear','hold','review_required')),
@@ -95,6 +97,7 @@ create or replace function public.set_supplier_listing_intent(
 declare
  v_actor uuid:=(select auth.uid());
  v_state public.supplier_listing_controls%rowtype;
+ v_product public.products%rowtype;
 begin
  if v_actor is null or p_action not in ('publish','unpublish')
  or not exists (
@@ -104,14 +107,15 @@ begin
     and m.user_id=v_actor and m.role in ('owner','manager')
  ) then raise exception 'Authorized supplier owner/manager access required'; end if;
 
- perform 1 from public.products p
+ select * into v_product from public.products p
  where p.store_id=p_store_id and p.id=p_product_id
-  and p.is_published=false
- for update;
+  and p.is_published=false for update;
  if not found then raise exception 'Private product unavailable'; end if;
 
- insert into public.supplier_listing_controls(store_id,product_id)
- values(p_store_id,p_product_id) on conflict do nothing;
+ insert into public.supplier_listing_controls(store_id,product_id,product_name,product_sku)
+ values(p_store_id,p_product_id,v_product.name,v_product.sku)
+ on conflict(store_id,product_id) do update
+ set product_name=excluded.product_name,product_sku=excluded.product_sku;
  select * into v_state from public.supplier_listing_controls
   where store_id=p_store_id and product_id=p_product_id for update;
 
@@ -145,6 +149,7 @@ create or replace function public.set_admin_listing_override(
 declare
  v_actor uuid:=(select auth.uid());
  v_state public.supplier_listing_controls%rowtype;
+ v_product public.products%rowtype;
  v_note text:=nullif(btrim(coalesce(p_reason,'')),'');
 begin
  if v_actor is null or
@@ -155,13 +160,15 @@ begin
  or (p_action in ('hold','require_review') and v_note is null)
  then raise exception 'Valid admin action and explanatory note required';end if;
 
- perform 1 from public.products p
+ select * into v_product from public.products p
  where p.id=p_product_id and p.store_id=p_store_id
   and p.is_published=false for update;
  if not found then raise exception 'Private product unavailable';end if;
 
- insert into public.supplier_listing_controls(store_id,product_id)
- values(p_store_id,p_product_id) on conflict do nothing;
+ insert into public.supplier_listing_controls(store_id,product_id,product_name,product_sku)
+ values(p_store_id,p_product_id,v_product.name,v_product.sku)
+ on conflict(store_id,product_id) do update
+ set product_name=excluded.product_name,product_sku=excluded.product_sku;
  select * into v_state from public.supplier_listing_controls
  where store_id=p_store_id and product_id=p_product_id for update;
 
