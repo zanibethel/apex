@@ -436,3 +436,52 @@ body { background:#07080b; }
  .apex-review-summary span{padding:9px;font-size:11px}
  .apex-review-summary strong{font-size:19px}
 }
+
+
+/* Private, read-only product review audit timeline. Native details avoid
+   crowding mobile cards; each event retains its server-recorded snapshot. */
+.apex-review-history{
+  border:1px solid rgba(204,207,217,.28);
+  border-radius:10px;background:#111217;min-width:0;overflow:visible;
+}
+.apex-review-history > summary{
+  cursor:pointer;min-height:48px;padding:14px;
+  font-size:14px;font-weight:700;color:#f0e4e9;
+  list-style-position:inside;
+}
+.apex-review-history > summary:focus-visible,
+.apex-review-event-snapshot summary:focus-visible{
+  outline:3px solid #f5c46c;outline-offset:3px;
+}
+.apex-review-history[open] > summary{
+  border-bottom:1px solid rgba(204,207,217,.18);
+}
+.apex-review-timeline{
+  list-style:none;display:grid;gap:0;padding:0 14px 12px;margin:0;
+}
+.apex-review-timeline-item{
+  display:grid;gap:5px;padding:14px 0 14px 16px;
+  position:relative;border-left:2px solid rgba(214,116,143,.6);
+  overflow-wrap:anywhere;
+}
+.apex-review-timeline-item:before{
+  content:"";position:absolute;left:-5px;top:20px;
+  width:8px;height:8px;border-radius:50%;background:#d77496;
+}
+.apex-review-timeline-item strong{font-size:13px;color:#f3e5eb}
+.apex-review-event-meta{color:#bdbec9;font-size:12px;line-height:1.4}
+.apex-review-event-note{
+  background:rgba(215,116,150,.08);border-left:2px solid #d77496;
+  color:#e4dfe4;padding:8px;margin:5px 0;font-size:13px;
+  overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.apex-review-event-snapshot summary{
+  min-height:40px;cursor:pointer;padding:10px 0;
+  color:#d2cbd0;font-size:12px;
+}
+.apex-review-event-snapshot .notice{margin:6px 0 0;font-size:12px}
+.apex-review-history > .notice{margin:12px 14px;line-height:1.5}
+@media(max-width:540px){
+ .apex-review-history > summary{padding:12px}
+ .apex-review-timeline{padding:0 12px 12px}
+}

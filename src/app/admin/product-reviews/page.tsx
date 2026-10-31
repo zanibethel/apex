@@ -5,6 +5,7 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {internalReviewLabel} from "@/lib/catalog/private-review-utils.mjs";
 import {formatReviewTime} from "@/lib/catalog/review-time.mjs";
+import {groupReviewHistory,reviewEventLabel,reviewEventActorLabel,reviewHistoryKey} from "@/lib/catalog/review-history.mjs";
 import {ProductReviewDecisionForm} from "./form";
 
 export const dynamic="force-dynamic";
@@ -14,6 +15,10 @@ type Snapshot={
  name?:string;sku?:string;description?:string;
  category_id?:string;image_path?:string;price_cents?:number;
  is_active?:boolean;quantity_on_hand?:number;quantity_reserved?:number;
+};
+type HistoryEvent={
+ id:number;store_id:string;product_id:string;event_type:string;
+ actor_id:string|null;note:string|null;snapshot:unknown;created_at:string;
 };
 function snapshot(value:unknown):Snapshot {
  return value&&typeof value==="object"&&!Array.isArray(value)?value as Snapshot:{};
@@ -27,6 +32,19 @@ export default async function ProductReviewsPage(){
  const {data:reviews,error}=await client.from("private_product_review_states")
    .select("store_id,product_id,submission_id,status,snapshot,submitted_at,review_note,decided_at")
    .order("submitted_at",{ascending:false}).limit(100);
+
+ // A bounded, read-only query uses the existing RLS-protected event ledger.
+ // Never return history from a service-role client or combine suppliers by SKU.
+ const visibleProductIds=[...new Set((reviews??[]).map(row=>row.product_id))];
+ const historyResult=visibleProductIds.length
+   ?await client.from("private_product_review_history")
+      .select("id,store_id,product_id,submission_id,event_type,actor_id,note,snapshot,created_at",{count:"exact"})
+      .in("product_id",visibleProductIds)
+      .order("created_at",{ascending:false}).order("id",{ascending:false})
+      .limit(500)
+   :{data:[],error:null,count:0};
+ const historyByProduct=groupReviewHistory(historyResult.data,20);
+ const historyTruncated=(historyResult.count??0)>500;
 
  // Only a trusted signed-in platform admin can request a short-lived image URL.
  // Storage RLS independently limits access to the exact image snapshotted on a
@@ -68,6 +86,7 @@ export default async function ProductReviewsPage(){
       const approved=item.status==="approved_internal";
       const changeRequested=item.status==="changes_requested";
       const imageUrl=previews.get(item.product_id);
+      const history=(historyByProduct.get(reviewHistoryKey(item.store_id,item.product_id))??[]) as HistoryEvent[];
       return <article key={item.product_id} className="apex-product-card">
        <div className="apex-product-card-head">
         <span className="eyebrow">{internalReviewLabel(item.status)}</span>
@@ -90,6 +109,32 @@ export default async function ProductReviewsPage(){
         <p className="notice">Category selected: {s.category_id?"Yes":"No"}</p>
        </details>
        {item.review_note&&<p className="apex-review-note"><strong>{changeRequested?"Changes needed":"Review note"}:</strong> {item.review_note}</p>}
+       <details className="apex-review-history" aria-label={"Review history for "+(s.name??"product")}>
+        <summary>Review history {historyResult.error?"· unavailable":"· "+history.length+" recent events"}</summary>
+        {historyResult.error
+          ?<p className="notice" role="status">Review history could not be loaded. Refresh to retry; no audit records were changed.</p>
+          :history.length===0
+          ?<p className="notice">No recorded review events for this product.</p>
+          :<ol className="apex-review-timeline">
+            {history.map(event=>{
+              const previous=snapshot(event.snapshot);
+              return <li key={event.id} className="apex-review-timeline-item">
+                <strong>{reviewEventLabel(event.event_type)}</strong>
+                <span className="apex-review-event-meta">
+                  {formatReviewTime(event.created_at)} · {reviewEventActorLabel(event.event_type,event.actor_id)}
+                </span>
+                {event.note&&<p className="apex-review-event-note">{event.note}</p>}
+                <details className="apex-review-event-snapshot">
+                  <summary>Submitted details at this event</summary>
+                  <p className="notice">SKU: {previous.sku??"—"} · Price: {typeof previous.price_cents==="number"?(previous.price_cents/100).toFixed(2)+" USD":"—"} · Stock: {previous.quantity_on_hand??"—"}</p>
+                  <p className="notice">Image on record: {previous.image_path?"Yes (private)":"No"}</p>
+                </details>
+              </li>;
+            })}
+          </ol>}
+        {!historyResult.error&&historyTruncated&&<p className="notice">Showing a limited recent event history; older entries may not appear.</p>}
+        {!historyResult.error&&history.length===20&&<p className="notice">Showing the latest 20 events for this product.</p>}
+       </details>
        {pending?<ProductReviewDecisionForm storeId={item.store_id}
         productId={item.product_id} submissionId={item.submission_id}/>
         :approved?<p className="apex-review-outcome">Internal content approved. No further decision is required unless product details change. This listing is not publicly available.</p>
