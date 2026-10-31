@@ -436,3 +436,26 @@ body { background:#07080b; }
  .apex-review-summary span{padding:9px;font-size:11px}
  .apex-review-summary strong{font-size:19px}
 }
+
+
+/* Apex private supplier publication preference and admin override screens. */
+.apex-listing-intent-status{
+  display:grid;gap:10px;margin-top:14px;padding:13px;
+  background:#15151c;border:1px solid rgba(216,125,155,.4);
+  border-radius:10px;
+}
+.apex-listing-intent-status h4{margin:0;color:#f5e1e8;font-size:15px}
+.apex-listing-intent-status > strong{font-size:14px;color:#f3dde5}
+.apex-listing-control-form{display:grid;gap:10px;min-width:0}
+.apex-listing-control-buttons{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+.apex-listing-control-buttons .button{
+  min-width:0;min-height:46px;line-height:1.35;
+  padding:10px 8px;font-size:13px;white-space:normal;
+}
+.apex-listing-override-form .apex-listing-control-buttons{grid-template-columns:repeat(3,minmax(0,1fr))}
+.apex-listing-intent-status .notice,.apex-listing-control-form .notice{margin:0;line-height:1.5}
+@media(max-width:600px){
+ .apex-listing-control-buttons,.apex-listing-override-form .apex-listing-control-buttons{grid-template-columns:1fr}
+}
