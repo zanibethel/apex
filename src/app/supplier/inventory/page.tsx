@@ -16,13 +16,19 @@ export default async function InventoryPage() {
     w.client.from("supplier_import_candidates").select("id", {count:"exact",head:true}).in("store_id",ids),
   ]);
   const names = new Map(products.data?.map(p => [p.id,p]) ?? []);
-  const enabled = process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED === "true";
+  const writesEnabled = process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED === "true";
+  const managingSupplierIds = new Set(w.memberships
+    .filter(member => member.role === "owner" || member.role === "manager")
+    .map(member => member.supplier_id));
+  const editableStoreIds = new Set(w.stores
+    .filter(store => !store.is_public && managingSupplierIds.has(store.supplier_id))
+    .map(store => store.id));
 
   return <main className="container supplier-shell">
     <Link className="back" href="/supplier">← Supplier workspace</Link>
     <p className="eyebrow">APEX / INVENTORY</p>
     <h1>Shared stock.</h1>
-    <p className="lead">Both suppliers see the same inventory records. Changes require matching current counts and are audited.</p>
+    <p className="lead">Members of the same supplier share inventory. Owners and managers can edit private draft stock when editing is enabled; changes are checked and audited.</p>
     {items.error || products.error ? <p>Inventory data is temporarily unavailable.</p>
       : !items.data?.length ? <section className="supplier-panel">
         <h2>No confirmed inventory yet.</h2>
@@ -36,14 +42,19 @@ export default async function InventoryPage() {
         <div className="feature-grid" style={{gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))"}}>
           {items.data.map(item => {
             const product = names.get(item.product_id);
+            const editable = writesEnabled && editableStoreIds.has(item.store_id)
+              && product !== undefined && product.store_id === item.store_id
+              && product.is_published === false;
             return <article className="feature-card" key={item.product_id}>
               <h3>{product?.name ?? "Product"}</h3>
               <p className="notice">SKU: {product?.sku ?? "Unavailable"}</p>
               <p>On hand: {item.quantity_on_hand}</p>
               <p>Reserved: {item.quantity_reserved}</p>
               <p>Available: {item.quantity_on_hand - item.quantity_reserved}</p>
-              <StockEditor storeId={item.store_id} productId={item.product_id}
-                quantity={item.quantity_on_hand} enabled={enabled && !!product && !product.is_published}/>
+              {editable
+                ? <StockEditor storeId={item.store_id} productId={item.product_id}
+                    quantity={item.quantity_on_hand} enabled={true}/>
+                : <p className="notice">Read-only stock. Editing requires an authorized owner or manager, a private draft, and enabled draft writes.</p>}
             </article>;
           })}
         </div>
