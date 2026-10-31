@@ -40,8 +40,11 @@ export default async function SharedCatalog() {
   </main>;
 
   const ids=stores.map(store=>store.id);
+  // Shared membership gives read access; only this store's owners/managers can edit.
   const canWrite=process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true" &&
-    stores.length===1&&!stores[0].is_public;
+    stores.length===1&&!stores[0].is_public &&
+    memberships.some(member=>member.supplier_id===stores[0].supplier_id &&
+      (member.role==="owner"||member.role==="manager"));
 
   const [products,categories,inventory,candidates,mappings]=await Promise.all([
     client.from("products")
