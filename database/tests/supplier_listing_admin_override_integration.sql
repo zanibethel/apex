@@ -145,6 +145,40 @@ begin
  then raise exception 'Listing audit is missing events';end if;
 end $guard$;
 
+
+-- Re-approve the current private draft and verify that routine price / inventory
+-- updates NO LONGER trigger a duplicate mandatory review.
+select set_config('request.jwt.claim.apex_role','',false);
+select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
+select public.submit_private_product_review(
+ '20000000-0000-4000-8000-000000000003',
+ (select id from public.products where sku='APX-BETA-DRAFT-002'));
+select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',false);
+select set_config('request.jwt.claim.apex_role','platform_admin',false);
+select public.decide_private_product_review(
+ '20000000-0000-4000-8000-000000000003',
+ (select product_id from public.private_product_review_states limit 1),
+ (select submission_id from public.private_product_review_states limit 1),
+ 'approved_internal','Internally reviewed');
+reset role;
+update public.products set price_cents=price_cents+100
+ where sku='APX-BETA-DRAFT-002';
+update public.inventory_items set quantity_on_hand=quantity_on_hand+1
+ where store_id='20000000-0000-4000-8000-000000000003'
+ and product_id=(select id from public.products where sku='APX-BETA-DRAFT-002');
+do $guard$
+begin
+ if (select status from public.private_product_review_states limit 1)<>'approved_internal'
+ then raise exception 'Routine price/stock edits unnecessarily invalidate review';end if;
+end $guard$;
+update public.products set description=description||' New labeling details'
+ where sku='APX-BETA-DRAFT-002';
+do $guard$
+begin
+ if (select status from public.private_product_review_states limit 1)<>'changes_requested'
+ then raise exception 'Material description edit failed to invalidate approval';end if;
+end $guard$;
+
 -- No public product/category/store flags changed by any action.
 reset role;
 do $guard$
