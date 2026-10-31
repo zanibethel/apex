@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {draftContentChecklist} from "../src/lib/catalog/draft-content-checklist.mjs";
+import {draftContentChecklist,draftSetupSteps} from "../src/lib/catalog/draft-content-checklist.mjs";
 
 const read = path => readFileSync(path,"utf8");
 const page=read("src/app/supplier/catalog/page.tsx");
@@ -69,4 +69,23 @@ test("only active owner or manager of the exact private store gets editing contr
  assert.match(page,/View product details \(read-only\)/);
  assert.match(page,/View source review \(read-only\)/);
  assert.doesNotMatch(page,/grant update|service_role|\.rpc\("publish/i);
+});
+
+test("draft setup shows missing fields and inventory separately",()=>{
+ const inventory={quantity_on_hand:5,quantity_reserved:0};
+ const full=draftSetupSteps({...basic,is_active:true},inventory);
+ assert.equal(full.total,8);
+ assert.equal(full.completed,8);
+ assert.equal(full.setupComplete,true);
+ const missing=draftSetupSteps({...basic,category_id:null,image_path:null,description:"",is_active:false},{quantity_on_hand:0,quantity_reserved:0});
+ assert.deepEqual(missing.steps.filter(s=>!s.complete).map(s=>s.id),["description","category","image","active","stock"]);
+ assert.equal(missing.remaining,5);
+});
+test("supplier cards include actionable steps and clearly marked approval stage",()=>{
+ assert.match(page,/draftSetupSteps/);
+ assert.match(page,/missingSteps.map/);
+ assert.match(page,/actionHref/);
+ assert.match(page,/Finish this product/);
+ assert.match(page,/Admin and product eligibility review/);
+ assert.match(page,/Storefront: Not published/);
 });
