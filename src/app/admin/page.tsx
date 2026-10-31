@@ -5,10 +5,29 @@ import { isVerifiedPlatformAdmin } from "@/lib/auth/admin-access";
 
 export const dynamic = "force-dynamic";
 
+const dashboardLinks = [
+  { title: "Users", description: "Review registered accounts and invitations.", href: "/admin/users", icon: "👥" },
+  { title: "Allocations", description: "Review proposed payout splits and recipient setup.", href: "/admin/splits", icon: "◫" },
+  { title: "Supplier workspace", description: "Inspect supplier inventory and operations.", href: "/supplier", icon: "▣" },
+];
+
 export default async function AdminDashboard() {
   const client = await createSupplierServerClient();
-  if (!client) return <main><h1>Unavailable</h1></main>;
+  if (!client) redirect("/admin/sign-in");
   const { data, error } = await client.auth.getUser();
   if (error || !data.user || !isVerifiedPlatformAdmin(data.user)) redirect("/admin/sign-in");
-  return <main className="container supplier-shell"><p className="eyebrow">APEX / PLATFORM ADMIN</p><h1>Apex control room</h1><p>Authorized read-only preview</p><section className="supplier-panel"><h2>Account management</h2><p>View registered logins and prepare administrator-approved invitations.</p><Link className="button secondary" href="/admin/users">Open user directory</Link> <Link className="button secondary" href="/admin/splits">Payout split proposals</Link> <Link className="button secondary" href="/account/profile">My profile</Link> <Link className="button secondary" href="/supplier">Test supplier workspace</Link></section></main>;
+
+  return <main className="container supplier-shell" style={{ minWidth: 0 }}>
+    <p className="eyebrow">APEX / PLATFORM ADMIN</p>
+    <h1 style={{ fontSize: "clamp(2rem, 7vw, 3.5rem)", lineHeight: 1.1, overflowWrap: "anywhere" }}>Control room</h1>
+    <p className="notice">Authorized administration preview. Payment execution remains disabled.</p>
+    <section aria-label="Admin tools" className="apex-admin-grid">
+      {dashboardLinks.map(item => <Link key={item.href} href={item.href} className="apex-admin-card">
+        <span className="apex-admin-icon" aria-hidden="true">{item.icon}</span>
+        <span><strong>{item.title}</strong><small>{item.description}</small></span>
+        <span className="apex-admin-arrow" aria-hidden="true">→</span>
+      </Link>)}
+    </section>
+    <p className="notice">Need account details? <Link href="/account/profile">Open your profile</Link>.</p>
+  </main>;
 }
