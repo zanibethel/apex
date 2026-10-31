@@ -1,4 +1,4 @@
--- Supabase Storage-specific migration; use only after review of draft-product membership RLS.
+-- Supabase Storage-specific REVIEW-ONLY setup SQL; use only after review of draft-product membership RLS.\n-- Qualify storage.objects.name in nested EXISTS clauses so it cannot bind to products.name.
 -- Private image objects; no public URLs and no overwrite or delete access.
 begin;
 insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types)
@@ -20,14 +20,14 @@ end $validate$;
 create policy "apex_member_upload_draft_image" on storage.objects
 for insert to authenticated with check (
  bucket_id='apex-draft-product-images'
- and array_length(storage.foldername(name),1)=2
- and storage.filename(name) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}\.(png|jpg|webp)$'
+ and array_length(storage.foldername(storage.objects.name),1)=2
+ and storage.filename(storage.objects.name) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}\.(png|jpg|webp)$'
  and exists (
   select 1 from public.products p
    join public.stores s on s.id=p.store_id
    join public.supplier_memberships m on m.supplier_id=s.supplier_id
-   where p.store_id::text=(storage.foldername(name))[1]
-     and p.id::text=(storage.foldername(name))[2]
+   where p.store_id::text=(storage.foldername(storage.objects.name))[1]
+     and p.id::text=(storage.foldername(storage.objects.name))[2]
      and p.is_published=false and s.is_public=false
      and m.user_id=(select auth.uid()) and m.role in ('owner','manager')
  )
@@ -36,13 +36,13 @@ for insert to authenticated with check (
 create policy "apex_member_read_draft_image" on storage.objects
 for select to authenticated using (
  bucket_id='apex-draft-product-images'
- and array_length(storage.foldername(name),1)=2
+ and array_length(storage.foldername(storage.objects.name),1)=2
  and exists (
   select 1 from public.products p
    join public.stores s on s.id=p.store_id
    join public.supplier_memberships m on m.supplier_id=s.supplier_id
-   where p.store_id::text=(storage.foldername(name))[1]
-     and p.id::text=(storage.foldername(name))[2]
+   where p.store_id::text=(storage.foldername(storage.objects.name))[1]
+     and p.id::text=(storage.foldername(storage.objects.name))[2]
      and m.user_id=(select auth.uid()) and m.role in ('owner','manager')
  )
 );
