@@ -10,6 +10,7 @@ const original={
 };
 const ok={key:"row-1",ok:true,id:"saved-uuid",sku:"TEST-1"};
 const editor=readFileSync("src/app/supplier/catalog/bulk-editor.tsx","utf8");
+const css=readFileSync("src/app/globals.css","utf8");
 
 test("unchanged submitted draft becomes saved and retains its persisted ID",()=>{
  const result=reconcileSavedBulkRow({...original},{...original},ok);
@@ -52,4 +53,17 @@ test("bulk editor blocks concurrent writes and reconciles against the submitted 
  assert.match(editor,/disabled=\{busy\} checked=\{selectedSet\.has\(r\.key\)\}/);
  assert.match(editor,/enabled=\{editable&&!busy\}/);
  assert.match(editor,/Previous version saved · newer edits unsaved/);
+});
+
+test("mobile footer uses compact two-column controls instead of full-width stacked actions",()=>{
+ assert.match(css,/@media\(max-width:600px\)\{[\s\S]*?\.apex-bulk-footer\{\s*display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.apex-bulk-footer \.button\{[\s\S]*?min-height:44px;max-height:48px/);
+ assert.match(css,/\.apex-bulk-action-short\{display:inline\}/);
+ assert.match(css,/\.apex-bulk-footer \.button:disabled\{opacity:\.43/);
+ assert.match(editor,/className="apex-bulk-action-short"/);
+ assert.match(editor,/aria-label="Preview all saved"/);
+ assert.doesNotMatch(editor,/Select saved products to preview together\./);
+ assert.match(editor,/Publish all eligible/);
+ assert.match(editor,/Publish selected/);
+ assert.match(editor,/saveBulkPublicationRequests/);
 });
