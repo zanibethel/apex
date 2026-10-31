@@ -25,5 +25,6 @@ export async function saveAdminListingOverride(_previous:Result,form:FormData):P
   return {ok:false,message:"Override could not be recorded. Refresh and verify the product status."};
  revalidatePath("/admin/listing-controls");
  revalidatePath("/supplier/catalog");
+ revalidatePath("/supplier/catalog/bulk");
  return {ok:true,message:result.data};
 }
