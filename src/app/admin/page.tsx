@@ -17,9 +17,9 @@ export default async function AdminDashboard() {
   const { data, error } = await client.auth.getUser();
   if (error || !data.user || !isVerifiedPlatformAdmin(data.user)) redirect("/admin/sign-in");
 
-  return <main className="container supplier-shell" style={{ minWidth: 0 }}>
-    <p className="eyebrow">APEX / PLATFORM ADMIN</p>
-    <h1 style={{ fontSize: "clamp(2rem, 7vw, 3.5rem)", lineHeight: 1.1, overflowWrap: "anywhere" }}>Control room</h1>
+  return <main className="container supplier-shell apex-branded-dashboard" style={{ minWidth: 0 }}>
+    <p className="eyebrow">APEX ANABOLICS / PLATFORM ADMIN</p>
+    <h1 style={{ fontSize: "clamp(2rem, 7vw, 3.5rem)", lineHeight: 1.1, overflowWrap: "anywhere" }}>CONTROL ROOM</h1>
     <p className="notice">Authorized administration preview. Payment execution remains disabled.</p>
     <section aria-label="Admin tools" className="apex-admin-grid">
       {dashboardLinks.map(item => <Link key={item.href} href={item.href} className="apex-admin-card">
