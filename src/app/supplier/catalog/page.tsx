@@ -7,6 +7,7 @@ import {ImportReviewForm} from "../imports/review-form";
 import {PromoteReviewedVariantForm} from "../imports/promote-form";
 import {ProductImageUploader} from "./image-uploader";
 import {SourceCostEditor} from "./source-cost-editor";
+import {draftContentChecklist} from "@/lib/catalog/draft-content-checklist.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Shared Products | Apex",robots:{index:false,follow:false}};
@@ -41,7 +42,9 @@ export default async function SharedCatalog() {
 
   const ids=stores.map(store=>store.id);
   const canWrite=process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true" &&
-    stores.length===1&&!stores[0].is_public;
+    stores.length===1&&!stores[0].is_public &&
+    memberships.some(member=>member.supplier_id===stores[0].supplier_id &&
+      (member.role==="owner"||member.role==="manager"));
 
   const [products,categories,inventory,candidates,mappings]=await Promise.all([
     client.from("products")
@@ -81,6 +84,7 @@ export default async function SharedCatalog() {
     const price=Number(product.price_cents);
     const compare=product.compare_at_price_cents==null?null:Number(product.compare_at_price_cents);
     const inv=stock.get(product.id);
+    const checklist=draftContentChecklist({...product,price_cents:price});
     return <div className="apex-product-fields">
       <div className="apex-product-photo">
         {images.get(product.id)
@@ -88,8 +92,6 @@ export default async function SharedCatalog() {
               width={480} height={320} unoptimized style={{width:"100%",height:"100%",objectFit:"cover"}}/>
           : <div className="apex-photo-placeholder">No image uploaded</div>}
       </div>
-      {!product.is_published &&
-        <ProductImageUploader storeId={product.store_id} productId={product.id} enabled={canWrite}/>}
       <div className="apex-product-meta">
         <span>SKU: {product.sku}</span>
         <span>{categoryNames.get(product.category_id??"")??"Uncategorized"}</span>
@@ -105,8 +107,19 @@ export default async function SharedCatalog() {
       <p className="notice">{inv
         ? `Inventory: ${inv.quantity_on_hand} on hand · ${inv.quantity_reserved} reserved`
         : "Inventory not tracked"}</p>
-      {!product.is_published
-        ? <ProductRowEditor
+      {!product.is_published && <div className="apex-content-checklist" aria-label="Private draft content checklist">
+        <strong>Content checklist · {checklist.completed}/{checklist.total}</strong>
+        <p className="notice">{checklist.contentComplete
+          ? "Metadata complete for internal review. Not approved or published."
+          : `Still needed: ${checklist.missing.join(", ")}.`}</p>
+      </div>}
+      {!product.is_published && canWrite && <details className="apex-card-editor">
+        <summary>Manage product image</summary>
+        <ProductImageUploader storeId={product.store_id} productId={product.id} enabled={canWrite}/>
+      </details>}
+      {!product.is_published && <details className="apex-card-editor">
+        <summary>{canWrite?"Edit details, SKU and price":"View product details (read-only)"}</summary>
+        <ProductRowEditor
           storeId={product.store_id} productId={product.id} sku={product.sku} name={product.name}
           description={product.description??""} price={(price/100).toFixed(2)}
           directSourceCost={allowDirectSourceEdit
@@ -116,7 +129,8 @@ export default async function SharedCatalog() {
           comparePrice={compare===null?"":(compare/100).toFixed(2)}
           isActive={product.is_active} categoryId={product.category_id}
           categories={choices} enabled={canWrite}/>
-        : <p className="notice">Published records cannot be changed from the draft editor.</p>}
+      </details>}
+      {product.is_published && <p className="notice">Published records cannot be changed from the draft editor.</p>}
     </div>;
   }
 
@@ -148,12 +162,16 @@ export default async function SharedCatalog() {
                 <span className="eyebrow">SOURCE #{item.source_index+1} · {item.strength}</span>
                 <h3>{item.product_name}</h3>
               </div>
-              <SourceCostEditor storeId={item.store_id} candidateId={item.id}
-                costCents={Number(item.wholesale_cost_cents)} enabled={canWrite}/>
-              <div className="apex-product-review">
-                <ImportReviewForm storeId={item.store_id} candidateId={item.id}
-                  status={item.review_status} enabled={canWrite}/>
-              </div>
+              <p className="apex-source-state">Source review: {item.review_status.replaceAll("_"," ")}</p>
+              <details className="apex-card-editor">
+                <summary>{canWrite?"Review source and cost":"View source review (read-only)"}</summary>
+                <SourceCostEditor storeId={item.store_id} candidateId={item.id}
+                  costCents={Number(item.wholesale_cost_cents)} enabled={canWrite}/>
+                <div className="apex-product-review">
+                  <ImportReviewForm storeId={item.store_id} candidateId={item.id}
+                    status={item.review_status} enabled={canWrite}/>
+                </div>
+              </details>
               {linkedProduct?productFields(linkedProduct)
                :linkedId?<p className="notice">Draft linked. Open the full catalog to locate the product.</p>
                :item.review_status==="approved_for_draft"
@@ -190,8 +208,14 @@ export default async function SharedCatalog() {
     </section>
 
     {stores.length===1&&<div className="apex-product-create">
-      <NewProductForm storeId={stores[0].id} enabled={canWrite} categories={choices}/>
-      <NewCategoryForm storeId={stores[0].id} enabled={canWrite}/>
+      <details className="apex-create-details">
+        <summary>Create private draft product</summary>
+        <NewProductForm storeId={stores[0].id} enabled={canWrite} categories={choices}/>
+      </details>
+      <details className="apex-create-details">
+        <summary>Add private category</summary>
+        <NewCategoryForm storeId={stores[0].id} enabled={canWrite}/>
+      </details>
     </div>}
     {!products.data?.length&&<p className="notice">No products yet. Source variants remain private until a reviewed draft is created.</p>}
     <p className="notice">No public publishing, checkout, payments, or order creation is enabled.</p>
