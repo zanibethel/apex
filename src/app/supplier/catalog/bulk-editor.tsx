@@ -8,13 +8,13 @@ import {CsvProductImport} from "./csv-product-import";
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
  price:string;comparePrice:string;sourceCost:string;categoryId:string;isActive:boolean;
- linkedSource?:boolean;
+ linkedSource?:boolean;needsSave?:boolean;
 };
 type Category={id:string;name:string};
 
 function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
-  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false};
+  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,needsSave:true};
 }
 export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
  storeId:string;editable:boolean;initialRows:BulkEditRow[];categories:Category[];
@@ -26,7 +26,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
  const [pending,startTransition]=useTransition();
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const selectedRows=rows.filter(r=>selectedSet.has(r.key));
- const savedSelected=selectedRows.filter(r=>Boolean(r.id));
+ const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
  const selectedIds=savedSelected.map(r=>r.id!);
  const previewSelected=selectedIds.length&&selectedIds.length<=50
   ?"/supplier/catalog/bulk/preview?ids="+encodeURIComponent(selectedIds.join(","))
@@ -59,13 +59,13 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
    ]))}));
    setRows(prev=>prev.map(r=>{
     const saved=all.find(o=>o.key===r.key&&o.ok&&o.id);
-    return saved?{...r,id:saved.id,sku:saved.sku||r.sku}:r;
+    return saved?{...r,id:saved.id,sku:saved.sku||r.sku,needsSave:false}:r;
    }));
   });
  }
 
  function change(key:string,field:keyof BulkEditRow,value:string|boolean){
-  setRows(prev=>prev.map(r=>r.key===key?{...r,[field]:value}:r));
+  setRows(prev=>prev.map(r=>r.key===key?{...r,[field]:value,needsSave:true}:r));
   setLastSave(prev=>{const copy={...prev};delete copy[key];return copy;});
  }
  function toggle(key:string){
@@ -105,8 +105,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
     {allSelected?"Clear selection":"Select all"}
    </button>
   </div>
-  <p className="notice">Edit several products together. Check the rows to save, then preview one or all saved offers. Upload up to 100 CSV rows, and save checked changes automatically in secure groups of 20.</p>
-  <div className="apex-bulk-rows">
+  <p className="notice">Uploading a CSV immediately builds editable product cards below and fills missing SKUs. Check or uncheck cards to choose what to save. Only saved products can be previewed or submitted for publication. Save up to 100 imported rows in secure batches of 20.</p>
+  <div className="apex-bulk-rows" id="bulk-product-cards">
    {rows.map((r,i)=>{
     const status=lastSave[r.key];
     return <article key={r.key} className="apex-bulk-row">
@@ -116,7 +116,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
         onChange={()=>toggle(r.key)} aria-label={"Select "+(r.name||"new product "+(i+1))}/>
        <strong>{r.name||"New product "+(i+1)}</strong>
       </label>
-      <span>{r.id?"Saved product":"Not saved"}</span>
+      <span>{r.needsSave?(r.id?"Unsaved edits":"Imported draft · not saved"):r.id?"Saved product":"Not saved"}</span>
      </div>
      <div className="apex-bulk-fields">
       <label>Name<input value={r.name} maxLength={120}
@@ -152,7 +152,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
        {status.ok?"✓ Saved":"Not saved"} — {status.message}</p>
        :<p className="notice">Select to include in your next save.</p>}
       <div className="actions">
-       {r.id&&<Link className="button secondary" href={"/supplier/catalog/preview/"+r.id}>
+       {r.id&&!r.needsSave&&<Link className="button secondary" href={"/supplier/catalog/preview/"+r.id}>
         Preview single
        </Link>}
        {!r.id&&<button type="button" className="button secondary"
