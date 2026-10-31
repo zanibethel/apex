@@ -22,6 +22,15 @@ The long eight-step private setup checklist and optional internal content-review
 - **The public-release gate remains structurally disabled.** Neither batch or single requests publish publicly, bypass authorization, or create orders/payouts.
 - This UI does not change any database schema or bypass existing product/category and source-import relationships. Private source cost and images are not overwritten by bulk edits. New draft products start with zero stock; complete inventory and upload images before requesting publication.
 
+## CSV import acceptance
+
+1. Download the blank CSV template and populate a benign test product (leave `product_id` blank). Upload: verify parsed rows are staged and editable, not saved.
+2. Export existing private products, change a nonlinked product's direct source cost and price in the CSV, upload, and confirm the matching SKU becomes an **update** rather than a duplicate. Verify a linked source cost can only change in Source review.
+3. Upload a CSV with malformed numeric values, unknown category, duplicate SKU, or a product_id outside this store; verify line-level issues and no write.
+4. Select valid rows, load them, and save; verify that the returned database-generated SKU and product ID are preserved for later edits. Import 21+ rows and confirm the client submits in audited chunks of 20 with per-row statuses.
+5. Preview selected/all products. Neither uploading nor saving should set `is_published`, bypass an admin hold, or enable the customer checkout.
+6. Verify source costs never appear in public/customer offer tiles; CSV export requires a verified supplier owner/manager page.
+
 ## Manual acceptance
 
 - Create 2–5 new rows with names/prices, select and Save. Confirm per-row saved identifiers, use the existing product editor to add images/stock, and preview single and group tiles.
@@ -33,7 +42,11 @@ The long eight-step private setup checklist and optional internal content-review
 
 ## Limitations / later passes
 
-- This release includes interactive bulk rows, **not CSV/XLSX import**. Bulk CSV upload, mass image association, more advanced inline inventory edit, pagination over 100 products, and atomic single-transaction bulk saves can be added separately after this UX is tested.
+- **CSV template, upload and private export are included.** Template route: `/templates/apex-product-import-template.csv` (also available from the bulk product page). Columns: `product_id,sku,title,description,source_cost,price,compare_at_price,category,active`. Product ID is optional for exact existing-product updates; otherwise a matching same-store SKU edits the existing draft; a new SKU or blank SKU creates a new private draft. `category` is an existing **category name**, not a supplier. Source cost is private and never shown in customer-facing tiles.
+- CSV files are parsed locally in the supplier browser (RFC4180 quotes, multiline text, BOM and CRLF supported); maximum **100 data rows / 256 KB**, with explicit rejected-row messages for missing mandatory data, formulas, invalid prices, unknown categories, mismatched IDs/SKUs and duplicate products. Upload is review-only: checked rows are **loaded to editor, not saved**. Save checked rows after review; a browser-side sequence submits bounded **20-row** batches using the existing authenticated server actions, which report per-row success/failure. Up to 250 staged editor rows can be loaded. Each server batch remains separately authorized; multi-batch saves are not one atomic transaction.
+- An **Export editor CSV** button downloads staged existing saved-product rows with private source costs for editing offline; this may include edits not yet saved to the database. Spreadsheet-formula-like text is escaped on export and rejected on import.
+- Optional fields: `product_id`, `sku` for new drafts, `description`, `source_cost`, `compare_at_price`, `category`, `active`. Required: `title` and positive `price`. `active` can be true/false, yes/no or 1/0; blank retains the existing value on updates. Blank `source_cost` on updates leaves the existing cost unchanged. Supplier-linked import source costs remain protected by the existing separate Source review action. Images and inventory remain on their dedicated editors; no image URL or public media import is enabled.
+- Other later enhancements: mass image association, optional inventory import via its own audited workflow, pagination over 100 existing products, and atomic all-or-nothing bulk transactions.
 - The bulk gallery previews the first 50 saved products; publish batches max 50.
 - Public publication, payment acceptance, customer checkout and fulfillment remain separately gated on supplier/product eligibility, lawful sale, public media delivery, and independently reviewed release safeguards.
 
