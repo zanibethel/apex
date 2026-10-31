@@ -13,6 +13,7 @@ import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-prod
 import {reconcileSavedBulkRow} from "@/lib/catalog/bulk-save-revision.mjs";
 import {filterSupplierBulkRows} from "@/lib/catalog/bulk-workspace-filter.mjs";
 import {privateBulkReadiness} from "@/lib/catalog/private-bulk-readiness.mjs";
+import {supplierAdminFeedback} from "@/lib/catalog/supplier-admin-feedback.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -21,7 +22,7 @@ export type BulkEditRow={
 };
 type Category={id:string;name:string};
 type ListingReadiness={
- productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;missing:string[];
+ productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];
 };
 type PublishOutcome={id:string;ok:boolean;message:string};
 
@@ -209,6 +210,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const publication=r.id?publicationById.get(r.id):undefined;
     const requested=Boolean(listingStatus?.requested||publication?.ok);
     const readiness=privateBulkReadiness(r,listingStatus,Boolean(publication?.ok));
+    const adminFeedback=r.id?supplierAdminFeedback(listingStatus):null;
     const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
     return <article key={r.key} className="apex-bulk-row">
      <div className="apex-bulk-row-title">
@@ -221,10 +223,15 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       <span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>
      </div>
      <details className="apex-bulk-readiness-details">
-      <summary>{readiness.missing.length
-       ?readiness.missing.length+" setup item"+(readiness.missing.length===1?"":"s")+" remaining"
-       :"Status details"}</summary>
+      <summary>{adminFeedback
+       ?"Administrator feedback"+(readiness.missing.length?" · "+readiness.missing.length+" setup items":"")
+       :readiness.missing.length
+        ?readiness.missing.length+" setup item"+(readiness.missing.length===1?"":"s")+" remaining"
+        :"Status details"}</summary>
       <p>{readiness.description}</p>
+      {adminFeedback&&<p className="apex-bulk-admin-feedback">
+       <strong>{adminFeedback.heading}:</strong> {adminFeedback.message}
+      </p>}
       {readiness.missing.length>0&&<ul>
        {readiness.missing.map((item:string)=><li key={item}>{item}</li>)}
       </ul>}
