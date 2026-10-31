@@ -15,6 +15,8 @@ end $guard$;
 
 -- CI fixture has a complete private product whose SKU was edited in previous
 -- review-integrity tests to APX-BETA-DRAFT-002.
+select id as target_product from public.products where sku='APX-BETA-DRAFT-002' \gset
+
 set role authenticated;
 select set_config('request.jwt.claim.apex_role','',false);
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',false);
@@ -24,7 +26,7 @@ begin
  begin
   perform public.set_supplier_listing_intent(
     '20000000-0000-4000-8000-000000000003',
-    (select id from public.products where sku='APX-BETA-DRAFT-002'),
+    :'target_product'::uuid,
     'publish');
   ok:=true;
  exception when others then null;end;
@@ -34,7 +36,7 @@ end $guard$;
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
 select public.set_supplier_listing_intent(
  '20000000-0000-4000-8000-000000000003',
- (select id from public.products where sku='APX-BETA-DRAFT-002'),'publish');
+ :'target_product'::uuid,'publish');
 do $guard$
 begin
  if (select count(*) from public.supplier_listing_controls
@@ -51,7 +53,7 @@ begin
  begin
   perform public.set_admin_listing_override(
     '20000000-0000-4000-8000-000000000003',
-    (select id from public.products where sku='APX-BETA-DRAFT-002'),
+    :'target_product'::uuid,
     'hold','should fail');
   ok:=true;
  exception when others then null;end;
@@ -62,7 +64,7 @@ select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003'
 select set_config('request.jwt.claim.apex_role','platform_admin',false);
 select public.set_admin_listing_override(
  '20000000-0000-4000-8000-000000000003',
- (select id from public.products where sku='APX-BETA-DRAFT-002'),
+ :'target_product'::uuid,
  'hold','Internal hold for verification');
 do $guard$
 begin
@@ -80,7 +82,7 @@ begin
  begin
   perform public.set_supplier_listing_intent(
     '20000000-0000-4000-8000-000000000003',
-    (select id from public.products where sku='APX-BETA-DRAFT-002'),'publish');
+    :'target_product'::uuid,'publish');
   ok:=true;
  exception when others then null;end;
  if ok then raise exception 'Supplier bypassed admin hold';end if;
@@ -102,7 +104,7 @@ begin
  begin
   perform public.set_supplier_listing_intent(
    '20000000-0000-4000-8000-000000000003',
-   (select id from public.products where sku='APX-BETA-DRAFT-002'),
+   :'target_product'::uuid,
    'publish');
   ok:=true;
  exception when others then null;end;
@@ -113,7 +115,7 @@ select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003'
 select set_config('request.jwt.claim.apex_role','platform_admin',false);
 select public.set_admin_listing_override(
  '20000000-0000-4000-8000-000000000003',
- (select id from public.products where sku='APX-BETA-DRAFT-002'),
+ :'target_product'::uuid,
  'approve_republish','Approved for supplier to re-request');
 do $guard$
 begin
@@ -127,13 +129,13 @@ select set_config('request.jwt.claim.apex_role','',false);
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
 select public.set_supplier_listing_intent(
  '20000000-0000-4000-8000-000000000003',
- (select id from public.products where sku='APX-BETA-DRAFT-002'),'publish');
+ :'target_product'::uuid,'publish');
 
 select set_config('request.jwt.claim.apex_role','platform_admin',false);
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',false);
 select public.set_admin_listing_override(
  '20000000-0000-4000-8000-000000000003',
- (select id from public.products where sku='APX-BETA-DRAFT-002'),
+ :'target_product'::uuid,
  'require_review','Review updated labeling');
 do $guard$
 begin
@@ -152,7 +154,7 @@ select set_config('request.jwt.claim.apex_role','',false);
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
 select public.submit_private_product_review(
  '20000000-0000-4000-8000-000000000003',
- (select id from public.products where sku='APX-BETA-DRAFT-002'));
+ :'target_product'::uuid);
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',false);
 select set_config('request.jwt.claim.apex_role','platform_admin',false);
 select public.decide_private_product_review(
@@ -165,7 +167,7 @@ update public.products set price_cents=price_cents+100
  where sku='APX-BETA-DRAFT-002';
 update public.inventory_items set quantity_on_hand=quantity_on_hand+1
  where store_id='20000000-0000-4000-8000-000000000003'
- and product_id=(select id from public.products where sku='APX-BETA-DRAFT-002');
+ and product_id=:'target_product'::uuid;
 do $guard$
 begin
  if (select status from public.private_product_review_states limit 1)<>'approved_internal'
