@@ -25,7 +25,7 @@ test("bulk creation, editing and saved confirmations are selectable and bounded"
  assert.match(bulkEditor,/selectedRows\.length<=20/);
  assert.match(actions,/parsed\.length>20/);
  assert.match(actions,/outcomes\.push/);
- assert.match(actions,/Draft product/);
+ assert.match(actions,/Saved to your private catalog/);
  assert.match(actions,/createDraftProduct/);
  assert.match(actions,/updateDraftProduct/);
  assert.match(operations,/productId:data\.id,sku/);
@@ -70,7 +70,7 @@ test("publish single, publish selected, publish all use existing guarded intent 
  assert.match(publishPanel,/status[es]*\.get/);
  assert.match(preview,/Preview single \/ Publish single/);
  assert.match(actions,/set_supplier_listing_intent/);
- assert.match(actions,/admin hold/i);
+ assert.match(actions,/administrator hold/i);
  assert.match(actions,/Public release remains disabled/);
  assert.match(catalog,/Bulk add \/ edit \/ preview/);
  assert.match(dashboard,/Bulk product manager/);
