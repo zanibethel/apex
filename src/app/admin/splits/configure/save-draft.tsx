@@ -5,7 +5,7 @@ import { saveMultiRecipientDraft } from "./actions";
 type Recipient = { id: string; display_name: string; recipient_type: string; status: string };
 const field = { width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box" as const };
 const label = { display: "grid", gap: 6, minWidth: 0 };
-export function SaveSplitDraft({ enabled, recipients }: { enabled: boolean; recipients: Recipient[] }) {
+export function SaveSplitDraft({ enabled, recipients, stores }: { enabled: boolean; recipients: Recipient[]; stores: { id: string; display_name: string }[] }) {\n  const [scopeType, setScopeType] = useState("storefront");
   const [query, setQuery] = useState("");
   const filtered = recipients.filter(r => (r.display_name + " " + r.recipient_type).toLowerCase().includes(query.toLowerCase()));
   const [state, action, pending] = useActionState(saveMultiRecipientDraft, { ok: false, message: "" });
@@ -31,7 +31,7 @@ export function SaveSplitDraft({ enabled, recipients }: { enabled: boolean; reci
       <p aria-live="polite">Allocated: {sum / 100}% {sum === 10000 && valid ? "✓" : "(must equal 100%)"}</p>
       <button type="button" className="button secondary" disabled={rows.length >= 100} onClick={() => { setRows(all => [...all, { id: next, recipient_id: "", basis_points: "0" }]); setNext(n => n + 1); }}>Add recipient</button>
       <input type="hidden" name="recipients" value={JSON.stringify(rows.map(({ recipient_id, basis_points }) => ({ recipient_id, basis_points: Number(basis_points) })))} />
-      <button className="button secondary" type="submit" disabled={!enabled || pending || !valid || sum !== 10000 || !recipients.length || rows.some(r => !r.recipient_id) || new Set(rows.map(r => r.recipient_id)).size !== rows.length}>{pending ? "Saving…" : "Save draft (no activation)"}</button>
+      <button className="button secondary" type="submit" disabled={!enabled || pending || !valid || sum !== 10000 || !recipients.length || (scopeType === "storefront" && !stores.length) || rows.some(r => !r.recipient_id) || new Set(rows.map(r => r.recipient_id)).size !== rows.length}>{pending ? "Saving…" : "Save draft (no activation)"}</button>
       {!enabled && <p className="notice">Draft saving is disabled in this preview.</p>}
       {state.message && <p role="status">{state.message}</p>}
     </form>
