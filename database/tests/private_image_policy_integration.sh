@@ -29,6 +29,9 @@ sed \
 run_sql database/tests/private_image_policy_before_repair.sql
 # Exercise the actual review-only SQL, including its stored-policy preflight.
 run_sql database/sql/apex_private_product_images_policy_repair_REVIEW_ONLY.sql
+# Simulate hosted image_path constraint drift and verify a valid file is rejected.
+run_sql database/tests/private_image_constraint_before_repair.sql
+run_sql database/sql/apex_private_product_image_path_constraint_repair_REVIEW_ONLY.sql
 run_sql database/tests/private_image_policy_after_repair.sql
 
 # Repair preflight must be one-shot. Re-running against already-corrected
