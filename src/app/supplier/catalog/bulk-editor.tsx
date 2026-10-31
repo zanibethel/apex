@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {BulkCardMedia} from "./bulk-card-media";
+import {BulkInlineOffer} from "./bulk-inline-offer";
 import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
 import {useMemo,useState,useTransition} from "react";
 import {saveBulkProductDrafts} from "./bulk-actions";
@@ -24,6 +25,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  media:BulkSavedMedia[];existingImages:BulkSavedImage[];
 }){
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
+ const [showOfferTiles,setShowOfferTiles]=useState(true);
  const router=useRouter();
  const savedMedia=new Map(media.map(m=>[m.productId,m]));
  const [selected,setSelected]=useState<string[]>([]);
@@ -111,11 +113,20 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     setSelected(allSelected?[]:rows.map(r=>r.key))}>
     {allSelected?"Clear selection":"Select all"}
    </button>
+   <button type="button" className="button secondary"
+    aria-pressed={showOfferTiles}
+    onClick={()=>setShowOfferTiles(value=>!value)}>
+    {showOfferTiles?"Hide live offer tiles":"Show live offer tiles"}
+   </button>
   </div>
-  <p className="notice">Upload a CSV to build editable product cards, with SKUs automatically filled. Save selected to unlock each card’s image picker (upload or choose existing) and stock editor. Only saved products can be previewed or submitted for publication.</p>
+  <p className="notice">Upload a CSV or edit existing products and see the offer tile change immediately. Save selected to keep changes, unlock image/stock controls and proceed to a single or group publication preview. These tiles are private simulations, never live listings.</p>
   <div className="apex-bulk-rows" id="bulk-product-cards">
    {rows.map((r,i)=>{
     const status=lastSave[r.key];
+    const cardMedia=r.id?savedMedia.get(r.id):undefined;
+    const availableStock=cardMedia?.quantityOnHand==null||cardMedia.quantityReserved==null
+     ?undefined:Math.max(0,cardMedia.quantityOnHand-cardMedia.quantityReserved);
+    const category=categories.find(c=>c.id===r.categoryId)?.name??"Uncategorized";
     return <article key={r.key} className="apex-bulk-row">
      <div className="apex-bulk-row-title">
       <label className="apex-bulk-select">
@@ -125,6 +136,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       </label>
       <span>{r.needsSave?(r.id?"Unsaved edits":"Imported draft · not saved"):r.id?"Saved product":"Not saved"}</span>
      </div>
+     <div className={"apex-bulk-card-layout"+(showOfferTiles?"":" apex-bulk-card-layout-single")}>
+      <div className="apex-bulk-editor-side">
      <div className="apex-bulk-fields">
       <label>Name<input value={r.name} maxLength={120}
        disabled={!editable} onChange={e=>change(r.key,"name",e.target.value)}/></label>
@@ -176,6 +189,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       :<p className="apex-bulk-media-locked">
          {r.id?"Save product edits to unlock image and stock tools.":"Save this draft to upload or reuse an image and set stock."}
         </p>}
+      </div>
+      {showOfferTiles&&<BulkInlineOffer row={r} category={category}
+        imageUrl={cardMedia?.imageUrl} availableStock={availableStock}/>}
+     </div>
     </article>;
    })}
   </div>
