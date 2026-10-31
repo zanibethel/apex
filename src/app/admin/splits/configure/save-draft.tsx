@@ -9,7 +9,6 @@ type ScopeOption = { id: string; display_name: string };
 type ProductOption = { id: string; name: string; sku: string };
 export function SaveSplitDraft({ enabled, recipients, stores, suppliers, products }: { enabled: boolean; recipients: Recipient[]; stores: ScopeOption[]; suppliers: ScopeOption[]; products: ProductOption[] }) {
   const [scopeType, setScopeType] = useState("storefront");
-  const [scopeType, setScopeType] = useState("storefront");
   const [query, setQuery] = useState("");
   const scopeOptions = scopeType === "storefront" ? stores.map(s => ({ id: s.id, label: s.display_name })) : scopeType === "supplier" ? suppliers.map(s => ({ id: s.id, label: s.display_name })) : products.map(p => ({ id: p.id, label: p.name + " (" + p.sku + ")" }));
   const filtered = recipients.filter(r => (r.display_name + " " + r.recipient_type).toLowerCase().includes(query.toLowerCase()));
