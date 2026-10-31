@@ -748,3 +748,48 @@ body { background:#07080b; }
  .apex-bulk-inline-preview{padding:10px}
  .apex-bulk-inline-preview .apex-offer-image{max-height:215px}
 }
+
+
+/* Mobile-first fix: make the live customer-style offer visible without
+   scrolling past the product's entire edit form. */
+.apex-bulk-import-notice{
+ margin:0;
+ padding:11px 13px;
+ border:1px solid rgba(235,166,190,.35);
+ border-radius:10px;
+ background:#2b1c29;
+ color:#f0dbe4;
+ font-size:13px;
+ line-height:1.5;
+}
+.apex-bulk-import-tag{
+ font-size:9px;
+ font-weight:750;
+ letter-spacing:.07em;
+ color:#f1bdd0;
+ background:#3b2633;
+ border:1px solid rgba(238,158,187,.25);
+ border-radius:20px;
+ padding:3px 7px;
+ white-space:nowrap;
+}
+@media(max-width:950px){
+ .apex-bulk-card-layout:not(.apex-bulk-card-layout-single) .apex-bulk-inline-preview{
+   order:-1;
+ }
+ .apex-bulk-card-layout>.apex-bulk-editor-side{
+   min-width:0;
+ }
+ .apex-bulk-inline-preview,.apex-bulk-editor-side,
+ .apex-bulk-row,.apex-bulk-fields,.apex-bulk-fields label{
+   max-width:100%;
+   box-sizing:border-box;
+ }
+}
+@media(max-width:500px){
+ .apex-bulk-row-title{align-items:flex-start}
+ .apex-bulk-select{flex-wrap:wrap}
+ .apex-bulk-inline-preview .apex-offer-tile{
+   min-width:0;
+ }
+}

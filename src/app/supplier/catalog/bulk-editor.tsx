@@ -8,6 +8,7 @@ import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
 import {useMemo,useState,useTransition} from "react";
 import {saveBulkProductDrafts} from "./bulk-actions";
 import {CsvProductImport} from "./csv-product-import";
+import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-products.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -29,6 +30,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const router=useRouter();
  const savedMedia=new Map(media.map(m=>[m.productId,m]));
  const [selected,setSelected]=useState<string[]>([]);
+ const [recentImportKeys,setRecentImportKeys]=useState<string[]>([]);
  const [lastSave,setLastSave]=useState<{[key:string]:{ok:boolean;message:string}}>({});
  const [result,setResult]=useState({ok:false,message:"",results:[] as {key:string;ok:boolean;name:string;message:string;id?:string;sku?:string}[]});
  const [pending,startTransition]=useTransition();
@@ -88,11 +90,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  }
  function loadFromCsv(imported:BulkEditRow[]){
   const incoming=new Set(imported.map(r=>r.key));
-  setRows(prev=>{
-   const merged=prev.map(r=>imported.find(n=>n.key===r.key)??r);
-   const current=new Set(prev.map(r=>r.key));
-   return [...merged,...imported.filter(r=>!current.has(r.key))];
-  });
+  // Put new or updated CSV cards FIRST, so an upload does not disappear
+  // beneath up to 100 existing products on narrow/mobile screens.
+  setRows(prev=>prioritizeImportedProducts(prev,imported));
+  setRecentImportKeys(imported.map(r=>r.key));
   setSelected(imported.map(r=>r.key));
   setLastSave(prev=>{const copy={...prev};for(const key of incoming)delete copy[key];return copy;});
  }
@@ -101,6 +102,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  }
  const selectedValid=selectedRows.length>0&&selectedRows.length<=250;
  const allSelected=rows.length>0&&selected.length===rows.length;
+ const recentImported=new Set(recentImportKeys);
 
  return <section className="apex-bulk-workspace" aria-label="Bulk product creation and editing">
   <CsvProductImport rows={rows} categories={categories} disabled={!editable||pending} onLoad={loadFromCsv}/>
@@ -120,6 +122,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    </button>
   </div>
   <p className="notice">Upload a CSV or edit existing products and see the offer tile change immediately. Save selected to keep changes, unlock image/stock controls and proceed to a single or group publication preview. These tiles are private simulations, never live listings.</p>
+  {recentImportKeys.length>0&&<p className="apex-bulk-import-notice" role="status">
+   {recentImportKeys.length} CSV product {recentImportKeys.length===1?"card is":"cards are"} at the top of the workspace.
+   Review their live previews and choose Save selected when ready.
+  </p>}
   <div className="apex-bulk-rows" id="bulk-product-cards">
    {rows.map((r,i)=>{
     const status=lastSave[r.key];
@@ -133,6 +139,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        <input type="checkbox" checked={selectedSet.has(r.key)}
         onChange={()=>toggle(r.key)} aria-label={"Select "+(r.name||"new product "+(i+1))}/>
        <strong>{r.name||"New product "+(i+1)}</strong>
+       {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
       </label>
       <span>{r.needsSave?(r.id?"Unsaved edits":"Imported draft · not saved"):r.id?"Saved product":"Not saved"}</span>
      </div>
