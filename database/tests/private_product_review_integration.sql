@@ -14,7 +14,7 @@ grant execute on function auth.jwt() to authenticated;
 update public.products p set
  description='Synthetic internal review only',
  category_id='30000000-0000-4000-8000-000000000005',
- is_active=true, price_cents=4500,
+ is_active=true,
  image_path=p.store_id::text||'/'||p.id::text||'/00000000-0000-4000-8000-000000000010.png'
 where sku='APX-BETA-DRAFT-001' and store_id='20000000-0000-4000-8000-000000000003';
 insert into public.inventory_items(store_id,product_id,quantity_on_hand,quantity_reserved)
