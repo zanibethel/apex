@@ -387,3 +387,26 @@ body { background:#07080b; }
 @media(max-width:420px){
  .apex-image-picker-tabs{grid-template-columns:1fr}
 }
+
+
+/* Private supplier-review queue: clear progression, small mobile footprint. */
+.apex-private-review-status{
+  margin-top:14px;padding:13px;border:1px solid rgba(204,207,217,.3);
+  border-radius:10px;background:#15151d;display:grid;gap:8px;
+}
+.apex-private-review-status strong{font-size:14px;color:#f2e5eb}
+.apex-private-review-status .notice{margin:0}
+.apex-review-submit{display:grid;gap:10px;margin-top:8px}
+.apex-review-submit .button{min-height:46px;margin:0}
+.apex-review-queue{padding-bottom:60px}
+.apex-review-queue .apex-product-card{gap:12px}
+.apex-review-queue .apex-product-card-head h2{
+  margin:0;font-size:clamp(20px,3vw,26px);overflow-wrap:anywhere;
+}
+.apex-admin-review-form{margin-top:0}
+.apex-review-note{padding:12px;border-left:3px solid #ed4b77;background:#17151c}
+.apex-setup-all summary{font-size:13px}
+@media(max-width:540px){
+ .apex-private-review-status{padding:12px}
+ .apex-review-queue .apex-product-grid{grid-template-columns:minmax(0,1fr)}
+}

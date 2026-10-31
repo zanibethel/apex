@@ -8,6 +8,8 @@ import {PromoteReviewedVariantForm} from "../imports/promote-form";
 import {ProductImageUploader} from "./image-uploader";
 import {SourceCostEditor} from "./source-cost-editor";
 import {draftContentChecklist,draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
+import {internalReviewLabel} from "@/lib/catalog/private-review-utils.mjs";
+import {SupplierReviewSubmission} from "./review-submission";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Shared Products | Apex",robots:{index:false,follow:false}};
@@ -46,7 +48,7 @@ export default async function SharedCatalog() {
     memberships.some(member=>member.supplier_id===stores[0].supplier_id &&
       (member.role==="owner"||member.role==="manager"));
 
-  const [products,categories,inventory,candidates,mappings]=await Promise.all([
+  const [products,categories,inventory,candidates,mappings,reviews]=await Promise.all([
     client.from("products")
       .select("id,store_id,category_id,sku,name,description,price_cents,internal_source_cost_cents,compare_at_price_cents,is_active,image_path,currency,is_published")
       .in("store_id",ids).order("name",{ascending:true}).limit(100),
@@ -58,6 +60,8 @@ export default async function SharedCatalog() {
       .in("store_id",ids).order("source_index",{ascending:true}).limit(100),
     client.from("supplier_candidate_drafts")
       .select("store_id,candidate_id,product_id").in("store_id",ids).limit(500),
+    client.from("private_product_review_states").select("store_id,product_id,status,review_note,submitted_at")
+      .in("store_id",ids).limit(100),
   ]);
   if(products.error||categories.error||inventory.error||mappings.error)
     return <main className="container supplier-shell">
@@ -76,6 +80,7 @@ export default async function SharedCatalog() {
   const choices=(categories.data??[]).map(c=>({id:c.id,name:c.name}));
   const stock=new Map(inventory.data?.map(item=>[item.product_id,item])??[]);
   const productsById=new Map(products.data?.map(p=>[p.id,p])??[]);
+  const reviewByProduct=new Map(reviews.data?.map(r=>[r.product_id,r])??[]);
   const draftsByCandidate=new Map(mappings.data?.map(m=>[m.candidate_id,m.product_id])??[]);
   const linkedProductIds=new Set(mappings.data?.map(m=>m.product_id)??[]);
   type ProductRow=NonNullable<typeof products.data>[number];
@@ -87,6 +92,8 @@ export default async function SharedCatalog() {
     const checklist=draftContentChecklist({...product,price_cents:price});
     const setup=draftSetupSteps({...product,price_cents:price},inv);
     const missingSteps=setup.steps.filter(step=>!step.complete);
+    const review=reviewByProduct.get(product.id);
+    const reviewStatus=review?.status??"draft";
     const reusableImages=canWrite?(products.data??[])
       .filter(source=>source.store_id===product.store_id&&source.id!==product.id&&
         !source.is_published&&Boolean(source.image_path)&&images.has(source.id))
@@ -143,7 +150,7 @@ export default async function SharedCatalog() {
           </ul>
           : <p className="notice">All internal product setup fields are filled. Approval remains separate.</p>}
         <details className="apex-setup-all">
-          <summary>View all {setup.total} setup checks</summary>
+          <summary>{setup.setupComplete?"8/8 complete · View checks":`View all ${setup.total} setup checks`}</summary>
           <ul>
             {setup.steps.map(step=><li key={step.id}>
               <span aria-hidden="true">{step.complete?"✓":"○"}</span>
@@ -151,6 +158,20 @@ export default async function SharedCatalog() {
             </li>)}
           </ul>
         </details>
+        <div className="apex-private-review-status">
+          <strong>Admin review: {reviews.error?"Unavailable":internalReviewLabel(reviewStatus)}</strong>
+          {review?.review_note&&<p className="notice">Admin feedback: {review.review_note}</p>}
+          {reviews.error
+            ? <p className="notice">Review workflow is not installed in this environment yet.</p>
+            :setup.setupComplete&&canWrite&&
+             (!review||reviewStatus==="changes_requested")
+             ? <SupplierReviewSubmission storeId={product.store_id} productId={product.id}
+                  enabled={canWrite}/>
+             :<p className="notice">{!setup.setupComplete?"Finish product setup before submitting."
+               :reviewStatus==="pending_review"?"Waiting for admin decision."
+               :reviewStatus==="approved_internal"?"Approved for internal review only; still not published."
+               :"An authorized manager can submit this draft for private review."}</p>}
+        </div>
         <div className="apex-publication-roadmap">
           <h4>Storefront: Not published</h4>
           <ol>
@@ -158,7 +179,8 @@ export default async function SharedCatalog() {
               <span>{setup.setupComplete?"Done for internal data entry":"Finish the items above"}</span>
             </li>
             <li><strong>Admin and product eligibility review</strong>
-              <span>Not approved. Review process is separate from product editing.</span>
+              <span>{reviewStatus==="approved_internal"?"Internal content reviewed; storefront release still blocked.":
+                "Awaiting separate internal content review and any required eligibility checks."}</span>
             </li>
             <li><strong>Release to storefront</strong>
               <span>Not enabled. Public listing, category/store visibility and public image delivery require an approved release workflow.</span>
