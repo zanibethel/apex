@@ -257,27 +257,43 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     </article>;
    })}
   </div>
-  <div className="apex-bulk-footer">
+  <div className="apex-bulk-footer" aria-label="Bulk product actions">
    <form action={saveSelected}>
-    <button type="submit" className="button primary" disabled={!editable||busy||!selectedValid}>
-     {pending?"Saving…":"Save selected ("+selectedRows.length+")"}
+    <button type="submit" className="button primary" disabled={!editable||busy||!selectedValid}
+     aria-label={pending?"Saving selected products":"Save selected ("+selectedRows.length+")"}>
+     {pending?"Saving…":<>
+      <span className="apex-bulk-action-long">Save selected ({selectedRows.length})</span>
+      <span className="apex-bulk-action-short" aria-hidden="true">Save ({selectedRows.length})</span>
+     </>}
     </button>
    </form>
-   {previewSelected?<Link className="button secondary" href={previewSelected}>
-     Preview selected ({selectedIds.length})
-    </Link>:<span className="notice">Select saved products to preview together.</span>}
-   <Link className="button secondary" href="/supplier/catalog/bulk/preview?all=1">
-    Preview all saved
+   {previewSelected&&<Link className="button secondary" href={previewSelected}
+    aria-label={"Preview selected ("+selectedIds.length+")"}>
+     <span className="apex-bulk-action-long">Preview selected ({selectedIds.length})</span>
+     <span className="apex-bulk-action-short" aria-hidden="true">Preview selected</span>
+    </Link>}
+   <Link className="button secondary" href="/supplier/catalog/bulk/preview?all=1"
+    aria-label="Preview all saved">
+    <span className="apex-bulk-action-long">Preview all saved</span>
+    <span className="apex-bulk-action-short" aria-hidden="true">Preview all</span>
    </Link>
    <button type="button" className="button secondary"
     disabled={!editable||pending||publishPending||!eligibleSelectedIds.length||eligibleSelectedIds.length>publicationLimit}
+    aria-label={publishPending?"Saving selected publication requests":"Publish selected ("+eligibleSelectedIds.length+")"}
     onClick={()=>publish(eligibleSelectedIds)}>
-    {publishPending?"Saving publication requests…":"Publish selected ("+eligibleSelectedIds.length+")"}
+    {publishPending?"Saving…":<>
+     <span className="apex-bulk-action-long">Publish selected ({eligibleSelectedIds.length})</span>
+     <span className="apex-bulk-action-short" aria-hidden="true">Publish selected ({eligibleSelectedIds.length})</span>
+    </>}
    </button>
    <button type="button" className="button primary"
     disabled={!editable||pending||publishPending||!eligiblePublishIds.length||eligiblePublishIds.length>publicationLimit}
+    aria-label={publishPending?"Saving eligible publication requests":"Publish all eligible ("+eligiblePublishIds.length+")"}
     onClick={()=>publish(eligiblePublishIds)}>
-    {publishPending?"Saving publication requests…":"Publish all eligible ("+eligiblePublishIds.length+")"}
+    {publishPending?"Saving…":<>
+     <span className="apex-bulk-action-long">Publish all eligible ({eligiblePublishIds.length})</span>
+     <span className="apex-bulk-action-short" aria-hidden="true">Publish all ({eligiblePublishIds.length})</span>
+    </>}
    </button>
   </div>
   <p className="notice">Publish submits private supplier requests only after saved product details and stock pass checks. Administrative holds remain enforced; no offer becomes publicly visible.</p>
