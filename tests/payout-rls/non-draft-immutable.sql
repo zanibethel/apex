@@ -1,18 +1,4 @@
 -- Verify the RPC cannot modify published/scheduled/active payout rules.
-begin;
-set local role authenticated;
-select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
-select set_config('request.jwt.claims','{"app_metadata":{"apex_role":"platform_admin"}}',true);
-do $$
-declare v_id uuid;
-begin
- v_id := public.save_payout_rule_draft(null,'storefront','30000000-0000-0000-0000-000000000001',
- '[{"recipient_id":"10000000-0000-0000-0000-000000000001","basis_points":6000},{"recipient_id":"10000000-0000-0000-0000-000000000002","basis_points":4000}]');
- -- A direct status update is unavailable to authenticated users. Test fixture
- -- changes the row using the privileged setup role in a separate transaction.
- perform set_config('apex.test_rule_id',v_id::text,true);
-end $$;
-rollback;
 -- Test as a single transaction with a privileged fixture update followed by
 -- a role-restricted RPC call. All changes are rolled back.
 begin;
