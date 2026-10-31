@@ -10,7 +10,7 @@ export default function AccountSignInPage() {
     <section className="supplier-panel" style={{maxWidth:560,marginInline:"auto"}}>
       <p className="eyebrow">APEX / ACCOUNT</p>
       <h1 style={{fontSize:"clamp(2rem,7vw,3rem)"}}>Sign in</h1>
-      <p className="notice">One sign-in for your account and any workspaces you're authorized to access.</p>
+      <p className="notice">One sign-in for your account and any workspaces you are authorized to access.</p>
       <form action={action} className="supplier-form">
         <label htmlFor="account-email">Email</label>
         <input id="account-email" name="email" type="email" autoComplete="username" maxLength={254} required />
