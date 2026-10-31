@@ -32,15 +32,33 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
   ?"/supplier/catalog/bulk/preview?ids="+encodeURIComponent(selectedIds.join(","))
   :null;
 
- function saveSelected(formData:FormData){
+ function saveSelected(_form:FormData){
+  // Server enforces a 20-row maximum per call. The UI safely submits a larger
+  // CSV selection in bounded sequential chunks and reports every row.
+  const pendingRows=selectedRows.slice();
   startTransition(async()=>{
-   const outcome=await saveBulkProductDrafts({ok:false,message:"",results:[]},formData);
-   setResult(outcome);
-   setLastSave(prev=>({...prev,...Object.fromEntries(outcome.results.map(r=>[
+   const all: {key:string;ok:boolean;name:string;message:string;id?:string;sku?:string}[]=[];
+   let stopped=false;
+   for(let i=0;i<pendingRows.length;i+=20){
+    const batchForm=new FormData();
+    batchForm.set("storeId",storeId);
+    batchForm.set("rows",JSON.stringify(pendingRows.slice(i,i+20)));
+    try{
+     const next=await saveBulkProductDrafts({ok:false,message:"",results:[]},batchForm);
+     if(!next.results.length){stopped=true;break;}
+     all.push(...next.results);
+    }catch{stopped=true;break;}
+   }
+   const completed=all.filter(r=>r.ok).length;
+   setResult({ok:!stopped&&all.length===pendingRows.length&&completed===all.length,
+    message:String(completed)+" of "+String(pendingRows.length)+" rows saved."+
+     (stopped?" A batch stopped before completion; review and retry remaining rows.":""),
+    results:all});
+   setLastSave(prev=>({...prev,...Object.fromEntries(all.map(r=>[
     r.key,{ok:r.ok,message:r.message}
    ]))}));
    setRows(prev=>prev.map(r=>{
-    const saved=outcome.results.find(o=>o.key===r.key&&o.ok&&o.id);
+    const saved=all.find(o=>o.key===r.key&&o.ok&&o.id);
     return saved?{...r,id:saved.id,sku:saved.sku||r.sku}:r;
    }));
   });
@@ -54,7 +72,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
   setSelected(prev=>prev.includes(key)?prev.filter(x=>x!==key):[...prev,key]);
  }
  function addRows(count:number){
-  if(!editable||rows.length+count>120)return;
+  if(!editable||rows.length+count>250)return;
   const added=Array.from({length:count},()=>newRow());
   setRows(prev=>[...prev,...added]);
   setSelected(prev=>[...prev,...added.map(r=>r.key)]);
@@ -72,22 +90,22 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
  function removeUnsaved(key:string){
   setRows(prev=>prev.filter(r=>r.key!==key));setSelected(prev=>prev.filter(k=>k!==key));
  }
- const selectedValid=selectedRows.length>0&&selectedRows.length<=20;
+ const selectedValid=selectedRows.length>0&&selectedRows.length<=250;
  const allSelected=rows.length>0&&selected.length===rows.length;
 
  return <section className="apex-bulk-workspace" aria-label="Bulk product creation and editing">
   <CsvProductImport rows={rows} categories={categories} disabled={!editable||pending} onLoad={loadFromCsv}/>
   <div className="apex-bulk-toolbar">
    <button type="button" className="button secondary" onClick={()=>addRows(1)}
-    disabled={!editable||rows.length>=120}>+ Add product</button>
+    disabled={!editable||rows.length>=250}>+ Add product</button>
    <button type="button" className="button secondary" onClick={()=>addRows(5)}
-    disabled={!editable||rows.length>115}>+ Add 5 products</button>
+    disabled={!editable||rows.length>245}>+ Add 5 products</button>
    <button type="button" className="button secondary" onClick={()=>
     setSelected(allSelected?[]:rows.map(r=>r.key))}>
     {allSelected?"Clear selection":"Select all"}
    </button>
   </div>
-  <p className="notice">Edit several products together. Check the rows to save, then preview one or all saved offers. Save up to 20 changes per batch.</p>
+  <p className="notice">Edit several products together. Check the rows to save, then preview one or all saved offers. Upload up to 100 CSV rows, and save checked changes automatically in secure groups of 20.</p>
   <div className="apex-bulk-rows">
    {rows.map((r,i)=>{
     const status=lastSave[r.key];
@@ -146,8 +164,6 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
   </div>
   <div className="apex-bulk-footer">
    <form action={saveSelected}>
-    <input type="hidden" name="storeId" value={storeId}/>
-    <input type="hidden" name="rows" value={JSON.stringify(selectedRows)}/>
     <button type="submit" className="button primary" disabled={!editable||pending||!selectedValid}>
      {pending?"Saving…":"Save selected ("+selectedRows.length+")"}
     </button>
@@ -159,9 +175,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
     Preview all saved
    </Link>
   </div>
-  {selectedRows.length>20&&<p role="status" className="notice">
-   Save products in groups of 20. {selectedRows.length} rows currently selected.
-  </p>}
+  {selectedRows.length>20&&<p className="notice">The selected products will be saved in sequential batches of 20.</p>}
   {result.message&&<p role="status" className="apex-bulk-result">{result.message}</p>}
  </section>;
 }
