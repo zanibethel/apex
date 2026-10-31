@@ -37,7 +37,7 @@ test("new imports are selected, tagged and described after upload",()=>{
 });
 
 test("live offer preview appears before long edit form on mobile",()=>{
- assert.match(editor,/className="apex-bulk-card-layout"/);
+ assert.match(editor,/className=\{"apex-bulk-card-layout"/);
  assert.match(editor,/className="apex-bulk-editor-side"/);
  assert.match(editor,/showOfferTiles&&<BulkInlineOffer/);
  assert.match(css,/@media\(max-width:950px\)/);
