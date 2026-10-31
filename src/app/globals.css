@@ -869,3 +869,12 @@ body { background:#07080b; }
  .apex-bulk-readiness-state{font-size:10px;padding:5px 8px}
  .apex-bulk-readiness-details{margin-bottom:9px}
 }
+
+/* Supplier-visible feedback from authenticated, store-scoped admin controls. */
+.apex-bulk-admin-feedback{
+ padding:10px 12px;margin:8px 0;
+ border:1px solid rgba(230,161,179,.32);border-radius:8px;
+ background:#2b1d27;color:#f0d7df;font-size:12px;line-height:1.5;
+ overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.apex-bulk-admin-feedback strong{color:#ffe7ef}
