@@ -16,6 +16,10 @@ type Snapshot={
  category_id?:string;image_path?:string;price_cents?:number;
  is_active?:boolean;quantity_on_hand?:number;quantity_reserved?:number;
 };
+type HistoryEvent={
+ id:number;store_id:string;product_id:string;event_type:string;
+ actor_id:string|null;note:string|null;snapshot:unknown;created_at:string;
+};
 function snapshot(value:unknown):Snapshot {
  return value&&typeof value==="object"&&!Array.isArray(value)?value as Snapshot:{};
 }
@@ -82,7 +86,7 @@ export default async function ProductReviewsPage(){
       const approved=item.status==="approved_internal";
       const changeRequested=item.status==="changes_requested";
       const imageUrl=previews.get(item.product_id);
-      const history=historyByProduct.get(reviewHistoryKey(item.store_id,item.product_id))??[];
+      const history=(historyByProduct.get(reviewHistoryKey(item.store_id,item.product_id))??[]) as HistoryEvent[];
       return <article key={item.product_id} className="apex-product-card">
        <div className="apex-product-card-head">
         <span className="eyebrow">{internalReviewLabel(item.status)}</span>
