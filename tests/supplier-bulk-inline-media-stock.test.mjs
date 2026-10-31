@@ -1,0 +1,70 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const read=p=>readFileSync(p,"utf8");
+const page=read("src/app/supplier/catalog/bulk/page.tsx");
+const editor=read("src/app/supplier/catalog/bulk-editor.tsx");
+const card=read("src/app/supplier/catalog/bulk-card-media.tsx");
+const image=read("src/app/supplier/catalog/image-uploader.tsx");
+const imageActions=read("src/app/supplier/catalog/image-actions.ts");
+const actions=read("src/app/supplier/operations/actions.ts");
+const css=read("src/app/globals.css");
+const importer=read("src/app/supplier/catalog/csv-product-import.tsx");
+
+test("bulk page scopes both stock and reusable private images to one supplier store",()=>{
+ assert.match(page,/\.eq\("store_id",store\.id\)\.eq\("is_published",false\)/);
+ assert.match(page,/client\.from\("inventory_items"\)/);
+ assert.match(page,/quantity_on_hand,quantity_reserved/);
+ assert.match(page,/client\.storage\.from\("apex-draft-product-images"\)/);
+ assert.match(page,/\.createSignedUrl\(product\.image_path!,120\)/);
+ assert.match(page,/if\(!error&&data\?\.signedUrl\)signedImages\.set/);
+ assert.match(page,/const imageLibrary=/);
+ assert.match(page,/const media=/);
+ assert.match(page,/existingImages=\{imageLibrary\}/);
+ assert.match(page,/media=\{media\}/);
+ assert.doesNotMatch(page,/service_role|createPublicUrl|is_published:true|is_public:true/);
+});
+test("a saved card has inline image and audited stock actions, unsaved CSV cards do not",()=>{
+ assert.match(editor,/BulkCardMedia/);
+ assert.match(editor,/r\.id&&!r\.needsSave/);
+ assert.match(editor,/Save this draft to upload or reuse an image and set stock/);
+ assert.match(editor,/savedMedia\.get\(r\.id\)\?\.imageUrl/);
+ assert.match(editor,/savedMedia\.get\(r\.id\)\?\.quantityOnHand/);
+ assert.match(editor,/existingImages=\{existingImages\}/);
+ assert.match(editor,/if\(completed>0\)router\.refresh\(\)/);
+ assert.match(importer,/needsSave:true/);
+});
+test("image picker reuses the existing private upload and same-store copy safeguards",()=>{
+ assert.match(card,/ProductImageUploader/);
+ assert.match(card,/Upload image \/ Choose existing/);
+ assert.match(card,/existingImages\.filter\(image=>image\.productId!==productId\)/);
+ assert.match(image,/requestProductImageUpload/);
+ assert.match(image,/requestProductImageReuse/);
+ assert.match(image,/attachProductImage/);
+ assert.match(image,/PNG, JPEG or WebP/);
+ assert.match(image,/3145728/);
+ assert.match(imageActions,/const prefix=storeId\+"\/"\+sourceProductId\+"\/"/);
+ assert.match(imageActions,/\.eq\("store_id",storeId\)/);
+ assert.match(imageActions,/\.eq\("is_published",false\)/);
+ assert.match(imageActions,/createSignedUploadUrl\(path\)/);
+ assert.doesNotMatch(card,/createPublicUrl|service_role|is_published:true/);
+});
+test("inline stock enforces expected on-hand CAS and never changes reservations",()=>{
+ assert.match(card,/adjustInventory/);
+ assert.match(card,/form\.set\("expectedOnHand",String\(persisted\)\)/);
+ assert.match(card,/form\.set\("quantityOnHand",String\(quantity\)\)/);
+ assert.match(card,/Number\.isSafeInteger\(quantity\)/);
+ assert.match(card,/quantity>1000000/);
+ assert.match(card,/setPersisted\(quantity\);router\.refresh\(\)/);
+ assert.match(actions,/\.eq\("quantity_on_hand",expected\)/);
+ assert.match(actions,/\.eq\("is_published", false\)/);
+ assert.match(actions,/Stock was not updated\. Refresh in case the quantity changed/);
+ assert.doesNotMatch(card,/\.from\("inventory_items"\)\.update|\.update\(\{quantity_reserved/);
+});
+test("inline controls are mobile responsive and existing product management remains",()=>{
+ assert.match(css,/\.apex-bulk-card-media/);
+ assert.match(css,/\.apex-bulk-media-photo/);
+ assert.match(css,/@media\(max-width:560px\)/);
+ assert.match(page,/Source review/);
+ assert.match(page,/New products begin as private drafts with zero stock/);
+});

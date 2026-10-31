@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import {useRouter} from "next/navigation";
+import {BulkCardMedia} from "./bulk-card-media";
+import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
 import {useMemo,useState,useTransition} from "react";
 import {saveBulkProductDrafts} from "./bulk-actions";
 import {CsvProductImport} from "./csv-product-import";
@@ -16,10 +19,13 @@ function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
   price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,needsSave:true};
 }
-export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
+export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages}:{
  storeId:string;editable:boolean;initialRows:BulkEditRow[];categories:Category[];
+ media:BulkSavedMedia[];existingImages:BulkSavedImage[];
 }){
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
+ const router=useRouter();
+ const savedMedia=new Map(media.map(m=>[m.productId,m]));
  const [selected,setSelected]=useState<string[]>([]);
  const [lastSave,setLastSave]=useState<{[key:string]:{ok:boolean;message:string}}>({});
  const [result,setResult]=useState({ok:false,message:"",results:[] as {key:string;ok:boolean;name:string;message:string;id?:string;sku?:string}[]});
@@ -61,6 +67,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
     const saved=all.find(o=>o.key===r.key&&o.ok&&o.id);
     return saved?{...r,id:saved.id,sku:saved.sku||r.sku,needsSave:false}:r;
    }));
+   if(completed>0)router.refresh();
   });
  }
 
@@ -105,7 +112,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
     {allSelected?"Clear selection":"Select all"}
    </button>
   </div>
-  <p className="notice">Uploading a CSV immediately builds editable product cards below and fills missing SKUs. Check or uncheck cards to choose what to save. Only saved products can be previewed or submitted for publication. Save up to 100 imported rows in secure batches of 20.</p>
+  <p className="notice">Upload a CSV to build editable product cards, with SKUs automatically filled. Save selected to unlock each card’s image picker (upload or choose existing) and stock editor. Only saved products can be previewed or submitted for publication.</p>
   <div className="apex-bulk-rows" id="bulk-product-cards">
    {rows.map((r,i)=>{
     const status=lastSave[r.key];
@@ -159,6 +166,16 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
         onClick={()=>removeUnsaved(r.key)}>Remove unsaved</button>}
       </div>
      </div>
+     {r.id&&!r.needsSave
+      ?<BulkCardMedia key={r.id+":"+String(savedMedia.get(r.id)?.quantityOnHand??"missing")} storeId={storeId} productId={r.id}
+         enabled={editable&&!pending}
+         imageUrl={savedMedia.get(r.id)?.imageUrl}
+         quantityOnHand={savedMedia.get(r.id)?.quantityOnHand}
+         quantityReserved={savedMedia.get(r.id)?.quantityReserved}
+         existingImages={existingImages}/>
+      :<p className="apex-bulk-media-locked">
+         {r.id?"Save product edits to unlock image and stock tools.":"Save this draft to upload or reuse an image and set stock."}
+        </p>}
     </article>;
    })}
   </div>
