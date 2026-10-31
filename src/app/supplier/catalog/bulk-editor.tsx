@@ -221,8 +221,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         onChange={e=>change(r.key,"description",e.target.value)}/></label>
      </div>
      <div className="apex-bulk-row-footer">
-      {status?<p role="status" className={status.ok?"apex-bulk-saved":"apex-bulk-error"}>
-       {status.ok?"✓ Saved":"Not saved"} — {status.message}</p>
+      {status?<p role="status" className={status.ok&&!r.needsSave?"apex-bulk-saved":"apex-bulk-error"}>
+       {status.ok?(r.needsSave?"Previous version saved · newer edits unsaved":"✓ Saved"):"Not saved"} — {status.message}</p>
        :<p className="notice">Select to include in your next save.</p>}
       <div className="actions">
        {r.id&&!r.needsSave&&<Link className="button secondary" href={"/supplier/catalog/preview/"+r.id}>
