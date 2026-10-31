@@ -9,7 +9,7 @@ type OfferTileProps={
  compareAtCents:number|null;
  imageUrl?:string;
  currency:string;
- availableStock:number;
+ availableStock?:number;
 };
 
 function formatPrice(cents:number,currency:string) {
@@ -40,7 +40,7 @@ export function OfferTile({name,sku,description,category,priceCents,compareAtCen
     <strong>{formatPrice(priceCents,currency)}</strong>
     {discount&&<s>{formatPrice(compareAtCents,currency)}</s>}
    </div>
-   <p className="apex-offer-availability">{availableStock>0?"In stock":"Out of stock"}</p>
+   <p className="apex-offer-availability">{availableStock==null?"Stock not entered":availableStock>0?"In stock":"Out of stock"}</p>
   </div>
  </article>;
 }
