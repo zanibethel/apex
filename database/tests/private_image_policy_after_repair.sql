@@ -23,16 +23,22 @@ END $assert$;
 -- Beta manager can insert and read their assigned PRIVATE DRAFT image.
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
--- Diagnostic until the isolated policy expression passes for a real draft path.
+-- Synthetic fixture diagnostics: investigate exact Postgres predicate mismatch.
 SELECT policyname, with_check FROM pg_policies
  WHERE schemaname='storage' AND tablename='objects'
-   AND policyname='apex_member_upload_draft_image';
+  AND policyname='apex_member_upload_draft_image';
 SELECT p.sku, auth.uid() AS actor, p.id AS product_id,
  p.store_id::text||'/'||p.id::text||'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png' AS path,
  storage.foldername(p.store_id::text||'/'||p.id::text||'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png') AS folders,
  storage.filename(p.store_id::text||'/'||p.id::text||'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png') AS filename,
  (storage.filename(p.store_id::text||'/'||p.id::text||'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png') ~
-  '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}\\.(png|jpg|webp)INSERT INTO storage.objects(bucket_id,name)
+  '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}\.(png|jpg|webp)$') AS file_regex_matches,
+ EXISTS (SELECT 1 FROM public.stores s JOIN public.supplier_memberships m
+   ON m.supplier_id=s.supplier_id WHERE s.id=p.store_id
+   AND s.is_public=false AND m.user_id=auth.uid()
+   AND m.role IN('owner','manager')) AS permission_matches
+ FROM public.products p WHERE p.sku='B-NEW-DRAFT';
+INSERT INTO storage.objects(bucket_id,name)
  SELECT 'apex-draft-product-images',
   p.store_id::text||'/'||p.id::text||'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png'
  FROM public.products p WHERE p.sku='B-NEW-DRAFT';
