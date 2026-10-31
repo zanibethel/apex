@@ -27,21 +27,24 @@ export default async function BulkProductWorkspace(){
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
  const store=stores[0];
- const [{data:products,error:productError},{data:categories,error:categoryError}]=await Promise.all([
+ const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError}]=await Promise.all([
   client.from("products")
-   .select("id,sku,name,description,price_cents,compare_at_price_cents,category_id,is_active")
+   .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active")
    .eq("store_id",store.id).eq("is_published",false).order("name").limit(100),
   client.from("categories").select("id,name").eq("store_id",store.id).order("name").limit(100),
+  client.from("supplier_candidate_drafts").select("product_id").eq("store_id",store.id).limit(500),
  ]);
- if(productError||categoryError)return <main className="container supplier-shell">
+ if(productError||categoryError||linkedError)return <main className="container supplier-shell">
   <h1>Private catalog temporarily unavailable.</h1>
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
+ const linkedProducts=new Set((linked??[]).map(p=>p.product_id));
  const initialRows=(products??[]).map(p=>({
   key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",
   price:(Number(p.price_cents)/100).toFixed(2),
   comparePrice:p.compare_at_price_cents===null?"":(Number(p.compare_at_price_cents)/100).toFixed(2),
-  categoryId:p.category_id??"",isActive:p.is_active,
+  sourceCost:p.internal_source_cost_cents==null?"":(Number(p.internal_source_cost_cents)/100).toFixed(2),
+  linkedSource:linkedProducts.has(p.id),categoryId:p.category_id??"",isActive:p.is_active,
  }));
  return <main className="container supplier-shell apex-bulk-page">
   <Link className="back" href="/supplier/catalog">← Product manager</Link>
@@ -51,6 +54,6 @@ export default async function BulkProductWorkspace(){
   <p className="notice">This is your private product workspace. New products begin with no stock and no image; complete those in the product manager before requesting publication. Saving here never makes anything publicly visible.</p>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
    categories={categories??[]} initialRows={initialRows}/>
-  <p className="notice">Source costs and uploaded images are unchanged by bulk edits. Edit those separately from the product manager. Up to 100 existing private products are shown.</p>
+  <p className="notice">Source cost can be edited for direct drafts. Linked imported-variant source costs still use Source review. Images and stock remain on their existing management screens. Up to 100 private products are shown.</p>
  </main>;
 }
