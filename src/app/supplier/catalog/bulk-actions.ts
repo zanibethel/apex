@@ -7,7 +7,7 @@ import {isValidId} from "@/lib/catalog/private-review-utils.mjs";
 
 type Row={
  key:string;id?:string;name:string;sku:string;description:string;
- price:string;comparePrice:string;categoryId:string;isActive:boolean;
+ price:string;comparePrice:string;sourceCost?:string;categoryId:string;isActive:boolean;
 };
 type Outcome={key:string;ok:boolean;name:string;message:string;id?:string;sku?:string};
 type BulkResult={ok:boolean;message:string;results:Outcome[]};
@@ -47,6 +47,8 @@ function validateRow(r:Row){
   typeof r.sku!=="string"||(r.sku!==""&&!skuPattern.test(r.sku))||
   typeof r.description!=="string"||r.description.length>1500||
   typeof r.price!=="string"||!moneyPattern.test(r.price)||Number(r.price)<=0||
+  (r.sourceCost!==undefined&&(typeof r.sourceCost!=="string"||
+    (r.sourceCost!==""&&!moneyPattern.test(r.sourceCost))))||
   typeof r.comparePrice!=="string"||
   (r.comparePrice!==""&&(!moneyPattern.test(r.comparePrice)||
     Number(r.comparePrice)<=Number(r.price)))||
@@ -80,8 +82,23 @@ export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):
   rowForm.set("comparePrice",row.comparePrice);
   rowForm.set("categoryId",row.categoryId);
   if(row.isActive)rowForm.set("isActive","on");
-  if(row.id)rowForm.set("productId",row.id);
-  else rowForm.set("directSourceCost","");
+  if(row.id){
+   rowForm.set("productId",row.id);
+   // When blank, leave existing source cost untouched. When identical, avoid
+   // editing imported/linked source costs through the direct-draft API.
+   if(row.sourceCost){
+    const {data:existing,error:readError}=await client.from("products")
+     .select("internal_source_cost_cents").eq("store_id",storeId)
+     .eq("id",row.id).eq("is_published",false).maybeSingle();
+    if(readError||!existing){
+     outcomes.push({key:row.key,ok:false,name,message:"Product no longer available for a private update."});
+     continue;
+    }
+    const cents=Math.round(Number(row.sourceCost)*100);
+    if(cents!==existing.internal_source_cost_cents)
+     rowForm.set("directSourceCost",row.sourceCost);
+   }
+  }else rowForm.set("directSourceCost",row.sourceCost??"");
   const saved=row.id?await updateDraftProduct({ok:false,message:""},rowForm)
     :await createDraftProduct({ok:false,message:""},rowForm);
   if(!saved.ok){outcomes.push({key:row.key,ok:false,name,message:saved.message});continue;}
