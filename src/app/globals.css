@@ -87,3 +87,6 @@
 .apex-allocation-bar { display:flex; overflow:hidden; width:100%; height:12px; margin:12px 0 20px; border-radius:999px; background:#383841; }
 .apex-allocation-bar span { display:block; height:100%; }
 @media(max-width:420px) { .apex-recipient-fields { grid-template-columns:1fr; } }
+
+.apex-menu-signout { display:block; width:100%; padding:12px; min-height:44px; border:0; border-radius:8px; background:transparent; color:inherit; text-align:left; font:inherit; cursor:pointer; }
+.apex-menu-signout:hover,.apex-menu-signout:focus-visible { background:#303039; }
