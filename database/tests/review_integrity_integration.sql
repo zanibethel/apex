@@ -37,15 +37,6 @@ begin
 end $check$;
 
 select set_config('request.jwt.claim.apex_role','platform_admin',false);
-select current_user as acting_role,auth.uid() as actor,auth.jwt() as jwt_claims;
-select (select count(*) from public.private_product_review_states) as visible_reviews,
- (select count(*) from storage.objects) as visible_images,
- (select count(*) from public.stores where is_public=false) as visible_stores;
-select p.store_id,p.id as product_id,r.snapshot->>'image_path' as saved_image,
- p.is_published,s.is_public
- from public.private_product_review_states r
- join public.products p on p.store_id=r.store_id and p.id=r.product_id
- join public.stores s on s.id=p.store_id;
 do $check$
 begin
  if (select count(*) from storage.objects)<>1 then
@@ -122,13 +113,13 @@ end $check$;
 reset role;
 do $check$
 begin
- if (select count(*) from public.products where is_published)<>3
- then
-  -- Existing synthetic catalog has published fixtures, but this test must
-  -- never change those flags. Confirm the reviewed private store stays hidden.
-  if exists (select 1 from public.products where store_id='20000000-0000-4000-8000-000000000003' and is_published)
-  then raise exception 'Review integrity published a private product';end if;
- end if;
+ -- Existing synthetic fixture includes other published products in this
+ -- supplier's store. Assert only the submitted review product stayed private.
+ if exists (
+  select 1 from public.private_product_review_states r
+  join public.products p on p.id=r.product_id and p.store_id=r.store_id
+  where p.is_published
+ ) then raise exception 'Review integrity published the submitted product';end if;
  if exists(select 1 from public.stores where id='20000000-0000-4000-8000-000000000003' and is_public)
  then raise exception 'Review integrity published the supplier store';end if;
 end $check$;
