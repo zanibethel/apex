@@ -6,7 +6,8 @@ import {BulkCardMedia} from "./bulk-card-media";
 import {BulkInlineOffer} from "./bulk-inline-offer";
 import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
 import {useMemo,useState,useTransition} from "react";
-import {saveBulkProductDrafts} from "./bulk-actions";
+import {saveBulkProductDrafts,saveBulkPublicationRequests} from "./bulk-actions";
+import {eligiblePrivatePublishIds} from "@/lib/catalog/bulk-publish-selection.mjs";
 import {CsvProductImport} from "./csv-product-import";
 import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-products.mjs";
 
@@ -16,14 +17,18 @@ export type BulkEditRow={
  linkedSource?:boolean;needsSave?:boolean;
 };
 type Category={id:string;name:string};
+type ListingReadiness={
+ productId:string;canRequest:boolean;requested:boolean;status:string;missing:string[];
+};
+type PublishOutcome={id:string;ok:boolean;message:string};
 
 function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
   price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,needsSave:true};
 }
-export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages}:{
+export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing}:{
  storeId:string;editable:boolean;initialRows:BulkEditRow[];categories:Category[];
- media:BulkSavedMedia[];existingImages:BulkSavedImage[];
+ media:BulkSavedMedia[];existingImages:BulkSavedImage[];listing:ListingReadiness[];
 }){
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
  const [showOfferTiles,setShowOfferTiles]=useState(true);
@@ -34,6 +39,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [lastSave,setLastSave]=useState<{[key:string]:{ok:boolean;message:string}}>({});
  const [result,setResult]=useState({ok:false,message:"",results:[] as {key:string;ok:boolean;name:string;message:string;id?:string;sku?:string}[]});
  const [pending,startTransition]=useTransition();
+ const [publishPending,startPublishTransition]=useTransition();
+ const [publishResults,setPublishResults]=useState<PublishOutcome[]>([]);
+ const [publicationMessage,setPublicationMessage]=useState("");
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const selectedRows=rows.filter(r=>selectedSet.has(r.key));
  const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
@@ -102,6 +110,33 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  }
  const selectedValid=selectedRows.length>0&&selectedRows.length<=250;
  const allSelected=rows.length>0&&selected.length===rows.length;
+ const listingByProduct=new Map(listing.map(item=>[item.productId,item]));
+ const publicationById=new Map(publishResults.map(item=>[item.id,item]));
+ const newlyRequested=new Set(publishResults.filter(item=>item.ok).map(item=>item.id));
+ const eligiblePublishIds=eligiblePrivatePublishIds(rows,listing,newlyRequested);
+ const eligiblePublishSet=new Set(eligiblePublishIds);
+ const eligibleSelectedIds=selectedRows.filter(r=>r.id&&eligiblePublishSet.has(r.id)).map(r=>r.id!);
+ const publicationLimit=50;
+ function publish(ids:string[]){
+  if(!editable||pending||publishPending||ids.length<1||ids.length>publicationLimit||
+   new Set(ids).size!==ids.length||ids.some(id=>!eligiblePublishSet.has(id)))return;
+  startPublishTransition(async()=>{
+   const form=new FormData();
+   form.set("storeId",storeId);
+   form.set("ids",ids.join(","));
+   try{
+    const response=await saveBulkPublicationRequests({ok:false,message:"",results:[]},form);
+    setPublishResults(previous=>[
+     ...previous.filter(item=>!ids.includes(item.id)),
+     ...response.results,
+    ]);
+    setPublicationMessage(response.message);
+    if(response.results.some(item=>item.ok))router.refresh();
+   }catch{
+    setPublicationMessage("Publication requests could not be saved. Refresh and check product status.");
+   }
+  });
+ }
  const recentImported=new Set(recentImportKeys);
 
  return <section className="apex-bulk-workspace" aria-label="Bulk product creation and editing">
@@ -133,6 +168,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const availableStock=cardMedia?.quantityOnHand==null||cardMedia.quantityReserved==null
      ?undefined:Math.max(0,cardMedia.quantityOnHand-cardMedia.quantityReserved);
     const category=categories.find(c=>c.id===r.categoryId)?.name??"Uncategorized";
+    const listingStatus=r.id?listingByProduct.get(r.id):undefined;
+    const publication=r.id?publicationById.get(r.id):undefined;
+    const requested=Boolean(listingStatus?.requested||publication?.ok);
+    const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
     return <article key={r.key} className="apex-bulk-row">
      <div className="apex-bulk-row-title">
       <label className="apex-bulk-select">
@@ -198,7 +237,15 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         </p>}
       </div>
       {showOfferTiles&&<BulkInlineOffer row={r} category={category}
-        imageUrl={cardMedia?.imageUrl} availableStock={availableStock}/>}
+        imageUrl={cardMedia?.imageUrl} availableStock={availableStock}
+        canPublish={publishReady} requested={requested}
+        publishing={publishPending} onPublish={()=>r.id&&publish([r.id])}
+        publicationMessage={publication?.message}
+        publicationNote={r.id&&!r.needsSave&&!requested&&!publishReady
+          ?listingStatus?.missing.length
+            ?"Complete to request: "+listingStatus.missing.join(", ")
+            :listingStatus?.status??"Private publication request unavailable"
+          :undefined}/>
      </div>
     </article>;
    })}
@@ -215,7 +262,22 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    <Link className="button secondary" href="/supplier/catalog/bulk/preview?all=1">
     Preview all saved
    </Link>
+   <button type="button" className="button secondary"
+    disabled={!editable||pending||publishPending||!eligibleSelectedIds.length||eligibleSelectedIds.length>publicationLimit}
+    onClick={()=>publish(eligibleSelectedIds)}>
+    {publishPending?"Saving publication requests…":"Publish selected ("+eligibleSelectedIds.length+")"}
+   </button>
+   <button type="button" className="button primary"
+    disabled={!editable||pending||publishPending||!eligiblePublishIds.length||eligiblePublishIds.length>publicationLimit}
+    onClick={()=>publish(eligiblePublishIds)}>
+    {publishPending?"Saving publication requests…":"Publish all eligible ("+eligiblePublishIds.length+")"}
+   </button>
   </div>
+  <p className="notice">Publish submits private supplier requests only after saved product details and stock pass checks. Administrative holds remain enforced; no offer becomes publicly visible.</p>
+  {eligiblePublishIds.length>publicationLimit&&<p role="status" className="notice">
+   More than 50 eligible products loaded. Publish selected groups of up to 50.
+  </p>}
+  {publicationMessage&&<p role="status" className="apex-bulk-result">{publicationMessage}</p>}
   {selectedRows.length>20&&<p className="notice">The selected products will be saved in sequential batches of 20.</p>}
   {result.message&&<p role="status" className="apex-bulk-result">{result.message}</p>}
  </section>;
