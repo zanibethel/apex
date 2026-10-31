@@ -5,7 +5,9 @@ import {revalidatePath} from "next/cache";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
 
 const bucket="apex-draft-product-images";
-const idRe=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}$/i;
+// Store/product IDs and image object names use complete UUIDs (8-4-4-4-12).
+const idRe=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const imageFileRe=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(png|jpg|webp)$/;
 const mimeToExt:Record<string,string>={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
 
 async function scopedProduct(storeId:string,productId:string) {
@@ -36,9 +38,9 @@ export async function requestProductImageUpload(
 
 export async function attachProductImage(storeId:string,productId:string,path:string) {
   if(process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED!=="true")return {ok:false,message:"Image management is disabled."};
+  const prefix=`${storeId}/${productId}/`;
   if(!idRe.test(storeId)||!idRe.test(productId)||
-     !path.startsWith(`${storeId}/${productId}/`)||
-     !/\/[0-9a-f-]{36}\.(png|jpg|webp)$/.test(path))
+     !path.startsWith(prefix)||!imageFileRe.test(path.slice(prefix.length)))
     return {ok:false,message:"Invalid image path."};
   const w=await scopedProduct(storeId,productId);
   if(!w)return {ok:false,message:"Product image permission required."};
