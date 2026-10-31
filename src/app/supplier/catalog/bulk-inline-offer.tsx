@@ -2,22 +2,16 @@
 
 import Link from "next/link";
 import {OfferTile} from "@/components/catalog/offer-tile";
+import {previewUsdCents,previewCompareAtCents} from "@/lib/catalog/offer-preview-money.mjs";
 import type {BulkEditRow} from "./bulk-editor";
-
-function centsFromUsd(value:string):number {
- if(!/^\d{1,7}(?:\.\d{1,2})?$/.test(value)||Number(value)<=0)return NaN;
- return Math.round(Number(value)*100);
-}
 
 // This is a local visual simulation of the edit fields, not an authoritative
 // published/saleable listing or an indication of actual saved database state.
 export function BulkInlineOffer({row,category,imageUrl,availableStock}:{
  row:BulkEditRow;category:string;imageUrl?:string;availableStock?:number;
 }){
- const priceCents=centsFromUsd(row.price);
- const attemptedCompare=row.comparePrice?centsFromUsd(row.comparePrice):NaN;
- const compareAtCents=Number.isSafeInteger(attemptedCompare)&&
-  attemptedCompare>priceCents?attemptedCompare:null;
+ const priceCents=previewUsdCents(row.price);
+ const compareAtCents=previewCompareAtCents(priceCents,row.comparePrice);
  const saved=Boolean(row.id)&&!row.needsSave;
  return <section className="apex-bulk-inline-preview" aria-label={"Live offer tile preview: "+(row.name||"New product")}>
   <div className="apex-bulk-inline-preview-header">
