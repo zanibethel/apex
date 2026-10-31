@@ -846,3 +846,26 @@ body { background:#07080b; }
  .apex-bulk-filterbar input,.apex-bulk-filterbar select{font-size:13px;padding:8px}
 }
 @media(max-width:360px){.apex-bulk-filterbar{grid-template-columns:minmax(0,1fr)}}
+
+/* Supplier-only private product readiness; collapsible so offer tiles remain
+   the focus on small screens. These labels do not imply public sellability. */
+.apex-bulk-readiness-state{
+ display:inline-flex;align-items:center;max-width:100%;
+ border:1px solid #605462;border-radius:999px;padding:5px 9px;
+ color:#e2d5e1;background:#28202b;font-size:11px;
+ font-weight:700;line-height:1.3;overflow-wrap:anywhere;
+}
+.apex-bulk-readiness-ready{color:#bfe5cf;border-color:#40664e;background:#193127}
+.apex-bulk-readiness-requested{color:#c7dfff;border-color:#3d5874;background:#182735}
+.apex-bulk-readiness-hold,.apex-bulk-readiness-review{color:#f1c4ca;border-color:#85515b;background:#39232d}
+.apex-bulk-readiness-unsaved,.apex-bulk-readiness-setup{color:#efdcad;border-color:#79673c;background:#332a20}
+.apex-bulk-readiness-details{font-size:12px;color:#c8bfcb;margin:0 0 10px}
+.apex-bulk-readiness-details summary{width:fit-content;min-height:28px;cursor:pointer;padding:4px 0}
+.apex-bulk-readiness-details summary:focus-visible{outline:3px solid #f5c46c;outline-offset:2px}
+.apex-bulk-readiness-details p{margin:5px 0 7px;line-height:1.5}
+.apex-bulk-readiness-details ul{margin:4px 0 9px;padding-left:22px}
+.apex-bulk-readiness-details li{margin:3px 0}
+@media(max-width:500px){
+ .apex-bulk-readiness-state{font-size:10px;padding:5px 8px}
+ .apex-bulk-readiness-details{margin-bottom:9px}
+}
