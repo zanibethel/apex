@@ -669,3 +669,31 @@ body { background:#07080b; }
  .apex-csv-downloads .button{flex:1 1 100%}
  .apex-csv-review-toolbar .button{flex:1 1 auto;font-size:12px}
 }
+
+
+/* Bulk card media picker and auditable inventory controls. */
+.apex-bulk-card-media{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;
+  border-top:1px solid rgba(255,255,255,.12);margin-top:13px;padding-top:14px;}
+.apex-bulk-media-photo{height:102px;width:120px;border:1px solid rgba(255,255,255,.14);
+  border-radius:10px;background:radial-gradient(circle,#30222d,#15131a);overflow:hidden;
+  display:grid;place-items:center;color:#bdb3bf;font-size:12px;text-align:center;}
+.apex-bulk-media-main{min-width:0;display:grid;align-content:start;gap:11px;}
+.apex-bulk-media-main>.button{width:fit-content;min-height:42px}
+.apex-bulk-stock-editor{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.apex-bulk-stock-editor label{color:#ded7df;font-size:12px;font-weight:650;}
+.apex-bulk-stock-editor input{background:#15121b;border:1px solid rgba(255,255,255,.2);
+  border-radius:7px;color:#fff;padding:10px;width:110px;max-width:100%;}
+.apex-bulk-stock-editor .button{min-height:40px}
+.apex-bulk-stock-editor small{flex-basis:100%;font-size:12px;color:#c6bfc7;}
+.apex-bulk-image-controls{grid-column:1/-1;min-width:0;
+  border:1px solid rgba(236,147,177,.28);border-radius:11px;padding:12px;}
+.apex-bulk-image-controls .apex-existing-image-grid{max-height:320px;overflow:auto;}
+.apex-bulk-media-locked{border-top:1px solid rgba(255,255,255,.12);margin:12px 0 0;
+ padding:12px;background:#211a25;border-radius:9px;color:#bdb6c0;font-size:12px;}
+@media(max-width:560px){
+ .apex-bulk-card-media{grid-template-columns:minmax(0,1fr);}
+ .apex-bulk-media-photo{width:100%;max-width:175px;height:118px;}
+ .apex-bulk-media-main>.button{width:100%}
+ .apex-bulk-stock-editor input{flex:1 1 90px;min-width:0}
+ .apex-bulk-stock-editor .button{flex:1 1 140px}
+}
