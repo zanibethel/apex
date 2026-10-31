@@ -48,8 +48,8 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    const row:BulkEditRow={
     key:target?.key??crypto.randomUUID(),id:target?.id,
     name:item.title,sku:sku||target?.sku||"",
-    description:item.description||"",price:item.price,
-    comparePrice:item.compare_at_price||"",
+    description:item.description||target?.description||"",price:item.price,
+    comparePrice:item.compare_at_price||target?.comparePrice||"",
     sourceCost:item.source_cost||target?.sourceCost||"",
     categoryId:categoryId||"",
     isActive:item.active?["true","yes","1"].includes(item.active.toLowerCase()):target?.isActive??false,
