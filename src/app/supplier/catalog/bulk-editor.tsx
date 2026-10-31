@@ -49,7 +49,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const busy=pending||publishPending;
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const newlyRequested=new Set(publishResults.filter(item=>item.ok).map(item=>item.id));
- const visibleRows=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested);
+ const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested);
  const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key));
  const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
  const selectedIds=savedSelected.map(r=>r.id!);
