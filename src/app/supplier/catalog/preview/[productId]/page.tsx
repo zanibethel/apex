@@ -101,7 +101,7 @@ export default async function SupplierOfferPreview({params}:{params:Promise<{pro
      wantsListing={listing?.supplier_wants_listing??false} canRequest={canRequest}
      publishLabel="Publish"/>
     <details className="apex-offer-release-details">
-     <summary>Why isn't this visible to customers yet?</summary>
+     <summary>Why isn&apos;t this visible to customers yet?</summary>
      <strong>{release.label}</strong>
      <p>{release.description}</p>
      <p>Publishing currently saves a supplier request. The public catalog remains disabled until the separate release and eligibility checks are completed.</p>
