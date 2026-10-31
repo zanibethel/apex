@@ -137,3 +137,19 @@ body { background:#07080b; }
  .apex-hero-copy .actions { display:grid; }
  .apex-hero-copy .actions .button { width:100%; }
 }
+
+/* Shared Apex storefront and private workspace finishes */
+.apex-branded-catalog { padding-top:52px; padding-bottom:65px; }
+.apex-branded-catalog h1 { font-size:clamp(2.4rem,7vw,5.3rem); font-weight:900; letter-spacing:-.05em; line-height:1.02; }
+.apex-branded-catalog h1 em { color:#e3295a; }
+.apex-branded-catalog .catalog-grid { gap:16px; }
+.apex-branded-catalog .catalog-card { min-width:0; overflow:hidden; border:1px solid #343640; border-radius:14px; background:#121318; }
+.apex-catalog-art { background:radial-gradient(circle at center,rgba(211,12,67,.23),transparent 68%),linear-gradient(140deg,#1c1c24,#090a0d); color:#e3295a; display:grid; place-items:center; }
+.apex-catalog-art span { font-size:clamp(3rem,9vw,6rem); text-shadow:0 0 40px #ae003d66; }
+.apex-branded-dashboard { padding-top:38px; padding-bottom:70px; }
+.apex-branded-dashboard h1 { font-weight:900; letter-spacing:-.04em; font-size:clamp(2rem,6vw,3.8rem); }
+.apex-branded-dashboard .supplier-panel,.apex-branded-dashboard .feature-card { background:linear-gradient(140deg,#17181e,#0d0e12); border:1px solid #343640; border-radius:14px; }
+.apex-branded-dashboard .apex-admin-card { background:linear-gradient(145deg,#1b1b23,#101116); border-color:#383944; border-radius:14px; }
+.apex-branded-dashboard .apex-admin-card:hover,.apex-branded-dashboard .apex-admin-card:focus-visible { border-color:#e3295a; }
+.apex-branded-dashboard .eyebrow { color:#ed4b77; }
+@media(max-width:650px) { .apex-branded-catalog { padding-top:30px; } .apex-branded-dashboard { padding-top:25px; } }
