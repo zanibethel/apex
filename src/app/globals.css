@@ -827,3 +827,22 @@ body { background:#07080b; }
  .apex-bulk-toolbar{gap:6px}
  .apex-bulk-toolbar .button{min-height:44px;padding:8px 12px;font-size:12px;border-radius:8px}
 }
+
+/* Supplier catalog finder: compact controls, independent of private publication. */
+.apex-bulk-filterbar{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px}
+.apex-bulk-filterbar label{display:grid;gap:5px;min-width:0;color:#d6cbd2;font-size:12px;font-weight:700}
+.apex-bulk-filterbar input,.apex-bulk-filterbar select{
+ width:100%;min-width:0;min-height:44px;padding:9px 11px;
+ border:1px solid rgba(255,255,255,.25);border-radius:8px;
+ background:#17141e;color:#fff;font:inherit;font-size:14px;
+}
+.apex-bulk-filterbar input:focus-visible,.apex-bulk-filterbar select:focus-visible{
+ outline:3px solid #f5c46c;outline-offset:2px;
+}
+.apex-bulk-filter-summary{color:#c4b7c2;font-size:12px;margin:0}
+.apex-bulk-no-results{padding:16px;border:1px dashed #625663;border-radius:10px}
+@media(max-width:600px){
+ .apex-bulk-filterbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px}
+ .apex-bulk-filterbar input,.apex-bulk-filterbar select{font-size:13px;padding:8px}
+}
+@media(max-width:360px){.apex-bulk-filterbar{grid-template-columns:minmax(0,1fr)}}
