@@ -11,7 +11,7 @@ type Row={
 };
 type Outcome={key:string;ok:boolean;name:string;message:string;id?:string};
 type BulkResult={ok:boolean;message:string;results:Outcome[]};
-export const emptyBulkResult:BulkResult={ok:false,message:"",results:[]};
+
 const moneyPattern=/^\d{1,7}(\.\d{1,2})?$/;
 const skuPattern=/^[A-Za-z0-9._-]{1,60}$/;
 const denied="Only a signed-in supplier owner or manager can edit this private store.";
@@ -85,16 +85,10 @@ export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):
   const saved=row.id?await updateDraftProduct({ok:false,message:""},rowForm)
     :await createDraftProduct({ok:false,message:""},rowForm);
   if(!saved.ok){outcomes.push({key:row.key,ok:false,name,message:saved.message});continue;}
-  let productId=row.id;
-  if(!productId){
-   // Confirm the inserted row from the scoped database rather than trusting
-   // the response message as proof that a new product exists.
-   const {chooseNewSku}=await import("@/lib/catalog/sku.mjs");
-   const sku=chooseNewSku(row.sku,row.name.trim());
-   const {data}=await client.from("products").select("id")
-    .eq("store_id",storeId).eq("sku",sku).maybeSingle();
-   productId=data?.id;
-  }
+  // createDraftProduct returns the exact inserted ID. A blank SKU is generated
+  // randomly, so never rederive it by calling chooseNewSku again.
+  const productId=row.id||("productId" in saved&&typeof saved.productId==="string"
+    ?saved.productId:undefined);
   outcomes.push({key:row.key,ok:!!productId,name,
    message:productId?"Saved to your private catalog.": "Saved but could not confirm the new product ID; refresh catalog.",
    id:productId});
@@ -110,7 +104,7 @@ export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):
 
 type PublishOutcome={id:string;ok:boolean;message:string};
 type PublishResult={ok:boolean;message:string;results:PublishOutcome[]};
-export const emptyPublishResult:PublishResult={ok:false,message:"",results:[]};
+
 export async function saveBulkPublicationRequests(_previous:PublishResult,form:FormData):Promise<PublishResult>{
  const storeId=form.get("storeId"),raw=form.get("ids");
  if(typeof storeId!=="string"||typeof raw!=="string")
