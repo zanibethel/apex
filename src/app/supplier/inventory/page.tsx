@@ -43,7 +43,8 @@ export default async function InventoryPage() {
           {items.data.map(item => {
             const product = names.get(item.product_id);
             const editable = writesEnabled && editableStoreIds.has(item.store_id)
-              && product?.store_id === item.store_id && product.is_published === false;
+              && product !== undefined && product.store_id === item.store_id
+              && product.is_published === false;
             return <article className="feature-card" key={item.product_id}>
               <h3>{product?.name ?? "Product"}</h3>
               <p className="notice">SKU: {product?.sku ?? "Unavailable"}</p>
