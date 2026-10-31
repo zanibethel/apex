@@ -232,3 +232,27 @@ body { background:#07080b; }
   .site-header .header-inner { min-height:60px; padding-block:4px; }
   .site-header .apex-logo-link { width:142px; height:52px; }
 }
+
+/* Final iPhone header: show complete logo, preserve right-anchored dropdown. */
+.site-header .apex-logo-link { width:146px; height:64px; flex:0 1 146px; overflow:hidden; }
+.site-header .apex-logo-link img {
+  position:static; transform:none; display:block;
+  width:100%; height:100%; max-width:100%;
+  object-fit:contain; object-position:left center;
+}
+.site-header .apex-menu-toggle {
+  display:flex; align-items:center; justify-content:center;
+  width:44px; height:44px; padding:0;
+  color:#d8d8e0; background:#14151a;
+  border:1px solid #383a43; border-radius:12px;
+  font:inherit; font-size:20px; cursor:pointer;
+}
+.site-header .apex-menu-toggle:hover,.site-header .apex-menu-toggle:focus-visible { border-color:#ed4b77; }
+.apex-profile-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.apex-profile-field { display:grid; gap:8px; min-width:0; }
+.apex-profile-field input { min-width:0; }
+@media(max-width:650px) {
+ .site-header .header-inner { min-height:68px; }
+ .site-header .apex-logo-link { width:142px; height:62px; flex-basis:142px; }
+ .apex-profile-grid { grid-template-columns:1fr; }
+}

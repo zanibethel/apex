@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createSupplierServerClient } from "@/lib/supabase/server";
 import { isVerifiedPlatformAdmin } from "@/lib/auth/admin-access";
-import { signOutAccount } from "@/app/account/sign-out/actions";
+import { AccountMenu } from "./account-menu";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -25,17 +25,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <div className="container header-inner">
             <Link href="/" className="brand apex-logo-link" aria-label="Apex Anabolics home"><img src="/apex-logo.png" alt="Apex Anabolics" width="210" height="50" /></Link>
             <nav aria-label="Main navigation" className="apex-navigation">
-              <details className="apex-menu">
-                <summary aria-label="Open navigation menu">☰ <span>Menu</span></summary>
-                <div className="apex-menu-panel">
-                  <Link href="/catalog">Catalog</Link>
-                  <Link href="/#approach">Approach</Link>
-                  <Link href="/account/profile">My profile</Link>
-                  {admin && <Link href="/admin">Admin dashboard</Link>}
-                  {supplier && <Link href="/supplier">Supplier workspace</Link>}
-                  {user ? <form action={signOutAccount}><button type="submit" className="apex-menu-signout">Sign out</button></form> : <Link href="/account/sign-in">Account sign in</Link>}
-                </div>
-              </details>
+              <AccountMenu signedIn={Boolean(user)} admin={admin} supplier={supplier} />
             </nav>
             <span className="demo-chip">DEMO ONLY</span>
           </div>
