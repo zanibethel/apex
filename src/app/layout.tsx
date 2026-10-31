@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createSupplierServerClient } from "@/lib/supabase/server";
+import { isVerifiedPlatformAdmin } from "@/lib/auth/admin-access";
+import { AccountMenu } from "./account-menu";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,18 +11,21 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const client = await createSupplierServerClient();
+  const { data } = client ? await client.auth.getUser() : { data: { user: null } };
+  const user = data.user && !data.user.is_anonymous && data.user.email_confirmed_at ? data.user : null;
+  const admin = isVerifiedPlatformAdmin(user);
+  const membership = user && !admin && client ? await client.from("supplier_memberships").select("supplier_id").limit(1) : null;
+  const supplier = Boolean(membership && !membership.error && membership.data?.length);
   return (
     <html lang="en">
       <body>
         <header className="site-header">
           <div className="container header-inner">
-            <Link href="/" className="brand" aria-label="Apex home"><span aria-hidden="true">▲</span> APEX</Link>
-            <nav aria-label="Main navigation">
-              <Link href="/catalog">Catalog</Link>
-              <Link href="/#approach">Approach</Link>
-              <Link href="/supplier/sign-in">Supplier login</Link>
-              <Link href="/admin/sign-in">Admin</Link>
+            <Link href="/" className="brand apex-logo-link" aria-label="Apex Anabolics home"><img src="/apex-logo.png" alt="Apex Anabolics" width="210" height="50" /></Link>
+            <nav aria-label="Main navigation" className="apex-navigation">
+              <AccountMenu signedIn={Boolean(user)} admin={admin} supplier={supplier} />
             </nav>
             <span className="demo-chip">DEMO ONLY</span>
           </div>

@@ -60,8 +60,8 @@ export default async function SupplierWorkspace() {
   return <main className="container supplier-shell">
     <div className="supplier-heading">
       <div>
-        <p className="eyebrow">APEX / SUPPLIER DASHBOARD</p>
-        <h1>Storefront workspace.</h1>
+        <p className="eyebrow">APEX ANABOLICS / SUPPLIER DASHBOARD</p>
+        <h1>SUPPLIER WORKSPACE</h1>
         <p className="lead">Welcome, {auth.user.email}. Access is shared by the supplier team and limited to its assigned storefront.</p>
       </div>
       <form action={signOutSupplier}><button className="button secondary" type="submit">Sign out</button></form>

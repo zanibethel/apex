@@ -9,7 +9,7 @@ test("profile checks signed-in user and email verification", () => {
   assert.match(source, /auth.getUser\(\)/);
   assert.match(source, /is_anonymous/);
   assert.match(source, /email_confirmed_at/);
-  assert.match(source, /redirect\("\/admin\/sign-in"\)/);
+  assert.match(source, /redirect\("\/account\/sign-in"\)/);
   assert.doesNotMatch(source, /admin\.listUsers|service_role|signUp\(/);
 });
 

@@ -9,17 +9,17 @@ const previewCollections = ["Collection 01", "Collection 02", "Collection 03"];
 export default async function CatalogPreview() {
   const result = await readPublishedCatalog();
   return (
-    <main className="container catalog">
+    <main className="container catalog apex-branded-catalog">
       <Link className="back" href="/">← Home</Link>
-      <p className="eyebrow">CATALOG / STRUCTURE PREVIEW</p>
-      <h1>Find it quickly.<br /><em>Understand it clearly.</em></h1>
+      <p className="eyebrow">APEX ANABOLICS / CATALOG PREVIEW</p>
+      <h1>DISCOVER THE<br /><em>APEX STANDARD.</em></h1>
       <p className="lead">A protected technical preview of the public catalog. No checkout or live inventory is available.</p>
       {result.state === "connected" ? (
         result.products.length > 0 ? (
           <div className="catalog-grid">
             {result.products.map((product) => (
               <article className="catalog-card" key={product.id}>
-                <div className="catalog-art" aria-hidden="true">A</div>
+                <div className="catalog-art apex-catalog-art" aria-hidden="true"><span>▲</span></div>
                 <div className="catalog-info">
                   <p className="eyebrow">PUBLIC CATALOG PREVIEW</p>
                   <h2>{product.name}</h2>
@@ -40,7 +40,7 @@ export default async function CatalogPreview() {
           <div className="catalog-grid">
             {previewCollections.map((title, index) => (
               <article className="catalog-card" key={title}>
-                <div className="catalog-art" aria-hidden="true">0{index + 1}</div>
+                <div className="catalog-art apex-catalog-art" aria-hidden="true"><span>0{index + 1}</span></div>
                 <div className="catalog-info">
                   <p className="eyebrow">DESIGN PLACEHOLDER</p>
                   <h2>{title}</h2>

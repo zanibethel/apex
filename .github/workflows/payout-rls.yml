@@ -1,0 +1,52 @@
+name: Payout RLS isolated Postgres verification
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'tests/payout-rls/**'
+      - '.github/workflows/payout-rls.yml'
+  workflow_dispatch:
+jobs:
+  isolated-rls:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: apex_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d apex_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: apex_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create isolated auth fixture
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/bootstrap.sql
+      - name: Apply catalog and payout migrations to disposable Postgres
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261029233701_apex_initial_catalog_readonly.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030222500_payout_reporting_readonly.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030233000_multi_split_draft_rpc.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030234500_payout_recipient_admin.sql
+      - name: Verify row isolation and read-only grants
+        run: bash tests/payout-rls/check.sh
+      - name: Verify atomic draft saving and denial cases
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/draft-rpc.sql
+      - name: Verify recipient directory authorization
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/recipient-admin.sql
+      - name: Verify direct draft writes denied
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/direct-write-denial.sql
+      - name: Verify invalid payout drafts are rejected
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/draft-rpc-negative.sql
+      - name: Verify active payout rule immutability
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/non-draft-immutable.sql
+      - name: Verify concurrent draft versions
+        run: bash tests/payout-rls/concurrent-versions.sh
