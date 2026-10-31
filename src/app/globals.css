@@ -697,3 +697,54 @@ body { background:#07080b; }
  .apex-bulk-stock-editor input{flex:1 1 90px;min-width:0}
  .apex-bulk-stock-editor .button{flex:1 1 140px}
 }
+
+
+/* Bulk supplier editor: editable fields next to a live, private offer tile. */
+.apex-bulk-card-layout{
+ display:grid;
+ grid-template-columns:minmax(0,1.15fr) minmax(255px,.85fr);
+ gap:18px;
+ align-items:start;
+}
+.apex-bulk-card-layout-single{grid-template-columns:minmax(0,1fr)}
+.apex-bulk-editor-side{min-width:0}
+.apex-bulk-card-layout:not(.apex-bulk-card-layout-single) .apex-bulk-fields{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.apex-bulk-inline-preview{
+ display:grid;gap:10px;min-width:0;
+ padding:12px;border:1px solid rgba(235,160,190,.28);
+ border-radius:13px;background:linear-gradient(140deg,#211922,#14131a);
+}
+.apex-bulk-inline-preview-header{display:flex;justify-content:space-between;
+ align-items:center;gap:8px;flex-wrap:wrap;}
+.apex-bulk-inline-preview-header strong{color:#f8e2ea;font-size:13px}
+.apex-bulk-preview-unsaved,.apex-bulk-preview-saved{
+ font-weight:750;letter-spacing:.05em;font-size:10px;
+ border-radius:20px;padding:5px 9px;border:1px solid rgba(236,170,192,.25);
+}
+.apex-bulk-preview-unsaved{color:#f0bdc9;background:#39202b}
+.apex-bulk-preview-saved{color:#bce6cc;background:#173326}
+.apex-bulk-inline-preview .apex-offer-tile{box-shadow:none;border-radius:11px}
+.apex-bulk-inline-preview .apex-offer-image{aspect-ratio:16 / 10;max-height:215px;padding:8px}
+.apex-bulk-inline-preview .apex-offer-content{padding:14px}
+.apex-bulk-inline-preview .apex-offer-content h2{font-size:18px}
+.apex-bulk-inline-preview .apex-offer-description{font-size:12px;line-height:1.45;margin:9px 0;
+ display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.apex-bulk-inline-preview .apex-offer-price strong{font-size:20px}
+.apex-bulk-inline-preview .apex-offer-price s{font-size:14px}
+.apex-bulk-inline-caption{font-size:12px;color:#c6bac4;margin:0;line-height:1.5}
+.apex-bulk-inline-save-hint{font-size:12px;color:#e4b5c5;margin:0}
+.apex-bulk-preview-link{min-height:43px;text-align:center;display:block}
+@media(max-width:950px){
+ .apex-bulk-card-layout{grid-template-columns:minmax(0,1fr)}
+ .apex-bulk-inline-preview{grid-template-columns:minmax(0,1fr)}
+ .apex-bulk-inline-preview .apex-offer-image{max-height:240px}
+}
+@media(max-width:500px){
+ .apex-bulk-card-layout:not(.apex-bulk-card-layout-single) .apex-bulk-fields{
+   grid-template-columns:minmax(0,1fr);
+ }
+ .apex-bulk-inline-preview{padding:10px}
+ .apex-bulk-inline-preview .apex-offer-image{max-height:215px}
+}
