@@ -20,7 +20,7 @@ test("catalog scopes every table to the member's storefront", () => {
   for (const table of ["products", "categories", "inventory_items", "supplier_import_candidates", "supplier_candidate_drafts"]) {
     assert.match(page, new RegExp('\\.from\\("'+table+'"\\)'));
   }
-  assert.equal((page.match(/\.in\("store_id",\s*ids\)/g) ?? []).length, 6);
+  assert.equal((page.match(/\.in\("store_id",\s*ids\)/g) ?? []).length, 7);
   assert.match(page, /limit\(100\)/);
   assert.doesNotMatch(page, /\.insert\(|\.update\(|\.delete\(|\.upsert\(|service_role|auth\.admin|NEXT_PUBLIC_SUPABASE_SECRET/);
 });
