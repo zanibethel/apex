@@ -91,6 +91,7 @@ export default async function SharedCatalog() {
       {!product.is_published &&
         <ProductImageUploader storeId={product.store_id} productId={product.id} enabled={canWrite}/>}
       <div className="apex-product-meta">
+        <span>SKU: {product.sku}</span>
         <span>{categoryNames.get(product.category_id??"")??"Uncategorized"}</span>
         <span>{product.is_active?"Active":"Inactive"} · {product.is_published?"Published record":"Private draft"}</span>
       </div>
@@ -106,7 +107,7 @@ export default async function SharedCatalog() {
         : "Inventory not tracked"}</p>
       {!product.is_published
         ? <ProductRowEditor
-          storeId={product.store_id} productId={product.id} name={product.name}
+          storeId={product.store_id} productId={product.id} sku={product.sku} name={product.name}
           description={product.description??""} price={(price/100).toFixed(2)}
           directSourceCost={allowDirectSourceEdit
             ? product.internal_source_cost_cents==null?""

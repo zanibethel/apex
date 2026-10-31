@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupplierServerClient } from "@/lib/supabase/server";
+import { chooseNewSku, normalizeSku } from "@/lib/catalog/sku.mjs";
 
 type Result = { ok: boolean; message: string };
 const denied: Result = { ok: false, message: "This account cannot change this storefront." };
@@ -41,7 +42,9 @@ export async function createDraftProduct(_previous: Result, form: FormData): Pro
   if (process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED !== "true") return denied;
   const store = await authorizedStore(form);
   if (!store) return denied;
-  const name=validName(form.get("name"),120), sku=validName(form.get("sku"),60);
+  const name=validName(form.get("name"),120);
+  const skuRaw=form.get("sku");
+  const sku=typeof skuRaw==="string" && name ? chooseNewSku(skuRaw,name) : null;
   const price_cents=dollarsToCents(form.get("price"));
   const compareRaw=form.get("comparePrice");
   const compare_at_price_cents=compareRaw===""?null:dollarsToCents(compareRaw);
@@ -76,6 +79,7 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
   if (!store) return denied;
   const productId=form.get("productId");
   const name=validName(form.get("name"),120);
+  const sku=normalizeSku(form.get("sku"));
   const price_cents=dollarsToCents(form.get("price"));
   const compareRaw=form.get("comparePrice");
   const compare_at_price_cents=compareRaw===""?null:dollarsToCents(compareRaw);
@@ -87,7 +91,7 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
   if(typeof categoryRaw!=="string" || (categoryRaw!=="" && !uuid.test(categoryRaw)))
     return {ok:false,message:"Invalid category."};
   const category_id=categoryRaw||null;
-  if(typeof productId!=="string" || !uuid.test(productId) || !name ||
+  if(typeof productId!=="string" || !uuid.test(productId) || !name || !sku ||
     price_cents===null || price_cents<1 || description.length>1500 ||
     (compareRaw!==""&&compare_at_price_cents===null) ||
     (compare_at_price_cents!==null&&compare_at_price_cents<=price_cents) ||
@@ -95,9 +99,9 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
     return {ok:false,message:"Invalid product details."};
   }
   const updates:{
-    name:string;description:string;price_cents:number;compare_at_price_cents:number|null;
+    name:string;sku:string;description:string;price_cents:number;compare_at_price_cents:number|null;
     is_active:boolean;category_id:string|null;internal_source_cost_cents?:number|null;
-  }={name,description,price_cents,compare_at_price_cents,is_active,category_id};
+  }={name,sku,description,price_cents,compare_at_price_cents,is_active,category_id};
   if(sourceRaw!==null){
     // Never create a second, conflicting source-cost value for a linked variant.
     const {data:source,error:sourceError}=await store.client.from("supplier_candidate_drafts")
@@ -109,7 +113,7 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
     .update(updates)
     .eq("id",productId).eq("store_id",store.storeId).eq("is_published",false)
     .select("id").maybeSingle();
-  if(error || !data) return {ok:false,message:"Draft not updated. Check your membership or product status."};
+  if(error || !data) return {ok:false,message:"Draft not updated. Check your membership, SKU uniqueness or product status."};
   revalidatePath("/supplier/catalog");
   return {ok:true,message:"Draft product updated."};
 }
