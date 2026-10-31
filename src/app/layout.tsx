@@ -22,7 +22,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <Link href="/catalog">Catalog</Link>
                   <Link href="/#approach">Approach</Link>
                   <Link href="/account/profile">My profile</Link>
-                  <Link href="/account/sign-in">Account sign in</Link>
+                  <Link href="/supplier/sign-in">Account sign in</Link>
                 </div>
               </details>
             </nav>
