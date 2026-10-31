@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupplierServerClient } from "@/lib/supabase/server";
 import { chooseNewSku, normalizeSku } from "@/lib/catalog/sku.mjs";
 
-type Result = { ok: boolean; message: string };
+type Result = { ok: boolean; message: string; productId?: string; sku?: string };
 const denied: Result = { ok: false, message: "This account cannot change this storefront." };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -62,15 +62,15 @@ export async function createDraftProduct(_previous: Result, form: FormData): Pro
     return {ok:false,message:"Enter a title, SKU, valid purchase price, source cost and an optional higher compare-at price."};
   const {data,error} = await store.client.from("products")
     .insert({store_id:store.storeId,name,sku,description,price_cents,currency:"USD",
-      category_id,compare_at_price_cents,internal_source_cost_cents,is_active:false})
+      category_id,compare_at_price_cents,internal_source_cost_cents,is_active:form.get("isActive")==="on"})
     .select("id").single();
   if (error || !data) return {ok:false,message:"Draft product was not saved. The SKU may already be in use."};
   const inventory=await store.client.from("inventory_items")
     .insert({store_id:store.storeId,product_id:data.id,quantity_on_hand:0});
   revalidatePath("/supplier/catalog"); revalidatePath("/supplier");
   return inventory.error
-    ? {ok:true,message:"Draft product saved; initial stock record could not be created."}
-    : {ok:true,message:"Draft product created with zero starting inventory."};
+    ? {ok:true,message:"Draft product saved; initial stock record could not be created.",productId:data.id,sku}
+    : {ok:true,message:"Draft product created with zero starting inventory.",productId:data.id,sku};
 }
 
 export async function updateDraftProduct(_previous: Result, form: FormData): Promise<Result> {

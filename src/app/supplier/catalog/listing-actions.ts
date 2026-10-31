@@ -25,6 +25,7 @@ export async function saveSupplierListingIntent(_previous:Result,form:FormData):
  if(result.error||!result.data)
   return {ok:false,message:"Cannot save the listing preference. Verify setup and any admin hold, then refresh."};
  revalidatePath("/supplier/catalog");
+ revalidatePath(`/supplier/catalog/preview/${productId}`);
  revalidatePath("/admin/listing-controls");
  return {ok:true,message:result.data};
 }

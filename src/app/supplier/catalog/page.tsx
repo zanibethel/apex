@@ -147,7 +147,18 @@ export default async function SharedCatalog() {
       <p className="notice">{inv
         ? `Inventory: ${inv.quantity_on_hand} on hand · ${inv.quantity_reserved} reserved`
         : "Inventory not tracked"}</p>
-      {!product.is_published && <section className="apex-content-checklist" aria-label="Product setup and storefront status">
+      {!product.is_published&&<div className="apex-preview-action">
+        <div>
+          <strong>Ready to see your offer?</strong>
+          <p className="notice">Edit your details, preview the customer-facing tile, then publish.</p>
+        </div>
+        <Link href={`/supplier/catalog/preview/${product.id}`} className="button primary">
+          Preview offer &amp; publish
+        </Link>
+      </div>}
+      {!product.is_published && <details className="apex-product-advanced">
+        <summary>Optional setup checks and internal review</summary>
+        <section className="apex-content-checklist" aria-label="Product setup and storefront status">
         <h4>Finish this product</h4>
         <strong>Content checklist · {checklist.completed}/{checklist.total}</strong>
         <p className="notice">{checklist.contentComplete
@@ -220,7 +231,8 @@ export default async function SharedCatalog() {
           </ol>
           <p className="notice">Supplier publication requests are saved privately, not shown to customers. An admin hold overrides the request. Public release needs separately authorized product eligibility, storefront visibility and public image delivery.</p>
         </div>
-      </section>}
+        </section>
+      </details>}
       {!product.is_published && canWrite && <details id={`image-${product.id}`} className="apex-card-editor">
         <summary>Manage product image</summary>
         <ProductImageUploader storeId={product.store_id} productId={product.id}
@@ -247,9 +259,10 @@ export default async function SharedCatalog() {
     <Link href="/supplier" className="back">← Supplier dashboard</Link>
     <p className="eyebrow">APEX / SHARED PRODUCT MANAGER</p>
     <h1>Products.</h1>
-    <p className="lead">Mobile-friendly product cards for the entire shared supplier team.</p>
+    <p className="lead">Create or edit your product, preview its storefront tile, then publish from the preview.</p>
     <p className="notice">Read-only preview without edit access; with supplier access you can save private draft changes. Source cost is internal and never used as the customer purchase price or compare-at price.</p>
     <div className="actions">
+      <Link className="button primary" href="/supplier/catalog/bulk">Bulk add / edit / preview</Link>
       <Link className="button secondary" href="/supplier/inventory">Inventory</Link>
       <Link className="button secondary" href="/supplier/imports">Import review</Link>
       <Link className="button secondary" href="/supplier/discounts">Discount codes</Link>
@@ -318,7 +331,7 @@ export default async function SharedCatalog() {
 
     {stores.length===1&&<div className="apex-product-create">
       <details className="apex-create-details">
-        <summary>Create private draft product</summary>
+        <summary>Add new product</summary>
         <NewProductForm storeId={stores[0].id} enabled={canWrite} categories={choices}/>
       </details>
       <details id="add-private-category" className="apex-create-details">

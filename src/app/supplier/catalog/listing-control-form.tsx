@@ -3,8 +3,9 @@
 import {useActionState} from "react";
 import {saveSupplierListingIntent} from "./listing-actions";
 
-export function SupplierListingControls({storeId,productId,canEdit,wantsListing,canRequest}:{
+export function SupplierListingControls({storeId,productId,canEdit,wantsListing,canRequest,publishLabel="Request publication"}:{
  storeId:string;productId:string;canEdit:boolean;wantsListing:boolean;canRequest:boolean;
+ publishLabel?:string;
 }) {
  const [state,action,pending]=useActionState(saveSupplierListingIntent,{ok:false,message:""});
  return <form action={action} className="apex-listing-control-form">
@@ -13,7 +14,7 @@ export function SupplierListingControls({storeId,productId,canEdit,wantsListing,
   <div className="apex-listing-control-buttons">
    <button className="button primary" type="submit" name="action" value="publish"
     disabled={!canEdit||!canRequest||wantsListing||pending}>
-     {pending?"Saving…":"Request publication"}
+     {pending?"Saving…":wantsListing?"Publication requested":publishLabel}
    </button>
    <button className="button secondary" type="submit" name="action" value="unpublish"
     disabled={!canEdit||!wantsListing||pending}>Remove request</button>
