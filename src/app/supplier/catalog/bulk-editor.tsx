@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {useActionState,useEffect,useMemo,useState} from "react";
+import {useMemo,useState,useTransition} from "react";
 import {saveBulkProductDrafts} from "./bulk-actions";
 
 export type BulkEditRow={
@@ -20,8 +20,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
  const [selected,setSelected]=useState<string[]>([]);
  const [lastSave,setLastSave]=useState<{[key:string]:{ok:boolean;message:string}}>({});
- const [result,action,pending]=useActionState(saveBulkProductDrafts,
-  {ok:false,message:"",results:[] as {key:string;ok:boolean;name:string;message:string;id?:string}[]});
+ const [result,setResult]=useState({ok:false,message:"",results:[] as {key:string;ok:boolean;name:string;message:string;id?:string}[]});
+ const [pending,startTransition]=useTransition();
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const selectedRows=rows.filter(r=>selectedSet.has(r.key));
  const savedSelected=selectedRows.filter(r=>Boolean(r.id));
@@ -30,16 +30,19 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
   ?"/supplier/catalog/bulk/preview?ids="+encodeURIComponent(selectedIds.join(","))
   :null;
 
- useEffect(()=>{
-  if(!result.results.length)return;
-  setLastSave(prev=>({...prev,...Object.fromEntries(result.results.map(r=>[
-   r.key,{ok:r.ok,message:r.message}
-  ]))}));
-  setRows(prev=>prev.map(r=>{
-   const saved=result.results.find(o=>o.key===r.key&&o.ok&&o.id);
-   return saved?{...r,id:saved.id}:r;
-  }));
- },[result]);
+ function saveSelected(formData:FormData){
+  startTransition(async()=>{
+   const outcome=await saveBulkProductDrafts({ok:false,message:"",results:[]},formData);
+   setResult(outcome);
+   setLastSave(prev=>({...prev,...Object.fromEntries(outcome.results.map(r=>[
+    r.key,{ok:r.ok,message:r.message}
+   ]))}));
+   setRows(prev=>prev.map(r=>{
+    const saved=outcome.results.find(o=>o.key===r.key&&o.ok&&o.id);
+    return saved?{...r,id:saved.id}:r;
+   }));
+  });
+ }
 
  function change(key:string,field:keyof BulkEditRow,value:string|boolean){
   setRows(prev=>prev.map(r=>r.key===key?{...r,[field]:value}:r));
@@ -126,7 +129,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
    })}
   </div>
   <div className="apex-bulk-footer">
-   <form action={action}>
+   <form action={saveSelected}>
     <input type="hidden" name="storeId" value={storeId}/>
     <input type="hidden" name="rows" value={JSON.stringify(selectedRows)}/>
     <button type="submit" className="button primary" disabled={!editable||pending||!selectedValid}>
