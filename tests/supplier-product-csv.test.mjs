@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {PRODUCT_CSV_HEADERS,PRODUCT_CSV_TEMPLATE,csvCell,buildProductCsv,parseProductCsv}
  from "../src/lib/catalog/product-csv.mjs";
+import {draftSkuFromUuid} from "../src/lib/catalog/sku-format.mjs";
+import {generateDraftSku} from "../src/lib/catalog/sku.mjs";
 const bulkPage=readFileSync("src/app/supplier/catalog/bulk/page.tsx","utf8");
 const bulkEditor=readFileSync("src/app/supplier/catalog/bulk-editor.tsx","utf8");
 const importer=readFileSync("src/app/supplier/catalog/csv-product-import.tsx","utf8");
@@ -52,17 +54,23 @@ test("limit imported rows and CSV file size",()=>{
  assert.match(parseProductCsv(short).errors.join(" "),/100 product rows/);
  assert.match(parseProductCsv("x".repeat(256001)).errors.join(" "),/256 KB/);
 });
-test("UI loads CSV to editable staged rows but never saves or publishes on upload",()=>{
+test("CSV upload creates editable cards, fills missing SKUs and never saves or publishes on upload",()=>{
  assert.match(importer,/parseProductCsv\(await file\.text\(\)\)/);
  assert.match(importer,/Product ID does not belong to this store/);
  assert.match(importer,/Unknown category/);
  assert.match(importer,/Duplicate product in CSV/);
  assert.match(importer,/setStaged\(mapped\)/);
- assert.match(importer,/onLoad\(chosen\)/);
- assert.match(importer,/Load checked rows into editor/);
+ assert.match(importer,/onLoad\(valid\.map\(r=>r\.row\)\)/);
+ assert.match(importer,/draftSkuFromUuid\(item\.title,crypto\.randomUUID\(\)\)/);
+ assert.match(importer,/needsSave:true/);
+ assert.match(importer,/product card/);
  assert.match(importer,/Export editor CSV/);
  assert.match(bulkEditor,/CsvProductImport/);
  assert.match(bulkEditor,/loadFromCsv/);
+ assert.match(bulkEditor,/id="bulk-product-cards"/);
+ assert.match(bulkEditor,/Unsaved edits/);
+ assert.match(bulkEditor,/Imported draft · not saved/);
+ assert.match(bulkEditor,/r\.id&&!r\.needsSave/);
  assert.match(bulkEditor,/sourceCost/);
  assert.match(bulkPage,/internal_source_cost_cents/);
  assert.match(bulkPage,/supplier_candidate_drafts/);
@@ -76,4 +84,29 @@ test("server validates source costs and uses existing guarded draft actions",()=
  assert.match(bulkActions,/createDraftProduct/);
  assert.match(operations,/supplier_candidate_drafts/);
  assert.doesNotMatch(bulkActions,/is_published:true|is_public:true|service_role/);
+});
+
+
+test("CSV-generated draft SKU matches database creation format and is unique per UUID",()=>{
+ const ids=[
+  "a1234567-1234-4123-8123-123456789abc",
+  "b1234567-1234-4123-8123-123456789abc",
+ ];
+ const first=draftSkuFromUuid("Example Peptide 5 mg",ids[0]);
+ const second=draftSkuFromUuid("Example Peptide 5 mg",ids[1]);
+ assert.equal(first,generateDraftSku("Example Peptide 5 mg",()=>ids[0]));
+ assert.equal(first,"APX-EXAMPLE-PEPTIDE-5-MG-A1234567");
+ assert.notEqual(first,second);
+ assert.match(first,/^[A-Z0-9][A-Z0-9._-]{0,59}$/);
+ assert.throws(()=>draftSkuFromUuid("Example","not-a-uuid"));
+});
+test("CSV empty SKU and optional updates are handled without overwriting IDs",()=>{
+ const parsed=parseProductCsv(raw(", ,Example Product,Notes,1.00,12.00,,GetSwole,true"));
+ assert.deepEqual(parsed.errors,[]);
+ assert.equal(parsed.rows.length,1);
+ assert.equal(parsed.rows[0].sku,"");
+ assert.match(importer,/sku:sku\|\|target\?\.sku\|\|draftSkuFromUuid/);
+ assert.match(importer,/target\?\.id/);
+ assert.match(importer,/existingById|byId/);
+ assert.match(importer,/Duplicate product in CSV/);
 });
