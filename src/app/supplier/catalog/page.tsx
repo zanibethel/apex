@@ -11,6 +11,7 @@ import {draftContentChecklist,draftSetupSteps} from "@/lib/catalog/draft-content
 import {internalReviewLabel} from "@/lib/catalog/private-review-utils.mjs";
 import {SupplierReviewSubmission} from "./review-submission";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
+import {privateReleaseDisplay} from "@/lib/catalog/private-release-decision.mjs";
 import {SupplierListingControls} from "./listing-control-form";
 
 export const dynamic="force-dynamic";
@@ -75,6 +76,15 @@ export default async function SharedCatalog() {
       <Link className="button secondary" href="/supplier">Back to supplier dashboard</Link>
     </main>;
 
+  // The server-side, authorized RPC is the only source of release readiness.
+  // A missing migration or RPC error must NEVER imply a publishable product.
+  const releaseDecisions=new Map<string,unknown>();
+  await Promise.all((products.data??[]).filter(p=>!p.is_published).map(async p=>{
+    const {data,error}=await client.rpc("get_private_release_readiness",{
+      p_store_id:p.store_id,p_product_id:p.id,
+    });
+    if(!error&&data)releaseDecisions.set(p.id,data);
+  }));
   const images=new Map<string,string>();
   await Promise.all((products.data??[]).filter(p=>p.image_path).map(async product=>{
     const {data:image,error}=await client.storage.from("apex-draft-product-images")
@@ -102,6 +112,7 @@ export default async function SharedCatalog() {
     const reviewStatus=review?.status??"draft";
     const listing=listingByProduct.get(product.id);
     const listingStatus=listingControlStatus(listing);
+    const releaseDecision=privateReleaseDisplay(releaseDecisions.get(product.id));
     const reusableImages=canWrite?(products.data??[])
       .filter(source=>source.store_id===product.store_id&&source.id!==product.id&&
         !source.is_published&&Boolean(source.image_path)&&images.has(source.id))
@@ -183,6 +194,8 @@ export default async function SharedCatalog() {
         <div className="apex-listing-intent-status">
           <h4>Supplier publishing controls</h4>
           <strong>{listingControls.error?"Not available":listingStatus.label}</strong>
+          <p className="notice"><strong>Effective release decision:</strong> {releaseDecision.label}</p>
+          <p className="notice">{releaseDecision.description}</p>
           {listing?.reason&&<p className="notice">Administrator note: {listing.reason}</p>}
           {listingControls.error
            ?<p className="notice">Listing controls are not installed in this environment yet.</p>
