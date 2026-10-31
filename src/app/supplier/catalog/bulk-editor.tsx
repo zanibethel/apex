@@ -245,7 +245,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
           ?listingStatus?.missing.length
             ?"Complete to request: "+listingStatus.missing.join(", ")
             :listingStatus?.status??"Private publication request unavailable"
-          :undefined}/>
+          :undefined}/>}
      </div>
     </article>;
    })}
