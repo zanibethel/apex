@@ -57,3 +57,13 @@
  .apex-cost-row{grid-template-columns:minmax(0,1fr)}
  .apex-cost-row button{width:100%}
 }
+
+/* Compact public navigation; privileged destinations remain behind authenticated dashboards. */
+.apex-navigation { margin-left:auto; }
+.apex-menu { position:relative; }
+.apex-menu summary { cursor:pointer; list-style:none; border:1px solid rgba(255,255,255,.22); border-radius:12px; padding:10px 14px; min-height:44px; display:flex; align-items:center; gap:8px; }
+.apex-menu summary::-webkit-details-marker { display:none; }
+.apex-menu-panel { position:absolute; right:0; top:calc(100% + 10px); z-index:50; display:grid; gap:4px; width:min(260px,80vw); padding:12px; background:#17171b; border:1px solid #45454e; border-radius:14px; box-shadow:0 16px 35px #0009; }
+.apex-menu-panel a { display:block; padding:12px; min-height:44px; border-radius:8px; }
+.apex-menu-panel a:hover,.apex-menu-panel a:focus-visible { background:#303039; }
+@media(max-width:650px) { .header-inner { flex-wrap:nowrap; gap:10px; } .demo-chip { display:none; } }
