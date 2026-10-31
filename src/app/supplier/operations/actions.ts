@@ -69,8 +69,8 @@ export async function createDraftProduct(_previous: Result, form: FormData): Pro
     .insert({store_id:store.storeId,product_id:data.id,quantity_on_hand:0});
   revalidatePath("/supplier/catalog"); revalidatePath("/supplier");
   return inventory.error
-    ? {ok:true,message:"Draft product saved; initial stock record could not be created."}
-    : {ok:true,message:"Draft product created with zero starting inventory."};
+    ? {ok:true,message:"Draft product saved; initial stock record could not be created.",productId:data.id}
+    : {ok:true,message:"Draft product created with zero starting inventory.",productId:data.id};
 }
 
 export async function updateDraftProduct(_previous: Result, form: FormData): Promise<Result> {
