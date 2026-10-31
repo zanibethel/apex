@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupplierServerClient } from "@/lib/supabase/server";
 import { chooseNewSku, normalizeSku } from "@/lib/catalog/sku.mjs";
 
-type Result = { ok: boolean; message: string };
+type Result = { ok: boolean; message: string; productId?: string };
 const denied: Result = { ok: false, message: "This account cannot change this storefront." };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
