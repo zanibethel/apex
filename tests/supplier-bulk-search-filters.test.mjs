@@ -49,7 +49,7 @@ test("title/SKU search scales across imported cards without changing source",()=
  assert.equal(big.length,150);
 });
 test("actions use only selected visible cards and changing view clears selection",()=>{
- assert.ok(editor.includes("const visibleRows=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested)"));
+ assert.ok(editor.includes("const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested)"));
  assert.ok(editor.includes("const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key))"));
  assert.ok(editor.includes("setSelected(allVisibleSelected?[]:visibleRows.map(r=>r.key))"));
  assert.ok(editor.includes("setProductSearch(e.target.value);setSelected([])"));
