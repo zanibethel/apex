@@ -9,7 +9,7 @@ type Row={
  key:string;id?:string;name:string;sku:string;description:string;
  price:string;comparePrice:string;categoryId:string;isActive:boolean;
 };
-type Outcome={key:string;ok:boolean;name:string;message:string;id?:string};
+type Outcome={key:string;ok:boolean;name:string;message:string;id?:string;sku?:string};
 type BulkResult={ok:boolean;message:string;results:Outcome[]};
 
 const moneyPattern=/^\d{1,7}(\.\d{1,2})?$/;
@@ -91,7 +91,7 @@ export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):
     ?saved.productId:undefined);
   outcomes.push({key:row.key,ok:!!productId,name,
    message:productId?"Saved to your private catalog.": "Saved but could not confirm the new product ID; refresh catalog.",
-   id:productId});
+   id:productId,sku:("sku" in saved && typeof saved.sku==="string")?saved.sku:row.sku});
  }
  revalidatePath("/supplier/catalog");
  revalidatePath("/supplier/catalog/bulk");
