@@ -25,3 +25,13 @@ The supplier catalog UI now shows write controls only when the draft-write featu
 Tests cover checklist inputs, read-only behavior, expandable forms and role guard. Existing GitHub CI runs lint, typecheck, source tests, build and disposable PostgreSQL RLS checks. No new Supabase branch or test database was provisioned.
 
 After an approved merge, manually verify on iPhone: compact cards across multiple imported variants, keyboard/VoiceOver expand/collapse, editable owner/manager workflow, read-only staff workflow, image refresh and original SKU/stock persistence. Preview deployments may have draft-write feature flags disabled, so do not confuse that with a permission failure.
+
+## Supplier-visible go-live explanation
+
+Each private draft card now has **Finish this product** with an eight-step setup tracker: name, SKU, description, category, stored image, purchase price, internal active setting and a positive on-hand inventory quantity. The first six are the content checklist; the last two are operational. These are owner-entered values, not independently verified claims. Optional private supplier source cost and truthful compare-at price do not block internal data entry.
+
+The tracker lists only missing items first, with direct destinations to **Edit details**, **Manage image**, **Select or add category**, or **Manage inventory**. Native expandable sections remain keyboard accessible. After completing a category, the supplier must select that category in the product edit form and save.
+
+Below the setup tracker, a separate **Storefront: Not published** sequence states: (1) complete draft data, (2) separate administrator/product eligibility review, (3) separately approved public release. Steps (2) and (3) are **not implemented** by this PR and cannot be satisfied just by toggling Active. The current Supabase draft image bucket is private and may not be used as a public asset without an approved publication/storage workflow.
+
+Even if the setup counter reaches eight of eight, this means only internal draft setup is complete. No eligibility, compliance, licensing, admin review, public exposure, catalog publication, customer checkout, payment, or fulfillment is authorized or activated. Do not use this checklist to bypass a publication review.
