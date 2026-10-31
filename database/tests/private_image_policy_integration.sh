@@ -42,6 +42,13 @@ if psql -X -v ON_ERROR_STOP=1 \
   echo "Image policy repair should reject a second application" >&2
   exit 1
 fi
+# The product constraint repair must also refuse a second application.
+if psql -X -v ON_ERROR_STOP=1 \
+  -f database/sql/apex_private_product_image_path_constraint_repair_REVIEW_ONLY.sql \
+  >/tmp/apex-image-constraint-repeat.log 2>&1; then
+  echo "Image path constraint repair should reject a second application" >&2
+  exit 1
+fi
 psql -X -v ON_ERROR_STOP=1 -c "
   DO \$verify\$
   BEGIN
