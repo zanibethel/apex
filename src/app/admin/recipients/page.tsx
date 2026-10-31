@@ -12,16 +12,20 @@ export default async function RecipientDirectory() {
  if(authError || !isVerifiedPlatformAdmin(auth.user)) redirect("/admin/sign-in");
  const {data:recipients,error}=await client.from("payout_recipients").select("id,display_name,recipient_type,status").order("display_name").limit(250);
  const enabled=process.env.APEX_RECIPIENT_ADMIN_WRITES_ENABLED==="true" && !error;
- return <main className="container supplier-shell">
+ return <main className="container supplier-shell" style={{minWidth:0,overflowWrap:"anywhere"}}>
   <Link className="back" href="/admin/splits/configure">← Split configuration</Link>
-  <p className="eyebrow">APEX / ADMIN / PAYOUTS</p><h1>Payout recipients</h1>
-  <p className="notice">Manage payout recipient labels and active status. This does not assign wallet addresses, account access, or trigger transfers.</p>
+  <p className="eyebrow">APEX / ADMIN / PAYOUTS</p>
+  <h1 style={{fontSize:"clamp(2rem, 8vw, 3.5rem)"}}>Payout recipients</h1>
+  <p className="notice">Manage payout recipient labels and active status. No wallet addresses, account access, or transfers are configured here.</p>
   {error && <p role="alert">Recipient directory unavailable until the reviewed payout migrations are installed.</p>}
-  <h2>Add recipient</h2><RecipientForm enabled={enabled} />
+  <section className="supplier-panel" style={{maxWidth:"100%",minWidth:0,marginBottom:24}}>
+   <h2>Add recipient</h2><RecipientForm enabled={enabled} />
+  </section>
   <h2>Existing recipients</h2>
-  {!recipients?.length && <p>No recipient records available.</p>}
-  {recipients?.map(r=><section key={r.id} className="supplier-panel" style={{marginBottom:20}}>
-    <h3>{r.display_name} — {r.recipient_type} ({r.status})</h3>
+  {!recipients?.length && <p>No recipient records available. Add a platform or supplier recipient above when editing is enabled.</p>}
+  {recipients?.map(r=><section key={r.id} className="supplier-panel" style={{marginBottom:20,maxWidth:"100%",minWidth:0}}>
+    <h3 style={{overflowWrap:"anywhere"}}>{r.display_name}</h3>
+    <p className="notice">{r.recipient_type} · {r.status}</p>
     <RecipientForm recipient={r} enabled={enabled} />
   </section>)}
  </main>;
