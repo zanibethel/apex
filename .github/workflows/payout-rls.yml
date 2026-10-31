@@ -44,3 +44,5 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/recipient-admin.sql
       - name: Verify direct draft writes denied
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/direct-write-denial.sql
+      - name: Verify invalid payout drafts are rejected
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/draft-rpc-negative.sql
