@@ -55,8 +55,11 @@ insert into public.products(
  is_active,image_path,is_published
 )
 select p.store_id,p.category_id,'DUPLICATE-NEW-SKU',p.name,p.description,
- p.price_cents,p.currency,p.is_active,p.image_path,false
+ p.price_cents,p.currency,p.is_active,null,false
 from public.products p where p.id=current_setting('request.test.release_product')::uuid;
+update public.products set image_path=
+ store_id::text||'/'||id::text||'/'||gen_random_uuid()::text||'.png'
+ where sku='DUPLICATE-NEW-SKU';
 insert into public.inventory_items(store_id,product_id,quantity_on_hand,quantity_reserved)
 select p.store_id,p.id,4,0 from public.products p where p.sku='DUPLICATE-NEW-SKU';
 select id as duplicate_product from public.products where sku='DUPLICATE-NEW-SKU' \gset
