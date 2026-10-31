@@ -10,6 +10,8 @@ import {SourceCostEditor} from "./source-cost-editor";
 import {draftContentChecklist,draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {internalReviewLabel} from "@/lib/catalog/private-review-utils.mjs";
 import {SupplierReviewSubmission} from "./review-submission";
+import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
+import {SupplierListingControls} from "./listing-control-form";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Shared Products | Apex",robots:{index:false,follow:false}};
@@ -48,7 +50,7 @@ export default async function SharedCatalog() {
     memberships.some(member=>member.supplier_id===stores[0].supplier_id &&
       (member.role==="owner"||member.role==="manager"));
 
-  const [products,categories,inventory,candidates,mappings,reviews]=await Promise.all([
+  const [products,categories,inventory,candidates,mappings,reviews,listingControls]=await Promise.all([
     client.from("products")
       .select("id,store_id,category_id,sku,name,description,price_cents,internal_source_cost_cents,compare_at_price_cents,is_active,image_path,currency,is_published")
       .in("store_id",ids).order("name",{ascending:true}).limit(100),
@@ -61,6 +63,9 @@ export default async function SharedCatalog() {
     client.from("supplier_candidate_drafts")
       .select("store_id,candidate_id,product_id").in("store_id",ids).limit(500),
     client.from("private_product_review_states").select("store_id,product_id,status,review_note,submitted_at")
+      .in("store_id",ids).limit(100),
+    client.from("supplier_listing_controls")
+      .select("store_id,product_id,supplier_wants_listing,admin_gate,republish_approval_required,republish_approved,reason")
       .in("store_id",ids).limit(100),
   ]);
   if(products.error||categories.error||inventory.error||mappings.error)
@@ -81,6 +86,7 @@ export default async function SharedCatalog() {
   const stock=new Map(inventory.data?.map(item=>[item.product_id,item])??[]);
   const productsById=new Map(products.data?.map(p=>[p.id,p])??[]);
   const reviewByProduct=new Map(reviews.data?.map(r=>[r.product_id,r])??[]);
+  const listingByProduct=new Map(listingControls.data?.map(r=>[r.product_id,r])??[]);
   const draftsByCandidate=new Map(mappings.data?.map(m=>[m.candidate_id,m.product_id])??[]);
   const linkedProductIds=new Set(mappings.data?.map(m=>m.product_id)??[]);
   type ProductRow=NonNullable<typeof products.data>[number];
@@ -94,6 +100,8 @@ export default async function SharedCatalog() {
     const missingSteps=setup.steps.filter(step=>!step.complete);
     const review=reviewByProduct.get(product.id);
     const reviewStatus=review?.status??"draft";
+    const listing=listingByProduct.get(product.id);
+    const listingStatus=listingControlStatus(listing);
     const reusableImages=canWrite?(products.data??[])
       .filter(source=>source.store_id===product.store_id&&source.id!==product.id&&
         !source.is_published&&Boolean(source.image_path)&&images.has(source.id))
@@ -172,8 +180,19 @@ export default async function SharedCatalog() {
                :reviewStatus==="approved_internal"?"Approved for internal review only; still not published."
                :"An authorized manager can submit this draft for private review."}</p>}
         </div>
+        <div className="apex-listing-intent-status">
+          <h4>Supplier publishing controls</h4>
+          <strong>{listingControls.error?"Not available":listingStatus.label}</strong>
+          {listing?.reason&&<p className="notice">Administrator note: {listing.reason}</p>}
+          {listingControls.error
+           ?<p className="notice">Listing controls are not installed in this environment yet.</p>
+           :<SupplierListingControls storeId={product.store_id} productId={product.id}
+              canEdit={canWrite&&setup.setupComplete}
+              wantsListing={listing?.supplier_wants_listing??false}
+              canRequest={listingStatus.canRequest}/>}
+        </div>
         <div className="apex-publication-roadmap">
-          <h4>Storefront: Not published</h4>
+          <h4>Public storefront: Not enabled</h4>
           <ol>
             <li><strong>Complete product setup</strong>
               <span>{setup.setupComplete?"Done for internal data entry":"Finish the items above"}</span>
@@ -186,7 +205,7 @@ export default async function SharedCatalog() {
               <span>Not enabled. Public listing, category/store visibility and public image delivery require an approved release workflow.</span>
             </li>
           </ol>
-          <p className="notice">Active in internal catalog does not publish a product. There is no public publish button in this workspace. Images are private previews until a separately approved public image delivery process exists.</p>
+          <p className="notice">Supplier publication requests are saved privately, not shown to customers. An admin hold overrides the request. Public release needs separately authorized product eligibility, storefront visibility and public image delivery.</p>
         </div>
       </section>}
       {!product.is_published && canWrite && <details id={`image-${product.id}`} className="apex-card-editor">
