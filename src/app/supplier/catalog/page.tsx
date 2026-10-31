@@ -7,7 +7,7 @@ import {ImportReviewForm} from "../imports/review-form";
 import {PromoteReviewedVariantForm} from "../imports/promote-form";
 import {ProductImageUploader} from "./image-uploader";
 import {SourceCostEditor} from "./source-cost-editor";
-import {draftContentChecklist} from "@/lib/catalog/draft-content-checklist.mjs";
+import {draftContentChecklist,draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Shared Products | Apex",robots:{index:false,follow:false}};
@@ -85,6 +85,13 @@ export default async function SharedCatalog() {
     const compare=product.compare_at_price_cents==null?null:Number(product.compare_at_price_cents);
     const inv=stock.get(product.id);
     const checklist=draftContentChecklist({...product,price_cents:price});
+    const setup=draftSetupSteps({...product,price_cents:price},inv);
+    const missingSteps=setup.steps.filter(step=>!step.complete);
+    function actionHref(action:string) {
+      if(action==="inventory")return "/supplier/inventory";
+      if(action==="category")return "#add-private-category";
+      return `#${action}-${product.id}`;
+    }
     return <div className="apex-product-fields">
       <div className="apex-product-photo">
         {images.get(product.id)
@@ -107,17 +114,57 @@ export default async function SharedCatalog() {
       <p className="notice">{inv
         ? `Inventory: ${inv.quantity_on_hand} on hand · ${inv.quantity_reserved} reserved`
         : "Inventory not tracked"}</p>
-      {!product.is_published && <div className="apex-content-checklist" aria-label="Private draft content checklist">
+      {!product.is_published && <section className="apex-content-checklist" aria-label="Product setup and storefront status">
+        <h4>Finish this product</h4>
         <strong>Content checklist · {checklist.completed}/{checklist.total}</strong>
         <p className="notice">{checklist.contentComplete
           ? "Metadata complete for internal review. Not approved or published."
           : `Still needed: ${checklist.missing.join(", ")}.`}</p>
-      </div>}
-      {!product.is_published && canWrite && <details className="apex-card-editor">
+        <p className="apex-setup-count">
+          Draft setup: {setup.completed} of {setup.total} steps complete
+        </p>
+        {missingSteps.length>0
+          ? <ul className="apex-setup-missing">
+            {missingSteps.map(step=><li key={step.id}>
+              <span>{step.label}</span>
+              {canWrite ? <Link href={actionHref(step.action)}>
+                {step.action==="inventory"?"Manage inventory"
+                  :step.action==="image"?"Manage image"
+                  :step.action==="category"?"Add a category":"Edit details"}
+              </Link> : <span className="apex-setup-view-only">Owner/manager action</span>}
+            </li>)}
+          </ul>
+          : <p className="notice">All internal product setup fields are filled. Approval remains separate.</p>}
+        <details className="apex-setup-all">
+          <summary>View all {setup.total} setup checks</summary>
+          <ul>
+            {setup.steps.map(step=><li key={step.id}>
+              <span aria-hidden="true">{step.complete?"✓":"○"}</span>
+              {" "}{step.label}: {step.complete?"Complete":"Needed"}
+            </li>)}
+          </ul>
+        </details>
+        <div className="apex-publication-roadmap">
+          <h4>Storefront: Not published</h4>
+          <ol>
+            <li><strong>Complete product setup</strong>
+              <span>{setup.setupComplete?"Done for internal data entry":"Finish the items above"}</span>
+            </li>
+            <li><strong>Admin and product eligibility review</strong>
+              <span>Not approved. Review process is separate from product editing.</span>
+            </li>
+            <li><strong>Release to storefront</strong>
+              <span>Not enabled. Public listing, category/store visibility and public image delivery require an approved release workflow.</span>
+            </li>
+          </ol>
+          <p className="notice">Active in internal catalog does not publish a product. There is no public publish button in this workspace.</p>
+        </div>
+      </section>}
+      {!product.is_published && canWrite && <details id={`image-${product.id}`} className="apex-card-editor">
         <summary>Manage product image</summary>
         <ProductImageUploader storeId={product.store_id} productId={product.id} enabled={canWrite}/>
       </details>}
-      {!product.is_published && <details className="apex-card-editor">
+      {!product.is_published && <details id={`details-${product.id}`} className="apex-card-editor">
         <summary>{canWrite?"Edit details, SKU and price":"View product details (read-only)"}</summary>
         <ProductRowEditor
           storeId={product.store_id} productId={product.id} sku={product.sku} name={product.name}
@@ -212,7 +259,7 @@ export default async function SharedCatalog() {
         <summary>Create private draft product</summary>
         <NewProductForm storeId={stores[0].id} enabled={canWrite} categories={choices}/>
       </details>
-      <details className="apex-create-details">
+      <details id="add-private-category" className="apex-create-details">
         <summary>Add private category</summary>
         <NewCategoryForm storeId={stores[0].id} enabled={canWrite}/>
       </details>
