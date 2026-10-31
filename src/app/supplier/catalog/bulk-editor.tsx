@@ -20,7 +20,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
  const [selected,setSelected]=useState<string[]>([]);
  const [lastSave,setLastSave]=useState<{[key:string]:{ok:boolean;message:string}}>({});
- const [result,setResult]=useState({ok:false,message:"",results:[] as {key:string;ok:boolean;name:string;message:string;id?:string}[]});
+ const [result,setResult]=useState({ok:false,message:"",results:[] as {key:string;ok:boolean;name:string;message:string;id?:string;sku?:string}[]});
  const [pending,startTransition]=useTransition();
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const selectedRows=rows.filter(r=>selectedSet.has(r.key));
@@ -39,7 +39,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
    ]))}));
    setRows(prev=>prev.map(r=>{
     const saved=outcome.results.find(o=>o.key===r.key&&o.ok&&o.id);
-    return saved?{...r,id:saved.id}:r;
+    return saved?{...r,id:saved.id,sku:saved.sku||r.sku}:r;
    }));
   });
  }
