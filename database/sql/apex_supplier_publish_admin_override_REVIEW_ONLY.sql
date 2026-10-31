@@ -208,6 +208,38 @@ grant execute on function public.set_supplier_listing_intent(uuid,uuid,text)
 grant execute on function public.set_admin_listing_override(uuid,uuid,text,text)
  to authenticated;
 
--- These operations never mutate public.products.is_published,
--- public.categories.is_published or public.stores.is_public.
+-- Routine price, internal activation, and inventory edits must not force
+-- internal reapproval. The existing product-trigger remains on identity,
+-- description, category and image changes. The existing stock trigger is removed;
+-- future actual PUBLIC catalog eligibility must check current stock dynamically.
+do $trigger_preflight$
+begin
+ if (select count(*) from pg_trigger
+    where tgrelid='public.products'::regclass
+      and tgname='apex_private_review_product_change_guard'
+      and not tgisinternal)<>1
+ or (select count(*) from pg_trigger
+    where tgrelid='public.inventory_items'::regclass
+      and tgname='apex_private_review_inventory_change_guard'
+      and not tgisinternal)<>1
+ then raise exception 'Expected prelaunch review triggers missing; do not replace blindly';end if;
+end $trigger_preflight$;
+
+drop trigger apex_private_review_product_change_guard on public.products;
+create trigger apex_private_review_product_change_guard
+ after update of name,sku,description,category_id,image_path
+ on public.products for each row
+ when (
+   old.name is distinct from new.name or
+   old.sku is distinct from new.sku or
+   old.description is distinct from new.description or
+   old.category_id is distinct from new.category_id or
+   old.image_path is distinct from new.image_path
+ )
+ execute function apex_internal.review_product_change_guard();
+drop trigger apex_private_review_inventory_change_guard on public.inventory_items;
+
+-- Admin override is always separate and stronger than internal content review.
+-- These operations never mutate products.is_published,
+-- categories.is_published or stores.is_public.
 commit;
