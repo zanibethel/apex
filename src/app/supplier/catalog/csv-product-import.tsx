@@ -53,7 +53,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
     sourceCost:item.source_cost||target?.sourceCost||"",
     categoryId:categoryId||"",
     isActive:item.active?["true","yes","1"].includes(item.active.toLowerCase()):target?.isActive??false,
-    linkedSource:target?.linkedSource??false,
+    linkedSource:target?.linkedSource??false,needsSave:true,
    };
    if(row.linkedSource&&item.source_cost&&item.source_cost!==target?.sourceCost)
     issue="Linked source cost must be edited in Source review.";
