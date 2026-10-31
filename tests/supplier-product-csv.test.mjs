@@ -60,7 +60,7 @@ test("UI loads CSV to editable staged rows but never saves or publishes on uploa
  assert.match(importer,/setStaged\(mapped\)/);
  assert.match(importer,/onLoad\(chosen\)/);
  assert.match(importer,/Load checked rows into editor/);
- assert.match(importer,/Export current products CSV/);
+ assert.match(importer,/Export editor CSV/);
  assert.match(bulkEditor,/CsvProductImport/);
  assert.match(bulkEditor,/loadFromCsv/);
  assert.match(bulkEditor,/sourceCost/);
