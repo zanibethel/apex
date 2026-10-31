@@ -54,6 +54,6 @@ test("only verified admins can retrieve snapshot images from existing private bu
  assert.doesNotMatch(sql,/create policy.*for insert to anon|set public=true|grant all on storage/i);
  assert.match(integration,/Non-admin obtained private submitted images/);
  assert.match(integration,/Admin cannot read exactly the submitted private image/);
- assert.match(integration,/Product details changed after submission/);
+ assert.match(sql,/Product details changed after submission/);
  assert.match(workflow,/review_integrity_integration\.sql/);
 });
