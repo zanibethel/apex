@@ -49,7 +49,8 @@ test("only verified admins can retrieve snapshot images from existing private bu
  assert.match(sql,/for select to authenticated using/);
  assert.match(sql,/#>> '\{app_metadata,apex_role\}' = 'platform_admin'/);
  assert.match(sql,/r\.snapshot->>'image_path'=objects\.name/);
- assert.match(sql,/p\.is_published=false and s\.is_public=false/);
+ assert.match(sql,/r\.store_id::text=split_part\(objects\.name/);
+ assert.match(sql,/r\.product_id::text=split_part\(objects\.name/);
  assert.match(sql,/bucket_id='apex-draft-product-images'/);
  assert.doesNotMatch(sql,/create policy.*for insert to anon|set public=true|grant all on storage/i);
  assert.match(integration,/Non-admin obtained private submitted images/);
