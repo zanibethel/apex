@@ -7,8 +7,12 @@ import type {BulkEditRow} from "./bulk-editor";
 
 // This is a local visual simulation of the edit fields, not an authoritative
 // published/saleable listing or an indication of actual saved database state.
-export function BulkInlineOffer({row,category,imageUrl,availableStock}:{
+export function BulkInlineOffer({row,category,imageUrl,availableStock,
+ canPublish=false,requested=false,publishing=false,onPublish,
+ publicationMessage,publicationNote}:{
  row:BulkEditRow;category:string;imageUrl?:string;availableStock?:number;
+ canPublish?:boolean;requested?:boolean;publishing?:boolean;onPublish?:()=>void;
+ publicationMessage?:string;publicationNote?:string;
 }){
  const priceCents=previewUsdCents(row.price);
  const compareAtCents=previewCompareAtCents(priceCents,row.comparePrice);
@@ -31,9 +35,17 @@ export function BulkInlineOffer({row,category,imageUrl,availableStock}:{
     :"Live preview of your current edits. Save the selected product before its individual or group publication preview."}
   </p>
   {saved
-   ?<Link href={"/supplier/catalog/preview/"+row.id} className="button primary apex-bulk-preview-link">
-      Preview single &amp; publish
-    </Link>
+   ?<div className="apex-bulk-inline-publish-actions">
+     <Link href={"/supplier/catalog/preview/"+row.id}
+      className="button secondary apex-bulk-preview-link">Full preview</Link>
+     <button type="button" className="button primary"
+      disabled={!canPublish||requested||publishing||!onPublish}
+      onClick={onPublish}>
+      {publishing?"Saving request…":requested?"Publication requested":"Publish"}
+     </button>
+    </div>
    :<p className="apex-bulk-inline-save-hint">Select this row and choose Save selected to continue.</p>}
+  {publicationNote&&<p className="apex-bulk-inline-save-hint">{publicationNote}</p>}
+  {publicationMessage&&<p role="status" className="apex-bulk-publish-feedback">{publicationMessage}</p>}
  </section>;
 }
