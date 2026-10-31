@@ -48,3 +48,5 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/draft-rpc-negative.sql
       - name: Verify active payout rule immutability
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/non-draft-immutable.sql
+      - name: Verify concurrent draft versions
+        run: bash tests/payout-rls/concurrent-versions.sh
