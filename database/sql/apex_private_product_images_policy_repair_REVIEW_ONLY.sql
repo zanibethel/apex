@@ -1,7 +1,7 @@
 -- REVIEW ONLY: proposed corrective migration for Apex private draft images.
 -- Not applied to any environment. Apply only after an approved migration-history
 -- reconciliation and an isolated owner/manager/staff acceptance test.
--- The existing policies incorrectly resolve storage.foldername(name) inside
+-- The existing policies incorrectly resolve an unqualified foldername() inside
 -- a products p subquery to products.name (p.name), not storage.objects.name.
 -- Keep the existing membership and private bucket restrictions unchanged.
 begin;
@@ -37,7 +37,7 @@ create policy "apex_member_upload_draft_image" on storage.objects
 for insert to authenticated with check (
  bucket_id='apex-draft-product-images'
  and array_length(storage.foldername(storage.objects.name),1)=2
- and storage.filename(storage.objects.name) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}\\.(png|jpg|webp)$'
+ and storage.filename(storage.objects.name) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}\.(png|jpg|webp)$'
  and exists (
   select 1 from public.products p
    join public.stores s on s.id=p.store_id
