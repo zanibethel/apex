@@ -9,7 +9,7 @@ test("inventory edit controls require an owner or manager of the assigned privat
   assert.match(inventory, /member\.role === "owner" \|\| member\.role === "manager"/);
   assert.match(inventory, /!store\.is_public && managingSupplierIds\.has\(store\.supplier_id\)/);
   assert.match(inventory, /editableStoreIds\.has\(item\.store_id\)/);
-  assert.match(inventory, /product\?\.store_id === item\.store_id/);
+  assert.match(inventory, /product !== undefined && product\.store_id === item\.store_id/);
   assert.match(inventory, /product\.is_published === false/);
   assert.match(inventory, /APEX_DRAFT_CATALOG_WRITES_ENABLED/);
   assert.match(inventory, /editable\s*\?\s*<StockEditor/);
