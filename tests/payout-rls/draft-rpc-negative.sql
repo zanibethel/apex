@@ -5,7 +5,9 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001'
 select set_config('request.jwt.claims','{"app_metadata":{"apex_role":"platform_admin"}}',true);
 do $$
 declare v_payload jsonb;
+ v_before bigint;
 begin
+ select count(*) into v_before from public.payout_rules where scope_id='30000000-0000-0000-0000-000000000001';
  for v_payload in
   select value from jsonb_array_elements(
    '[
@@ -22,7 +24,7 @@ begin
    if sqlerrm like 'SECURITY TEST FAILURE%' then raise; end if;
   end;
  end loop;
- if exists(select 1 from public.payout_rules where scope_id='30000000-0000-0000-0000-000000000001')
+ if (select count(*) from public.payout_rules where scope_id='30000000-0000-0000-0000-000000000001') <> v_before
  then raise exception 'SECURITY TEST FAILURE: invalid drafts persisted'; end if;
 end $$;
 rollback;
