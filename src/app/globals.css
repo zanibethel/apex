@@ -630,3 +630,42 @@ body { background:#07080b; }
  .apex-bulk-publish-actions form{flex:1 1 100%}
  .apex-bulk-publish-actions .button{width:100%}
 }
+
+
+/* Supplier CSV import and private catalog download controls. */
+.apex-csv-panel{
+ display:grid;gap:13px;padding:18px;background:#17141d;
+ border:1px solid rgba(232,141,176,.35);border-radius:14px;
+}
+.apex-csv-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:15px}
+.apex-csv-header h2{font-size:21px;color:#fbeaf1;margin:5px 0 9px}
+.apex-csv-header p{max-width:650px;margin:0}
+.apex-csv-downloads{display:flex;align-items:stretch;flex-wrap:wrap;gap:9px}
+.apex-csv-downloads .button{display:flex;align-items:center;justify-content:center;font-size:13px;min-height:43px}
+.apex-csv-upload{display:grid;gap:9px;font-size:13px;font-weight:650}
+.apex-csv-upload input[type=file]{
+ display:block;width:100%;max-width:520px;min-width:0;
+ padding:12px;border:1px solid rgba(255,255,255,.22);
+ border-radius:9px;background:#201b25;color:#f4e6ed;
+}
+.apex-csv-errors{padding:12px;border:1px solid rgba(246,154,167,.4);
+ border-radius:10px;color:#f6abbf;background:#341e29;font-size:13px}
+.apex-csv-errors ul{margin:9px 0;padding-left:20px}
+.apex-csv-review-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.apex-csv-review-toolbar strong{margin-right:auto;font-size:14px}
+.apex-csv-review-list{max-height:420px;overflow:auto;display:grid;gap:7px}
+.apex-csv-review-row{
+ display:flex;gap:11px;align-items:flex-start;padding:11px;
+ border:1px solid rgba(255,255,255,.15);border-radius:8px;background:#211c27;
+}
+.apex-csv-review-row input{accent-color:#df658f;min-width:18px;min-height:18px;margin-top:2px}
+.apex-csv-review-row span{display:grid;gap:4px;min-width:0}
+.apex-csv-review-row strong{font-size:13px;overflow-wrap:anywhere}
+.apex-csv-review-row small{font-size:12px;color:#bdb5c2}
+.apex-csv-status{margin:0;color:#f0c5d6;font-size:13px}
+@media(max-width:600px){
+ .apex-csv-panel{padding:12px}
+ .apex-csv-downloads{width:100%}
+ .apex-csv-downloads .button{flex:1 1 100%}
+ .apex-csv-review-toolbar .button{flex:1 1 auto;font-size:12px}
+}
