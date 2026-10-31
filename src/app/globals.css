@@ -256,3 +256,54 @@ body { background:#07080b; }
  .site-header .apex-logo-link { width:142px; height:62px; flex-basis:142px; }
  .apex-profile-grid { grid-template-columns:1fr; }
 }
+
+
+/* Phase 2: compact private supplier product cards. Native details keep controls
+   accessible without always displaying several long forms on mobile. */
+.apex-card-editor,.apex-create-details{
+  min-width:0;
+  border:1px solid rgba(204,207,217,.22);
+  border-radius:10px;
+  background:#111217;
+  overflow:visible;
+}
+.apex-card-editor > summary,.apex-create-details > summary{
+  display:list-item;
+  cursor:pointer;
+  padding:13px 14px;
+  min-height:48px;
+  color:#eeeef2;
+  font-weight:700;
+  line-height:1.4;
+  list-style-position:inside;
+}
+.apex-card-editor > summary:focus-visible,.apex-create-details > summary:focus-visible{
+  outline:3px solid #f5c46c;
+  outline-offset:3px;
+}
+.apex-card-editor[open] > summary,.apex-create-details[open] > summary{
+  border-bottom:1px solid rgba(204,207,217,.16);
+}
+.apex-card-editor > :not(summary),.apex-create-details > :not(summary){
+  margin:12px;
+}
+.apex-card-editor .supplier-form,.apex-create-details .supplier-panel{
+  min-width:0;
+}
+.apex-content-checklist{
+  border:1px solid rgba(213,102,126,.28);
+  border-radius:9px;
+  background:rgba(135,12,44,.09);
+  padding:12px 14px;
+  font-size:13px;
+}
+.apex-content-checklist strong{color:#f3dbe1}
+.apex-content-checklist p{margin:7px 0 0;line-height:1.5}
+.apex-source-state{color:#bfc0c9;font-size:13px;margin:0;text-transform:capitalize}
+@media(max-width:540px){
+ .apex-product-grid{gap:12px}
+ .apex-product-card{gap:12px;padding:14px}
+ .apex-product-fields{gap:10px}
+ .apex-card-editor > summary,.apex-create-details > summary{padding:12px}
+ .apex-product-create{gap:12px}
+}
