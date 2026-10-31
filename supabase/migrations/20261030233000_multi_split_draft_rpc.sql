@@ -1,5 +1,5 @@
 -- REVIEW ONLY. Apply only after prior Apex migrations are reviewed and approved.
--- Atomic draft writes through an authenticated SECURITY INVOKER RPC.
+-- Atomic draft writes via explicitly authorized SECURITY DEFINER RPC.
 -- Admin role comes from trusted app_metadata; membership grants are never self-service.
 begin;
 create or replace function public.save_payout_rule_draft(
@@ -7,7 +7,7 @@ create or replace function public.save_payout_rule_draft(
  p_scope_type text,
  p_scope_id uuid,
  p_recipients jsonb
-) returns uuid language plpgsql security invoker set search_path = '' as $$
+) returns uuid language plpgsql security definer set search_path = '' as $$
 declare
  v_id uuid;
  v_total integer;
@@ -67,8 +67,8 @@ begin
  from jsonb_to_recordset(p_recipients) as x(recipient_id uuid,basis_points integer);
  return v_id;
 end; $$;
--- No generic browser writes: grant RPC only. RPC runs as caller and needs
--- narrow RLS policies for draft writes.
+-- No generic browser writes. SECURITY DEFINER is deliberately limited by
+-- explicit auth.uid(), trusted app_metadata and membership checks above.
 create policy payout_rules_admin_insert on public.payout_rules
  for insert to authenticated with check(
  status='draft' and exists(select 1 from public.apex_admin_memberships a where a.user_id=(select auth.uid()))
@@ -83,8 +83,8 @@ create policy payout_rule_allocations_admin_delete on public.payout_rule_allocat
  exists(select 1 from public.payout_rules r where r.id=rule_id and r.status='draft')
  and exists(select 1 from public.apex_admin_memberships a where a.user_id=(select auth.uid()))
  and (select auth.jwt()->'app_metadata'->>'apex_role')='platform_admin');
-grant insert on public.payout_rules to authenticated;
-grant insert,delete on public.payout_rule_allocations to authenticated;
+revoke insert,update,delete on public.payout_rules from PUBLIC,anon,authenticated;
+revoke insert,update,delete on public.payout_rule_allocations from PUBLIC,anon,authenticated;
 revoke all on function public.save_payout_rule_draft(uuid,text,uuid,jsonb) from public,anon;
 grant execute on function public.save_payout_rule_draft(uuid,text,uuid,jsonb) to authenticated;
 commit;
