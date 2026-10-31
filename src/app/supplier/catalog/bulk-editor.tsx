@@ -3,16 +3,18 @@
 import Link from "next/link";
 import {useMemo,useState,useTransition} from "react";
 import {saveBulkProductDrafts} from "./bulk-actions";
+import {CsvProductImport} from "./csv-product-import";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
- price:string;comparePrice:string;categoryId:string;isActive:boolean;
+ price:string;comparePrice:string;sourceCost:string;categoryId:string;isActive:boolean;
+ linkedSource?:boolean;
 };
 type Category={id:string;name:string};
 
 function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
-  price:"",comparePrice:"",categoryId:"",isActive:false};
+  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false};
 }
 export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
  storeId:string;editable:boolean;initialRows:BulkEditRow[];categories:Category[];
@@ -57,6 +59,16 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
   setRows(prev=>[...prev,...added]);
   setSelected(prev=>[...prev,...added.map(r=>r.key)]);
  }
+ function loadFromCsv(imported:BulkEditRow[]){
+  const incoming=new Set(imported.map(r=>r.key));
+  setRows(prev=>{
+   const merged=prev.map(r=>imported.find(n=>n.key===r.key)??r);
+   const current=new Set(prev.map(r=>r.key));
+   return [...merged,...imported.filter(r=>!current.has(r.key))];
+  });
+  setSelected(imported.map(r=>r.key));
+  setLastSave(prev=>{const copy={...prev};for(const key of incoming)delete copy[key];return copy;});
+ }
  function removeUnsaved(key:string){
   setRows(prev=>prev.filter(r=>r.key!==key));setSelected(prev=>prev.filter(k=>k!==key));
  }
@@ -64,6 +76,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
  const allSelected=rows.length>0&&selected.length===rows.length;
 
  return <section className="apex-bulk-workspace" aria-label="Bulk product creation and editing">
+  <CsvProductImport rows={rows} categories={categories} disabled={!editable||pending} onLoad={loadFromCsv}/>
   <div className="apex-bulk-toolbar">
    <button type="button" className="button secondary" onClick={()=>addRows(1)}
     disabled={!editable||rows.length>=120}>+ Add product</button>
@@ -96,6 +109,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories}:{
       <label>Price (USD)<input type="number" min="0" max="9999999.99"
        step=".01" value={r.price} disabled={!editable}
        onChange={e=>change(r.key,"price",e.target.value)}/></label>
+      <label>Source cost (private)<input type="number" min="0" max="9999999.99" step=".01"
+       value={r.sourceCost} disabled={!editable||r.linkedSource}
+       onChange={e=>change(r.key,"sourceCost",e.target.value)}/></label>
       <label>Compare-at <small>(optional)</small><input type="number"
        min="0" max="9999999.99" step=".01" value={r.comparePrice}
        disabled={!editable} onChange={e=>change(r.key,"comparePrice",e.target.value)}/></label>
