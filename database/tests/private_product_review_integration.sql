@@ -2,7 +2,7 @@
 -- NEVER execute this script against the hosted Apex Supabase database.
 \set ON_ERROR_STOP on
 
-create function auth.jwt() returns jsonb language sql stable as $fn$
+create or replace function auth.jwt() returns jsonb language sql stable as $fn$
  select jsonb_build_object('app_metadata',jsonb_build_object(
   'apex_role',nullif(current_setting('request.jwt.claim.apex_role',true),'')
  ));
