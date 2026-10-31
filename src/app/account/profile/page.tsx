@@ -11,10 +11,10 @@ export default async function ProfilePage() {
   if (!client) return <main className="container supplier-shell"><h1>Profile unavailable</h1></main>;
   const { data, error } = await client.auth.getUser();
   if (error || !data.user || data.user.is_anonymous || !data.user.email_confirmed_at)
-    redirect("/admin/sign-in");
+    redirect("/account/sign-in");
 
   return <main className="container supplier-shell">
-    <Link href={data.user.app_metadata?.apex_role === "platform_admin" ? "/admin" : "/supplier"} className="back">← Workspace</Link>
+    <Link href={data.user.app_metadata?.apex_role === "platform_admin" ? "/admin" : "/account/profile"} className="back">← Workspace</Link>
     <p className="eyebrow">APEX / MY PROFILE</p>
     <h1>Account settings</h1>
     <section className="supplier-panel">
