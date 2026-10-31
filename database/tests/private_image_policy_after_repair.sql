@@ -32,7 +32,7 @@ SELECT p.sku, auth.uid() AS actor, p.id AS product_id,
  storage.foldername(p.store_id::text||'/'||p.id::text||'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png') AS folders,
  storage.filename(p.store_id::text||'/'||p.id::text||'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png') AS filename,
  (storage.filename(p.store_id::text||'/'||p.id::text||'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png') ~
-  '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}\.(png|jpg|webp)$') AS file_regex_matches,
+  '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(png|jpg|webp)$') AS file_regex_matches,
  EXISTS (SELECT 1 FROM public.stores s JOIN public.supplier_memberships m
    ON m.supplier_id=s.supplier_id WHERE s.id=p.store_id
    AND s.is_public=false AND m.user_id=auth.uid()
@@ -42,8 +42,16 @@ INSERT INTO storage.objects(bucket_id,name)
  SELECT 'apex-draft-product-images',
   p.store_id::text||'/'||p.id::text||'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png'
  FROM public.products p WHERE p.sku='B-NEW-DRAFT';
+UPDATE public.products SET image_path=store_id::text||'/'||id::text||
+ '/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png'
+ WHERE sku='B-NEW-DRAFT' AND is_published=false;
 DO $assert$
 BEGIN
+ IF NOT EXISTS (SELECT 1 FROM public.products
+  WHERE sku='B-NEW-DRAFT' AND image_path = store_id::text||'/'||id::text||
+  '/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png') THEN
+  RAISE EXCEPTION 'Valid private image path was not persisted after repaired constraint';
+ END IF;
  IF (SELECT count(*) FROM storage.objects WHERE bucket_id='apex-draft-product-images')<>1 THEN
   RAISE EXCEPTION 'Manager cannot see assigned private draft image';
  END IF;
