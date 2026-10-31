@@ -8,6 +8,7 @@ import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
 import {useMemo,useState,useTransition} from "react";
 import {saveBulkProductDrafts} from "./bulk-actions";
 import {CsvProductImport} from "./csv-product-import";
+import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-products.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -91,7 +92,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   const incoming=new Set(imported.map(r=>r.key));
   // Put new or updated CSV cards FIRST, so an upload does not disappear
   // beneath up to 100 existing products on narrow/mobile screens.
-  setRows(prev=>[...imported,...prev.filter(r=>!incoming.has(r.key))]);
+  setRows(prev=>prioritizeImportedProducts(prev,imported));
   setRecentImportKeys(imported.map(r=>r.key));
   setSelected(imported.map(r=>r.key));
   setLastSave(prev=>{const copy={...prev};for(const key of incoming)delete copy[key];return copy;});
