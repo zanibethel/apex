@@ -8,7 +8,7 @@ type Result = { label: string; amount: bigint; percentage: number };
 function calculate(amount: string, rows: Row[]): Result[] {
   if (!/^\d+$/.test(amount)) throw new Error("Enter a whole number of satoshis.");
   const sats = BigInt(amount);
-  if (sats > BigInt('2100000000000000')) throw new Error("Amount exceeds the Bitcoin supply.");
+  if (sats > BigInt("2100000000000000")) throw new Error("Amount exceeds the Bitcoin supply.");
   if (!rows.length || rows.length > 100) throw new Error("Add between 1 and 100 recipients.");
   const names = new Set<string>();
   let sum = 0;
@@ -34,6 +34,8 @@ function calculate(amount: string, rows: Row[]): Result[] {
   return parts.map(({ label, amount, percentage }) => ({ label, amount, percentage }));
 }
 
+const field = { width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box" as const };
+const labelStyle = { display: "grid", gap: 6, minWidth: 0 };
 export function MultiSplitPreview() {
   const [rows, setRows] = useState<Row[]>([{ key: 1, label: "", basisPoints: "100" }]);
   const [nextId, setNextId] = useState(2);
@@ -42,19 +44,19 @@ export function MultiSplitPreview() {
     try { return { data: calculate(amount, rows), error: "" }; }
     catch (error) { return { data: [] as Result[], error: error instanceof Error ? error.message : "Invalid split" }; }
   }, [amount, rows]);
-  function update(key: number, field: "label" | "basisPoints", value: string) {
-    setRows(current => current.map(row => row.key === key ? { ...row, [field]: value } : row));
+  function update(key: number, fieldName: "label" | "basisPoints", value: string) {
+    setRows(current => current.map(row => row.key === key ? { ...row, [fieldName]: value } : row));
   }
-  return <section className="supplier-panel" style={{ maxWidth: "none" }}>
-    <h2>Draft allocation calculator</h2>
-    <p>Enter recipient labels and their percentage shares. This calculator uses synthetic values only; no wallet addresses are required.</p>
-    <label htmlFor="preview-sats">Example order amount (satoshis)</label>
-    <input id="preview-sats" type="text" inputMode="numeric" value={amount} onChange={event => setAmount(event.target.value)} />
-    {rows.map(row => <div key={row.key} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end", marginTop: 12 }}>
-      <label>Recipient<br /><input aria-label="Recipient name" value={row.label} onChange={event => update(row.key, "label", event.target.value)} placeholder="Recipient name" /></label>
-      <label>Share (%)<br /><input aria-label="Recipient percentage" inputMode="decimal" value={row.basisPoints} onChange={event => update(row.key, "basisPoints", event.target.value)} /></label>
-      <button className="button secondary" type="button" disabled={rows.length === 1} onClick={() => setRows(current => current.filter(item => item.key !== row.key))}>Remove</button>
-    </div>)}
+  return <section className="supplier-panel" style={{ maxWidth: "100%", minWidth: 0, overflowWrap: "anywhere" }}>
+    <h2 style={{ fontSize: "clamp(1.5rem, 6vw, 2rem)" }}>Draft allocation calculator</h2>
+    <p>Enter recipient labels and percentage shares. Synthetic values only; no wallet addresses required.</p>
+    <label style={labelStyle} htmlFor="preview-sats">Example order amount (satoshis)<input style={field} id="preview-sats" type="text" inputMode="numeric" value={amount} onChange={event => setAmount(event.target.value)} /></label>
+    {rows.map((row, index) => <fieldset key={row.key} style={{ display: "grid", gap: 12, width: "100%", minWidth: 0, boxSizing: "border-box", border: "1px solid #555", borderRadius: 8, padding: 12, marginTop: 12 }}>
+      <legend>Recipient {index + 1}</legend>
+      <label style={labelStyle}>Recipient name<input style={field} aria-label="Recipient name" value={row.label} onChange={event => update(row.key, "label", event.target.value)} placeholder="Recipient name" /></label>
+      <label style={labelStyle}>Share (%)<input style={field} aria-label="Recipient percentage" inputMode="decimal" value={row.basisPoints} onChange={event => update(row.key, "basisPoints", event.target.value)} /></label>
+      <button className="button secondary" type="button" disabled={rows.length === 1} onClick={() => setRows(current => current.filter(item => item.key !== row.key))}>Remove recipient</button>
+    </fieldset>)}
     <p style={{ marginTop: 16 }}><button className="button secondary" type="button" disabled={rows.length >= 100} onClick={() => { setRows(current => [...current, { key: nextId, label: "", basisPoints: "0" }]); setNextId(value => value + 1); }}>Add recipient</button></p>
     {preview.error ? <p role="alert" className="notice">{preview.error}</p> : <>
       <h3>Preview only</h3>
