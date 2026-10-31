@@ -33,3 +33,18 @@ Last reviewed: 2026-10-31
 **Possible solution:** Read-only acceptance inventory for supplier-provided catalog, images, publish flags, role-scoped edits and audit history; test with nontransactional demonstration data and independently verify role isolation before proposing launch readiness.
 
 **Recommendation:** Keep demo-only and do not represent the storefront as catalog-ready or activate real payments/fulfillment. Any production data, auth, payment or deployment change requires separate approval.
+
+---
+
+## 3. Runtime patch readiness for the deployed storefront
+
+**Status:** Evaluate / read-only version audit  
+**Added:** 2026-10-31  
+**Last reviewed:** 2026-10-31
+
+**Evidence:** Apex Vercel project is configured for Node **22.x**; repository `package.json` has no `engines.node` and declares Next.js `^16.0.0` (the lockfile/deployed resolved patch version was not established in this review). Vercel announced Node 26 LTS GA Oct 29, default for new projects, with conditional existing-project upgrades. Next.js plans seven medium-severity fixes Nov 3; affected versions are not yet established. Sources: https://vercel.com/changelog/node-js-26-lts-is-now-generally-available-on-vercel ; https://nextjs.org/blog/upcoming-nextjs-security-release-november-2026 .
+
+**Possible solution:** Read-only inspect deployed Node/Next versions, lockfile and CI settings; test storefront, supplier auth, catalog image access and session flows on patched versions in isolation.
+
+**Recommendation:** No runtime/framework changes or deployment without regression evidence and explicit approval. Keep real checkout disabled pending existing payment and compliance gates.
+
