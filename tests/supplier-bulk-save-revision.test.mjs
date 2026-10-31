@@ -51,4 +51,5 @@ test("bulk editor blocks concurrent writes and reconciles against the submitted 
  assert.match(editor,/disabled=\{!editable\|\|busy\}/);
  assert.match(editor,/disabled=\{busy\} checked=\{selectedSet\.has\(r\.key\)\}/);
  assert.match(editor,/enabled=\{editable&&!busy\}/);
+ assert.match(editor,/Previous version saved · newer edits unsaved/);
 });
