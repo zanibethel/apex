@@ -37,6 +37,15 @@ begin
 end $check$;
 
 select set_config('request.jwt.claim.apex_role','platform_admin',false);
+select current_user as acting_role,auth.uid() as actor,auth.jwt() as jwt_claims;
+select (select count(*) from public.private_product_review_states) as visible_reviews,
+ (select count(*) from storage.objects) as visible_images,
+ (select count(*) from public.stores where is_public=false) as visible_stores;
+select p.store_id,p.id as product_id,r.snapshot->>'image_path' as saved_image,
+ p.is_published,s.is_public
+ from public.private_product_review_states r
+ join public.products p on p.store_id=r.store_id and p.id=r.product_id
+ join public.stores s on s.id=p.store_id;
 do $check$
 begin
  if (select count(*) from storage.objects)<>1 then
