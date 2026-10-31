@@ -1,0 +1,61 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const read=path=>readFileSync(path,"utf8");
+const page=read("src/app/supplier/catalog/preview/[productId]/page.tsx");
+const catalog=read("src/app/supplier/catalog/page.tsx");
+const tile=read("src/components/catalog/offer-tile.tsx");
+const form=read("src/app/supplier/catalog/listing-control-form.tsx");
+const action=read("src/app/supplier/catalog/listing-actions.ts");
+const css=read("src/app/globals.css");
+
+test("supplier process leads from edit to storefront-like tile and publish",()=>{
+ assert.match(catalog,/Preview offer &amp; publish/);
+ assert.match(catalog,/supplier\/catalog\/preview/);
+ assert.match(catalog,/apex-product-advanced/);
+ assert.match(catalog,/Optional setup checks and internal review/);
+ assert.match(catalog,/<summary>Add new product<\/summary>/);
+ assert.match(page,/<h1>Preview your offer<\/h1>/);
+ assert.match(page,/<OfferTile /);
+ assert.match(page,/publishLabel="Publish"/);
+ assert.match(page,/privateReleaseDisplay/);
+ assert.match(form,/publishLabel\?:string/);
+ assert.match(form,/wantsListing\?"Publication requested":publishLabel/);
+});
+test("private preview is tenant-scoped and does not reveal unauthorized products",()=>{
+ assert.match(page,/createSupplierServerClient\(\)/);
+ assert.match(page,/auth\.getUser\(\)/);
+ assert.match(page,/is_anonymous/);
+ assert.match(page,/email_confirmed_at/);
+ assert.match(page,/isValidId\(productId\)/);
+ assert.match(page,/supplier_memberships/);
+ assert.match(page,/\.eq\("id",productId\)/);
+ assert.match(page,/memberships\.find\(m=>m\.supplier_id===store\.supplier_id\)/);
+ assert.match(page,/if\(!member\)notFound\(\)/);
+ assert.match(page,/member\.role==="owner"\|\|member\.role==="manager"/);
+ assert.match(page,/get_private_release_readiness/);
+ assert.match(page,/createSignedUrl\(product\.image_path,90\)/);
+ assert.match(page,/robots:\{index:false,follow:false\}/);
+ assert.doesNotMatch(page,/createPublicUrl|service_role|\.update\(\{is_published/);
+});
+test("offer tile contains customer-visible information, not private source costs",()=>{
+ assert.match(tile,/category/);
+ assert.match(tile,/imageUrl/);
+ assert.match(tile,/compareAtCents>priceCents/);
+ assert.match(tile,/SKU:/);
+ assert.match(tile,/In stock/);
+ assert.match(tile,/Out of stock/);
+ assert.match(tile,/Product description coming soon/);
+ assert.doesNotMatch(tile,/internal_source_cost|supplier_wallet|wholesale_cost|payment|checkout/i);
+ assert.match(css,/\.apex-offer-preview-grid/);
+ assert.match(css,/@media\(max-width:740px\)/);
+});
+test("Publish keeps guarded server intent, never directly switches public flags",()=>{
+ assert.match(form,/name="action" value="publish"/);
+ assert.match(action,/set_supplier_listing_intent/);
+ assert.match(action,/revalidatePath/);
+ assert.match(action,/supplier\/catalog\/preview/);
+ assert.match(page,/Publishing currently saves a supplier request/);
+ assert.match(page,/!decisionResult\.error&&listingStatus\.canRequest/);
+ assert.doesNotMatch(page+action,/publish_storefront|is_published:true|is_public:true|\.from\("orders"\)/);
+});
