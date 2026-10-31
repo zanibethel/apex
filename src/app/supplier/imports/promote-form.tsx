@@ -19,9 +19,10 @@ export function PromoteReviewedVariantForm({storeId,candidateId,productName,stre
     {state.ok ? <p role="status">{state.message}</p> : <form action={action} className="supplier-form">
       <input type="hidden" name="storeId" value={storeId}/>
       <input type="hidden" name="candidateId" value={candidateId}/>
-      <label htmlFor={id+"sku"}>New SKU</label>
-      <input id={id+"sku"} name="sku" maxLength={60} autoComplete="off" required disabled={!enabled}
-        placeholder="Unique internal SKU"/>
+      <label htmlFor={id+"sku"}>SKU (optional)</label>
+      <input id={id+"sku"} name="sku" maxLength={60} autoComplete="off" disabled={!enabled}
+        placeholder="Auto-generated when blank"/>
+      <p className="notice">A unique SKU will be generated for this variant if you leave the field blank.</p>
       <label htmlFor={id+"price"}>Customer purchase price (USD)</label>
       <input id={id+"price"} name="retailPrice" type="number" min="0.01" max="9999999.99" step="0.01"
         required disabled={!enabled} placeholder="Not the wholesale cost"/>
