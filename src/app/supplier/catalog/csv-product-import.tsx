@@ -67,7 +67,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
   if(!chosen.length){setMessage("Select valid rows first.");return;}
   const keys=new Set(rows.map(r=>r.key));
   const additions=chosen.filter(r=>!keys.has(r.key)).length;
-  if(rows.length+additions>120){setMessage("The editor supports 120 rows. Load smaller groups.");return;}
+  if(rows.length+additions>250){setMessage("The editor supports 250 rows. Load smaller groups.");return;}
   onLoad(chosen);setStaged([]);setSelected([]);
   setMessage(String(chosen.length)+" rows loaded. Select them and click Save selected to commit to the private catalog.");
  }
@@ -90,7 +90,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    <div className="apex-csv-downloads">
     <a href="/templates/apex-product-import-template.csv" download className="button secondary">Download CSV template</a>
     <button type="button" className="button secondary" disabled={!rows.some(r=>r.id)}
-     onClick={exportSaved}>Export current products CSV</button>
+     onClick={exportSaved}>Export editor CSV</button>
    </div>
   </div>
   <p className="notice"><strong>Matching:</strong> product_id or SKU updates an existing private product; otherwise a new draft is created. Category uses the category name (GetSwole is a category, not a supplier). Blank source cost on updates preserves it. Images and inventory remain separate.</p>
