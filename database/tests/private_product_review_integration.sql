@@ -14,10 +14,11 @@ grant execute on function auth.jwt() to authenticated;
 -- repair. Mirror the already-applied hosted image-path constraint in CI only.
 alter table public.products drop constraint products_private_image_path;
 alter table public.products add constraint products_private_image_path check (
- image_path is null or (
- char_length(image_path)<=180 and
- image_path ~ ('^'||store_id::text||'/'||id::text||
- '/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](png|jpg|webp)
+ image_path is null or
+ (char_length(image_path)<=180 and
+  image_path ~ ('^' || store_id::text || '/' || id::text ||
+    '/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](png|jpg|webp)'))
+);
 
 -- Synthetic beta private product already created by earlier CI catalog fixtures.
 update public.products p set
