@@ -35,3 +35,12 @@ test("private image policies reference storage object path even inside nested pr
   assert.doesNotMatch(storage,/for delete|for update/i);
   assert.doesNotMatch(repair,/create policy[^;]*for delete|create policy[^;]*for update/i);
 });
+
+test("all draft image allowlists validate complete randomized UUID filenames",()=>{
+  const productSchema=readFileSync("database/sql/apex_product_media_promos_review.sql","utf8");
+  const constraint=readFileSync("database/sql/apex_private_product_image_path_constraint_repair_REVIEW_ONLY.sql","utf8");
+  const fullUUID=String.raw`[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(png|jpg|webp)`;
+  for(const [name,sql] of Object.entries({storage,repair,productSchema,constraint})) {
+    assert.ok(sql.includes(fullUUID),name+" must match an entire UUID filename");
+  }
+});

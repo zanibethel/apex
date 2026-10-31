@@ -37,7 +37,7 @@ create policy "apex_member_upload_draft_image" on storage.objects
 for insert to authenticated with check (
  bucket_id='apex-draft-product-images'
  and array_length(storage.foldername(storage.objects.name),1)=2
- and storage.filename(storage.objects.name) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}\.(png|jpg|webp)$'
+ and storage.filename(storage.objects.name) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(png|jpg|webp)$'
  and exists (
   select 1 from public.products p
    join public.stores s on s.id=p.store_id
