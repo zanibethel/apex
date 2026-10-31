@@ -27,17 +27,35 @@ export default async function BulkProductWorkspace(){
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
  const store=stores[0];
- const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError}]=await Promise.all([
+ const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:inventory,error:inventoryError}]=await Promise.all([
   client.from("products")
-   .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active")
+   .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).order("name").limit(100),
   client.from("categories").select("id,name").eq("store_id",store.id).order("name").limit(100),
   client.from("supplier_candidate_drafts").select("product_id").eq("store_id",store.id).limit(500),
+  client.from("inventory_items").select("product_id,quantity_on_hand,quantity_reserved").eq("store_id",store.id).limit(250),
  ]);
- if(productError||categoryError||linkedError)return <main className="container supplier-shell">
+ if(productError||categoryError||linkedError||inventoryError)return <main className="container supplier-shell">
   <h1>Private catalog temporarily unavailable.</h1>
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
+ // Signed URLs are generated only for draft products in this authenticated
+ // supplier's private store. No public bucket policy or public URLs.
+ const signedImages=new Map<string,string>();
+ await Promise.all((products??[]).filter(p=>p.image_path).map(async product=>{
+  const {data,error}=await client.storage.from("apex-draft-product-images")
+   .createSignedUrl(product.image_path!,120);
+  if(!error&&data?.signedUrl)signedImages.set(product.id,data.signedUrl);
+ }));
+ const imageLibrary=(products??[]).filter(p=>signedImages.has(p.id)).map(p=>({
+  productId:p.id,name:p.name,sku:p.sku,previewUrl:signedImages.get(p.id)!,
+ }));
+ const quantities=new Map((inventory??[]).map(i=>[i.product_id,i]));
+ const media=(products??[]).map(p=>({
+  productId:p.id,imageUrl:signedImages.get(p.id),
+  quantityOnHand:quantities.get(p.id)?.quantity_on_hand,
+  quantityReserved:quantities.get(p.id)?.quantity_reserved,
+ }));
  const linkedProducts=new Set((linked??[]).map(p=>p.product_id));
  const initialRows=(products??[]).map(p=>({
   key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",
@@ -51,9 +69,9 @@ export default async function BulkProductWorkspace(){
   <p className="eyebrow">APEX / SUPPLIER BULK PRODUCT MANAGEMENT</p>
   <h1>Add and edit multiple products</h1>
   <p className="lead">Select products, make changes, save them, then choose Preview single or Preview all before publishing.</p>
-  <p className="notice">This is your private product workspace. New products begin with no stock and no image; complete those in the product manager before requesting publication. Saving here never makes anything publicly visible.</p>
+  <p className="notice">New products begin as private drafts with zero stock. Save a draft to unlock its inline image picker and stock editor, then preview the completed offer. Nothing is made public by saving.</p>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
-   categories={categories??[]} initialRows={initialRows}/>
-  <p className="notice">Source cost can be edited for direct drafts. Linked imported-variant source costs still use Source review. Images and stock remain on their existing management screens. Up to 100 private products are shown.</p>
+   categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary}/>
+  <p className="notice">Upload a new PNG/JPEG/WebP image or reuse an existing private product image; each reuse makes its own private copy. On-hand inventory updates use expected-count checks and are audited. Private source cost for linked variants still requires Source review. The first 100 private products are shown.</p>
  </main>;
 }
