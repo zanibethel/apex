@@ -42,8 +42,9 @@ expect_count "$ONE" payment_allocation_snapshots 0
 expect_count "$ONE" payout_rules 0
 expect_count "$TWO" payment_allocation_entries 1
 expect_count "$TWO" payout_transfer_records 1
-# Confirm no browser mutations are possible even when logged in.
-if psql -v ON_ERROR_STOP=1 -Atqc "begin; set local role authenticated; select set_config('request.jwt.claim.sub','$ONE',true); update public.payout_recipients set display_name='tamper'; rollback;" >/dev/null 2>&1; then
- echo "FAIL: authenticated role unexpectedly permitted UPDATE"; exit 1
+# The role has narrowly granted UPDATE, but RLS must affect zero rows for nonadmins.
+updated="$(psql -v ON_ERROR_STOP=1 -Atqc "begin; set local role authenticated; select set_config('request.jwt.claim.sub','$ONE',true); select set_config('request.jwt.claims','{\"app_metadata\":{\"apex_role\":\"customer\"}}',true); with changed as (update public.payout_recipients set display_name='tamper' returning id) select count(*) from changed; rollback;" | tail -n 1)"
+if [[ "$updated" != "0" ]]; then
+ echo "FAIL: non-admin changed $updated recipient rows"; exit 1
 fi
-echo "PASS: authenticated UPDATE denied"
+echo "PASS: non-admin UPDATE affects zero rows"
