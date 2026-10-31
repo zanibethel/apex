@@ -49,17 +49,19 @@ export function MultiSplitPreview() {
   }
   return <section className="supplier-panel" style={{ maxWidth: "100%", minWidth: 0, overflowWrap: "anywhere" }}>
     <h2 style={{ fontSize: "clamp(1.5rem, 6vw, 2rem)" }}>Draft allocation calculator</h2>
-    <p>Enter recipient labels and percentage shares. Synthetic values only; no wallet addresses required.</p>
+    <p className="notice">Preview how an example order would be allocated. No wallet or transfer is involved.</p>
     <label style={labelStyle} htmlFor="preview-sats">Example order amount (satoshis)<input style={field} id="preview-sats" type="text" inputMode="numeric" value={amount} onChange={event => setAmount(event.target.value)} /></label>
-    {rows.map((row, index) => <fieldset key={row.key} style={{ display: "grid", gap: 12, width: "100%", minWidth: 0, boxSizing: "border-box", border: "1px solid #555", borderRadius: 8, padding: 12, marginTop: 12 }}>
+    {rows.map((row, index) => <fieldset key={row.key} className="apex-recipient-card">
       <legend>Recipient {index + 1}</legend>
-      <label style={labelStyle}>Recipient name<input style={field} aria-label="Recipient name" value={row.label} onChange={event => update(row.key, "label", event.target.value)} placeholder="Recipient name" /></label>
+      <div className="apex-recipient-fields"><label style={labelStyle}>Recipient name<input style={field} aria-label="Recipient name" value={row.label} onChange={event => update(row.key, "label", event.target.value)} placeholder="Recipient name" /></label>
       <label style={labelStyle}>Share (%)<input style={field} aria-label="Recipient percentage" inputMode="decimal" value={row.basisPoints} onChange={event => update(row.key, "basisPoints", event.target.value)} /></label>
-      <button className="button secondary" type="button" disabled={rows.length === 1} onClick={() => setRows(current => current.filter(item => item.key !== row.key))}>Remove recipient</button>
+      </div><button className="button secondary" type="button" disabled={rows.length === 1} onClick={() => setRows(current => current.filter(item => item.key !== row.key))}>Remove recipient</button>
     </fieldset>)}
     <p style={{ marginTop: 16 }}><button className="button secondary" type="button" disabled={rows.length >= 100} onClick={() => { setRows(current => [...current, { key: nextId, label: "", basisPoints: "0" }]); setNextId(value => value + 1); }}>Add recipient</button></p>
+    <div className="apex-allocation-summary"><strong>Allocation preview</strong><span>{preview.error ? "Needs attention" : "100% allocated ✓"}</span></div>
+    {!preview.error && <div className="apex-allocation-bar" role="img" aria-label={preview.data.map(row => `${row.label}: ${row.percentage}%`).join(", ")}>{preview.data.filter(row => row.percentage > 0).map((row, index) => <span key={row.label} style={{ width: `${row.percentage}%`, background: `hsl(${(330 + index * 63) % 360} 55% 62%)` }} title={`${row.label}: ${row.percentage}%`} />)}</div>}
     {preview.error ? <p role="alert" className="notice">{preview.error}</p> : <>
-      <h3>Preview only</h3>
+      <h3>Estimated distribution</h3>
       <ul className="supplier-stores">{preview.data.map(row => <li key={row.label}><span>{row.label} ({row.percentage}%)</span><strong>{row.amount.toString()} sats</strong></li>)}</ul>
       <p>Total: {amount} sats</p>
     </>}
