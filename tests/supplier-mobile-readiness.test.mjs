@@ -87,5 +87,5 @@ test("supplier cards include actionable steps and clearly marked approval stage"
  assert.match(page,/actionHref/);
  assert.match(page,/Finish this product/);
  assert.match(page,/Admin and product eligibility review/);
- assert.match(page,/Storefront: Not published/);
+ assert.match(page,/Public storefront: Not enabled/);
 });

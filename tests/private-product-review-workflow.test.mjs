@@ -50,8 +50,8 @@ test("completed setup remains compact and can be submitted; review and public re
  assert.match(catalog,/Admin feedback/);
  assert.match(catalog,/reviewStatus==="changes_requested"/);
  assert.match(catalog,/reviewStatus==="pending_review"/);
- assert.match(catalog,/Storefront: Not published/);
- assert.match(catalog,/There is no public publish button/);
+ assert.match(catalog,/Public storefront: Not enabled/);
+ assert.match(catalog,/Public release needs separately authorized product eligibility/);
  assert.match(queue,/isVerifiedPlatformAdmin/);
  assert.match(queue,/ProductReviewDecisionForm/);
  assert.match(queue,/Admin and product eligibility|not regulatory clearance/i);
