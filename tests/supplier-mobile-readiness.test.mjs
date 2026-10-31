@@ -38,7 +38,7 @@ test("checklist does not mistake whitespace, unknown inventory, or inactive stat
  const unchanged=draftContentChecklist({...basic,quantity_on_hand:0});
  assert.equal(unchanged.contentComplete,true);
  const source=read("src/lib/catalog/draft-content-checklist.mjs");
- assert.doesNotMatch(source,/\\.update\\(|\\.insert\\(|service_role|is_published\s*:/);
+ assert.doesNotMatch(source,/\.update\(|\.insert\(|service_role|is_published\s*:/);
 });
 test("mobile cards always show image and summary, then collapse long edit controls",()=>{
  assert.match(page,/apex-product-photo/);
@@ -68,5 +68,5 @@ test("only active owner or manager of the exact private store gets editing contr
  assert.match(page,/enabled=\{canWrite\}/);
  assert.match(page,/View product details \(read-only\)/);
  assert.match(page,/View source review \(read-only\)/);
- assert.doesNotMatch(page,/grant update|service_role|\\.rpc\("publish/i);
+ assert.doesNotMatch(page,/grant update|service_role|\.rpc\("publish/i);
 });
