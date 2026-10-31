@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupplierWorkspace } from "@/lib/auth/supplier-workspace";
+import { chooseNewSku, normalizeSku } from "@/lib/catalog/sku.mjs";
 
 export type ReviewResult = { ok:boolean;message:string };
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -35,21 +36,21 @@ export async function createDraftFromReviewedVariant(
   if (process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED !== "true") {
     return {ok:false,message:"Draft creation is disabled outside the protected preview."};
   }
-  const storeId=form.get("storeId"), candidateId=form.get("candidateId"), sku=form.get("sku"),
+  const storeId=form.get("storeId"), candidateId=form.get("candidateId"), skuInput=form.get("sku"),
     price=form.get("retailPrice"), compareRaw=form.get("comparePrice"), stock=form.get("confirmedStock"),
     confirmedPrice=form.get("confirmedPrice"), stockVerified=form.get("stockVerified"),
     description=form.get("description");
 
   if (typeof storeId!=="string" || !uuid.test(storeId) ||
       typeof candidateId!=="string" || !uuid.test(candidateId) ||
-      typeof sku!=="string" || sku.trim().length<1 || sku.trim().length>60 ||
+      typeof skuInput!=="string" || (skuInput!=="" && !normalizeSku(skuInput)) ||
       typeof price!=="string" || !/^\d{1,7}(\.\d{1,2})?$/.test(price) ||
       typeof compareRaw!=="string" ||
       (compareRaw!=="" && !/^\d{1,7}(\.\d{1,2})?$/.test(compareRaw)) ||
       typeof stock!=="string" || !/^(0|[1-9]\d{0,6})$/.test(stock) ||
       confirmedPrice!=="on" || (Number(stock)>0 && stockVerified!=="on") ||
       typeof description!=="string" || description.length>1500) {
-    return {ok:false,message:"Enter a draft SKU, an approved retail price and a confirmed stock quantity. Check the required confirmations."};
+    return {ok:false,message:"Enter an optional valid SKU, an approved retail price and a confirmed stock quantity. Check the required confirmations."};
   }
 
   const [whole,cents=""]=price.split(".");
@@ -72,12 +73,23 @@ export async function createDraftFromReviewedVariant(
     return {ok:false,message:"Supplier access required."};
   }
 
+  const {data:candidate,error:candidateError}=skuInput===""
+    ?await w.client.from("supplier_import_candidates")
+      .select("product_name,strength").eq("store_id",storeId).eq("id",candidateId).maybeSingle()
+    :{data:null,error:null};
+  if(skuInput==="" && (candidateError||!candidate))
+    return {ok:false,message:"Source variant unavailable for automatic SKU generation."};
+  const sku=skuInput===""
+    ?chooseNewSku("",`${candidate?.product_name??""} ${candidate?.strength??""}`)
+    :normalizeSku(skuInput);
+  if(!sku) return {ok:false,message:"Invalid SKU."};
+
   // SECURITY INVOKER RPC executes source-status verification, insert, stock creation
   // and one-to-one source association in a single RLS-scoped DB transaction.
   const {data,error}=await w.client.rpc("create_draft_from_candidate_with_compare",{
     p_store_id:storeId,
     p_candidate_id:candidateId,
-    p_sku:sku.trim(),
+    p_sku:sku,
     p_retail_price_cents:retailCents,
     p_quantity_on_hand:quantity,
     p_description:description.trim(),
