@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createSupplierServerClient } from "@/lib/supabase/server";
+import { isVerifiedPlatformAdmin } from "@/lib/auth/admin-access";
+import { signOutAccount } from "@/app/account/sign-out/actions";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,7 +11,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const client = await createSupplierServerClient();
+  const { data } = client ? await client.auth.getUser() : { data: { user: null } };
+  const user = data.user && !data.user.is_anonymous && data.user.email_confirmed_at ? data.user : null;
+  const admin = isVerifiedPlatformAdmin(user);
+  const membership = user && !admin && client ? await client.from("supplier_memberships").select("supplier_id").limit(1) : null;
+  const supplier = Boolean(membership && !membership.error && membership.data?.length);
   return (
     <html lang="en">
       <body>
@@ -22,7 +31,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <Link href="/catalog">Catalog</Link>
                   <Link href="/#approach">Approach</Link>
                   <Link href="/account/profile">My profile</Link>
-                  <Link href="/account/sign-in">Account sign in</Link>
+                  {admin && <Link href="/admin">Admin dashboard</Link>}
+                  {supplier && <Link href="/supplier">Supplier workspace</Link>}
+                  {user ? <form action={signOutAccount}><button type="submit" className="apex-menu-signout">Sign out</button></form> : <Link href="/account/sign-in">Account sign in</Link>}
                 </div>
               </details>
             </nav>
