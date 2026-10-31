@@ -5,7 +5,8 @@ import { saveMultiRecipientDraft } from "./actions";
 type Recipient = { id: string; display_name: string; recipient_type: string; status: string };
 const field = { width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box" as const };
 const label = { display: "grid", gap: 6, minWidth: 0 };
-export function SaveSplitDraft({ enabled, recipients, stores }: { enabled: boolean; recipients: Recipient[]; stores: { id: string; display_name: string }[] }) {\n  const [scopeType, setScopeType] = useState("storefront");
+export function SaveSplitDraft({ enabled, recipients, stores }: { enabled: boolean; recipients: Recipient[]; stores: { id: string; display_name: string }[] }) {
+  const [scopeType, setScopeType] = useState("storefront");
   const [query, setQuery] = useState("");
   const filtered = recipients.filter(r => (r.display_name + " " + r.recipient_type).toLowerCase().includes(query.toLowerCase()));
   const [state, action, pending] = useActionState(saveMultiRecipientDraft, { ok: false, message: "" });
