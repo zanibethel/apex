@@ -66,3 +66,4 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f database/tests/mobile_supplier_product_cards_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/draft_sku_edit_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/private_product_review_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/review_integrity_integration.sql
