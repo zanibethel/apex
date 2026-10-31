@@ -52,7 +52,7 @@ test("mobile cards always show image and summary, then collapse long edit contro
  assert.match(page,/<details className="apex-card-editor">/);
  assert.match(page,/<summary>Manage product image<\/summary>/);
  assert.match(page,/Edit details, SKU and price/);
- assert.match(page,/<summary>Create private draft product<\/summary>/);
+ assert.match(page,/<summary>Add new product<\/summary>/);
  assert.match(page,/<summary>Add private category<\/summary>/);
  assert.match(page,/Source review:/);
  assert.match(page,/Review source and cost/);
