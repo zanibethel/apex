@@ -99,7 +99,7 @@ declare
  v_state public.supplier_listing_controls%rowtype;
  v_product public.products%rowtype;
 begin
- if v_actor is null or p_action not in ('publish','unpublish')
+ if v_actor is null or p_action is null or p_action not in ('publish','unpublish')
  or not exists (
   select 1 from public.stores s
   join public.supplier_memberships m on m.supplier_id=s.supplier_id
@@ -155,7 +155,7 @@ begin
  if v_actor is null or
  (select auth.jwt()) #>> '{app_metadata,apex_role}' is distinct from 'platform_admin'
  then raise exception 'Verified platform administrator access required';end if;
- if p_action not in ('hold','require_review','approve_republish')
+ if p_action is null or p_action not in ('hold','require_review','approve_republish')
  or length(coalesce(p_reason,''))>1000
  or (p_action in ('hold','require_review') and v_note is null)
  then raise exception 'Valid admin action and explanatory note required';end if;
