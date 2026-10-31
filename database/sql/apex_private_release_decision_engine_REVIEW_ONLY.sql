@@ -182,8 +182,8 @@ declare
 begin
  if v_actor is null then raise exception 'Authenticated identity required';end if;
 
- select p.*,s.supplier_id into v_p
- from public.products p join public.stores s on s.id=p.store_id
+ select p.* into v_p
+ from public.products p
  where p.store_id=p_store_id and p.id=p_product_id;
  if not found then raise exception 'Product not found';end if;
  select s.supplier_id into v_supplier from public.stores s
