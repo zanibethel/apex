@@ -127,12 +127,9 @@ create policy "apex_admin_read_submitted_image" on storage.objects
   and (select auth.jwt()) #>> '{app_metadata,apex_role}' = 'platform_admin'
   and exists(
    select 1 from public.private_product_review_states r
-    join public.products p on p.store_id=r.store_id and p.id=r.product_id
-    join public.stores s on s.id=r.store_id
    where r.snapshot->>'image_path'=objects.name
-     and p.is_published=false and s.is_public=false
-     and p.store_id::text=split_part(objects.name,'/',1)
-     and p.id::text=split_part(objects.name,'/',2)
+     and r.store_id::text=split_part(objects.name,'/',1)
+     and r.product_id::text=split_part(objects.name,'/',2)
   )
  );
 
