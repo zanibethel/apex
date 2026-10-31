@@ -582,6 +582,9 @@ body { background:#07080b; }
  border-radius:12px;padding:13px;box-shadow:0 -10px 34px rgba(0,0,0,.28);
 }
 .apex-bulk-footer .button{min-height:44px}
+.apex-bulk-footer .button:disabled{opacity:.43;cursor:not-allowed}
+.apex-bulk-footer .button:focus-visible{outline:3px solid #f5c46c;outline-offset:2px}
+.apex-bulk-action-short{display:none}
 .apex-bulk-result{color:#ebc3cf;font-size:14px;margin:0}
 .apex-offer-gallery{
  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
@@ -623,8 +626,8 @@ body { background:#07080b; }
 @media(max-width:500px){
  .apex-bulk-fields{grid-template-columns:minmax(0,1fr)}
  .apex-bulk-row{padding:12px}
- .apex-bulk-footer{bottom:0;gap:8px}
- .apex-bulk-footer form,.apex-bulk-footer .button{flex:1 1 100%;text-align:center}
+ .apex-bulk-footer{bottom:8px;gap:6px}
+ .apex-bulk-footer form{width:100%;min-width:0}
  .apex-bulk-footer form .button{width:100%}
  .apex-bulk-publish{padding:14px}
  .apex-bulk-publish-actions form{flex:1 1 100%}
@@ -803,5 +806,24 @@ body { background:#07080b; }
 .apex-bulk-footer>button{min-height:44px;}
 @media(max-width:500px){
  .apex-bulk-inline-publish-actions{grid-template-columns:minmax(0,1fr);}
- .apex-bulk-footer>button{flex:1 1 100%;width:100%;}
+ .apex-bulk-footer>button{width:100%;}
+}
+
+/* iPhone supplier QA: keep bulk actions visible without obscuring the offer card.
+   A 2-column tray replaces the former 4–5 full-width button stack. */
+@media(max-width:600px){
+ .apex-bulk-footer{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;padding:8px;bottom:8px;align-items:stretch;
+ }
+ .apex-bulk-footer form{margin:0;min-width:0;width:100%}
+ .apex-bulk-footer .button{
+  width:100%;min-width:0;min-height:44px;max-height:48px;
+  padding:8px 5px;font-size:12px;line-height:1.1;
+  border-radius:8px;text-align:center;white-space:nowrap;flex:none;
+ }
+ .apex-bulk-action-long{display:none}
+ .apex-bulk-action-short{display:inline}
+ .apex-bulk-toolbar{gap:6px}
+ .apex-bulk-toolbar .button{min-height:44px;padding:8px 12px;font-size:12px;border-radius:8px}
 }

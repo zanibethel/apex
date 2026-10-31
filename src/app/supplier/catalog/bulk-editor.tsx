@@ -10,6 +10,7 @@ import {saveBulkProductDrafts,saveBulkPublicationRequests} from "./bulk-actions"
 import {eligiblePrivatePublishIds} from "@/lib/catalog/bulk-publish-selection.mjs";
 import {CsvProductImport} from "./csv-product-import";
 import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-products.mjs";
+import {reconcileSavedBulkRow} from "@/lib/catalog/bulk-save-revision.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -42,6 +43,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [publishPending,startPublishTransition]=useTransition();
  const [publishResults,setPublishResults]=useState<PublishOutcome[]>([]);
  const [publicationMessage,setPublicationMessage]=useState("");
+ const busy=pending||publishPending;
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const selectedRows=rows.filter(r=>selectedSet.has(r.key));
  const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
@@ -51,9 +53,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   :null;
 
  function saveSelected(_form:FormData){
+  if(!editable||busy)return;
   // Server enforces a 20-row maximum per call. The UI safely submits a larger
   // CSV selection in bounded sequential chunks and reports every row.
   const pendingRows=selectedRows.slice();
+  const submittedByKey=new Map(pendingRows.map(r=>[r.key,r]));
   startTransition(async()=>{
    const all: {key:string;ok:boolean;name:string;message:string;id?:string;sku?:string}[]=[];
    let stopped=false;
@@ -75,28 +79,30 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    setLastSave(prev=>({...prev,...Object.fromEntries(all.map(r=>[
     r.key,{ok:r.ok,message:r.message}
    ]))}));
-   setRows(prev=>prev.map(r=>{
-    const saved=all.find(o=>o.key===r.key&&o.ok&&o.id);
-    return saved?{...r,id:saved.id,sku:saved.sku||r.sku,needsSave:false}:r;
-   }));
+   const savedByKey=new Map(all.filter(o=>o.ok&&o.id).map(o=>[o.key,o]));
+   setRows(prev=>prev.map(r=>reconcileSavedBulkRow(r,
+    submittedByKey.get(r.key),savedByKey.get(r.key))));
    if(completed>0)router.refresh();
   });
  }
 
  function change(key:string,field:keyof BulkEditRow,value:string|boolean){
+  if(!editable||busy)return;
   setRows(prev=>prev.map(r=>r.key===key?{...r,[field]:value,needsSave:true}:r));
   setLastSave(prev=>{const copy={...prev};delete copy[key];return copy;});
  }
  function toggle(key:string){
+  if(busy)return;
   setSelected(prev=>prev.includes(key)?prev.filter(x=>x!==key):[...prev,key]);
  }
  function addRows(count:number){
-  if(!editable||rows.length+count>250)return;
+  if(!editable||busy||rows.length+count>250)return;
   const added=Array.from({length:count},()=>newRow());
   setRows(prev=>[...prev,...added]);
   setSelected(prev=>[...prev,...added.map(r=>r.key)]);
  }
  function loadFromCsv(imported:BulkEditRow[]){
+  if(busy)return;
   const incoming=new Set(imported.map(r=>r.key));
   // Put new or updated CSV cards FIRST, so an upload does not disappear
   // beneath up to 100 existing products on narrow/mobile screens.
@@ -106,6 +112,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   setLastSave(prev=>{const copy={...prev};for(const key of incoming)delete copy[key];return copy;});
  }
  function removeUnsaved(key:string){
+  if(busy)return;
   setRows(prev=>prev.filter(r=>r.key!==key));setSelected(prev=>prev.filter(k=>k!==key));
  }
  const selectedValid=selectedRows.length>0&&selectedRows.length<=250;
@@ -140,14 +147,14 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const recentImported=new Set(recentImportKeys);
 
  return <section className="apex-bulk-workspace" aria-label="Bulk product creation and editing">
-  <CsvProductImport rows={rows} categories={categories} disabled={!editable||pending} onLoad={loadFromCsv}/>
+  <CsvProductImport rows={rows} categories={categories} disabled={!editable||busy} onLoad={loadFromCsv}/>
   <div className="apex-bulk-toolbar">
    <button type="button" className="button secondary" onClick={()=>addRows(1)}
-    disabled={!editable||rows.length>=250}>+ Add product</button>
+    disabled={!editable||busy||rows.length>=250}>+ Add product</button>
    <button type="button" className="button secondary" onClick={()=>addRows(5)}
-    disabled={!editable||rows.length>245}>+ Add 5 products</button>
+    disabled={!editable||busy||rows.length>245}>+ Add 5 products</button>
    <button type="button" className="button secondary" onClick={()=>
-    setSelected(allSelected?[]:rows.map(r=>r.key))}>
+    setSelected(allSelected?[]:rows.map(r=>r.key))} disabled={busy}>
     {allSelected?"Clear selection":"Select all"}
    </button>
    <button type="button" className="button secondary"
@@ -175,7 +182,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     return <article key={r.key} className="apex-bulk-row">
      <div className="apex-bulk-row-title">
       <label className="apex-bulk-select">
-       <input type="checkbox" checked={selectedSet.has(r.key)}
+       <input type="checkbox" disabled={busy} checked={selectedSet.has(r.key)}
         onChange={()=>toggle(r.key)} aria-label={"Select "+(r.name||"new product "+(i+1))}/>
        <strong>{r.name||"New product "+(i+1)}</strong>
        {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
@@ -186,48 +193,48 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       <div className="apex-bulk-editor-side">
      <div className="apex-bulk-fields">
       <label>Name<input value={r.name} maxLength={120}
-       disabled={!editable} onChange={e=>change(r.key,"name",e.target.value)}/></label>
+       disabled={!editable||busy} onChange={e=>change(r.key,"name",e.target.value)}/></label>
       <label>SKU <small>(optional for new)</small><input value={r.sku}
-       maxLength={60} disabled={!editable}
+       maxLength={60} disabled={!editable||busy}
        onChange={e=>change(r.key,"sku",e.target.value)}/></label>
       <label>Price (USD)<input type="number" min="0" max="9999999.99"
-       step=".01" value={r.price} disabled={!editable}
+       step=".01" value={r.price} disabled={!editable||busy}
        onChange={e=>change(r.key,"price",e.target.value)}/></label>
       <label>Source cost (private)<input type="number" min="0" max="9999999.99" step=".01"
-       value={r.sourceCost} disabled={!editable||r.linkedSource}
+       value={r.sourceCost} disabled={!editable||busy||r.linkedSource}
        onChange={e=>change(r.key,"sourceCost",e.target.value)}/></label>
       <label>Compare-at <small>(optional)</small><input type="number"
        min="0" max="9999999.99" step=".01" value={r.comparePrice}
-       disabled={!editable} onChange={e=>change(r.key,"comparePrice",e.target.value)}/></label>
-      <label>Category<select value={r.categoryId} disabled={!editable}
+       disabled={!editable||busy} onChange={e=>change(r.key,"comparePrice",e.target.value)}/></label>
+      <label>Category<select value={r.categoryId} disabled={!editable||busy}
        onChange={e=>change(r.key,"categoryId",e.target.value)}>
        <option value="">Uncategorized</option>
        {categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
       </select></label>
       <label className="apex-bulk-active">
        <input type="checkbox" checked={r.isActive}
-        disabled={!editable} onChange={e=>change(r.key,"isActive",e.target.checked)}/>
+        disabled={!editable||busy} onChange={e=>change(r.key,"isActive",e.target.checked)}/>
        Active in private catalog
       </label>
       <label className="apex-bulk-description">Description
-       <textarea value={r.description} rows={2} maxLength={1500} disabled={!editable}
+       <textarea value={r.description} rows={2} maxLength={1500} disabled={!editable||busy}
         onChange={e=>change(r.key,"description",e.target.value)}/></label>
      </div>
      <div className="apex-bulk-row-footer">
-      {status?<p role="status" className={status.ok?"apex-bulk-saved":"apex-bulk-error"}>
-       {status.ok?"✓ Saved":"Not saved"} — {status.message}</p>
+      {status?<p role="status" className={status.ok&&!r.needsSave?"apex-bulk-saved":"apex-bulk-error"}>
+       {status.ok?(r.needsSave?"Previous version saved · newer edits unsaved":"✓ Saved"):"Not saved"} — {status.message}</p>
        :<p className="notice">Select to include in your next save.</p>}
       <div className="actions">
        {r.id&&!r.needsSave&&<Link className="button secondary" href={"/supplier/catalog/preview/"+r.id}>
         Preview single
        </Link>}
        {!r.id&&<button type="button" className="button secondary"
-        onClick={()=>removeUnsaved(r.key)}>Remove unsaved</button>}
+        disabled={busy} onClick={()=>removeUnsaved(r.key)}>Remove unsaved</button>}
       </div>
      </div>
      {r.id&&!r.needsSave
       ?<BulkCardMedia key={r.id+":"+String(savedMedia.get(r.id)?.quantityOnHand??"missing")} storeId={storeId} productId={r.id}
-         enabled={editable&&!pending}
+         enabled={editable&&!busy}
          imageUrl={savedMedia.get(r.id)?.imageUrl}
          quantityOnHand={savedMedia.get(r.id)?.quantityOnHand}
          quantityReserved={savedMedia.get(r.id)?.quantityReserved}
@@ -250,27 +257,43 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     </article>;
    })}
   </div>
-  <div className="apex-bulk-footer">
+  <div className="apex-bulk-footer" aria-label="Bulk product actions">
    <form action={saveSelected}>
-    <button type="submit" className="button primary" disabled={!editable||pending||!selectedValid}>
-     {pending?"Saving…":"Save selected ("+selectedRows.length+")"}
+    <button type="submit" className="button primary" disabled={!editable||busy||!selectedValid}
+     aria-label={pending?"Saving selected products":"Save selected ("+selectedRows.length+")"}>
+     {pending?"Saving…":<>
+      <span className="apex-bulk-action-long">Save selected ({selectedRows.length})</span>
+      <span className="apex-bulk-action-short" aria-hidden="true">Save ({selectedRows.length})</span>
+     </>}
     </button>
    </form>
-   {previewSelected?<Link className="button secondary" href={previewSelected}>
-     Preview selected ({selectedIds.length})
-    </Link>:<span className="notice">Select saved products to preview together.</span>}
-   <Link className="button secondary" href="/supplier/catalog/bulk/preview?all=1">
-    Preview all saved
+   {previewSelected&&<Link className="button secondary" href={previewSelected}
+    aria-label={"Preview selected ("+selectedIds.length+")"}>
+     <span className="apex-bulk-action-long">Preview selected ({selectedIds.length})</span>
+     <span className="apex-bulk-action-short" aria-hidden="true">Preview selected</span>
+    </Link>}
+   <Link className="button secondary" href="/supplier/catalog/bulk/preview?all=1"
+    aria-label="Preview all saved">
+    <span className="apex-bulk-action-long">Preview all saved</span>
+    <span className="apex-bulk-action-short" aria-hidden="true">Preview all</span>
    </Link>
    <button type="button" className="button secondary"
     disabled={!editable||pending||publishPending||!eligibleSelectedIds.length||eligibleSelectedIds.length>publicationLimit}
+    aria-label={publishPending?"Saving selected publication requests":"Publish selected ("+eligibleSelectedIds.length+")"}
     onClick={()=>publish(eligibleSelectedIds)}>
-    {publishPending?"Saving publication requests…":"Publish selected ("+eligibleSelectedIds.length+")"}
+    {publishPending?"Saving…":<>
+     <span className="apex-bulk-action-long">Publish selected ({eligibleSelectedIds.length})</span>
+     <span className="apex-bulk-action-short" aria-hidden="true">Publish selected ({eligibleSelectedIds.length})</span>
+    </>}
    </button>
    <button type="button" className="button primary"
     disabled={!editable||pending||publishPending||!eligiblePublishIds.length||eligiblePublishIds.length>publicationLimit}
+    aria-label={publishPending?"Saving eligible publication requests":"Publish all eligible ("+eligiblePublishIds.length+")"}
     onClick={()=>publish(eligiblePublishIds)}>
-    {publishPending?"Saving publication requests…":"Publish all eligible ("+eligiblePublishIds.length+")"}
+    {publishPending?"Saving…":<>
+     <span className="apex-bulk-action-long">Publish all eligible ({eligiblePublishIds.length})</span>
+     <span className="apex-bulk-action-short" aria-hidden="true">Publish all ({eligiblePublishIds.length})</span>
+    </>}
    </button>
   </div>
   <p className="notice">Publish submits private supplier requests only after saved product details and stock pass checks. Administrative holds remain enforced; no offer becomes publicly visible.</p>
