@@ -24,8 +24,8 @@ end $assert$;
 set role anon;
 do $assert$
 begin
- if exists (select 1 from public.private_product_review_history)
- then raise exception 'Anonymous user accessed private audit history'; end if;
+ if has_table_privilege(current_user,'public.private_product_review_history','SELECT')
+ then raise exception 'Anonymous read grant unexpectedly exists'; end if;
 end $assert$;
 reset role;
 
