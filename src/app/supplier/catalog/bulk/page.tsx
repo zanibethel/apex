@@ -72,6 +72,7 @@ export default async function BulkProductWorkspace(){
    canRequest:!listingError&&setup.setupComplete&&status.canRequest&&!control?.supplier_wants_listing,
    requested:!!control?.supplier_wants_listing,
    status:listingError?"Publication status unavailable":status.label,
+   kind:listingError?"unavailable":status.kind,
    missing,
   };
  });
