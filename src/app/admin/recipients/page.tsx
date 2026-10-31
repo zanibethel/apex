@@ -18,10 +18,12 @@ export default async function RecipientDirectory() {
   <h1 style={{fontSize:"clamp(2rem, 8vw, 3.5rem)"}}>Payout recipients</h1>
   <p className="notice">Manage payout recipient labels and active status. No wallet addresses, account access, or transfers are configured here.</p>
   {error && <p role="alert">Recipient directory unavailable until the reviewed payout migrations are installed.</p>}
+  <p className="notice">Setup checklist: create a Platform recipient, create a Supplier recipient, then mark each Active when ready to include them in a draft. Recipient records do not link wallets or grant supplier access.</p>
   <section className="supplier-panel" style={{maxWidth:"100%",minWidth:0,marginBottom:24}}>
    <h2>Add recipient</h2><RecipientForm enabled={enabled} />
   </section>
-  <h2>Existing recipients</h2>
+  <h2>Existing recipients ({recipients?.length ?? 0})</h2>
+  <p><Link href="/admin/splits/configure">← Return to draft allocations</Link></p>
   {!recipients?.length && <p>No recipient records available. Add a platform or supplier recipient above when editing is enabled.</p>}
   {recipients?.map(r=><section key={r.id} className="supplier-panel" style={{marginBottom:20,maxWidth:"100%",minWidth:0}}>
     <h3 style={{overflowWrap:"anywhere"}}>{r.display_name}</h3>
