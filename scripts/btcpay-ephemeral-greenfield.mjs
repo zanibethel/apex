@@ -231,6 +231,8 @@ export async function runEphemeralGreenfield({
     ...(durableJournal ? {durableReceiptJournalVerified:true} : {}),
     ...(finalProof ? {prismForwardingVerified:finalProof.prismForwardingVerified,
       prismPayoutScenarioCount:finalProof.scenarioCount} : {}),
+    ...(finalProof?.trustedRealGreenfieldVerified===true ?
+      {trustedRealGreenfieldVerified:true}:{}),
     prismVerified:Boolean(finalProof?.prismForwardingVerified),
     productionReady:false,
   });
@@ -250,7 +252,10 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
   const prism=process.env.APEX_BTCPAY_PRISM_FORWARDING==="true"
     ?import("./btcpay-ephemeral-prism-forwarding.mjs").then(m=>m.runEphemeralPrismForwarding)
     :Promise.resolve(null);
-  Promise.all([pay,durable,prism]).then(([fund,durableJournal,prismForwarding])=>runEphemeralGreenfield({
+  const trusted=process.env.APEX_BTCPAY_TRUSTED_REAL_WORKER==="true"
+    ?import("./btcpay-ephemeral-trusted-live-greenfield.mjs").then(m=>m.runTrustedRealGreenfield)
+    :Promise.resolve(null);
+  Promise.all([pay,durable,prism,trusted]).then(([fund,durableJournal,prismForwarding,trustedWorker])=>runEphemeralGreenfield({
     testOnly:process.env.APEX_BTCPAY_EPHEMERAL==="true",
     network:process.env.APEX_BTCPAY_TEST_NETWORK,
     ...(fund?{payInvoice:payment=>fund({
@@ -259,7 +264,17 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
     })}:{}),
     verifyWebhook:process.env.APEX_BTCPAY_VERIFY_WEBHOOK==="true",
     durableJournal,
-    ...(prismForwarding ? {afterSettlement:prismForwarding} : {}),
+    ...((prismForwarding||trustedWorker)?{
+      afterSettlement:async context=>{
+        const proof=prismForwarding?await prismForwarding(context):null;
+        const workerProof=trustedWorker?await trustedWorker(context):null;
+        return {
+          ...(proof||{}),
+          ...(workerProof?.trustedWorkerVerified===true?
+            {trustedRealGreenfieldVerified:true}:{})
+        };
+      },
+    }:{}),
   })).then(out=>process.stdout.write(JSON.stringify(out,null,2)+"\\n"))
     .catch(e=>{process.stderr.write(e.message+"\\n");process.exitCode=1;});
 }
