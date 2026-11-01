@@ -2,12 +2,13 @@
 import {useState} from "react";
 import {buildProductCsv,parseProductCsv} from "@/lib/catalog/product-csv.mjs";
 import {draftSkuFromUuid} from "@/lib/catalog/sku-format.mjs";
+import {privateProductCsvExportBatches} from "@/lib/catalog/private-csv-export-batches.mjs";
 import type {BulkEditRow} from "./bulk-editor";
 type Category={id:string;name:string};
 type ImportRow={key:string;line:number;row:BulkEditRow;issue?:string};
-function saveCsv(body:string){
+function saveCsv(body:string,filename:string){
  const url=URL.createObjectURL(new Blob(["\uFEFF",body],{type:"text/csv;charset=utf-8"}));
- const a=document.createElement("a");a.href=url;a.download="apex-private-products.csv";
+ const a=document.createElement("a");a.href=url;a.download=filename;
  document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
 }
 export function CsvProductImport({rows,categories,disabled,onLoad}:{
@@ -71,14 +72,15 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
   setMessage(valid.length+" product "+(valid.length===1?"card":"cards")+
    " added to the editor below with SKUs filled in. Review the cards, then Save selected to create or update the private products.");
  }
- function exportSaved(){
-  const items=rows.filter(r=>r.id).map(r=>({
+ const exportBatches=privateProductCsvExportBatches(rows);
+ function exportSavedBatch(batch:typeof exportBatches[number]){
+  const items=batch.rows.map((r:BulkEditRow)=>({
    product_id:r.id,sku:r.sku,title:r.name,description:r.description,
    source_cost:r.sourceCost??"",price:r.price,compare_at_price:r.comparePrice,
    category:categories.find(c=>c.id===r.categoryId)?.name??"",
    active:r.isActive?"true":"false",
   }));
-  saveCsv(buildProductCsv(items));
+  saveCsv(buildProductCsv(items),batch.filename);
  }
  return <section className="apex-csv-panel" aria-label="CSV import and export">
   <div className="apex-csv-header">
@@ -89,10 +91,19 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    </div>
    <div className="apex-csv-downloads">
     <a href="/templates/apex-product-import-template.csv" download className="button secondary">Download CSV template</a>
-    <button type="button" className="button secondary" disabled={!rows.some(r=>r.id)}
-     onClick={exportSaved}>Export editor CSV</button>
+    {exportBatches.length===0
+     ?<button type="button" className="button secondary" disabled>Export editor CSV</button>
+     :exportBatches.map((batch:typeof exportBatches[number])=><button type="button"
+       key={batch.filename} className="button secondary" disabled={disabled}
+       onClick={()=>exportSavedBatch(batch)}>
+       {exportBatches.length===1?"Export editor CSV":`Export CSV ${batch.start}–${batch.end}`}
+      </button>)}
    </div>
   </div>
+  {exportBatches.length>1&&<p className="notice apex-csv-export-notice" role="status">
+   Your {exportBatches.reduce((n:number,b:typeof exportBatches[number])=>n+b.rows.length,0)} saved product cards are split into {exportBatches.length} CSV files of up to 100 rows each. Download each file separately; every file can be re-uploaded using the existing importer.
+  </p>}
+  {exportBatches.length>0&&<p className="notice">Exports use the current editor values, including any unsaved edits, for products with saved IDs. Save your changes before exporting if you need the exported file to match your stored catalog.</p>}
   <p className="notice"><strong>Matching:</strong> product_id or SKU updates an existing private product; otherwise a new draft is created. Category uses the category name (GetSwole is a category, not a supplier). Blank source cost on updates preserves it. Images and inventory remain separate.</p>
   <label className="apex-csv-upload">Select CSV file
    <input type="file" accept=".csv,text/csv" disabled={disabled}
