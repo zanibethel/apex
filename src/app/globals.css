@@ -926,3 +926,34 @@ body { background:#07080b; }
  .apex-bulk-preview-pagination-actions{width:100%}
  .apex-bulk-preview-pagination-actions .button{flex:1;text-align:center}
 }
+
+
+/* Compact, separated cart/menu actions — frameless icons, 44px touch targets. */
+.site-header .header-inner nav.apex-navigation{
+ gap:14px;
+ align-items:center;
+}
+.site-header .header-inner nav.apex-navigation .apex-cart-toggle,
+.site-header .header-inner nav.apex-navigation .apex-menu-toggle{
+ display:grid;place-items:center;
+ width:44px;min-width:44px;height:44px;
+ padding:0;border:0;border-radius:9px;
+ background:transparent;color:#f0f0f4;
+ box-shadow:none;
+ -webkit-tap-highlight-color:transparent;
+}
+.site-header .header-inner nav.apex-navigation .apex-cart-toggle svg,
+.site-header .header-inner nav.apex-navigation .apex-menu-toggle svg{
+ width:23px;height:23px;
+}
+.site-header .header-inner nav.apex-navigation :is(.apex-cart-toggle,.apex-menu-toggle):hover{
+ background:rgba(255,255,255,.07);
+}
+.site-header .header-inner nav.apex-navigation :is(.apex-cart-toggle,.apex-menu-toggle):focus-visible{
+ outline:2px solid #ed4b77;
+ outline-offset:0;
+ border:0;
+}
+@media(max-width:650px){
+ .site-header .header-inner nav.apex-navigation{gap:12px}
+}

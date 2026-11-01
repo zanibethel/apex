@@ -250,3 +250,67 @@
    Avoid a mismatched system tap flash on Safari; keyboard focus stays visible. */
 .apex-checkout-preview :is(button,input,a){-webkit-tap-highlight-color:rgba(237,75,119,.12)}
 .apex-checkout-preview .apex-state-trigger{-webkit-appearance:none;appearance:none}
+
+
+/* Compact iPhone details: two name fields and State/ZIP on paired rows.
+   Keep actual text 16px to avoid Safari focus zoom; only shrink padding. */
+@media(max-width:600px){
+ .apex-checkout-preview .apex-checkout-workspace{padding:16px 15px}
+ .apex-checkout-preview .apex-checkout-section-top{margin-bottom:5px;gap:7px}
+ .apex-checkout-preview .apex-checkout-mini{font-size:10px;padding:5px 9px}
+ .apex-checkout-preview .apex-checkout-support{
+  font-size:12px;line-height:1.5;margin:8px 0 17px;
+ }
+ .apex-checkout-preview .apex-checkout-fields{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  column-gap:10px;row-gap:9px;
+ }
+ .apex-checkout-preview .apex-checkout-field{
+  min-width:0;gap:3px;
+ }
+ .apex-checkout-preview .apex-checkout-field>span{
+  font-size:11px;line-height:1.25;
+ }
+ .apex-checkout-preview .apex-checkout-field input{
+  min-height:44px;padding:8px 10px;font-size:16px;
+ }
+ .apex-checkout-preview .apex-state-trigger{
+  min-height:44px;padding:8px 10px;font-size:16px;
+ }
+ .apex-checkout-preview .apex-checkout-firstName{grid-column:1 / 2}
+ .apex-checkout-preview .apex-checkout-lastName{grid-column:2 / 3}
+ .apex-checkout-preview .apex-checkout-email,
+ .apex-checkout-preview .apex-checkout-phone,
+ .apex-checkout-preview .apex-checkout-street,
+ .apex-checkout-preview .apex-checkout-city{grid-column:1 / -1}
+ .apex-checkout-preview .apex-checkout-state{grid-column:1 / 2}
+ .apex-checkout-preview .apex-checkout-postal{grid-column:2 / 3}
+ .apex-checkout-preview .apex-checkout-shipping{margin-top:18px}
+}
+@media(max-width:390px){
+ .apex-checkout-preview .apex-checkout-fields .apex-checkout-firstName{grid-column:1 / 2}
+ .apex-checkout-preview .apex-checkout-fields .apex-checkout-lastName{grid-column:2 / 3}
+}
+/* State is a custom picker trigger, not an address-autofill input. Keep
+   its containing row fully transparent and the focus indicator ON the button.
+   System-level iOS interaction overlays may still be outside CSS control. */
+.apex-checkout-preview .apex-checkout-state,
+.apex-checkout-preview .apex-checkout-state:focus-within{
+ background:transparent;
+ border:0;
+ border-radius:0;
+ box-shadow:none;
+ -webkit-tap-highlight-color:transparent;
+}
+.apex-checkout-preview .apex-checkout-state .apex-state-trigger{
+ -webkit-appearance:none;
+ appearance:none;
+ -webkit-tap-highlight-color:transparent;
+ box-shadow:none;
+ background:#0b0c10;
+}
+.apex-checkout-preview .apex-checkout-state .apex-state-trigger:focus-visible{
+ outline:2px solid #ed4b77;
+ outline-offset:2px;
+ border-color:#ed4b77;
+}

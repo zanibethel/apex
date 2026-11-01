@@ -62,10 +62,54 @@
 .apex-checkout-empty-cart strong{font-size:14px}
 .apex-checkout-empty-cart span{color:#d4c5ce;font-size:12px}
 .apex-checkout-empty-cart a{color:#ffa4c1;font-size:13px;font-weight:800;text-decoration:underline}
-.apex-cart-overlay :is(button,a):focus-visible,.apex-demo-shelf :is(button,a):focus-visible,.apex-cart-toggle:focus-visible{outline:3px solid #ffcc80;outline-offset:3px}
+.apex-cart-overlay :is(button,a):focus-visible,.apex-demo-shelf :is(button,a):focus-visible,.apex-cart-toggle:focus-visible{outline:2px solid #ed4b77;outline-offset:2px}
 @media(max-width:650px){
  .site-header .header-inner nav.apex-navigation{order:initial;width:auto;justify-content:flex-end;gap:8px}
  .apex-demo-product-grid{grid-template-columns:1fr}
  .apex-cart-drawer{border-left:0}
 }
 @media(prefers-reduced-motion:reduce){.apex-cart-overlay *, .apex-demo-shelf *{scroll-behavior:auto}}
+
+
+/* A content-sized shopping drawer on phones, not a full-screen takeover. */
+@media(max-width:650px){
+ .apex-cart-overlay{align-items:flex-start;justify-content:flex-end}
+ .apex-cart-backdrop{background:rgba(0,0,0,.58)}
+ .apex-cart-drawer{
+  width:min(354px,calc(100vw - 28px));
+  height:auto;
+  min-height:0;
+  max-height:calc(100dvh - 94px);
+  margin:78px 10px 0 0;
+  border:1px solid #43454e;
+  border-radius:17px;
+  box-shadow:-12px 18px 55px #000b;
+ }
+ .apex-cart-head{padding:16px 16px 9px}
+ .apex-cart-kicker{font-size:9px;margin-bottom:5px}
+ .apex-cart-head h2{font-size:23px}
+ .apex-cart-head h2 span{font-size:14px}
+ .apex-cart-close{width:40px;min-width:40px;height:40px;border:0;background:transparent}
+ .apex-cart-notice{margin:0 16px 8px;padding:8px 10px;font-size:11px;line-height:1.35}
+ .apex-cart-lineitems{flex:0 1 auto;min-height:0;padding:0 16px 7px}
+ .apex-cart-line{grid-template-columns:52px minmax(0,1fr) auto;gap:8px;padding:12px 0}
+ .apex-cart-art{width:52px;height:54px;font-size:25px}
+ .apex-cart-item-detail{gap:2px}
+ .apex-cart-item-detail>strong{font-size:12px}
+ .apex-cart-item-detail>span{font-size:11px}
+ .apex-cart-line>b{font-size:12px}
+ .apex-cart-qty{gap:8px;margin-top:5px}
+ .apex-cart-qty button{width:30px;height:30px}
+ .apex-cart-remove{padding:4px 0;font-size:11px}
+ .apex-cart-empty{padding:18px 6px}
+ .apex-cart-empty>span{font-size:30px}
+ .apex-cart-empty h3{font-size:17px}
+ .apex-cart-footer{padding:12px 16px 14px}
+ .apex-cart-subtotal{font-size:15px}
+ .apex-cart-footer p{margin:7px 0 10px;font-size:10px}
+ .apex-cart-checkout{min-height:44px;padding:10px 12px;font-size:12px}
+ .apex-cart-footer-actions{margin-top:10px;font-size:11px}
+}
+@media(max-width:390px){
+ .apex-cart-drawer{margin-top:72px;max-height:calc(100dvh - 84px)}
+}

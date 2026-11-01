@@ -189,3 +189,24 @@ test("keyboard focus uses a thin Apex crimson outline, never gold",()=>{
  assert.match(css,/font-size:16px;/);
  assert.doesNotMatch(css,/user-scalable\s*:\s*no|maximum-scale\s*:/i);
 });
+
+
+test("compact guest form keeps paired names and State/ZIP with 16px iOS-safe inputs",()=>{
+ const css=readFileSync("src/app/checkout/preview/checkout-preview.css","utf8");
+ const jsx=readFileSync("src/app/checkout/preview/checkout-preview.tsx","utf8");
+ const compact=css.slice(css.indexOf("/* Compact iPhone details:"));
+ assert.ok(compact.startsWith("/* Compact iPhone details:"));
+ assert.match(compact,/\.apex-checkout-preview \.apex-checkout-firstName\{grid-column:1 \/ 2\}/);
+ assert.match(compact,/\.apex-checkout-preview \.apex-checkout-lastName\{grid-column:2 \/ 3\}/);
+ assert.match(compact,/\.apex-checkout-preview \.apex-checkout-state\{grid-column:1 \/ 2\}/);
+ assert.match(compact,/\.apex-checkout-preview \.apex-checkout-postal\{grid-column:2 \/ 3\}/);
+ assert.match(compact,/row-gap:9px/);
+ assert.match(compact,/min-height:44px;padding:8px 10px;font-size:16px/);
+ assert.match(compact,/\.apex-checkout-state:focus-within\{[\s\S]*?background:transparent/);
+ assert.match(compact,/-webkit-tap-highlight-color:transparent/);
+ assert.doesNotMatch(jsx,/id="apex-preview-state"|aria-labelledby="apex-state-field-label/);
+ assert.match(jsx,/aria-label=\{"Choose shipping region: "\+displayDemoState\(guest.state\)\}/);
+ assert.match(jsx,/aria-haspopup="dialog"/);
+ assert.match(jsx,/stateChoices\.map/);
+ assert.doesNotMatch(css,/user-scalable\s*:\s*no|maximum-scale\s*:/i);
+});
