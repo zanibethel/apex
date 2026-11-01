@@ -81,7 +81,6 @@ export async function runEphemeralGreenfield({
   });
   if(typeof key?.apiKey!=="string"||key.apiKey.length<12)
     throw Error("Synthetic scoped Greenfield key was not returned");
-  const actualPermissions=(key.permissions||[]).map(x=>typeof x==="string"?x:x?.policy);
   if(!Array.isArray(key.permissions)||!permissions.every(
     p=>key.permissions.some(x=>x===p||x?.policy===p||x?.toString?.()===p)
   )) {
