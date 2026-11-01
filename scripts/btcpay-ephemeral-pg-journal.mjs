@@ -29,7 +29,7 @@ export function createEphemeralPgBridge({
     return stdout.trim();
   };
   const run=async(file,values)=>{
-    const args=["-X","-v","ON_ERROR_STOP=1","-At"];
+    const args=["-X","-q","-v","ON_ERROR_STOP=1","-At"];
     for(const [key,value] of Object.entries(values)){
       if(!/^[a-z_]+$/.test(key)||typeof value!=="string" ||
          !/^[a-zA-Z0-9_-]{1,100}$/.test(value))
