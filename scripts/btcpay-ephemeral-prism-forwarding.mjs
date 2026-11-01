@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
-import { openSync, closeSync, readFileSync } from "node:fs";
+import { openSync, closeSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { snapshotSyntheticAdminSplit } from "../src/lib/payments/synthetic-payout-rule-snapshot.mjs";
@@ -131,11 +131,13 @@ async function restartLocalBTCPay() {
   // Kill only processes started by this job. The project launch profile binds localhost.
   try{invoke("pkill",["-TERM","-P",String(n)]);}catch{/* child may have exited */}
   try{process.kill(n,"SIGTERM");}catch{/* already stopped */}
+  let oldServerStopped=false;
   for(let i=0;i<30;i++){
     try{await fetch(origin+"/",{signal:AbortSignal.timeout(800),redirect:"manual"});}
-    catch{break;}
+    catch{oldServerStopped=true;break;}
     await delay(400);
   }
+  if(!oldServerStopped)throw Error("Disposable BTCPay server did not stop cleanly");
   const log=join(process.env.RUNNER_TEMP,"btcpay-prism-restart.log");
   const fd=openSync(log,"w");
   const child=spawn("dotnet",["run","--no-build","--project",
@@ -148,6 +150,7 @@ async function restartLocalBTCPay() {
   });
   closeSync(fd);
   if(!child.pid)throw Error("BTCPay regtest restart did not spawn");
+  writeFileSync(pidFile,String(child.pid)+"\n");
   for(let i=0;i<90;i++){
     try{
       const r=await fetch(origin+"/",{redirect:"manual",
@@ -275,7 +278,7 @@ export async function runEphemeralPrismForwarding({basic}) {
     if(!btcMethod||!btcMethod.destination.startsWith("bcrt1")||
        sats(btcMethod.due)!==1000000n)
       throw Error("Prism test payment details do not match regtest invoice");
-    const tx=wallet(miner,"sendtoaddress",btcMethod.destination,btc(btcMethod.due&&1000000n));
+    const tx=wallet(miner,"sendtoaddress",btcMethod.destination,btc(1000000n));
     if(!sha.test(tx))throw Error("Synthetic Prism invoice payment not broadcast");
     rpc("generatetoaddress","6",minerAddress);
     let settled=false;
