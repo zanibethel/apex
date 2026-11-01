@@ -31,7 +31,7 @@ test("a saved card has inline image and audited stock actions, unsaved CSV cards
  assert.match(editor,/savedMedia\.get\(r\.id\)\?\.imageUrl/);
  assert.match(editor,/savedMedia\.get\(r\.id\)\?\.quantityOnHand/);
  assert.match(editor,/existingImages=\{existingImages\}/);
- assert.match(editor,/if\(completed>0\)router\.refresh\(\)/);
+ assert.match(editor,/if\(progress\.saved>0\)router\.refresh\(\)/);
  assert.match(importer,/needsSave:true/);
 });
 test("image picker reuses the existing private upload and same-store copy safeguards",()=>{

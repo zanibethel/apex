@@ -23,7 +23,7 @@ test("bulk creation, editing and saved confirmations are selectable and bounded"
  assert.match(bulkEditor,/Preview selected/);
  assert.match(bulkEditor,/Preview all saved/);
  assert.match(bulkEditor,/Preview single/);
- assert.match(bulkEditor,/selectedRows\.length<=250/);
+ assert.match(bulkEditor,/pendingSaveRows\.length<=250/);
  assert.match(actions,/parsed\.length>20/);
  assert.match(actions,/outcomes\.push/);
  assert.match(actions,/Saved to your private catalog/);
