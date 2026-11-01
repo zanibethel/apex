@@ -100,7 +100,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   // A status-filtered saved card can vanish on the first keystroke when it
   // becomes unsaved. Keep the edited card visible so the supplier can finish.
   // Name/SKU edits also clear an active text search that may stop matching.
-  const nextView=bulkViewAfterEdit(productSearch,viewFilter,field);
+  const nextView=bulkViewAfterEdit(productSearch,field);
   if(nextView.filter!==viewFilter)setViewFilter(nextView.filter);
   if(nextView.query!==productSearch)setProductSearch(nextView.query);
   setRows(prev=>prev.map(r=>r.key===key?{...r,[field]:value,needsSave:true}:r));
