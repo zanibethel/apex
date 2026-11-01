@@ -1,7 +1,7 @@
 // Preserve editability when a status/search filter would otherwise remove a
 // card from the screen as soon as the first field becomes dirty.
 // This is UI-only: publication readiness is still checked by the server/RPC.
-export function bulkViewAfterEdit(query,filter,field){
+export function bulkViewAfterEdit(query,field){
  return {
   query:(field==="name"||field==="sku")?"":query,
   filter:"all",
