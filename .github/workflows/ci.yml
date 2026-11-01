@@ -69,3 +69,4 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f database/tests/review_integrity_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_listing_admin_override_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/private_release_decision_engine_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_hold_correction_roundtrip_integration.sql
