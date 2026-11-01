@@ -18,6 +18,7 @@ Use `DECIDED FOR BUILD`, `PROPOSED`, `VERIFIED`, or `APPROVED FOR LIVE`. Only a 
 | ADR-012 | Repository privacy | VERIFIED | Repo was public on 2026-10-29. Never publish partner contracts, wallet keys, account secrets or identity data. |
 | ADR-013 | December target | PROPOSED | Partner prefers technical readiness **before Dec 10, 2026** for possible holiday launch. Dec 7–9 stretch assumes immediate funding/inputs; live sales remain gated. |
 | ADR-014 | Holiday promotions | PROPOSED | Simple 24-hour, scheduled, single-rule sale is a priority candidate only if it fits the scoped six-week plan. New Year's campaign may follow approval. |
+| ADR-015 | BTCPay environment costs | DECIDED FOR BUILD | Test BTCPay/Prism using local regtest first; run exactly one continuously billed production VPS when approved. No permanently billed staging/test VPS. An ephemeral hosted test server requires separate authorization and deletion after use. See BTCPAY_LOCAL_FIRST_STRATEGY_20261031.md. |
 
 ## Important unresolved design questions
 1. Can Prism payout signing be configured without undue custody/security risk?
