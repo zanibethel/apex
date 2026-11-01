@@ -139,6 +139,8 @@ export function assessRegtestProviderDrain({
   const localInvoices = new Map();
   const providerPayouts = new Map();
   const localClaims = new Map();
+  const providerOrderIds = new Set();
+  const ledgerOrderRefs = new Set();
 
   for (const i of inventory.invoices) {
     if (!safeId.test(i?.id || "") || !validInvoiceStatus.has(i?.status) ||
@@ -149,6 +151,8 @@ export function assessRegtestProviderDrain({
     }
     if (providerInvoices.has(i.id)) add(reasons, "DUPLICATE_PROVIDER_INVOICE");
     providerInvoices.set(i.id, i);
+    if (providerOrderIds.has(i.metadata.orderId)) add(reasons, "DUPLICATE_PROVIDER_ORDER_REFERENCE");
+    providerOrderIds.add(i.metadata.orderId);
     if (i.status !== "Settled" || i.additionalStatus !== "None")
       add(reasons, "OUTSTANDING_OR_EXCEPTION_INVOICE");
   }
@@ -158,6 +162,8 @@ export function assessRegtestProviderDrain({
     }
     if (localInvoices.has(i.invoiceId)) add(reasons, "DUPLICATE_LEDGER_INVOICE");
     localInvoices.set(i.invoiceId, i);
+    if (ledgerOrderRefs.has(i.orderRef)) add(reasons, "DUPLICATE_LEDGER_ORDER_REFERENCE");
+    ledgerOrderRefs.add(i.orderRef);
     if (i.independentFinality?.claimsConfirmed !== true ||
         i.independentFinality?.walletReceiptsConfirmed !== true)
       add(reasons, "MISSING_INDEPENDENT_FINALITY");
