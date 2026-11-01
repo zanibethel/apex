@@ -29,7 +29,7 @@ create policy btcpay_test_resume_permits_admin_read
 
 -- Only OPEN -> CONSUMED / REVOKED is legal. Closing is permanent.
 create function apex_test_internal.enforce_test_resume_permit_terminal()
-returns trigger language plpgsql security definer set search_path='' as $
+returns trigger language plpgsql security definer set search_path='' as $$
 begin
  if tg_op='DELETE' then
     raise exception 'Disposable checkout permit is append-only'
@@ -45,7 +45,7 @@ begin
      using errcode='55000';
  end if;
  return new;
-end; $;
+end; $$;
 revoke all on function apex_test_internal.enforce_test_resume_permit_terminal()
  from PUBLIC,anon,authenticated;
 create trigger btcpay_test_resume_permits_terminal
