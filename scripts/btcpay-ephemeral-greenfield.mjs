@@ -96,7 +96,7 @@ export async function runEphemeralGreenfield({
   const orderId="APEX-REGTEST-001";
   if(verifyWebhook && typeof payInvoice!=="function")
     throw Error("Signed webhook test requires real regtest funding");
-  let receiver,secret;
+  let receiver,secret,hookId;
   if(verifyWebhook) {
     secret=randomBytes(24).toString("hex");
     const journal=createEphemeralWebhookJournal({
@@ -105,7 +105,7 @@ export async function runEphemeralGreenfield({
       readInvoice:id=>request("/api/v1/stores/"+store.id+
         "/invoices/"+id,{auth:token}),
     });
-    receiver=await journal.begin();
+    receiver=await journal.begin(process.env.APEX_BTCPAY_WEBHOOK_PORT==="48173"?48173:0);
   }
   try {
   if(receiver) {
@@ -119,6 +119,7 @@ export async function runEphemeralGreenfield({
     if(typeof hook?.id!=="string"||!safeId.test(hook.id)||
        hook.enabled!==true)
       throw Error("Synthetic webhook registration did not complete");
+    hookId=hook.id;
   }
   const invoice=await request("/api/v1/stores/"+store.id+"/invoices",{
     method:"POST",auth:token,
@@ -183,8 +184,22 @@ export async function runEphemeralGreenfield({
   if(receiver) {
     for(let attempt=0;attempt<30&&!receiver.isSettled;attempt++)
       await sleep(500);
-    if(!receiver.isSettled)
-      throw Error("No authenticated BTCPay InvoiceSettled webhook received");
+    if(!receiver.isSettled){
+      let deliveries="unavailable";
+      try{
+        const list=await request("/api/v1/stores/"+store.id+
+          "/webhooks/"+hookId+"/deliveries",{auth:basic});
+        if(Array.isArray(list)) {
+          deliveries=JSON.stringify(list.slice(0,5).map(x=>({
+            status:x.status,httpCode:x.httpCode||null,
+          })));
+        }
+      }catch{/* diagnostic status remains unavailable */}
+      throw Error("No authenticated BTCPay InvoiceSettled webhook; "+
+        "received="+receiver.receivedRequests+
+        ",rejected="+receiver.rejectedRequests+
+        ",deliveries="+deliveries);
+    }
     const result=await receiver.replayAssertions();
     webhookProof={
       signedSettlementWebhookReceived:true,
