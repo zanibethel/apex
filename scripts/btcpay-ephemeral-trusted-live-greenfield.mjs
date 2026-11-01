@@ -8,7 +8,6 @@
  * from logs. Existing on-chain Prism integration runs separately.
  */
 import assert from "node:assert/strict";
-import {randomBytes} from "node:crypto";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
 import {createTrustedRegtestPgWorker} from
@@ -20,7 +19,7 @@ const scopeId="39500000-0000-0000-0000-000000000001";
 const orderRef="real-regtest-worker-1";
 const amountSats=10000n;
 const safeId=/^[A-Za-z0-9_-]{1,100}$/;
-const env=process.env;
+const env={...process.env,PGDATABASE:"apex_test"};
 if(env.CI!=="true"||env.GITHUB_ACTIONS!=="true"||
    env.APEX_BTCPAY_EPHEMERAL!=="true"||
    env.APEX_BTCPAY_TEST_NETWORK!=="regtest"||
@@ -66,19 +65,14 @@ async function sql(file,params={}){
   }catch{throw Error("Isolated regtest PostgreSQL test failed");}
 }
 
-const suffix=randomBytes(18).toString("hex");
-const email="apex-trusted-worker-"+suffix.slice(0,16)+"@example.com";
-const password="A7!q"+suffix+"Zz9";
-const user=await request("/api/v1/users",{
-  method:"POST",
-  json:{email,name:"Apex disposable real-worker test",
-    password,isAdministrator:true,sendInvitationEmail:false},
-});
-assert.equal(typeof user?.id,"string","Could not create disposable account");
-const basic="Basic "+Buffer.from(email+":"+password).toString("base64");
-const me=await request("/api/v1/users/me",{auth:basic});
-assert.equal(me?.id,user.id,"Synthetic administrator identity mismatch");
-const store=await request("/api/v1/stores",{
+export async function runTrustedRealGreenfield({basic,network,testOnly}={}){
+ if(testOnly!==true||network!=="regtest"||
+    typeof basic!=="string"||!/^Basic [A-Za-z0-9+/=]+$/.test(basic))
+   throw Error("Disposable authenticated regtest operator required");
+ const me=await request("/api/v1/users/me",{auth:basic});
+ if(typeof me?.id!=="string"||!me.id)
+   throw Error("Existing ephemeral administrator identity not verified");
+ const store=await request("/api/v1/stores",{
  method:"POST",auth:basic,json:{name:"Apex Trusted Worker Regtest"},
 });
 if(!safeId.test(store?.id||""))throw Error("Invalid disposable store");
@@ -116,7 +110,7 @@ await sql("tests/payout-rls/btcpay-real-provider-worker-setup.sql",{
 });
 
 let posts=0;
-const worker=createTrustedRegtestPgWorker({
+const worker=createTrustedRegtestPgWorker({env,
  fetchImpl:async(url,opts)=>{
   if(!url.startsWith(ORIGIN+"/api/v1/stores/"+storeId+"/invoices"))
     throw Error("Worker attempted external or cross-store Greenfield request");
@@ -161,10 +155,11 @@ const dbResult=await sql(
   invoice_id:result.invoiceId,
 });
 assert.equal(dbResult,"verified","Durable provider invoice journal verification failed");
-process.stdout.write(JSON.stringify({
+return Object.freeze({
  result:"verified",network:"regtest",realGreenfieldPostCount:posts,
  realGreenfieldInvoiceReadback:true,realProviderInventoryCount:1,
  durablePrePostReservation:true,duplicateRequestRejected:true,
  independentAdminCosignFixture:true,immutableHoldStillActive:true,
  publicCheckoutEnabled:false,splitActivated:false,productionReady:false,
-})+"\n");
+});
+}
