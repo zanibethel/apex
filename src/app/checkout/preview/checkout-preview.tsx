@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import {useState, type FormEvent} from "react";
+import {useEffect,useRef,useState, type FormEvent} from "react";
 import {
  DEMO_ITEMS,DEMO_SHIPPING,DEMO_RATE_CENTS,applyDemoCoupon,
  demoTotals,formatDemoUsd,formatDemoBtc,validateDemoGuest,
  normalizeDemoQuantity,
 } from "@/lib/checkout/preview-model.mjs";
+import {displayDemoState,filterDemoStates,resolveDemoState} from "@/lib/checkout/us-states.mjs";
 
 type Step="details"|"bitcoin"|"complete";
 type PaymentState="awaiting"|"detected"|"confirmed"|"expired";
@@ -43,10 +44,45 @@ export function CheckoutPreview(){
  const [couponInput,setCouponInput]=useState("");
  const [coupon,setCoupon]=useState("");
  const [couponError,setCouponError]=useState("");
+ const [statePickerOpen,setStatePickerOpen]=useState(false);
+ const [stateSearch,setStateSearch]=useState("");
+ const stateButtonRef=useRef<HTMLButtonElement>(null);
+ const stateSearchRef=useRef<HTMLInputElement>(null);
+ const stateChoices=filterDemoStates(stateSearch);
+ useEffect(()=>{
+  if(!statePickerOpen)return;
+  const priorOverflow=document.body.style.overflow;
+  document.body.style.overflow="hidden";
+  stateSearchRef.current?.focus({preventScroll:true});
+  const onEscape=(event:KeyboardEvent)=>{
+   if(event.key==="Escape"){
+    event.preventDefault();
+    setStatePickerOpen(false);
+    stateButtonRef.current?.focus({preventScroll:true});
+   }
+  };
+  document.addEventListener("keydown",onEscape);
+  return ()=>{
+   document.removeEventListener("keydown",onEscape);
+   document.body.style.overflow=priorOverflow;
+  };
+ },[statePickerOpen]);
  const total=demoTotals({quantities,shipping,coupon});
  const updateGuest=(key:GuestKey,value:string)=>{
   setGuest(current=>({...current,[key]:value}));
   setErrors(current=>({...current,[key]:undefined}));
+ };
+ const openStatePicker=()=>{
+  setStateSearch("");
+  setStatePickerOpen(true);
+ };
+ const closeStatePicker=()=>{
+  setStatePickerOpen(false);
+  stateButtonRef.current?.focus({preventScroll:true});
+ };
+ const chooseState=(code:string)=>{
+  updateGuest("state",code);
+  closeStatePicker();
  };
  const changeQuantity=(id:string,direction:number)=>{
   setQuantities(current=>({
@@ -77,6 +113,8 @@ export function CheckoutPreview(){
   setCoupon("");
   setCouponInput("");
   setCouponError("");
+  setStatePickerOpen(false);
+  setStateSearch("");
  };
  return <main className="container apex-checkout-preview">
   <div className="apex-checkout-live-test-banner" role="status" aria-label="Checkout simulation mode">
@@ -113,15 +151,65 @@ export function CheckoutPreview(){
       </div>
       <p className="apex-checkout-support">The form is prefilled with fictional data so you can test the flow immediately. Please do not enter real personal information.</p>
       <div className="apex-checkout-fields">
-       {FIELDS.map(field=><label className={"apex-checkout-field apex-checkout-"+field.name} key={field.name} htmlFor={"apex-preview-"+field.name}>
-        <span>{field.label}</span>
-        <input id={"apex-preview-"+field.name} type={field.type??"text"}
-         value={guest[field.name]} autoComplete={field.autoComplete??"off"}
-         onChange={event=>updateGuest(field.name,event.target.value)}
-         aria-invalid={Boolean(errors[field.name])} aria-describedby={errors[field.name]?"apex-error-"+field.name:undefined}
-         maxLength={field.name==="email"?160:field.name==="street"?140:75}/>
-        {errors[field.name]&&<small id={"apex-error-"+field.name} className="apex-checkout-error">{errors[field.name]}</small>}
-       </label>)}
+       {FIELDS.map(field=>field.name==="state"?
+        <div className="apex-checkout-field apex-checkout-state" key="state">
+         <span id="apex-state-field-label">State</span>
+         <button ref={stateButtonRef} id="apex-preview-state" type="button"
+          className="apex-state-trigger" aria-labelledby="apex-state-field-label apex-preview-state"
+          aria-haspopup="dialog" aria-expanded={statePickerOpen}
+          aria-invalid={Boolean(errors.state)}
+          onClick={openStatePicker}>
+          <span>{displayDemoState(guest.state)}</span><span aria-hidden="true">⌄</span>
+         </button>
+         {errors.state&&<small id="apex-error-state" className="apex-checkout-error">{errors.state}</small>}
+        </div>
+        :<label className={"apex-checkout-field apex-checkout-"+field.name} key={field.name} htmlFor={"apex-preview-"+field.name}>
+         <span>{field.label}</span>
+         <input id={"apex-preview-"+field.name} type={field.type??"text"}
+          value={guest[field.name]} autoComplete={field.autoComplete??"off"}
+          onChange={event=>updateGuest(field.name,event.target.value)}
+          aria-invalid={Boolean(errors[field.name])} aria-describedby={errors[field.name]?"apex-error-"+field.name:undefined}
+          maxLength={field.name==="email"?160:field.name==="street"?140:75}/>
+         {errors[field.name]&&<small id={"apex-error-"+field.name} className="apex-checkout-error">{errors[field.name]}</small>}
+        </label>)}
+       {statePickerOpen&&<div className="apex-state-layer">
+        <button type="button" tabIndex={-1} className="apex-state-backdrop"
+         aria-label="Close state picker" onClick={closeStatePicker}/>
+        <section className="apex-state-dialog" role="dialog" aria-modal="true"
+         aria-labelledby="apex-state-dialog-title" aria-describedby="apex-state-dialog-description">
+         <div className="apex-state-dialog-header">
+          <div>
+           <p className="apex-checkout-kicker">SHIPPING INFORMATION</p>
+           <h3 id="apex-state-dialog-title">Choose your state</h3>
+          </div>
+          <button type="button" className="apex-state-close" onClick={closeStatePicker}
+           aria-label="Close state picker">✕</button>
+         </div>
+         <label className="apex-state-search-label" htmlFor="apex-state-search">Search by name or abbreviation</label>
+         <input ref={stateSearchRef} className="apex-state-search" type="search"
+          id="apex-state-search" value={stateSearch} placeholder="Type Texas or TX"
+          autoComplete="off" maxLength={40}
+          onChange={event=>setStateSearch(event.target.value)}
+          onKeyDown={event=>{
+           if(event.key==="Enter"){
+            event.preventDefault();
+            const match=resolveDemoState(stateSearch)??(stateChoices.length===1?stateChoices[0]:null);
+            if(match)chooseState(match.code);
+           }
+          }}/>
+         <p id="apex-state-dialog-description" className="apex-state-hint" role="status">
+          {stateChoices.length} {stateChoices.length===1?"state":"states"} · scroll or type to filter
+         </p>
+         <div className="apex-state-options" role="listbox" aria-label="Available US states">
+          {stateChoices.map(option=><button key={option.code} type="button"
+           role="option" aria-selected={guest.state===option.code}
+           onClick={()=>chooseState(option.code)}>
+            <span>{option.name}</span><strong>{option.code}</strong>
+           </button>)}
+          {!stateChoices.length&&<p className="apex-state-empty">No matching states. Try a name or two-letter abbreviation.</p>}
+         </div>
+        </section>
+       </div>}
       </div>
       <fieldset className="apex-checkout-shipping">
        <legend>Delivery method <span>· sample options</span></legend>

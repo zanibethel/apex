@@ -140,3 +140,66 @@
 .apex-checkout-live-test-banner strong{font-size:13px;letter-spacing:.075em}
 .apex-checkout-live-test-banner span{font-size:12px;line-height:1.5;color:#f2d6bc;max-width:620px}
 @media(max-width:600px){.apex-checkout-live-test-banner{padding:14px;gap:7px}}
+
+
+/* iOS Safari/WebView zooms the viewport when focusing inputs below 16px.
+   Keep readable field text; never disable user pinch zoom in viewport meta. */
+.apex-checkout-preview .apex-checkout-field input,
+.apex-checkout-preview .apex-checkout-coupon input,
+.apex-checkout-preview .apex-state-search{
+ font-size:16px;
+ line-height:1.4;
+}
+.apex-checkout-preview .apex-state-trigger{
+ width:100%;min-height:48px;display:flex;align-items:center;justify-content:space-between;
+ gap:12px;text-align:left;padding:12px 14px;color:#f1f2f4;
+ font-size:16px;line-height:1.4;border:1px solid #464954;
+ background:#0b0c10;border-radius:9px;
+}
+.apex-checkout-preview .apex-state-trigger[aria-invalid="true"]{border-color:#ed7c98}
+.apex-checkout-preview .apex-state-trigger>span:last-child{color:#c9a4b2;font-size:24px;line-height:.8}
+.apex-checkout-preview .apex-state-trigger:focus-visible{outline:3px solid #ffc36b;outline-offset:3px}
+.apex-state-layer{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:16px}
+.apex-state-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(0,0,0,.82);cursor:pointer}
+.apex-checkout-preview .apex-state-dialog{
+ position:relative;isolation:isolate;width:min(100%,470px);max-height:min(80dvh,630px);
+ border:1px solid #62636d;border-radius:18px;padding:20px;
+ box-shadow:0 24px 80px rgba(0,0,0,.75);background:#16171d;color:#f4f4f6;
+ display:flex;flex-direction:column;min-width:0;
+}
+.apex-state-dialog-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.apex-state-dialog-header h3{font-size:23px;line-height:1.2;letter-spacing:-.03em;margin:0 0 18px}
+.apex-state-dialog-header .apex-checkout-kicker{margin-bottom:6px}
+.apex-checkout-preview .apex-state-close{
+ width:40px;height:40px;min-width:40px;display:grid;place-items:center;
+ color:#f4f4f6;background:#25262c;border:1px solid #4a4c56;border-radius:10px;font-size:16px;
+}
+.apex-state-search-label{color:#d9d9e2;font-size:12px;font-weight:700;margin-bottom:8px}
+.apex-checkout-preview .apex-state-search{
+ width:100%;flex:none;min-height:49px;border:1px solid #71737f;
+ color:#f3f3f5;background:#0b0c11;padding:10px 14px;border-radius:10px;
+}
+.apex-state-hint{color:#bcbec7;font-size:12px;margin:11px 0}
+.apex-state-options{
+ min-height:0;max-height:min(50dvh,390px);overflow-y:auto;
+ -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+ display:grid;align-content:start;gap:4px;border:1px solid #30313a;
+ border-radius:11px;background:#101116;padding:6px;
+}
+.apex-checkout-preview .apex-state-options button{
+ min-height:46px;text-align:left;display:flex;align-items:center;justify-content:space-between;
+ width:100%;gap:12px;padding:10px 13px;border:0;border-radius:7px;
+ color:#e5e6eb;background:transparent;font-size:15px;
+}
+.apex-checkout-preview .apex-state-options button[aria-selected="true"]{
+ background:#38212b;color:#ffe1e8;
+}
+.apex-checkout-preview .apex-state-options button:focus-visible,
+.apex-checkout-preview .apex-state-options button:hover{background:#303039}
+.apex-state-options button strong{color:#f08daa;font-size:12px}
+.apex-state-empty{color:#bfc0c9;padding:14px;font-size:13px}
+@media(max-width:600px){
+ .apex-state-layer{padding:12px;align-items:center}
+ .apex-checkout-preview .apex-state-dialog{max-height:min(76dvh,580px);padding:16px;border-radius:14px}
+ .apex-state-options{max-height:min(43dvh,360px)}
+}
