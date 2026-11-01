@@ -103,7 +103,7 @@ test("rejects missing or widened key permissions",async()=>{
   });
   await assert.rejects(runEphemeralGreenfield({
     testOnly:true,network:"regtest",fetchImpl,random:()=>fixed,
-  }),/did not report requested store scope/);
+  }),/did not report the requested store scope/);
 });
 test("rejects mismatched invoice store/order and hides upstream response body",async()=>{
   const {fetchImpl}=mockServer({override:({path,result})=>
