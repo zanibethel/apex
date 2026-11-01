@@ -152,11 +152,12 @@ export function CheckoutPreview(){
       <div className="apex-checkout-fields">
        {FIELDS.map(field=>field.name==="state"?
         <div className="apex-checkout-field apex-checkout-state" key="state">
-         <span id="apex-state-field-label">State</span>
-         <button ref={stateButtonRef} id="apex-preview-state" type="button"
-          className="apex-state-trigger" aria-labelledby="apex-state-field-label apex-preview-state"
+         <span aria-hidden="true">State</span>
+         <button ref={stateButtonRef} type="button"
+          className="apex-state-trigger"
+          aria-label={"Choose shipping region: "+displayDemoState(guest.state)}
           aria-haspopup="dialog" aria-expanded={statePickerOpen}
-          aria-invalid={Boolean(errors.state)}
+          aria-describedby={errors.state?"apex-error-state":undefined}
           onClick={openStatePicker}>
           <span>{displayDemoState(guest.state)}</span><span aria-hidden="true">⌄</span>
          </button>
