@@ -82,7 +82,7 @@ test("complete batch is truthful and no save is inferred from missing outcomes",
 });
 
 test("client retry is bounded and never re-saves successfully confirmed cards",()=>{
- assert.match(editor,/const pendingSaveRows=bulkRowsRequiringSave\(selectedRows,lastSave\)/);
+ assert.match(editor,/const pendingSaveRows:BulkEditRow[]=bulkRowsRequiringSave\(selectedRows,lastSave\)/);
  assert.match(editor,/const pendingRows=pendingSaveRows\.slice\(\)/);
  assert.match(editor,/reconcileBulkSaveBatch\(pendingRows\.slice\(i,i\+20\),next\.results\)/);
  assert.match(editor,/if\(!batch\.complete\)\{stopped=true;break;\}/);
