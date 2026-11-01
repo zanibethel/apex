@@ -6,7 +6,7 @@ import {
 const sample={
  testOnly:true,network:"regtest",
  upstreamRoot:"/tmp/official-upstream-btcpay",
- destination:"bcrt1qsyntheticregtestpaymentaddressonlynotreal",
+ destination:"bcrt1q"+"q".repeat(38),
  amount:"0.00010000",
 };
 test("regtest payment adapter rejects mainnet, invalid addresses or unsafe amounts",()=>{
