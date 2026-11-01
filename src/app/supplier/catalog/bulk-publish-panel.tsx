@@ -8,8 +8,8 @@ type Publishable={
 };
 type Result={ok:boolean;message:string;results:{id:string;ok:boolean;message:string}[]};
 
-export function BulkPublishPanel({storeId,editable,products}:{
- storeId:string;editable:boolean;products:Publishable[];
+export function BulkPublishPanel({storeId,editable,products,pageScoped=false}:{
+ storeId:string;editable:boolean;products:Publishable[];pageScoped?:boolean;
 }){
  const [selected,setSelected]=useState<string[]>(products.filter(p=>p.canRequest&&!p.wantsListing).map(p=>p.id));
  const [result,action,pending]=useActionState(saveBulkPublicationRequests,
@@ -21,7 +21,7 @@ export function BulkPublishPanel({storeId,editable,products}:{
  return <section className="apex-bulk-publish" aria-label="Bulk publication requests">
   <div className="apex-bulk-publish-header">
    <h2>Publish offers</h2>
-   <p className="notice">Choose individual saved offers or submit all eligible ones. Each product is checked independently. An admin hold takes priority. Requests are private until the separate public release gate is enabled.</p>
+   <p className="notice">Choose individual saved offers or submit all eligible ones{pageScoped?" on this page":""}. Each product is checked independently. An admin hold takes priority. Requests are private until the separate public release gate is enabled.</p>
   </div>
   <div className="apex-bulk-publish-list">
    {products.map(p=>{
@@ -52,7 +52,7 @@ export function BulkPublishPanel({storeId,editable,products}:{
     <input type="hidden" name="ids" value={allEligible.slice(0,limit).join(",")}/>
     <button type="submit" className="button primary"
      disabled={!editable||pending||allEligible.length<1||allEligible.length>limit}>
-      {pending?"Saving requests…":"Publish all ("+allEligible.length+")"}
+      {pending?"Saving requests…":pageScoped?"Publish all on this page ("+allEligible.length+")":"Publish all ("+allEligible.length+")"}
     </button>
    </form>
   </div>
