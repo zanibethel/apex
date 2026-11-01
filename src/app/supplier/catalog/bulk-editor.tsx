@@ -130,7 +130,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  }
  function loadFromCsv(imported:BulkEditRow[]){
   if(busy)return;
-  setProductSearch("");setViewFilter("all");
+  setProductSearch("");setViewFilter("all");setSaveRetryKeys([]);
   const incoming=new Set(imported.map(r=>r.key));
   // Put new or updated CSV cards FIRST, so an upload does not disappear
   // beneath up to 100 existing products on narrow/mobile screens.
@@ -377,9 +377,14 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   {publicationMessage&&<p role="status" className="apex-bulk-result">{publicationMessage}</p>}
   {pendingSaveRows.length>20&&<p className="notice">Pending changes will be saved in sequential batches of 20.</p>}
   {result.message&&<p role="status" className="apex-bulk-result">{result.message}</p>}
-  {saveRetryKeys.length>0&&<p className="notice apex-bulk-retry-hint" role="status">
-   Showing the {saveRetryKeys.length} product {saveRetryKeys.length===1?"change that needs":"changes that need"} attention.
-   <a href="#bulk-product-cards">Review unfinished cards</a>. Return to All products to preview your full selection.
-  </p>
+  {saveRetryKeys.length>0&&<div className="notice apex-bulk-retry-hint" role="status">
+   {saveRetryKeys.length} product {saveRetryKeys.length===1?"change still needs":"changes still need"} attention.
+   {viewFilter!=="save_retries"&&<button type="button" className="button secondary"
+    disabled={busy} onClick={()=>{setProductSearch("");setViewFilter("save_retries");}}>
+    Show unfinished
+   </button>}
+   <a href="#bulk-product-cards">Jump to product cards</a>.
+   Return to All products to preview the full saved selection.
+  </div>
  </section>;
 }
