@@ -14,7 +14,7 @@ function fixture({readInvoice}={}){
   const journal=createEphemeralWebhookJournal({
     testOnly:true,network:"regtest",storeId,secret,orderId,
     amountSats:10000n,
-    readInvoice:readInvoice||async()=>{reads++;return invoice;},
+    readInvoice:readInvoice||(async()=>{reads++;return invoice;}),
   });
   journal.setInvoiceId(invoiceId);
   function payload(data={}){
