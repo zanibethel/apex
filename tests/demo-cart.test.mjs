@@ -88,3 +88,23 @@ test("cart cannot use untrusted product price or create invoices",()=>{
  assert.doesNotMatch(provider,/sessionStorage|indexedDB|document\.cookie/);
  assert.match(provider,/window\.localStorage/);
 });
+
+
+test("mobile cart is content-sized, and header uses separated borderless touch targets",()=>{
+ const cart=readFileSync("src/app/demo-cart.css","utf8");
+ const header=readFileSync("src/app/globals.css","utf8");
+ const menu=readFileSync("src/app/account-menu.tsx","utf8");
+ const c=cart.slice(cart.indexOf("/* A content-sized shopping drawer"));
+ const h=header.slice(header.indexOf("/* Compact, separated cart/menu actions"));
+ assert.ok(c.startsWith("/* A content-sized shopping drawer"));
+ assert.match(c,/width:min\(354px,calc\(100vw - 28px\)\)/);
+ assert.match(c,/height:auto/);
+ assert.match(c,/max-height:calc\(100dvh - 94px\)/);
+ assert.match(c,/\.apex-cart-lineitems\{flex:0 1 auto/);
+ assert.match(h,/nav\.apex-navigation\{[\s\S]*?gap:14px/);
+ assert.match(h,/\.apex-cart-toggle,[\s\S]*?\.apex-menu-toggle\{[\s\S]*?width:44px;min-width:44px;height:44px;[\s\S]*?border:0/);
+ assert.match(h,/nav\.apex-navigation\{gap:12px\}/);
+ assert.match(menu,/<svg aria-hidden="true" viewBox="0 0 24 24"/);
+ assert.match(menu,/aria-label="Navigation menu"/);
+ assert.match(cart,/No purchases or payments/);
+});
