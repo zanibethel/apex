@@ -9,6 +9,8 @@ on:
       - "scripts/btcpay-local-doctor.mjs"
       - "tests/btcpay-local-doctor.test.mjs"
       - "scripts/btcpay-ephemeral-*.mjs"
+      - "scripts/install_prism_regtest.py"
+      - "tests/prism-install-safety.test.py"
       - "database/sql/apex_btcpay_*_REVIEW_ONLY.sql"
       - "tests/payout-rls/btcpay-live-journal-*.sql"
       - "tests/btcpay-ephemeral-*.test.mjs"
@@ -101,11 +103,28 @@ jobs:
           done
           test "$verified" = "1" || { echo "::error::Bitcoin regtest node did not become ready"; exit 1; }
           echo "Verified Bitcoin Core chain: regtest; no real funds"
+      - name: Download pinned published Prism plugin (CI test only)
+        env:
+          APEX_BTCPAY_EPHEMERAL: "true"
+          APEX_BTCPAY_TEST_NETWORK: regtest
+        run: |
+          set -euo pipefail
+          # Published release from official BTCPay Plugin Builder over HTTPS.
+          curl --fail --location --silent --show-error --retry 3 --proto '=https' --tlsv1.2             --max-time 90             'https://plugin-builder.btcpayserver.org/api/v1/plugins/%5BBTCPayServer.Plugins.Prism%5D/versions/1.3.3.0/download'             -o "${RUNNER_TEMP}/prism-1.3.3.0.btcpay"
+          sha256sum "${RUNNER_TEMP}/prism-1.3.3.0.btcpay"
+          python3 scripts/install_prism_regtest.py             "${RUNNER_TEMP}/prism-1.3.3.0.btcpay"             "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism"
+          test -s "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism/BTCPayServer.Plugins.Prism.dll"
+      - name: Verify Prism package safety unit tests
+        env:
+          APEX_BTCPAY_EPHEMERAL: "true"
+          APEX_BTCPAY_TEST_NETWORK: regtest
+        run: python3 -m unittest discover -s tests -p 'prism-install-safety.test.py' -v
       - name: Start official BTCPay Server on loopback-only development profile
         env:
           # Disposable runner only; keep SSRF protection enabled and narrowly
           # permit only the temporary local callback port, not all private IPs.
           BTCPAY_SSRFEXCEPTIONS: "127.0.0.1:48173"
+          BTCPAY_PLUGINDIR: ${{ runner.temp }}/apex-prism-plugins
         working-directory: ${{ runner.temp }}/btcpayserver
         run: |
           set -euo pipefail
@@ -130,6 +149,21 @@ jobs:
           test "$ready" = "1" || { echo "::error::BTCPay did not become ready at localhost:14142"; exit 1; }
           echo "Official BTCPay localhost startup verified on ephemeral regtest runner"
           echo "Not tested: Greenfield invoice, signed webhook, Prism plugin, actual split forwarding"
+      - name: Verify Prism route is installed in the disposable BTCPay server
+        run: |
+          set -euo pipefail
+          test -s "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism/BTCPayServer.Plugins.Prism.dll"
+          # Authenticated store form, expected redirect without a logged-in browser.
+          result="$(curl --silent --output /dev/null --write-out '%{http_code}'             --max-time 8 http://127.0.0.1:14142/plugins/synthetic-test-store/prism)"
+          if [[ "$result" != "302" && "$result" != "401" ]]; then
+            echo "::error::Prism store configuration endpoint not registered (HTTP $result)"
+            exit 1
+          fi
+          if grep -Eiq 'Error when loading plugin BTCPayServer.Plugins.Prism|Prism plugin.*disabled|Prism version does not match' "${RUNNER_TEMP}/btcpay-boot.log"; then
+            echo "::error::Prism load failure found in BTCPay startup log"
+            exit 1
+          fi
+          echo "Prism route registered and protected on isolated regtest runner"
       - name: Create, pay, and verify signed settled webhook on real regtest
         env:
           APEX_BTCPAY_EPHEMERAL: "true"
@@ -149,3 +183,4 @@ jobs:
           fi
           docker compose down --volumes --remove-orphans || true
           rm -f "${RUNNER_TEMP}/chain.json" "${RUNNER_TEMP}/btcpay-boot.log" "${RUNNER_TEMP}/btcpay-boot.pid"
+          rm -rf "${RUNNER_TEMP}/apex-prism-plugins" "${RUNNER_TEMP}/prism-1.3.3.0.btcpay"
