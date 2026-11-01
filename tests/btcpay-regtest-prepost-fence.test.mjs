@@ -175,3 +175,36 @@ test("test-only protocol is not imported by live app routes or production checko
   assert.doesNotMatch(readFileSync(file,"utf8"),/btcpay-regtest-prepost-fence/);
  }
 });
+
+
+test("real Greenfield-style numeric BTC decimal is compared as exact satoshis",async()=>{
+ for(const amount of [0.0001,"0.00010000","0.0001"]){
+   const result=await createPreauthorizedRegtestInvoice({
+     ...args,reserveDurably:async()=>admission,
+     recordObservation:async()=> "recorded_without_checkout_authorization",
+     fetchImpl:async(url,opt)=>{
+       if(opt.method==="POST")return providerResponse(url,opt);
+       const original=await providerResponse(url,opt);
+       return {ok:true,json:async()=>({...await original.json(),amount})};
+     },
+   });
+   assert.equal(result.status,"observed_regtest_invoice_no_checkout");
+ }
+ for(const amount of [0.00010001,"0.00010001","1e-4","0.000100000","0.0001x",null]){
+   const result=await createPreauthorizedRegtestInvoice({
+     ...args,reserveDurably:async()=>admission,
+     recordObservation:async evidence=>{
+       assert.equal(evidence.kind,"post_outcome_unknown");
+       return "recorded_without_checkout_authorization";
+     },
+     fetchImpl:async(url,opt)=>{
+       if(opt.method==="POST")return providerResponse(url,opt);
+       const original=await providerResponse(url,opt);
+       return {ok:true,json:async()=>({...await original.json(),amount})};
+     },
+   });
+   assert.equal(result.status,"operator_reconciliation_required");
+   assert.equal(result.invoiceId,null);
+   assert.equal(result.automaticallyRetry,false);
+ }
+});
