@@ -75,11 +75,17 @@ begin
  end;
  if not rejected then raise exception 'cross-store invoice alias accepted'; end if;
 
+ -- Use an unused delivery so the FK check, not the observation unique key,
+ -- is the condition under test.
+ insert into public.btcpay_test_webhook_receipts
+  (btcpay_store_id,delivery_id,invoice_id,event_type,payload_sha256)
+  values ('test-store-alpha','delivery-2','invoice-alpha','InvoiceSettled',repeat('d',64));
+
  rejected:=false;
  begin
    insert into public.btcpay_test_invoice_observations
     (btcpay_store_id,delivery_id,invoice_id,invoice_status,additional_status,assessment)
-    values ('test-store-alpha','delivery-1','invoice-beta','Settled','None','settled_invoice_reported');
+    values ('test-store-alpha','delivery-2','invoice-beta','Settled','None','settled_invoice_reported');
  exception when foreign_key_violation then rejected:=true;
  end;
  if not rejected then raise exception 'cross-invoice observation accepted'; end if;
@@ -88,7 +94,7 @@ begin
  begin
    insert into public.btcpay_test_invoice_observations
     (btcpay_store_id,delivery_id,invoice_id,invoice_status,additional_status,assessment)
-    values ('test-store-alpha','delivery-1','invoice-alpha','Settled','PaidPartial','settled_invoice_reported');
+    values ('test-store-alpha','delivery-2','invoice-alpha','Settled','PaidPartial','settled_invoice_reported');
  exception when check_violation then rejected:=true;
  end;
  if not rejected then raise exception 'invalid assessment accepted'; end if;
