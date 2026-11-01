@@ -878,3 +878,23 @@ body { background:#07080b; }
  overflow-wrap:anywhere;white-space:pre-wrap;
 }
 .apex-bulk-admin-feedback strong{color:#ffe7ef}
+
+/* Private draft remediation: short links jump to the matching product
+   field, rather than adding buttons to the compact mobile action bar. */
+.apex-bulk-fix-link{
+ color:#e9d9ff;text-decoration:underline;text-underline-offset:3px;
+ border-radius:3px;overflow-wrap:anywhere;display:inline-block;
+ padding:3px 0;font-size:12px;
+}
+.apex-bulk-fix-link:hover{color:#fff}
+.apex-bulk-fix-link:focus-visible{
+ outline:3px solid #f5c46c;outline-offset:3px;
+}
+.apex-bulk-media-target{min-width:0;scroll-margin-top:85px;border-radius:9px}
+.apex-bulk-fields [id^="bulk-fix-"]{scroll-margin-top:85px}
+.apex-bulk-fields [id^="bulk-fix-"]:target{
+ outline:3px solid #f5c46c;outline-offset:2px;
+}
+.apex-bulk-media-target:target{
+ outline:2px solid #f5c46c;outline-offset:4px;
+}
