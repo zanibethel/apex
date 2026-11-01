@@ -34,6 +34,7 @@ async function endpoint(path, { method="GET", json, auth, fetchImpl=fetch }={}) 
 
 export async function runEphemeralGreenfield({
   testOnly, network, fetchImpl=fetch, random=()=>randomBytes(18).toString("hex"),
+  payInvoice, sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),
 }={}) {
   if(testOnly!==true||network!=="regtest") {
     throw Error("STOP: Greenfield smoke requires explicit disposable regtest mode");
@@ -105,19 +106,66 @@ export async function runEphemeralGreenfield({
     observed?.currency!=="BTC") {
     throw Error("Synthetic Greenfield invoice did not match trusted store/order metadata");
   }
+  let funded=false,settled=false;
+  if(payInvoice!==undefined) {
+    if(typeof payInvoice!=="function")throw Error("Invalid disposable funding adapter");
+    const methods=await request("/api/v1/invoices/"+invoice.id+
+      "/payment-methods",{auth:token});
+    const onChain=Array.isArray(methods)
+      ?methods.find(p=>p.paymentMethodId==="BTC-CHAIN"):null;
+    if(!onChain||onChain.currency!=="BTC"||
+       typeof onChain.destination!=="string"||
+       typeof onChain.due!=="string") {
+      throw Error("Synthetic BTC-CHAIN payment destination or due amount is missing");
+    }
+    const receipt=await payInvoice({
+      destination:onChain.destination,amount:onChain.due,
+    });
+    if(receipt?.network!=="regtest"||
+       receipt.localTransactionCreated!==true||
+       receipt.transactionIdVerified!==true) {
+      throw Error("Synthetic regtest transfer did not report success");
+    }
+    funded=true;
+    for(let attempt=0;attempt<90;attempt++) {
+      const status=await request("/api/v1/stores/"+store.id+
+        "/invoices/"+invoice.id,{auth:token});
+      if(status?.id!==invoice.id||status?.storeId!==store.id||
+         status?.metadata?.orderId!==orderId||status?.currency!=="BTC") {
+        throw Error("Invoice identity drift during regtest confirmation");
+      }
+      if(status.status==="Settled"&&status.additionalStatus==="None"){
+        settled=true;break;
+      }
+      if(status.status==="Invalid"||status.status==="Expired"||
+         (status.additionalStatus&&status.additionalStatus!=="None")) {
+        throw Error("Invoice entered an exceptional status during test settlement");
+      }
+      await sleep(2000);
+    }
+    if(!settled)throw Error("BTCPay did not report a settled regtest invoice");
+  }
   return Object.freeze({
     chain:"regtest",accountCreated:true,storeCreated:true,
     testWalletConfigured:true,
     storeScopedKeyCreated:true,invoiceCreated:true,invoiceReadVerified:true,
     invoiceStatus:observed.status,
-    paymentFunded:false,prismVerified:false,productionReady:false,
+    paymentFunded:funded,invoiceSettledVerified:settled,
+    prismVerified:false,productionReady:false,
   });
 }
 
 if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
-  runEphemeralGreenfield({
+  const pay=process.env.APEX_BTCPAY_PAY_REGTEST==="true"
+    ?import("./btcpay-ephemeral-regtest-payment.mjs").then(m=>m.fundEphemeralInvoice)
+    :Promise.resolve(null);
+  pay.then(fund=>runEphemeralGreenfield({
     testOnly:process.env.APEX_BTCPAY_EPHEMERAL==="true",
     network:process.env.APEX_BTCPAY_TEST_NETWORK,
-  }).then(out=>process.stdout.write(JSON.stringify(out,null,2)+"\n"))
-    .catch(e=>{process.stderr.write(e.message+"\n");process.exitCode=1;});
+    ...(fund?{payInvoice:payment=>fund({
+      ...payment,testOnly:true,network:"regtest",
+      upstreamRoot:process.env.APEX_BTCPAY_UPSTREAM_ROOT,
+    })}:{}),
+  })).then(out=>process.stdout.write(JSON.stringify(out,null,2)+"\\n"))
+    .catch(e=>{process.stderr.write(e.message+"\\n");process.exitCode=1;});
 }

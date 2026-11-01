@@ -90,7 +90,8 @@ test("creates synthetic account, exact store scoped key, invoice and re-fetch on
     chain:"regtest",accountCreated:true,storeCreated:true,
     testWalletConfigured:true,
     storeScopedKeyCreated:true,invoiceCreated:true,invoiceReadVerified:true,
-    invoiceStatus:"New",paymentFunded:false,prismVerified:false,productionReady:false,
+    invoiceStatus:"New",paymentFunded:false,invoiceSettledVerified:false,
+    prismVerified:false,productionReady:false,
   });
   assert.equal(Object.isFrozen(result),true);
   assert.ok(!JSON.stringify(result).includes("ephemeral_fake_scoped_key"));
@@ -127,4 +128,72 @@ test("rejects invalid entropy before network IO",async()=>{
     testOnly:true,network:"regtest",random:()=>"too short",fetchImpl:async()=>{called++;},
   }),/entropy/);
   assert.equal(called,0);
+});
+
+test("real-regtest-path uses BTCPay payment methods, never trusts a redirect",async()=>{
+  const {fetchImpl,calls}=mockServer();
+  let paid=false,invocations=0;
+  const wrapped=async(url,options)=>{
+    if(url.endsWith("/invoices/invoice_regtest_1/payment-methods")){
+      return {ok:true,status:200,json:async()=>[{
+        paymentMethodId:"BTC-CHAIN",currency:"BTC",
+        destination:"bcrt1qsyntheticregtestdestinationonlynotreal",
+        due:"0.00010000",
+      }]};
+    }
+    if(url.endsWith("/invoices/invoice_regtest_1")&&paid){
+      return {ok:true,status:200,json:async()=>({
+        id:"invoice_regtest_1",storeId:"syntheticStore001",
+        currency:"BTC",metadata:{orderId:"APEX-REGTEST-001"},
+        status:"Settled",additionalStatus:"None",
+      })};
+    }
+    return fetchImpl(url,options);
+  };
+  const result=await runEphemeralGreenfield({
+    testOnly:true,network:"regtest",fetchImpl:wrapped,random:()=>fixed,
+    payInvoice:async({destination,amount})=>{
+      invocations++;
+      assert.equal(destination,"bcrt1qsyntheticregtestdestinationonlynotreal");
+      assert.equal(amount,"0.00010000");
+      paid=true;
+      return {network:"regtest",localTransactionCreated:true,
+        transactionIdVerified:true};
+    },
+    sleep:async()=>{throw Error("No polling delay needed in this fixture");},
+  });
+  assert.equal(invocations,1);
+  assert.equal(result.paymentFunded,true);
+  assert.equal(result.invoiceSettledVerified,true);
+  assert.equal(result.prismVerified,false);
+  assert.equal(result.productionReady,false);
+  assert.equal(calls.filter(x=>x.options.method==="POST").length,5);
+});
+test("payment not classified settled from invalid or expired invoice",async()=>{
+  const {fetchImpl}=mockServer();
+  let paid=false;
+  const wrapped=async(url,options)=>{
+    if(url.endsWith("/payment-methods"))return {
+      ok:true,status:200,json:async()=>[{
+        paymentMethodId:"BTC-CHAIN",currency:"BTC",
+        destination:"bcrt1qsyntheticregtestdestinationonlynotreal",
+        due:"0.00010000",
+      }],
+    };
+    if(url.endsWith("/invoices/invoice_regtest_1")&&paid)return {
+      ok:true,status:200,json:async()=>({
+        id:"invoice_regtest_1",storeId:"syntheticStore001",currency:"BTC",
+        metadata:{orderId:"APEX-REGTEST-001"},
+        status:"Expired",additionalStatus:"PaidLate",
+      }),
+    };
+    return fetchImpl(url,options);
+  };
+  await assert.rejects(runEphemeralGreenfield({
+    testOnly:true,network:"regtest",fetchImpl:wrapped,random:()=>fixed,
+    payInvoice:async()=>{paid=true;return {
+      network:"regtest",localTransactionCreated:true,
+      transactionIdVerified:true};},
+    sleep:async()=>{},
+  }),/exceptional status/);
 });

@@ -97,10 +97,12 @@ jobs:
           test "$ready" = "1" || { echo "::error::BTCPay did not become ready at localhost:14142"; exit 1; }
           echo "Official BTCPay localhost startup verified on ephemeral regtest runner"
           echo "Not tested: Greenfield invoice, signed webhook, Prism plugin, actual split forwarding"
-      - name: Create synthetic Greenfield store and test invoice on local regtest
+      - name: Create, pay and confirm synthetic Greenfield invoice on real regtest
         env:
           APEX_BTCPAY_EPHEMERAL: "true"
           APEX_BTCPAY_TEST_NETWORK: regtest
+          APEX_BTCPAY_PAY_REGTEST: "true"
+          APEX_BTCPAY_UPSTREAM_ROOT: ${{ runner.temp }}/btcpayserver
         run: node scripts/btcpay-ephemeral-greenfield.mjs
       - name: Stop ephemeral test processes and destroy disposable Bitcoin data
         if: always()
