@@ -90,6 +90,7 @@ export function createEphemeralWebhookJournal({
        const result=await process(raw,typeof sig==="string"?sig:"");
        res.writeHead(result.status).end();
      }catch{
+       requestsRejected++;
        // Never expose credential, payload, or provider details in response.
        res.writeHead(400).end();
      }
