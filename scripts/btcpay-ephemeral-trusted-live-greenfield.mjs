@@ -156,6 +156,7 @@ const dbResult=await sql(
 });
 assert.equal(dbResult,"verified","Durable provider invoice journal verification failed");
 return Object.freeze({
+ trustedWorkerVerified:true,
  result:"verified",network:"regtest",realGreenfieldPostCount:posts,
  realGreenfieldInvoiceReadback:true,realProviderInventoryCount:1,
  durablePrePostReservation:true,duplicateRequestRejected:true,
