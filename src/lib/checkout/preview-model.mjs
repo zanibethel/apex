@@ -23,6 +23,7 @@ export function applyDemoCoupon(raw){
   code===""?{accepted:false,code:"",error:"Enter a sample discount code."}:
   {accepted:false,code:"",error:"Demo code not recognized. Try DEMO10."};
 }
+/** @param {{quantities?: Record<string, number>, shipping?: "standard" | "express", coupon?: string}} [options] */
 export function demoTotals({
  quantities={"demo-shirt":1,"demo-bottle":1},
  shipping="standard",coupon="",
