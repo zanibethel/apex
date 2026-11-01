@@ -91,6 +91,8 @@ test("creates synthetic account, exact store scoped key, invoice and re-fetch on
     testWalletConfigured:true,
     storeScopedKeyCreated:true,invoiceCreated:true,invoiceReadVerified:true,
     invoiceStatus:"New",paymentFunded:false,invoiceSettledVerified:false,
+    signedSettlementWebhookReceived:false,duplicateDeliveryIgnored:false,
+    tamperingRejected:false,crossStoreRejected:false,
     prismVerified:false,productionReady:false,
   });
   assert.equal(Object.isFrozen(result),true);
