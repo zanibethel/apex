@@ -5,6 +5,8 @@ import {
  DEMO_ITEMS,DEMO_RATE_CENTS,applyDemoCoupon,demoTotals,
  formatDemoUsd,formatDemoBtc,validateDemoGuest,normalizeDemoQuantity,
 } from "../src/lib/checkout/preview-model.mjs";
+import {US_STATE_OPTIONS,resolveDemoState,filterDemoStates,displayDemoState}
+ from "../src/lib/checkout/us-states.mjs";
 
 const good={
  firstName:"Demo",lastName:"Customer",email:"demo@example.invalid",
@@ -115,4 +117,43 @@ test("public demo release requires explicit server-only demo mode; live never en
  assert.match(source,/Do not send funds or enter real personal information/);
  assert.match(env,/APEX_CHECKOUT_MODE=off/);
  assert.doesNotMatch(env,/APEX_CHECKOUT_MODE=live/);
+});
+
+
+test("state picker includes 50 states plus DC, resolves codes and full names",()=>{
+ assert.equal(US_STATE_OPTIONS.length,51);
+ assert.equal(new Set(US_STATE_OPTIONS.map(option=>option.code)).size,51);
+ assert.deepEqual(resolveDemoState("tx"),{code:"TX",name:"Texas"});
+ assert.deepEqual(resolveDemoState(" Texas "),{code:"TX",name:"Texas"});
+ assert.deepEqual(resolveDemoState("District of Columbia"),{code:"DC",name:"District of Columbia"});
+ assert.equal(resolveDemoState("ZZ"),null);
+ assert.equal(displayDemoState("tx"),"Texas (TX)");
+ assert.equal(displayDemoState("unknown"),"Choose a state");
+});
+
+test("search accepts state name fragments and abbreviations without API calls",()=>{
+ assert.equal(filterDemoStates("").length,51);
+ assert.deepEqual(filterDemoStates("TeX").map(s=>s.code),["TX"]);
+ assert.deepEqual(filterDemoStates("tx").map(s=>s.code),["TX"]);
+ assert.deepEqual(filterDemoStates("new").map(s=>s.code),["NH","NJ","NM","NY"]);
+ assert.equal(filterDemoStates("not-a-state").length,0);
+ assert.deepEqual(validateDemoGuest({...good,state:"Texas"}),{});
+ assert.deepEqual(validateDemoGuest({...good,state:"tx"}),{});
+ assert.match(validateDemoGuest({...good,state:"ZZ"}).state,/valid state/);
+ assert.match(validateDemoGuest({...good,state:"TE"}).state,/valid state/);
+});
+
+test("mobile checkout field size avoids iPhone keyboard-induced zoom without disabling pinch zoom",()=>{
+ const css=readFileSync("src/app/checkout/preview/checkout-preview.css","utf8");
+ const jsx=readFileSync("src/app/checkout/preview/checkout-preview.tsx","utf8");
+ assert.match(css,/\.apex-checkout-field input,[\s\S]*?\.apex-state-search\{[\s\S]*?font-size:16px;/);
+ assert.doesNotMatch(css,/user-scalable\s*:\s*no|maximum-scale\s*:/i);
+ assert.match(jsx,/apex-state-trigger/);
+ assert.match(jsx,/role="dialog" aria-modal="true"/);
+ assert.match(jsx,/type="search"/);
+ assert.match(jsx,/role="listbox"/);
+ assert.match(jsx,/stateChoices\.map/);
+ assert.match(jsx,/event\.key==="Escape"/);
+ assert.match(jsx,/setStateSearch\(event\.target\.value\)/);
+ assert.match(jsx,/role="option" aria-selected/);
 });
