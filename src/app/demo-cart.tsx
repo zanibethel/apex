@@ -31,9 +31,14 @@ export function DemoCartProvider({children,enabled}:{children:ReactNode;enabled:
 
  useEffect(()=>{
   if(!enabled)return;
-  try{setQuantities(parseDemoCart(window.localStorage.getItem(DEMO_CART_STORAGE_KEY)));}
-  catch{setQuantities({...EMPTY_DEMO_CART});}
-  setReady(true);
+  // Read persisted demo-only quantities after hydration to preserve SSR markup.
+  // A cancellable browser frame avoids synchronous setState in effects.
+  const frame=window.requestAnimationFrame(()=>{
+   try{setQuantities(parseDemoCart(window.localStorage.getItem(DEMO_CART_STORAGE_KEY)));}
+   catch{setQuantities({...EMPTY_DEMO_CART});}
+   setReady(true);
+  });
+  return ()=>window.cancelAnimationFrame(frame);
  },[enabled]);
  useEffect(()=>{
   if(!enabled||!ready)return;
