@@ -67,4 +67,9 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-split-activation-gate.sql
       - name: Prove two concurrent administrator reviews cannot approve two rule versions
         run: bash tests/payout-rls/btcpay-concurrent-split-reviews.sh
-
+      - name: Load non-authorizing invoice writer and split-sync hold gate (disposable PostgreSQL)
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_invoice_sync_hold_REVIEW_ONLY.sql
+      - name: Verify invoice gating, stale admin reviews, immutable holds and role denials
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-invoice-sync-hold.sql
+      - name: Prove invoice writer races serialize behind synchronization hold
+        run: bash tests/payout-rls/btcpay-invoice-sync-hold-concurrency.sh
