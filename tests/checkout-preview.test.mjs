@@ -92,7 +92,7 @@ test("preview route cannot initiate orders, requests, wallets, invoice POST, or 
  assert.match(source,/Simulate blockchain confirmation/);
  assert.match(source,/not a scannable Bitcoin QR code/);
  assert.match(source,/noValidate/);
- assert.match(source,/no real personal information/i);
+ assert.match(source,/do not enter real personal information/i);
  assert.match(source,/disabled=\{!total\.items\.length\}/);
  for(const text of [source,route,model]){
   assert.doesNotMatch(text,/\bfetch\s*\(|XMLHttpRequest|sendBeacon|\baxios\b/);
