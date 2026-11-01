@@ -9,6 +9,8 @@ on:
       - "scripts/btcpay-local-doctor.mjs"
       - "tests/btcpay-local-doctor.test.mjs"
       - "scripts/btcpay-ephemeral-*.mjs"
+      - "src/lib/payments/prism-payout-reliability.mjs"
+      - "tests/prism-payout-reliability.test.mjs"
       - "tests/payout-rls/prism-ephemeral-test-store-setting.sql"
       - "scripts/install_prism_regtest.py"
       - "tests/prism-install-safety.test.py"
