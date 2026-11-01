@@ -106,5 +106,6 @@ test("mobile cart is content-sized, and header uses separated borderless touch t
  assert.match(h,/nav\.apex-navigation\{gap:12px\}/);
  assert.match(menu,/<svg aria-hidden="true" viewBox="0 0 24 24"/);
  assert.match(menu,/aria-label="Navigation menu"/);
- assert.match(cart,/No purchases or payments/);
+ const provider=readFileSync("src/app/demo-cart.tsx","utf8");
+ assert.match(provider,/No purchases or payments/);
 });
