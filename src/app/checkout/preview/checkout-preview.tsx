@@ -79,6 +79,10 @@ export function CheckoutPreview(){
   setCouponError("");
  };
  return <main className="container apex-checkout-preview">
+  <div className="apex-checkout-live-test-banner" role="status" aria-label="Checkout simulation mode">
+   <strong>TEST MODE — SIMULATED PAYMENTS ONLY</strong>
+   <span>This public demo cannot accept Bitcoin, place orders, or trigger shipments. Do not send funds or enter real personal information.</span>
+  </div>
   <div className="apex-checkout-topline">
    <Link href="/catalog" className="apex-checkout-back">← Back to catalog</Link>
    <span className="apex-checkout-safe">● SANDBOX EXPERIENCE · NO REAL PAYMENTS</span>
