@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {useDemoCart} from "@/app/demo-cart";
 import {useEffect,useRef,useState, type FormEvent} from "react";
 import {
  DEMO_ITEMS,DEMO_SHIPPING,DEMO_RATE_CENTS,applyDemoCoupon,
@@ -37,9 +38,8 @@ export function CheckoutPreview(){
  const [status,setStatus]=useState<PaymentState>("awaiting");
  const [guest,setGuest]=useState<Guest>(INITIAL_GUEST);
  const [errors,setErrors]=useState<Partial<Record<GuestKey,string>>>({});
- const [quantities,setQuantities]=useState<Record<string,number>>({
-  "demo-shirt":1,"demo-bottle":1,
- });
+ const cart=useDemoCart();
+ const {quantities}=cart;
  const [shipping,setShipping]=useState<"standard"|"express">("standard");
  const [couponInput,setCouponInput]=useState("");
  const [coupon,setCoupon]=useState("");
@@ -85,9 +85,7 @@ export function CheckoutPreview(){
   closeStatePicker();
  };
  const changeQuantity=(id:string,direction:number)=>{
-  setQuantities(current=>({
-    ...current,[id]:normalizeDemoQuantity((current[id]??0)+direction),
-  }));
+  cart.setQuantity(id,normalizeDemoQuantity((quantities[id]??0)+direction));
  };
  const applyCoupon=()=>{
   const result=applyDemoCoupon(couponInput);
@@ -108,7 +106,7 @@ export function CheckoutPreview(){
   setStatus("awaiting");
   setGuest(INITIAL_GUEST);
   setErrors({});
-  setQuantities({"demo-shirt":1,"demo-bottle":1});
+  cart.clear();
   setShipping("standard");
   setCoupon("");
   setCouponInput("");
@@ -150,6 +148,7 @@ export function CheckoutPreview(){
        <span className="apex-checkout-mini">No account required</span>
       </div>
       <p className="apex-checkout-support">The form is prefilled with fictional data so you can test the flow immediately. Please do not enter real personal information.</p>
+      {!total.items.length&&<div className="apex-checkout-empty-cart" role="status"><strong>Nothing in your demo cart yet.</strong><span>Pick a fictional sample item before continuing.</span><Link href="/catalog">Browse sample items →</Link></div>}
       <div className="apex-checkout-fields">
        {FIELDS.map(field=>field.name==="state"?
         <div className="apex-checkout-field apex-checkout-state" key="state">
