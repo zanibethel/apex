@@ -11,7 +11,7 @@ import {createPreauthorizedRegtestInvoice} from
 
 const execAsync=promisify(execFile);
 const safeId=/^[A-Za-z0-9_-]{1,100}$/;
-const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const queries=Object.freeze({
   reserve:fileURLToPath(new URL("../tests/payout-rls/btcpay-worker-reserve.sql",import.meta.url)),
