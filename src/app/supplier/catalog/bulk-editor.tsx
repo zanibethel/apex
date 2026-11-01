@@ -16,7 +16,7 @@ import {privateBulkReadiness} from "@/lib/catalog/private-bulk-readiness.mjs";
 import {supplierAdminFeedback} from "@/lib/catalog/supplier-admin-feedback.mjs";
 import {bulkSetupHref} from "@/lib/catalog/bulk-setup-targets.mjs";
 import {bulkViewAfterEdit,selectEditedBulkRow} from "@/lib/catalog/bulk-edit-visibility.mjs";
-import {bulkRowsRequiringSave,reconcileBulkSaveBatch,bulkSaveProgress} from "@/lib/catalog/bulk-save-retry.mjs";
+import {bulkRowsRequiringSave,reconcileBulkSaveBatch,bulkSaveProgress,bulkUnfinishedSaveKeys} from "@/lib/catalog/bulk-save-retry.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -41,6 +41,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [showOfferTiles,setShowOfferTiles]=useState(true);
  const [productSearch,setProductSearch]=useState("");
  const [viewFilter,setViewFilter]=useState("all");
+ const [saveRetryKeys,setSaveRetryKeys]=useState<string[]>([]);
  const router=useRouter();
  const savedMedia=new Map(media.map(m=>[m.productId,m]));
  const [selected,setSelected]=useState<string[]>([]);
@@ -54,7 +55,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const busy=pending||publishPending;
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const newlyRequested=new Set(publishResults.filter(item=>item.ok).map(item=>item.id));
- const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested);
+ const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested,new Set(saveRetryKeys));
  const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key));
  const pendingSaveRows:BulkEditRow[]=bulkRowsRequiringSave(selectedRows,lastSave);
  const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
@@ -85,6 +86,12 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     }catch{stopped=true;break;}
    }
    const progress=bulkSaveProgress(pendingRows,all,stopped);
+   const unfinished=bulkUnfinishedSaveKeys(pendingRows,all);
+   setSaveRetryKeys(unfinished);
+   // If a batch partially fails, immediately show only the rows that need
+   // correction/retry. Selection survives for a later grouped preview.
+   if(unfinished.length){setProductSearch("");setViewFilter("save_retries");}
+   else if(viewFilter==="save_retries")setViewFilter("all");
    setResult({ok:progress.ok,message:progress.message,results:all});
    setLastSave(prev=>({...prev,...Object.fromEntries(all.map(r=>[
     r.key,{ok:r.ok,message:r.message}
@@ -123,7 +130,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  }
  function loadFromCsv(imported:BulkEditRow[]){
   if(busy)return;
-  setProductSearch("");setViewFilter("all");
+  setProductSearch("");setViewFilter("all");setSaveRetryKeys([]);
   const incoming=new Set(imported.map(r=>r.key));
   // Put new or updated CSV cards FIRST, so an upload does not disappear
   // beneath up to 100 existing products on narrow/mobile screens.
@@ -182,6 +189,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
      <option value="ready">Ready to request</option>
      <option value="requested">Publication requested</option>
      <option value="needs_attention">Needs setup / held</option>
+     {saveRetryKeys.length>0&&<option value="save_retries">Fix / retry saves ({saveRetryKeys.length})</option>}
     </select>
    </label>
   </div>
@@ -369,5 +377,14 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   {publicationMessage&&<p role="status" className="apex-bulk-result">{publicationMessage}</p>}
   {pendingSaveRows.length>20&&<p className="notice">Pending changes will be saved in sequential batches of 20.</p>}
   {result.message&&<p role="status" className="apex-bulk-result">{result.message}</p>}
+  {saveRetryKeys.length>0&&<div className="notice apex-bulk-retry-hint" role="status">
+   {saveRetryKeys.length} product {saveRetryKeys.length===1?"change still needs":"changes still need"} attention.
+   {viewFilter!=="save_retries"&&<button type="button" className="button secondary"
+    disabled={busy} onClick={()=>{setProductSearch("");setViewFilter("save_retries");}}>
+    Show unfinished
+   </button>}
+   <a href="#bulk-product-cards">Jump to product cards</a>.
+   Return to All products to preview the full saved selection.
+  </div>}
  </section>;
 }

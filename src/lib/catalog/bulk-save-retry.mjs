@@ -33,3 +33,15 @@ export function bulkSaveProgress(submittedRows,results,stopped=false){
  if(failed||unfinished)message+=" Correct remaining rows and choose Save selected again. Confirmed rows will not be resubmitted.";
  return {ok:complete,message,saved,failed,unfinished};
 }
+
+
+// Exact keys from the most recent explicit save action that still need
+// correction or retry, including rows omitted by a partial network response.
+// A successful result requires both ok=true and the persisted product ID.
+export function bulkUnfinishedSaveKeys(submittedRows,outcomes){
+ const successful=new Set(
+  outcomes.filter(item=>item?.ok===true&&typeof item.id==="string"&&item.id.length>0)
+   .map(item=>item.key)
+ );
+ return submittedRows.filter(row=>!successful.has(row.key)).map(row=>row.key);
+}

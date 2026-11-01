@@ -898,3 +898,15 @@ body { background:#07080b; }
 .apex-bulk-media-target:target{
  outline:2px solid #f5c46c;outline-offset:4px;
 }
+
+/* Recovery status for a partial private supplier bulk save. Never overlays
+   product controls or increases the fixed mobile action bar height. */
+.apex-bulk-retry-hint{
+ display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+ padding:10px 0;line-height:1.5;font-size:12px;
+}
+.apex-bulk-retry-hint .button{
+ min-height:44px;font-size:12px;padding:8px 12px;margin:0;
+}
+.apex-bulk-retry-hint a{text-decoration:underline;text-underline-offset:3px}
+#bulk-product-cards{scroll-margin-top:80px}
