@@ -36,7 +36,7 @@ export function CheckoutPreview(){
  const [status,setStatus]=useState<PaymentState>("awaiting");
  const [guest,setGuest]=useState<Guest>(INITIAL_GUEST);
  const [errors,setErrors]=useState<Partial<Record<GuestKey,string>>>({});
- const [quantities,setQuantities]=useState<Record<string,number>>({
+ const [quantities,setQuantities]=useState({
   "demo-shirt":1,"demo-bottle":1,
  });
  const [shipping,setShipping]=useState<"standard"|"express">("standard");
