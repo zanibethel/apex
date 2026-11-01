@@ -63,7 +63,7 @@ export function createEphemeralPgBridge({
       throw Error("Untrusted or uninitialized synthetic event");
     // Both caller and DB use exact integer satoshi snapshot; no JS floats.
     const amount=String(invoice.amount);
-    if(!/^(0|[1-9]\\d{0,7})(?:\\.\\d{1,8})?$/.test(amount))
+    if(!/^(0|[1-9]\d{0,7})(?:\.\d{1,8})?$/.test(amount))
       throw Error("Invalid BTC invoice amount");
     const [whole,fract=""]=amount.split(".");
     const sats=BigInt(whole)*100000000n+BigInt(fract.padEnd(8,"0"));
