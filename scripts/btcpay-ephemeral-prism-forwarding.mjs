@@ -117,7 +117,7 @@ function persistSettings(store,settings) {
   if(!id.test(store))throw Error("Bad synthetic store ID");
   const path="tests/payout-rls/prism-ephemeral-test-store-setting.sql";
   const r=invoke("psql",[
-    "-X","-q","-h","127.0.0.1","-p","39372","-U","postgres",
+    "-X","-q","-At","-h","127.0.0.1","-p","39372","-U","postgres",
     "-d","btcpayserver","-v","ON_ERROR_STOP=1",
     "-v","store_id="+store,"-v","settings_json="+JSON.stringify(settings),
     "-f",join(process.env.GITHUB_WORKSPACE,path),
