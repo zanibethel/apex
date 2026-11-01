@@ -35,7 +35,7 @@ async function endpoint(path, { method="GET", json, auth, fetchImpl=fetch }={}) 
 
 export async function runEphemeralGreenfield({
   testOnly, network, fetchImpl=fetch, random=()=>randomBytes(18).toString("hex"),
-  payInvoice, verifyWebhook=false,
+  payInvoice, verifyWebhook=false, durableJournal,
   sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),
 }={}) {
   if(testOnly!==true||network!=="regtest") {
@@ -96,6 +96,11 @@ export async function runEphemeralGreenfield({
   const orderId="APEX-REGTEST-001";
   if(verifyWebhook && typeof payInvoice!=="function")
     throw Error("Signed webhook test requires real regtest funding");
+  if(durableJournal && (!verifyWebhook ||
+    typeof durableJournal.initialize!=="function" ||
+    typeof durableJournal.recordVerified!=="function" ||
+    typeof durableJournal.assertSettledOnce!=="function"))
+    throw Error("Durable regtest journal requires signed webhook verification");
   let receiver,secret,hookId;
   if(verifyWebhook) {
     secret=randomBytes(24).toString("hex");
@@ -104,6 +109,7 @@ export async function runEphemeralGreenfield({
       secret,orderId,amountSats:10000n,
       readInvoice:id=>request("/api/v1/stores/"+store.id+
         "/invoices/"+id,{auth:token}),
+      recordVerified:durableJournal?.recordVerified,
     });
     receiver=await journal.begin(process.env.APEX_BTCPAY_WEBHOOK_PORT==="48173"?48173:0);
   }
@@ -128,6 +134,9 @@ export async function runEphemeralGreenfield({
   if(typeof invoice?.id!=="string"||!safeId.test(invoice.id))
     throw Error("Synthetic invoice was not created");
   receiver?.setInvoiceId(invoice.id);
+  if(durableJournal)await durableJournal.initialize({
+    storeId:store.id,invoiceId:invoice.id,orderId,amountSats:10000n,
+  });
   const observed=await request("/api/v1/stores/"+store.id+"/invoices/"+invoice.id,{
     auth:token,
   });
@@ -201,6 +210,7 @@ export async function runEphemeralGreenfield({
         ",deliveries="+deliveries);
     }
     const result=await receiver.replayAssertions();
+    if(durableJournal)await durableJournal.assertSettledOnce();
     webhookProof={
       signedSettlementWebhookReceived:true,
       duplicateDeliveryIgnored:result.duplicateIgnored,
@@ -214,7 +224,9 @@ export async function runEphemeralGreenfield({
     storeScopedKeyCreated:true,invoiceCreated:true,invoiceReadVerified:true,
     invoiceStatus:observed.status,
     paymentFunded:funded,invoiceSettledVerified:settled,
-    ...webhookProof,prismVerified:false,productionReady:false,
+    ...webhookProof,
+    ...(durableJournal ? {durableReceiptJournalVerified:true} : {}),
+    prismVerified:false,productionReady:false,
   });
   } finally {
     if(receiver)await receiver.close();
@@ -225,7 +237,11 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
   const pay=process.env.APEX_BTCPAY_PAY_REGTEST==="true"
     ?import("./btcpay-ephemeral-regtest-payment.mjs").then(m=>m.fundEphemeralInvoice)
     :Promise.resolve(null);
-  pay.then(fund=>runEphemeralGreenfield({
+  const durable=process.env.APEX_BTCPAY_DURABLE_TEST_JOURNAL==="true"
+    ?import("./btcpay-ephemeral-pg-journal.mjs").then(m=>
+      m.createEphemeralPgBridge({testOnly:true,network:"regtest"}))
+    :Promise.resolve(null);
+  Promise.all([pay,durable]).then(([fund,durableJournal])=>runEphemeralGreenfield({
     testOnly:process.env.APEX_BTCPAY_EPHEMERAL==="true",
     network:process.env.APEX_BTCPAY_TEST_NETWORK,
     ...(fund?{payInvoice:payment=>fund({
@@ -233,6 +249,7 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
       upstreamRoot:process.env.APEX_BTCPAY_UPSTREAM_ROOT,
     })}:{}),
     verifyWebhook:process.env.APEX_BTCPAY_VERIFY_WEBHOOK==="true",
+    durableJournal,
   })).then(out=>process.stdout.write(JSON.stringify(out,null,2)+"\\n"))
     .catch(e=>{process.stderr.write(e.message+"\\n");process.exitCode=1;});
 }

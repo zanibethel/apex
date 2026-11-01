@@ -18,13 +18,14 @@ export function btcSats(value){
 }
 
 export function createEphemeralWebhookJournal({
- testOnly,network,storeId,secret,orderId,amountSats,readInvoice,
+ testOnly,network,storeId,secret,orderId,amountSats,readInvoice,recordVerified,
 }){
  if(testOnly!==true||network!=="regtest"||typeof storeId!=="string"||
     !safeId.test(storeId)||typeof secret!=="string"||secret.length<16||
     typeof orderId!=="string"||!safeId.test(orderId)||
     typeof amountSats!=="bigint"||amountSats<1000n||
-    typeof readInvoice!=="function"){
+    typeof readInvoice!=="function"||
+    (recordVerified!==undefined && typeof recordVerified!=="function")){
    throw Error("Webhook receiver requires explicit synthetic regtest order context");
  }
  let expectedInvoiceId;
@@ -45,6 +46,12 @@ export function createEphemeralWebhookJournal({
      if(already.hash!==hash || already.invoiceId!==event.invoiceId ||
         already.eventType!==event.type)
        throw Error("Conflicting webhook delivery replay");
+     // Confirm identical replays against the durable database too.
+     if(recordVerified){
+       const invoice=await readInvoice(event.invoiceId);
+       const saved=await recordVerified({event,invoice,payloadSha256:hash});
+       if(saved!=="duplicate")throw Error("Durable journal failed to deduplicate");
+     }
      return {kind:"duplicate",status:200};
    }
    if(expectedInvoiceId===undefined || event.invoiceId!==expectedInvoiceId)
@@ -61,6 +68,13 @@ export function createEphemeralWebhookJournal({
      throw Error("BTCPay invoice status requires manual review");
    if(event.type==="InvoiceSettled" && invoice.status!=="Settled")
      throw Error("Webhook settlement event is not confirmed by Greenfield");
+   // Commit to PostgreSQL before acknowledging the signed HTTP delivery.
+   // A database failure must propagate as non-2xx for a later retry.
+   if(recordVerified){
+     const persisted=await recordVerified({event,invoice,payloadSha256:hash});
+     if(persisted!=="accepted"&&persisted!=="duplicate")
+       throw Error("Durable event was not recorded");
+   }
    // Mark as observed only after independent authenticated re-fetch.
    receipts.set(event.deliveryId,{
      hash,invoiceId:event.invoiceId,eventType:event.type,

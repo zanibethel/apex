@@ -9,6 +9,8 @@ on:
       - "scripts/btcpay-local-doctor.mjs"
       - "tests/btcpay-local-doctor.test.mjs"
       - "scripts/btcpay-ephemeral-*.mjs"
+      - "database/sql/apex_btcpay_*_REVIEW_ONLY.sql"
+      - "tests/payout-rls/btcpay-live-journal-*.sql"
       - "tests/btcpay-ephemeral-*.test.mjs"
       - "docs/BTCPAY_EPHEMERAL_SIGNED_WEBHOOK_20261101.md"
       - "docs/BTCPAY_LOCAL_FIRST_STRATEGY_20261031.md"
@@ -25,7 +27,23 @@ jobs:
   upstream-local-regtest:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: apex_journal_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d apex_journal_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 12
     env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: apex_journal_ci
       UPSTREAM_REF: 381ad1f0ac32fb011163239fcacdde1e6f7538b9
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
@@ -52,6 +70,14 @@ jobs:
           test "$(git -C "${RUNNER_TEMP}/btcpayserver" rev-parse HEAD)" = "${UPSTREAM_REF}"
       - name: Fail closed unless upstream dev configuration uses loopback and Bitcoin regtest
         run: node scripts/btcpay-local-doctor.mjs "${RUNNER_TEMP}/btcpayserver"
+      - name: Initialize synthetic Apex test receipt and status schema in disposable PostgreSQL
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/bootstrap.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261029233701_apex_initial_catalog_readonly.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261030222500_payout_reporting_readonly.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_receipt_journal_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_order_status_REVIEW_ONLY.sql
       - name: Start upstream Bitcoin Core, NBXplorer and PostgreSQL (regtest only)
         working-directory: ${{ runner.temp }}/btcpayserver/BTCPayServer.Tests
         run: |
@@ -110,6 +136,7 @@ jobs:
           APEX_BTCPAY_TEST_NETWORK: regtest
           APEX_BTCPAY_PAY_REGTEST: "true"
           APEX_BTCPAY_VERIFY_WEBHOOK: "true"
+          APEX_BTCPAY_DURABLE_TEST_JOURNAL: "true"
           APEX_BTCPAY_WEBHOOK_PORT: "48173"
           APEX_BTCPAY_UPSTREAM_ROOT: ${{ runner.temp }}/btcpayserver
         run: node scripts/btcpay-ephemeral-greenfield.mjs
