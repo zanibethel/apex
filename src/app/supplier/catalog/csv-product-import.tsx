@@ -5,9 +5,10 @@ import {draftSkuFromUuid} from "@/lib/catalog/sku-format.mjs";
 import {privateProductCsvExportBatches} from "@/lib/catalog/private-csv-export-batches.mjs";
 import {csvEditableOptionalText,csvEditableCategoryId} from "@/lib/catalog/csv-optional-field-changes.mjs";
 import {csvExistingCardLookup} from "@/lib/catalog/csv-existing-card-lookup.mjs";
+import {matchRepeatedBlankSkuCard} from "@/lib/catalog/csv-repeat-blank-sku.mjs";
 import type {BulkEditRow} from "./bulk-editor";
 type Category={id:string;name:string};
-type ImportRow={key:string;line:number;row:BulkEditRow;issue?:string};
+type ImportRow={key:string;line:number;row:BulkEditRow;issue?:string;originalBlankSku?:boolean};
 function saveCsv(body:string,filename:string){
  const url=URL.createObjectURL(new Blob(["\uFEFF",body],{type:"text/csv;charset=utf-8"}));
  const a=document.createElement("a");a.href=url;a.download=filename;
@@ -21,6 +22,8 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
  const [message,setMessage]=useState("");
  const [fileName,setFileName]=useState("");
  async function upload(file?:File){
+  const previousStaged=staged;
+  const previousFileName=fileName;
   setStaged([]);setErrors([]);setMessage("");setFileName(file?.name??"");
   if(!file)return;
   if(!file.name.toLowerCase().endsWith(".csv")||file.size<1||file.size>256000){
@@ -38,11 +41,16 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    const sku=(item.sku||"").trim().toUpperCase();
    const explicit=item.product_id?byId.get(item.product_id.toLowerCase()):undefined;
    const matched=sku?bySku.get(sku):undefined;
-   const target=explicit||matched;
+   const reimportedBlank=!sku&&!item.product_id
+    ?matchRepeatedBlankSkuCard(previousFileName,file.name,previousStaged,rows,item.line,item.title)
+    :undefined;
+   const target=explicit||matched||reimportedBlank;
    let issue:string|undefined;
    if(item.product_id&&!explicit)issue="Product ID does not belong to this store.";
    if(explicit&&matched&&explicit.key!==matched.key)issue="Product ID and SKU identify different products.";
-   if(sku&&ambiguousSkus.has(sku))issue="This SKU matches multiple editor cards. Resolve duplicates before importing.";
+   if((sku&&ambiguousSkus.has(sku))||
+      (reimportedBlank&&ambiguousSkus.has(reimportedBlank.sku.toUpperCase())))
+    issue="This SKU matches multiple editor cards. Resolve duplicates before importing.";
    const categoryName=(item.category||"").trim().toLowerCase();
    const categoryId=csvEditableCategoryId(item,target?.categoryId,byCategory);
    if(categoryName&&!categoryId)issue="Unknown category. Add it first.";
@@ -60,7 +68,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    };
    if(row.linkedSource&&item.source_cost&&item.source_cost!==target?.sourceCost)
     issue="Linked source cost must be edited in Source review.";
-   return {key:row.key,line:item.line,row,issue};
+   return {key:row.key,line:item.line,row,issue,originalBlankSku:!sku&&!item.product_id};
   });
   setStaged(mapped);
   const valid=mapped.filter(r=>!r.issue);
@@ -106,7 +114,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    Your {exportBatches.reduce((n:number,b:typeof exportBatches[number])=>n+b.rows.length,0)} saved product cards are split into {exportBatches.length} CSV files of up to 100 rows each. Download each file separately; every file can be re-uploaded using the existing importer.
   </p>}
   {exportBatches.length>0&&<p className="notice">Exports use the current editor values, including any unsaved edits, for products with saved IDs. Save your changes before exporting if you need the exported file to match your stored catalog.</p>}
-  <p className="notice"><strong>Matching:</strong> product_id or SKU updates an existing saved or unsaved editor card; otherwise a new draft is created. Re-uploading the same file updates staged cards rather than duplicating them. Category uses the category name (GetSwole is a category, not a supplier). Blank description, compare-at price or category clears that field when its CSV column is included. Omitted columns preserve existing values. Blank source cost preserves the existing cost. Images and inventory remain separate.</p>
+  <p className="notice"><strong>Matching:</strong> product_id or SKU updates an existing saved or unsaved editor card; otherwise a new draft is created. Re-uploading the same file updates staged cards, including blank-SKU rows, instead of duplicating them. Category uses the category name (GetSwole is a category, not a supplier). Blank description, compare-at price or category clears that field when its CSV column is included. Omitted columns preserve existing values. Blank source cost preserves the existing cost. Images and inventory remain separate.</p>
   <label className="apex-csv-upload">Select CSV file
    <input type="file" accept=".csv,text/csv" disabled={disabled}
     onChange={e=>{const file=e.target.files?.[0];e.target.value="";void upload(file);}}/>
