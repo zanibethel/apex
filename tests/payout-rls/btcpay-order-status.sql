@@ -1,9 +1,19 @@
 -- Disposable PostgreSQL only. Depends on PR #107 receipt fixture + review-only order SQL.
+-- The PR #107 beta fixture intentionally uses testnet. Retain it to assert
+-- rejection, and create a distinct regtest invoice for late-payment tests.
+insert into public.btcpay_test_invoices(
+  apex_store_id,btcpay_store_id,invoice_id,order_reference,
+  expected_amount_cents,bitcoin_network
+) values (
+  '52000000-0000-0000-0000-000000000002','test-store-beta',
+  'invoice-beta-regtest','order-beta-regtest',1500,'regtest'
+);
 insert into public.btcpay_test_order_status(
   btcpay_store_id,invoice_id,order_reference,expected_amount_sats
 ) values
   ('test-store-alpha','invoice-alpha','order-alpha',10000),
-  ('test-store-beta','invoice-beta','order-beta',15000);
+  ('test-store-beta','invoice-beta','order-beta',15000),
+  ('test-store-beta','invoice-beta-regtest','order-beta-regtest',15000);
 
 -- A new authentic delivery updates the admin-visible status transactionally.
 do $$
@@ -69,6 +79,16 @@ begin
   exception when sqlstate '22023' then rejected:=true; end;
   if not rejected then raise exception 'wrong order ref accepted'; end if;
 
+  -- An invoice attached to a testnet-labeled original snapshot is
+  -- never eligible for this regtest-only write path.
+  rejected:=false;
+  begin
+    perform apex_test_internal.record_verified_btcpay_event(
+      'test-store-beta','invoice-beta','testnet-snapshot','InvoiceSettled',
+      repeat('a',64),'order-beta',15000,'Settled','None','regtest');
+  exception when sqlstate '22023' then rejected:=true; end;
+  if not rejected then raise exception 'testnet-labeled source invoice accepted'; end if;
+
   rejected:=false;
   begin
     perform apex_test_internal.record_verified_btcpay_event(
@@ -125,10 +145,10 @@ begin
    then raise exception 'manual review was cleared by a later event'; end if;
 
  perform apex_test_internal.record_verified_btcpay_event(
-    'test-store-beta','invoice-beta','beta-late','InvoiceExpired',
-    repeat('6',64),'order-beta',15000,'Expired','PaidLate','regtest');
+    'test-store-beta','invoice-beta-regtest','beta-late','InvoiceExpired',
+    repeat('6',64),'order-beta-regtest',15000,'Expired','PaidLate','regtest');
  if (select status from public.btcpay_test_order_status
-     where invoice_id='invoice-beta') <> 'manual_review'
+     where invoice_id='invoice-beta-regtest') <> 'manual_review'
    then raise exception 'late payment was credited instead of reviewed'; end if;
 end $$;
 
@@ -146,7 +166,7 @@ begin
      where invoice_id='invoice-alpha') <>5
    then raise exception 'alpha version drift'; end if;
  if (select status_revision from public.btcpay_test_order_status
-     where invoice_id='invoice-beta') <>1
+     where invoice_id='invoice-beta-regtest') <>1
    then raise exception 'beta version drift'; end if;
  if (select count(*) from public.btcpay_test_order_status_history
       where display_status='settled_reported')<>2
@@ -198,7 +218,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
 do $$
 begin
- if (select count(*) from public.btcpay_test_order_status)<>2 or
+ if (select count(*) from public.btcpay_test_order_status)<>3 or
     (select count(*) from public.btcpay_test_order_status_history)<>6
  then raise exception 'admin order status visibility denied'; end if;
 end $$;
