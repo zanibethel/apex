@@ -61,3 +61,10 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/non-draft-immutable.sql
       - name: Verify concurrent draft versions
         run: bash tests/payout-rls/concurrent-versions.sh
+      - name: Load review-only admin activation guard (disposable PostgreSQL)
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_split_activation_REVIEW_ONLY.sql
+      - name: Verify admin approvals, pending invoice safety, historical immutability and denials
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-split-activation-gate.sql
+      - name: Prove two concurrent administrator reviews cannot approve two rule versions
+        run: bash tests/payout-rls/btcpay-concurrent-split-reviews.sh
+
