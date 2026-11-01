@@ -1,0 +1,108 @@
+name: BTCPay ephemeral upstream regtest readiness
+
+# Runs only synthetic BTC regtest in a disposable GitHub-hosted runner.
+# No GitHub repository secrets, production VPS, customer wallets or real coins.
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/btcpay-upstream-regtest.yml"
+      - "scripts/btcpay-local-doctor.mjs"
+      - "tests/btcpay-local-doctor.test.mjs"
+      - "docs/BTCPAY_LOCAL_FIRST_STRATEGY_20261031.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: btcpay-ephemeral-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upstream-local-regtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      UPSTREAM_REF: 381ad1f0ac32fb011163239fcacdde1e6f7538b9
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      ASPNETCORE_ENVIRONMENT: Development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Check synthetic environment prerequisites
+        run: |
+          node --version
+          dotnet --version
+          docker compose version
+      - name: Fetch a reviewed, pinned official BTCPay source revision
+        run: |
+          git init "${RUNNER_TEMP}/btcpayserver"
+          git -C "${RUNNER_TEMP}/btcpayserver" remote add origin https://github.com/btcpayserver/btcpayserver.git
+          git -C "${RUNNER_TEMP}/btcpayserver" fetch --depth 1 origin "${UPSTREAM_REF}"
+          git -C "${RUNNER_TEMP}/btcpayserver" checkout --detach FETCH_HEAD
+          test "$(git -C "${RUNNER_TEMP}/btcpayserver" rev-parse HEAD)" = "${UPSTREAM_REF}"
+      - name: Fail closed unless upstream dev configuration uses loopback and Bitcoin regtest
+        run: node scripts/btcpay-local-doctor.mjs "${RUNNER_TEMP}/btcpayserver"
+      - name: Start upstream Bitcoin Core, NBXplorer and PostgreSQL (regtest only)
+        working-directory: ${{ runner.temp }}/btcpayserver/BTCPayServer.Tests
+        run: |
+          docker compose up -d bitcoind nbxplorer postgres
+      - name: Independently verify actual Bitcoin Core reports regtest
+        working-directory: ${{ runner.temp }}/btcpayserver/BTCPayServer.Tests
+        run: |
+          set -euo pipefail
+          verified=0
+          for i in $(seq 1 90); do
+            if docker compose exec -T bitcoind bitcoin-cli -datadir=/data -regtest getblockchaininfo >"${RUNNER_TEMP}/chain.json" 2>/dev/null; then
+              if jq -e '.chain == "regtest"' "${RUNNER_TEMP}/chain.json" >/dev/null; then
+                verified=1
+                break
+              else
+                echo "::error::Connected chain was not regtest"
+                exit 1
+              fi
+            fi
+            sleep 2
+          done
+          test "$verified" = "1" || { echo "::error::Bitcoin regtest node did not become ready"; exit 1; }
+          echo "Verified Bitcoin Core chain: regtest; no real funds"
+      - name: Start official BTCPay Server on loopback-only development profile
+        working-directory: ${{ runner.temp }}/btcpayserver
+        run: |
+          set -euo pipefail
+          # No bind to public network, no API tokens or any production environment variables.
+          nohup dotnet run --project BTCPayServer/BTCPayServer.csproj --launch-profile Bitcoin >"${RUNNER_TEMP}/btcpay-boot.log" 2>&1 &
+          echo "$!" >"${RUNNER_TEMP}/btcpay-boot.pid"
+      - name: Check actual BTCPay server responds to HTTP on local runner only
+        run: |
+          set -euo pipefail
+          ready=0
+          for i in $(seq 1 120); do
+            if curl --silent --show-error --location --max-redirs 2 --output /dev/null --write-out '%{http_code}' --max-time 3 http://127.0.0.1:14142/ 2>/dev/null | grep -Eq '^(200|302|303)$'; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$(cat "${RUNNER_TEMP}/btcpay-boot.pid")" 2>/dev/null; then
+              echo "::error::BTCPay development process exited before HTTP readiness"
+              exit 1
+            fi
+            sleep 5
+          done
+          test "$ready" = "1" || { echo "::error::BTCPay did not become ready at localhost:14142"; exit 1; }
+          echo "Official BTCPay localhost startup verified on ephemeral regtest runner"
+          echo "Not tested: Greenfield invoice, signed webhook, Prism plugin, actual split forwarding"
+      - name: Stop ephemeral test processes and destroy disposable Bitcoin data
+        if: always()
+        working-directory: ${{ runner.temp }}/btcpayserver/BTCPayServer.Tests
+        run: |
+          if [ -f "${RUNNER_TEMP}/btcpay-boot.pid" ]; then
+            kill "$(cat "${RUNNER_TEMP}/btcpay-boot.pid")" 2>/dev/null || true
+          fi
+          docker compose down --volumes --remove-orphans || true
+          rm -f "${RUNNER_TEMP}/chain.json" "${RUNNER_TEMP}/btcpay-boot.log" "${RUNNER_TEMP}/btcpay-boot.pid"
