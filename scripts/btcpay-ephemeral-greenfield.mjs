@@ -57,6 +57,20 @@ export async function runEphemeralGreenfield({
   });
   if(typeof store?.id!=="string"||!safeId.test(store.id))
     throw Error("Synthetic BTCPay store creation was not verified");
+  // Disposable regtest-only wallet. The API returns a mnemonic; keep it
+  // strictly in-process and NEVER print, upload, persist, or reuse it.
+  const wallet=await request("/api/v1/stores/"+store.id+
+    "/payment-methods/BTC-CHAIN/wallet/generate",{
+    method:"POST",auth:basic,json:{
+      label:"Disposable CI Regtest Wallet",savePrivateKeys:false,
+      scriptPubKeyType:"Segwit",
+    },
+  });
+  if(wallet?.paymentMethodId!=="BTC-CHAIN" ||
+     typeof wallet?.config?.derivationScheme!=="string" ||
+     wallet.config.derivationScheme.length<20) {
+    throw Error("Synthetic regtest on-chain wallet configuration was not verified");
+  }
   const permissions=[
     "btcpay.store.canviewstoresettings:"+store.id,
     "btcpay.store.cancreateinvoice:"+store.id,
@@ -94,6 +108,7 @@ export async function runEphemeralGreenfield({
   }
   return Object.freeze({
     chain:"regtest",accountCreated:true,storeCreated:true,
+    testWalletConfigured:true,
     storeScopedKeyCreated:true,invoiceCreated:true,invoiceReadVerified:true,
     invoiceStatus:observed.status,
     paymentFunded:false,prismVerified:false,productionReady:false,
