@@ -247,6 +247,6 @@
 }
 
 /* Only a narrow, crimson focus indicator on the actual interactive control.
-   Prevent a gold system tap flash on Safari; keyboard focus stays visible. */
+   Avoid a mismatched system tap flash on Safari; keyboard focus stays visible. */
 .apex-checkout-preview :is(button,input,a){-webkit-tap-highlight-color:rgba(237,75,119,.12)}
 .apex-checkout-preview .apex-state-trigger{-webkit-appearance:none;appearance:none}
