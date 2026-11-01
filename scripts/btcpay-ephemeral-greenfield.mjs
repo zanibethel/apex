@@ -268,6 +268,8 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
       afterSettlement:async context=>{
         const proof=prismForwarding?await prismForwarding(context):null;
         const workerProof=trustedWorker?await trustedWorker(context):null;
+        if(trustedWorker&&workerProof?.trustedWorkerVerified!==true)
+          throw Error("Real trusted regtest worker did not verify");
         return {
           ...(proof||{}),
           ...(workerProof?.trustedWorkerVerified===true?
