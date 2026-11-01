@@ -4,6 +4,7 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'tests/payout-rls/**'
+      - 'database/sql/apex_btcpay_*_REVIEW_ONLY.sql'
       - '.github/workflows/payout-rls.yml'
   workflow_dispatch:
 jobs:
@@ -42,6 +43,12 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_receipt_journal_REVIEW_ONLY.sql
       - name: Verify BTCPay replay, append-only integrity and RLS
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-receipt-journal.sql
+      - name: Apply reviewed BTCPay test order status projection in disposable PostgreSQL
+        run: psql -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_order_status_REVIEW_ONLY.sql
+      - name: Verify trusted order matching, duplicate deliveries, status progression, and RLS
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-order-status.sql
+      - name: Prove transactionally serialized concurrent duplicate webhooks
+        run: bash tests/payout-rls/btcpay-order-status-concurrency.sh
       - name: Verify atomic draft saving and denial cases
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/draft-rpc.sql
       - name: Verify recipient directory authorization
