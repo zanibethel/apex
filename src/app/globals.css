@@ -910,3 +910,19 @@ body { background:#07080b; }
 }
 .apex-bulk-retry-hint a{text-decoration:underline;text-underline-offset:3px}
 #bulk-product-cards{scroll-margin-top:80px}
+
+/* Authenticated private offer preview: small, touch-safe paging links.
+   Pagination does not alter the existing 50-item publication request limit. */
+.apex-bulk-preview-pagination{
+ display:flex;justify-content:space-between;align-items:center;
+ flex-wrap:wrap;gap:12px;margin:14px 0 20px;
+ padding:12px 0;border-bottom:1px solid rgba(255,255,255,.15);
+ font-size:13px;color:#dbd4dd;
+}
+.apex-bulk-preview-pagination-actions{display:flex;flex-wrap:wrap;gap:8px}
+.apex-bulk-preview-pagination-actions .button{min-height:44px}
+@media(max-width:500px){
+ .apex-bulk-preview-pagination{align-items:flex-start}
+ .apex-bulk-preview-pagination-actions{width:100%}
+ .apex-bulk-preview-pagination-actions .button{flex:1;text-align:center}
+}
