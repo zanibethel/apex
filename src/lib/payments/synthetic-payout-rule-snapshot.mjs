@@ -51,7 +51,6 @@ export function snapshotSyntheticAdminSplit({rule,orderId,amountSats,
     amountSats,feePolicy:"separate_merchant_reserve_test_only",
     pending: Object.freeze(amounts.map(({recipientId,basisPoints,sats})=>
       Object.freeze({recipientId,basisPoints,entitlementSats:sats}))),
-    }),
     prismForwardingVerified:false,productionReady:false,
   });
 }
