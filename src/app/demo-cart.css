@@ -62,7 +62,7 @@
 .apex-checkout-empty-cart strong{font-size:14px}
 .apex-checkout-empty-cart span{color:#d4c5ce;font-size:12px}
 .apex-checkout-empty-cart a{color:#ffa4c1;font-size:13px;font-weight:800;text-decoration:underline}
-.apex-cart-overlay :is(button,a):focus-visible,.apex-demo-shelf :is(button,a):focus-visible,.apex-cart-toggle:focus-visible{outline:3px solid #ffcc80;outline-offset:3px}
+.apex-cart-overlay :is(button,a):focus-visible,.apex-demo-shelf :is(button,a):focus-visible,.apex-cart-toggle:focus-visible{outline:2px solid #ed4b77;outline-offset:2px}
 @media(max-width:650px){
  .site-header .header-inner nav.apex-navigation{order:initial;width:auto;justify-content:flex-end;gap:8px}
  .apex-demo-product-grid{grid-template-columns:1fr}
