@@ -1,6 +1,6 @@
-# BTCPay test-server provisioning — first operator pass (2026-10-31)
+# Optional BTCPay hosted test-server fallback — deferred (2026-10-31)
 
-**Status: PREPARED, NOT DEPLOYED.** No VPS purchased or connected, no DNS configured, no BTCPay instance, no wallet created, no Prism installation, no API credentials, no checkout, no transfers. This PR adds only a read-only preflight tool and runbook.
+**STATUS: OPTIONAL FALLBACK ONLY, NOT OUR CURRENT PLAN.** The agreed plan is **local BTCPay regtest first, then ONE paid production VPS**. See [local-first strategy](BTCPAY_LOCAL_FIRST_STRATEGY_20261031.md). Do not create a DigitalOcean Droplet or a test subdomain now. No VPS purchased or connected, no DNS configured, no BTCPay instance, no wallet, no Prism installation, no checkout or transfers. This document is retained solely if temporary hosted staging is later required and explicitly authorized.
 
 ## Fixed scope
 - Apex uses one shared storefront; supplier authorization and payout percentages remain controlled in the Apex application.
@@ -10,15 +10,15 @@
 - This deployment is isolated from the existing Apex Signet-only pending wallet requests; do **not** reuse them.
 - No production merchant transactions or commercial activation. Any later release requires merchant/product/payment authorization.
 
-## Hosting choice (selected for planning, NOT purchased)
+## Hosting candidate (DEFERRED and NOT purchased)
 
-**Provider selected:** DigitalOcean, **Basic Droplet** (regular shared CPU), 2 vCPU / 4 GiB RAM / 80 GiB SSD, approximately **US$24/month** at the October 31, 2026 published rate. First-choice location: **NYC3** (verify plan capacity when creating). OS: Ubuntu 24.04 LTS x64. Weekly DigitalOcean Droplet backup adds 20% (approximately **US$4.80/month**), for a proposed total of **US$28.80/month** before taxes and other costs.
+**Fallback candidate only:** DigitalOcean, **Basic Droplet** (regular shared CPU), 2 vCPU / 4 GiB RAM / 80 GiB SSD, approximately **US$24/month** at the October 31, 2026 published rate. First-choice location: **NYC3** (verify plan capacity when creating). OS: Ubuntu 24.04 LTS x64. Weekly DigitalOcean Droplet backup adds 20% (approximately **US$4.80/month**), for a proposed total of **US$28.80/month** before taxes and other costs.
 
-This is a **provider recommendation and nonbinding configuration choice only**. No DigitalOcean account is connected, no Droplet has been created, no billing authorization has been granted, and the price must be confirmed in the DigitalOcean creation screen before purchase.
+This is a **deferred fallback recommendation only, not an instruction to provision a server.** No DigitalOcean account is connected, no Droplet has been created, no billing authorization has been granted, and the price must be confirmed in the DigitalOcean creation screen before purchase.
 
 This plan exceeds BTCPay's 2-core/4-GB starting profile and provides additional headroom beyond its 50-GB minimal pruned BTC installation. Use `opt-save-storage-xs` when evaluating a future small **pruned Bitcoin mainnet** installation, following the official storage documentation; the **initial test setup must stay regtest**. Do not represent a regtest test as a mainnet synchronization test.
 
-Recommended DigitalOcean creation checklist:
+Only after separate explicit approval for a **temporary** publicly reachable test server, follow this DigitalOcean creation checklist. Destroy the temporary Droplet after the test and confirm billing stopped:
 1. Create a dedicated Apex-owned DigitalOcean project and Basic regular-CPU Droplet with the above parameters (only after explicit approval of the recurring charge).
 2. Add SSH public key authentication during creation. Do not use password-only SSH. Apply the provider firewall for TCP 22 from a trusted admin IP/VPN and TCP 80/443 for DNS validation and HTTPS. Never publicly expose Bitcoin RPC or PostgreSQL.
 3. Add a dedicated test BTCPay DNS name after the Apex domain is controlled. Do not assume a hostname exists or disclose secrets in the public repo.
@@ -32,11 +32,11 @@ Sources (prices and requirements must be rechecked at order time):
 - https://docs.digitalocean.com/products/droplets/details/availability/
 - https://docs.btcpayserver.org/Docker/specs/
 
-## Verified domain and DigitalOcean handoff (2026-10-31)
+## Deferred domain and DigitalOcean handoff (2026-10-31)
 
 Vercel's connected team domain inventory confirms `apexanabolics.co` is owned/verified and attached to the Apex storefront project. **Do not purchase a second domain.** Choose `pay-test.apexanabolics.co` as the planned test BTCPay hostname, separate from the existing storefront. The DNS A record **does not exist by virtue of this plan**; it must be created only after the VPS obtains an assigned IPv4 address. Do not change apex/root/www DNS records.
 
-**DigitalOcean browser provisioning handoff — not executed:**
+**Optional DigitalOcean browser provisioning — not executed and NOT currently requested:**
 1. Sign in at `https://cloud.digitalocean.com/`, select/create an Apex-specific project and choose **Create > Droplets**.
 2. Select **Ubuntu 24.04 LTS x64**, not the BTCPay Marketplace 1-Click image for this **first regtest** pass. DigitalOcean does offer a BTCPay 1-Click image, but its documented first-login wizard does not explicitly establish a regtest chain; use an independently verified `NBITCOIN_NETWORK=regtest` installation.
 3. Region `NYC3` if the matching size is in stock; Basic **Regular** shared CPU; **2 vCPU / 4 GiB RAM / 80 GiB SSD**. Confirm the displayed base price (published US$24/month) before purchase.
@@ -50,14 +50,14 @@ Vercel's connected team domain inventory confirms `apexanabolics.co` is owned/ve
 
 **Provider-specific information:** https://docs.digitalocean.com/products/marketplace/catalog/btcpay-server/ documents the 1-Click alternative, but it is not selected here. https://docs.btcpayserver.org/Docker/installation/ and https://docs.btcpayserver.org/Docker/networking/ remain authoritative for installation and HTTPS.
 
-## Operator prerequisites (still required)
+## Optional hosted-test operator prerequisites (only if separately approved)
 1. Confirm who owns the VPS account, an acceptable monthly recurring budget, DNS name and an administrator with restricted SSH access. Do not purchase or change DNS without approval.
 2. Choose a host with sufficient **persistent** storage and memory according to current BTCPay Docker/server-sizing documents. Do not use a temporary application container or Vercel for Bitcoin Core.
 3. Prepare Linux updates, SSH key authentication, host firewall, monitoring and a recoverable backup method. Admin access should be IP/VPN restricted.
 4. Point a DNS hostname for **test** BTCPay at the VPS IP, and allow HTTPS issuance (ports TCP 80 and 443).
 5. Inspect the exact official installation instructions immediately before installing; installation modifies host Docker, system services and SSH settings.
 
-## Official Docker test-network installation (run only on an approved, dedicated VPS)
+## Hosted test Docker installation (ONLY if a temporary test VPS is separately approved)
 These are adaptations of the official BTCPay Server Docker README. The placeholder DNS name must be replaced with the approved hostname. Check the current README before executing. The commands are **not executed by this repository**.
 
 ```sh
@@ -85,7 +85,7 @@ bitcoin-cli.sh getblockchaininfo
 
 Record and independently inspect `chain: "regtest"`. Reject any other value, especially `main`. Verify Bitcoin Core and NBXplorer readiness. A Greenfield store lookup alone **cannot verify Bitcoin Core's actual network**.
 
-## Read-only Greenfield connectivity preflight
+## Hosted-stage read-only Greenfield connectivity preflight (not needed for first local tests)
 1. Create one synthetic **regtest** store and separate test-only receiving wallet.
 2. From the instance's account/API-key UI, create a dedicated, **store-scoped read-only** API key with `btcpay.store.canviewstoresettings:<STORE_ID>`; do not use an unrestricted key or payout/signing privileges. This key is for operator preflight **only**, not invoice creation.
 3. Set these values in a local, private shell session, never in GitHub, a screenshot, public logs or `NEXT_PUBLIC_*` variables:
@@ -103,7 +103,7 @@ Success only proves a valid HTTPS API response under the given key and **exact e
 
 The first application invoice key later needs `btcpay.store.cancreateinvoice:<STORE_ID>`, stored server-side and separately from this preflight key. Do not enable it in this pass. Configure a separately secured webhook secret in the future and validate raw-body HMAC, deduplication and authenticated invoice re-fetch before updating orders.
 
-## Prism checkpoint — separate follow-up
+## Prism checkpoint — perform on local regtest first, use hosted stage only if needed
 1. Confirm selected BTCPay build and installed Prism plugin version are compatible.
 2. Create **only test-network** supplier and platform destinations with independent signing/security boundaries.
 3. Prove one test payment and actual subsequent two-destination forwarding; verify transaction IDs, on-chain confirmations, rounding, minimum outputs and network-fee payer.
