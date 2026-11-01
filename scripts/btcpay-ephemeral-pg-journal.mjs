@@ -21,13 +21,13 @@ export function createEphemeralPgBridge({
 }={}){
   if(testOnly!==true||network!=="regtest")
     throw Error("Disposable regtest PostgreSQL bridge only");
-  const exec=runPsql||async(args)=>{
+  const exec=runPsql||(async(args)=>{
     const {stdout}=await execAsync("psql",args,{
       encoding:"utf8",timeout:20000,maxBuffer:1024*512,
       stdio:["ignore","pipe","pipe"],
     });
     return stdout.trim();
-  };
+  });
   const run=async(file,values)=>{
     const args=["-X","-q","-v","ON_ERROR_STOP=1","-At"];
     for(const [key,value] of Object.entries(values)){
