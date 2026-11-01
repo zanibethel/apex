@@ -4,6 +4,7 @@ import {buildProductCsv,parseProductCsv} from "@/lib/catalog/product-csv.mjs";
 import {draftSkuFromUuid} from "@/lib/catalog/sku-format.mjs";
 import {privateProductCsvExportBatches} from "@/lib/catalog/private-csv-export-batches.mjs";
 import {csvEditableOptionalText,csvEditableCategoryId} from "@/lib/catalog/csv-optional-field-changes.mjs";
+import {csvExistingCardLookup} from "@/lib/catalog/csv-existing-card-lookup.mjs";
 import type {BulkEditRow} from "./bulk-editor";
 type Category={id:string;name:string};
 type ImportRow={key:string;line:number;row:BulkEditRow;issue?:string};
@@ -29,8 +30,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
   try{parsed=parseProductCsv(await file.text());}
   catch{setErrors(["Unable to parse CSV file."]);return;}
   setErrors(parsed.errors);
-  const byId=new Map(rows.filter(r=>r.id).map(r=>[r.id!.toLowerCase(),r]));
-  const bySku=new Map(rows.filter(r=>r.id&&r.sku).map(r=>[r.sku.toUpperCase(),r]));
+  const {byId,bySku,ambiguousSkus}=csvExistingCardLookup(rows);
   const byCategory=new Map(categories.map(c=>[c.name.trim().toLowerCase(),c.id]));
   const seen=new Set<string>();
   const mapped:ImportRow[]=parsed.rows.map((data,index)=>{
@@ -41,7 +41,8 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    const target=explicit||matched;
    let issue:string|undefined;
    if(item.product_id&&!explicit)issue="Product ID does not belong to this store.";
-   if(explicit&&matched&&explicit.id!==matched.id)issue="Product ID and SKU identify different products.";
+   if(explicit&&matched&&explicit.key!==matched.key)issue="Product ID and SKU identify different products.";
+   if(sku&&ambiguousSkus.has(sku))issue="This SKU matches multiple editor cards. Resolve duplicates before importing.";
    const categoryName=(item.category||"").trim().toLowerCase();
    const categoryId=csvEditableCategoryId(item,target?.categoryId,byCategory);
    if(categoryName&&!categoryId)issue="Unknown category. Add it first.";
@@ -105,10 +106,10 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    Your {exportBatches.reduce((n:number,b:typeof exportBatches[number])=>n+b.rows.length,0)} saved product cards are split into {exportBatches.length} CSV files of up to 100 rows each. Download each file separately; every file can be re-uploaded using the existing importer.
   </p>}
   {exportBatches.length>0&&<p className="notice">Exports use the current editor values, including any unsaved edits, for products with saved IDs. Save your changes before exporting if you need the exported file to match your stored catalog.</p>}
-  <p className="notice"><strong>Matching:</strong> product_id or SKU updates an existing private product; otherwise a new draft is created. Category uses the category name (GetSwole is a category, not a supplier). Blank description, compare-at price or category clears that field when its CSV column is included. Omitted columns preserve existing values. Blank source cost preserves the existing cost. Images and inventory remain separate.</p>
+  <p className="notice"><strong>Matching:</strong> product_id or SKU updates an existing saved or unsaved editor card; otherwise a new draft is created. Re-uploading the same file updates staged cards rather than duplicating them. Category uses the category name (GetSwole is a category, not a supplier). Blank description, compare-at price or category clears that field when its CSV column is included. Omitted columns preserve existing values. Blank source cost preserves the existing cost. Images and inventory remain separate.</p>
   <label className="apex-csv-upload">Select CSV file
    <input type="file" accept=".csv,text/csv" disabled={disabled}
-    onChange={e=>void upload(e.target.files?.[0])}/>
+    onChange={e=>{const file=e.target.files?.[0];e.target.value="";void upload(file);}}/>
   </label>
   {fileName&&<p className="notice">Selected file: {fileName}</p>}
   {errors.length>0&&<div role="alert" className="apex-csv-errors">
