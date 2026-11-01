@@ -15,6 +15,7 @@ import {filterSupplierBulkRows} from "@/lib/catalog/bulk-workspace-filter.mjs";
 import {privateBulkReadiness} from "@/lib/catalog/private-bulk-readiness.mjs";
 import {supplierAdminFeedback} from "@/lib/catalog/supplier-admin-feedback.mjs";
 import {bulkSetupHref} from "@/lib/catalog/bulk-setup-targets.mjs";
+import {bulkViewAfterEdit,selectEditedBulkRow} from "@/lib/catalog/bulk-edit-visibility.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -96,7 +97,16 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
 
  function change(key:string,field:keyof BulkEditRow,value:string|boolean){
   if(!editable||busy)return;
+  // A status-filtered saved card can vanish on the first keystroke when it
+  // becomes unsaved. Keep the edited card visible so the supplier can finish.
+  // Name/SKU edits also clear an active text search that may stop matching.
+  const nextView=bulkViewAfterEdit(productSearch,viewFilter,field);
+  if(nextView.filter!==viewFilter)setViewFilter(nextView.filter);
+  if(nextView.query!==productSearch)setProductSearch(nextView.query);
   setRows(prev=>prev.map(r=>r.key===key?{...r,[field]:value,needsSave:true}:r));
+  // The edited row is automatically included in Save selected. Existing
+  // multi-row selection is retained, never silently overwritten.
+  setSelected(prev=>selectEditedBulkRow(prev,key));
   setLastSave(prev=>{const copy={...prev};delete copy[key];return copy;});
  }
  function toggle(key:string){
