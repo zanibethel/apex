@@ -51,7 +51,7 @@ export default async function BulkOfferPreview({searchParams}:{
  if(showAll&&(!paging||(paging.total>0&&!products?.length)))notFound();
  const ids=(products??[]).map(p=>p.id);
  const [cats,stocks,controls]=await Promise.all([
-  client.from("categories").select("id,name").eq("store_id",store.id).limit(100),
+  client.from("categories").select("id,name").eq("store_id",store.id).limit(250),
   ids.length?client.from("inventory_items")
    .select("product_id,quantity_on_hand,quantity_reserved")
    .eq("store_id",store.id).in("product_id",ids):Promise.resolve({data:[],error:null}),
