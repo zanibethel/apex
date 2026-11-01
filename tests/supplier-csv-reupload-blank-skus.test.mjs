@@ -56,7 +56,9 @@ test("match is strictly same filename, source line and title",()=>{
 
 test("removed, saved, blocked and ambiguous staged cards are not silently reused",()=>{
  assert.equal(matchRepeatedBlankSkuCard("a.csv","a.csv",staged,[],2,"Sample A"),undefined);
- assert.equal(matchRepeatedBlankSkuCard("a.csv","a.csv",staged,[{...rows[0],id:uuid1}],2,"Sample A"),undefined);
+ assert.equal(matchRepeatedBlankSkuCard("a.csv","a.csv",staged,[{...rows[0],id:uuid1}],2,"Sample A")?.id,uuid1);
+ // Once the supplier saved the card, the same blank-SKU CSV must still
+ // target its persisted product instead of silently creating a duplicate.
  assert.equal(matchRepeatedBlankSkuCard("a.csv","a.csv",[
   {...staged[0],issue:"Unknown category"}],rows,2,"Sample A"),undefined);
  assert.equal(matchRepeatedBlankSkuCard("a.csv","a.csv",[
