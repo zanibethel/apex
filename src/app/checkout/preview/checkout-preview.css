@@ -203,3 +203,45 @@
  .apex-checkout-preview .apex-state-dialog{max-height:min(76dvh,580px);padding:16px;border-radius:14px}
  .apex-state-options{max-height:min(43dvh,360px)}
 }
+
+
+/* iPhone checkout refinement: keep State + ZIP side by side even at 390px.
+   Earlier narrow-screen rules make every field full width; override only
+   this deliberate pair. Keep text fields at 16px to avoid Safari zoom. */
+@media(max-width:600px){
+ .apex-checkout-preview .apex-checkout-fields{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  column-gap:10px;
+  row-gap:13px;
+ }
+ .apex-checkout-preview .apex-checkout-field{gap:5px;min-width:0}
+ .apex-checkout-preview .apex-checkout-field input{
+  min-width:0;min-height:46px;padding:10px 11px;
+ }
+ .apex-checkout-preview .apex-state-trigger{
+  min-width:0;min-height:46px;gap:6px;padding:10px 11px;
+ }
+ .apex-checkout-preview .apex-state-trigger span:first-child{
+  min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+ }
+ .apex-checkout-preview .apex-checkout-state{grid-column:1 / 2}
+ .apex-checkout-preview .apex-checkout-postal{grid-column:2 / 3}
+ .apex-checkout-preview .apex-checkout-shipping{margin-top:22px;gap:9px}
+ .apex-checkout-preview .apex-checkout-shipping legend{margin-bottom:9px}
+ .apex-checkout-preview .apex-checkout-ship{padding:12px;gap:10px}
+ .apex-checkout-preview .apex-checkout-privacy{margin:18px 0}
+}
+@media(max-width:390px){
+ .apex-checkout-preview .apex-checkout-fields{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+ .apex-checkout-preview .apex-checkout-fields .apex-checkout-field{
+  grid-column:1 / -1;
+ }
+ .apex-checkout-preview .apex-checkout-fields .apex-checkout-state{
+  grid-column:1 / 2;
+ }
+ .apex-checkout-preview .apex-checkout-fields .apex-checkout-postal{
+  grid-column:2 / 3;
+ }
+}
