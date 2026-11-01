@@ -210,3 +210,21 @@ test("compact guest form keeps paired names and State/ZIP with 16px iOS-safe inp
  assert.match(jsx,/stateChoices\.map/);
  assert.doesNotMatch(css,/user-scalable\s*:\s*no|maximum-scale\s*:/i);
 });
+
+
+test("shipping State field does not inherit invoice status pill padding or badge colors",()=>{
+ const css=readFileSync("src/app/checkout/preview/checkout-preview.css","utf8");
+ const jsx=readFileSync("src/app/checkout/preview/checkout-preview.tsx","utf8");
+ // The old shared .apex-checkout-state class inadvertently padded and
+ // rounded the address field, making it smaller than the adjacent ZIP field.
+ assert.doesNotMatch(css,/(?:^|\n)\.apex-checkout-state(?:\.state-[a-z]+)?\s*\{/);
+ assert.match(css,/\.apex-checkout-invoice-status\{font-size:11px;letter-spacing:\.02em;padding:7px 10px/);
+ for(const suffix of ["detected","confirmed","expired"]){
+  assert.ok(css.includes(".apex-checkout-invoice-status.state-"+suffix+"{"));
+ }
+ assert.match(jsx,/className="apex-checkout-field apex-checkout-state"/);
+ assert.match(jsx,/className=\{"apex-checkout-invoice-status state-"\+status\}/);
+ assert.match(css,/\.apex-checkout-preview \.apex-checkout-state,\s*\.apex-checkout-preview \.apex-checkout-state:focus-within\{\s*background:transparent/);
+ assert.match(css,/\.apex-checkout-preview \.apex-checkout-state\{grid-column:1 \/ 2\}/);
+ assert.match(css,/\.apex-checkout-preview \.apex-checkout-postal\{grid-column:2 \/ 3\}/);
+});

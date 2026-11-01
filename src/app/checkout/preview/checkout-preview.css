@@ -77,10 +77,10 @@
 .apex-checkout-invoice{border:1px solid #41434f;border-radius:14px;background:#0b0c10;margin:24px 0 20px;padding:20px}
 .apex-checkout-invoice-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:15px;border-bottom:1px solid #2e3038}
 .apex-checkout-invoice-head .apex-checkout-kicker{margin:0}
-.apex-checkout-state{font-size:11px;letter-spacing:.02em;padding:7px 10px;border:1px solid #746438;color:#ffe29d;border-radius:50px;background:#2c2818}
-.apex-checkout-state.state-detected{background:#12243b;border-color:#456d9f;color:#a9d9ff}
-.apex-checkout-state.state-confirmed{background:#142a20;border-color:#397b56;color:#a5e8b7}
-.apex-checkout-state.state-expired{background:#32181b;border-color:#8b3f4d;color:#ffb9c6}
+.apex-checkout-invoice-status{font-size:11px;letter-spacing:.02em;padding:7px 10px;border:1px solid #746438;color:#ffe29d;border-radius:50px;background:#2c2818}
+.apex-checkout-invoice-status.state-detected{background:#12243b;border-color:#456d9f;color:#a9d9ff}
+.apex-checkout-invoice-status.state-confirmed{background:#142a20;border-color:#397b56;color:#a5e8b7}
+.apex-checkout-invoice-status.state-expired{background:#32181b;border-color:#8b3f4d;color:#ffb9c6}
 .apex-checkout-payment-body{display:grid;grid-template-columns:minmax(130px,165px) minmax(0,1fr);gap:22px;align-items:center;padding-top:21px}
 .apex-checkout-not-qr{min-height:164px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;border:2px dashed #61616a;border-radius:8px;background:repeating-linear-gradient(45deg,#101115 0 12px,#16171c 12px 24px);text-align:center;color:#bcbec6}
 .apex-checkout-qr-icon{font-weight:900;font-size:33px;color:#f34c7b;line-height:1}

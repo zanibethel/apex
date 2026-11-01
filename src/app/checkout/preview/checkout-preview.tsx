@@ -236,7 +236,7 @@ export function CheckoutPreview(){
       <div className="apex-checkout-invoice">
        <div className="apex-checkout-invoice-head">
         <span className="apex-checkout-kicker">SIMULATED INVOICE</span>
-        <strong className={"apex-checkout-state state-"+status}>{status==="awaiting"?"Awaiting payment":status==="detected"?"Payment detected":status==="confirmed"?"Payment confirmed":"Invoice expired"}</strong>
+        <strong className={"apex-checkout-invoice-status state-"+status}>{status==="awaiting"?"Awaiting payment":status==="detected"?"Payment detected":status==="confirmed"?"Payment confirmed":"Invoice expired"}</strong>
        </div>
        <div className="apex-checkout-payment-body">
         <div className="apex-checkout-not-qr" role="img" aria-label="Sample placeholder, not a scannable Bitcoin QR code">
