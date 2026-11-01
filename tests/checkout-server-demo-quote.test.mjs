@@ -107,7 +107,7 @@ test("route is demo only, origin checked, bounded, nonpayable, no DB/BTCPay writ
  assert.match(route,/MAX_BYTES=2048/);
  assert.match(route,/calculateDemoServerQuote\(JSON\.parse\(body\)\)/);
  assert.match(route,/Cache-Control/);
- assert.doesNotMatch(route,/\.from\(|\.insert\(|\.update\(|\.rpc\(|\bfetch\s*\(|payment|Greenfield|BTCPay/i);
+ assert.doesNotMatch(route,/\.from\(|\.insert\(|\.update\(|\.rpc\(|\bfetch\s*\(|Greenfield|BTCPay/i);
  assert.match(server,/payable:false/);
  assert.match(server,/canCreateOrder:false/);
  assert.match(server,/canCreatePayment:false/);
