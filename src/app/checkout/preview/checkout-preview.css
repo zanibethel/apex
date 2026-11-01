@@ -134,3 +134,9 @@
  .apex-checkout-ship{flex-wrap:wrap}
 }
 @media(prefers-reduced-motion:reduce){.apex-checkout-preview *{transition:none!important}}
+
+/* Prominent public-production demo warning: never imply payable Bitcoin. */
+.apex-checkout-live-test-banner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 20px;border:1px solid #cb6a21;background:#302012;color:#ffeacb;border-radius:12px;padding:14px 18px;margin:0 0 22px;box-shadow:0 4px 18px #0002}
+.apex-checkout-live-test-banner strong{font-size:13px;letter-spacing:.075em}
+.apex-checkout-live-test-banner span{font-size:12px;line-height:1.5;color:#f2d6bc;max-width:620px}
+@media(max-width:600px){.apex-checkout-live-test-banner{padding:14px;gap:7px}}
