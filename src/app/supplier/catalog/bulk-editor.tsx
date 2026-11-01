@@ -14,6 +14,7 @@ import {reconcileSavedBulkRow} from "@/lib/catalog/bulk-save-revision.mjs";
 import {filterSupplierBulkRows} from "@/lib/catalog/bulk-workspace-filter.mjs";
 import {privateBulkReadiness} from "@/lib/catalog/private-bulk-readiness.mjs";
 import {supplierAdminFeedback} from "@/lib/catalog/supplier-admin-feedback.mjs";
+import {bulkSetupHref} from "@/lib/catalog/bulk-setup-targets.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -233,18 +234,23 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        <strong>{adminFeedback.heading}:</strong> {adminFeedback.message}
       </p>}
       {readiness.missing.length>0&&<ul>
-       {readiness.missing.map((item:string)=><li key={item}>{item}</li>)}
+       {readiness.missing.map((item:string)=>{
+         const href=bulkSetupHref(item,r.key);
+         return <li key={item}>{href
+          ?<a href={href} className="apex-bulk-fix-link">{item} <span aria-hidden="true">↳</span></a>
+          :item}</li>;
+        })}
       </ul>}
      </details>
      <div className={"apex-bulk-card-layout"+(showOfferTiles?"":" apex-bulk-card-layout-single")}>
       <div className="apex-bulk-editor-side">
      <div className="apex-bulk-fields">
-      <label>Name<input value={r.name} maxLength={120}
+      <label>Name<input id={"bulk-fix-"+r.key+"-name"} value={r.name} maxLength={120}
        disabled={!editable||busy} onChange={e=>change(r.key,"name",e.target.value)}/></label>
-      <label>SKU <small>(optional for new)</small><input value={r.sku}
+      <label>SKU <small>(optional for new)</small><input id={"bulk-fix-"+r.key+"-sku"} value={r.sku}
        maxLength={60} disabled={!editable||busy}
        onChange={e=>change(r.key,"sku",e.target.value)}/></label>
-      <label>Price (USD)<input type="number" min="0" max="9999999.99"
+      <label>Price (USD)<input id={"bulk-fix-"+r.key+"-price"} type="number" min="0" max="9999999.99"
        step=".01" value={r.price} disabled={!editable||busy}
        onChange={e=>change(r.key,"price",e.target.value)}/></label>
       <label>Source cost (private)<input type="number" min="0" max="9999999.99" step=".01"
@@ -253,18 +259,18 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       <label>Compare-at <small>(optional)</small><input type="number"
        min="0" max="9999999.99" step=".01" value={r.comparePrice}
        disabled={!editable||busy} onChange={e=>change(r.key,"comparePrice",e.target.value)}/></label>
-      <label>Category<select value={r.categoryId} disabled={!editable||busy}
+      <label>Category<select id={"bulk-fix-"+r.key+"-category"} value={r.categoryId} disabled={!editable||busy}
        onChange={e=>change(r.key,"categoryId",e.target.value)}>
        <option value="">Uncategorized</option>
        {categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
       </select></label>
       <label className="apex-bulk-active">
-       <input type="checkbox" checked={r.isActive}
+       <input id={"bulk-fix-"+r.key+"-active"} type="checkbox" checked={r.isActive}
         disabled={!editable||busy} onChange={e=>change(r.key,"isActive",e.target.checked)}/>
        Active in private catalog
       </label>
       <label className="apex-bulk-description">Description
-       <textarea value={r.description} rows={2} maxLength={1500} disabled={!editable||busy}
+       <textarea id={"bulk-fix-"+r.key+"-description"} value={r.description} rows={2} maxLength={1500} disabled={!editable||busy}
         onChange={e=>change(r.key,"description",e.target.value)}/></label>
      </div>
      <div className="apex-bulk-row-footer">
@@ -279,6 +285,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         disabled={busy} onClick={()=>removeUnsaved(r.key)}>Remove unsaved</button>}
       </div>
      </div>
+     <div id={"bulk-fix-"+r.key+"-media"} className="apex-bulk-media-target" tabIndex={-1} aria-label="Private product image and stock tools">
      {r.id&&!r.needsSave
       ?<BulkCardMedia key={r.id+":"+String(savedMedia.get(r.id)?.quantityOnHand??"missing")} storeId={storeId} productId={r.id}
          enabled={editable&&!busy}
@@ -289,6 +296,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       :<p className="apex-bulk-media-locked">
          {r.id?"Save product edits to unlock image and stock tools.":"Save this draft to upload or reuse an image and set stock."}
         </p>}
+     </div>
       </div>
       {showOfferTiles&&<BulkInlineOffer row={r} category={category}
         imageUrl={cardMedia?.imageUrl} availableStock={availableStock}
