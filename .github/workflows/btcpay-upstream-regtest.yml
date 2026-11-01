@@ -9,6 +9,7 @@ on:
       - "scripts/btcpay-local-doctor.mjs"
       - "tests/btcpay-local-doctor.test.mjs"
       - "scripts/btcpay-ephemeral-*.mjs"
+      - "tests/payout-rls/prism-ephemeral-test-store-setting.sql"
       - "scripts/install_prism_regtest.py"
       - "tests/prism-install-safety.test.py"
       - "database/sql/apex_btcpay_*_REVIEW_ONLY.sql"
@@ -168,13 +169,15 @@ jobs:
             exit 1
           fi
           echo "Prism route registered and protected on isolated regtest runner"
-      - name: Create, pay, and verify signed settled webhook on real regtest
+      - name: Verify signed payment and real Prism-generated on-chain regtest forwarding
         env:
           APEX_BTCPAY_EPHEMERAL: "true"
           APEX_BTCPAY_TEST_NETWORK: regtest
           APEX_BTCPAY_PAY_REGTEST: "true"
           APEX_BTCPAY_VERIFY_WEBHOOK: "true"
           APEX_BTCPAY_DURABLE_TEST_JOURNAL: "true"
+          APEX_BTCPAY_PRISM_FORWARDING: "true"
+          BTCPAY_PLUGINDIR: ${{ runner.temp }}/apex-prism-plugins
           APEX_BTCPAY_WEBHOOK_PORT: "48173"
           APEX_BTCPAY_UPSTREAM_ROOT: ${{ runner.temp }}/btcpayserver
         run: node scripts/btcpay-ephemeral-greenfield.mjs
