@@ -13,7 +13,10 @@ test("navigation points to a real catalog route", () => {
 test("preview is visibly non-transactional", () => {
   assert.match(read("src/app/page.tsx"), /No live products, ordering or payments/);
   assert.match(read("src/app/catalog/page.tsx"), /No checkout, ordering or live inventory/);
-  assert.doesNotMatch(read("src/app/page.tsx"), /href="\/checkout"/);
+  const homeWithoutOnlyDemoLink=read("src/app/page.tsx").replaceAll('href="/checkout/preview"',"");
+  assert.doesNotMatch(homeWithoutOnlyDemoLink,/href="\/checkout/);
+  assert.match(read("src/app/page.tsx"),/href="\/checkout\/preview"/);
+  assert.ok(existsSync(join(root,"src/app/checkout/preview/page.tsx")));
   assert.match(read("src/app/layout.tsx"), /index: false/);
 });
 test("runtime configuration does not include production wallet integrations", () => {
