@@ -8,6 +8,15 @@ update public.payout_recipients set status='active'
  where id in ('10000000-0000-0000-0000-000000000001',
               '10000000-0000-0000-0000-000000000002');
 
+-- Fixed fixture IDs let the existing draft-only RPC edit the correct records.
+-- This SQL file never applies to hosted Supabase.
+insert into public.payout_rules(id,scope_type,scope_id,version,status,effective_from)
+values
+ ('21000000-0000-0000-0000-000000000019','storefront',
+  '30000000-0000-0000-0000-000000000001',119,'draft',now()),
+ ('21000000-0000-0000-0000-000000000020','storefront',
+  '30000000-0000-0000-0000-000000000001',120,'draft',now());
+
 begin;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
