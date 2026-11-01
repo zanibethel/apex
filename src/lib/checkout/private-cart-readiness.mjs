@@ -22,6 +22,13 @@ const CHECKS=Object.freeze([
  Object.freeze({key:"public_release_enabled",label:"Public catalog release authorized"}),
 ]);
 export const PRIVATE_CHECKOUT_READINESS_CHECKS=CHECKS;
+const KNOWN_PRIVATE_RELEASE_REASONS=new Set([
+ "admin_hold","admin_review_required","same_supplier_identity_hold",
+ "supplier_not_requested","content_review_pending","product_setup_incomplete",
+ "insufficient_available_stock","supplier_suspended",
+ "supplier_authorization_unverified","product_authorization_blocked",
+ "product_authorization_unverified","public_release_disabled",
+]);
 
 export function evaluatePrivateCheckoutReadiness(snapshot,serverMode){
  const mode=serverMode==="demo"?"demo":"disabled";
@@ -29,7 +36,7 @@ export function evaluatePrivateCheckoutReadiness(snapshot,serverMode){
   &&snapshot.checks&&typeof snapshot.checks==="object"&&!Array.isArray(snapshot.checks)
   ?snapshot.checks:null;
  const verified=Boolean(checks)&&
-  typeof snapshot.status_code==="string"&&snapshot.status_code.length<=100&&
+  KNOWN_PRIVATE_RELEASE_REASONS.has(snapshot.status_code)&&
   snapshot.effective_public===false&&
   CHECKS.every(item=>typeof checks[item.key]==="boolean");
  const statuses=CHECKS.map(item=>Object.freeze({
