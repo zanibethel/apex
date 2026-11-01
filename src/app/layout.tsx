@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createSupplierServerClient } from "@/lib/supabase/server";
 import { isVerifiedPlatformAdmin } from "@/lib/auth/admin-access";
 import { AccountMenu } from "./account-menu";
+import { DemoCartProvider,DemoCartToggle } from "./demo-cart";
+import "./demo-cart.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,10 +23,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en">
       <body>
+       <DemoCartProvider enabled={process.env.APEX_CHECKOUT_MODE==="demo"}>
         <header className="site-header">
           <div className="container header-inner">
             <Link href="/" className="brand apex-logo-link" aria-label="Apex Anabolics home"><img src="/apex-logo.png" alt="Apex Anabolics" width="210" height="50" /></Link>
             <nav aria-label="Main navigation" className="apex-navigation">
+              {process.env.APEX_CHECKOUT_MODE==="demo"&&<DemoCartToggle/>}
               <AccountMenu signedIn={Boolean(user)} admin={admin} supplier={supplier} />
             </nav>
             <span className="demo-chip">DEMO ONLY</span>
@@ -37,6 +41,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <span>No products, orders or payments are available.</span>
           </div>
         </footer>
+       </DemoCartProvider>
       </body>
     </html>
   );
