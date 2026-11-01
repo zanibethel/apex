@@ -16,7 +16,7 @@
 ## Limitations and security requirements
 - This is **test-only in-memory event recording**, not a durable transaction log. PR #107 models the proposed append-only receipt journal and RLS but no new SQL is applied to hosted Supabase here.
 - The receiving test harness never marks an Apex order paid or fulfilled and never triggers an actual payout. Even signed webhook delivery requires independently authenticated Greenfield invoice status and future durable atomic idempotency rules.
-- BTCPay may refuse localhost callback due to outbound SSRF policy. If the true GitHub integration fails on this, keep the PR as draft and address the developer-profile restrictions without disabling general outbound SSRF protections for any production network.
+- **Disposable runner SSRF exception only:** BTCPay normally blocks localhost webhook delivery. In this GitHub job only, the developer BTCPay process uses `BTCPAY_SSRFEXCEPTIONS=127.0.0.1:48173` and the temporary callback binds `127.0.0.1:48173`. General SSRF protection stays enabled; this exact loopback exception must never be copied into production/Vercel configuration. It is not needed for the future public HTTPS webhook endpoint.
 - A successful real regtest webhook still does **not** prove Prism 90/10 forwarding, production suitability, or merchant payment approval.
 - Do not print webhook secret, API key, synthetic wallet mnemonic or unredacted webhook bodies. The code keeps all ephemeral material only in process memory.
 - Keep the consumer checkout disabled; branded modal UX is documented separately in `docs/BTCPAY_SEAMLESS_CHECKOUT_UX_PLAN_20261031.md`.
