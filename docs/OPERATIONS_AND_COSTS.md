@@ -18,6 +18,8 @@
 **Base monthly equivalent: ~$89.19** = $76.20 month-billed hosting + $12.99 annual-billed Proton equivalent. Plan a **$100–$125/month service allowance** for early operation, excluding variable network fees and separately approved upgrades. These are *not* proof of a settled commercial agreement or guaranteed all-in operating costs.
 
 ## Hosting
+**Environment decision (2026-10-31): local BTCPay/regtest for development, then ONE paid production VPS after separate approval. The $24/month DigitalOcean line models one eventual production server, NOT two simultaneously billed production/test servers. No Droplet purchase is authorized or completed; no hosted test subdomain is needed yet.**
+
 A 2-vCPU/4-GB-RAM/80-GB SSD Linux VPS is the initial budgeting candidate, not a tested sizing guarantee. Validate pruning, Bitcoin node storage consumption, growth, backup retention and restore. BTCPay must run on a continuously available service separate from Vercel.
 
 ## Operational responsibilities
