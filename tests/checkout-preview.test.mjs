@@ -102,3 +102,17 @@ test("preview route cannot initiate orders, requests, wallets, invoice POST, or 
   assert.doesNotMatch(text,/\bserverAction\s*\(/);
  }
 });
+
+test("public demo release requires explicit server-only demo mode; live never enables payment",()=>{
+ const page=readFileSync("src/app/checkout/preview/page.tsx","utf8");
+ const source=readFileSync("src/app/checkout/preview/checkout-preview.tsx","utf8");
+ const env=readFileSync(".env.example","utf8");
+ assert.match(page,/process\.env\.APEX_CHECKOUT_MODE!=="demo"\)notFound\(\)/);
+ assert.match(page,/force-dynamic/);
+ assert.doesNotMatch(page,/NEXT_PUBLIC_APEX_CHECKOUT_MODE/);
+ assert.match(source,/TEST MODE — SIMULATED PAYMENTS ONLY/);
+ assert.match(source,/cannot accept Bitcoin, place orders, or trigger shipments/);
+ assert.match(source,/Do not send funds or enter real personal information/);
+ assert.match(env,/APEX_CHECKOUT_MODE=off/);
+ assert.doesNotMatch(env,/APEX_CHECKOUT_MODE=live/);
+});
