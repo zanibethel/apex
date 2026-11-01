@@ -36,7 +36,8 @@ export function runBTCPayLocalDoctor(sourceDir,{read=readFileSync,exec=execFileS
       stdio:["ignore","pipe","pipe"],maxBuffer:2*1024*1024})).trim();}
     catch{throw Error("Missing or failed development prerequisite: "+bin);}
   };
-  if(!/\bv?2\.\d+/.test(call("docker",["compose","version"])))
+  const composeVersion=call("docker",["compose","version"]).match(/Docker Compose version v?(\d+)\.(\d+)/i);
+  if(!composeVersion || Number(composeVersion[1])<2)
     throw Error("Docker Compose v2 or later is required");
   if(!/^1\d\./.test(call("dotnet",["--version"])))
     throw Error(".NET SDK 10 or later is required for upstream BTCPay development");
