@@ -56,7 +56,7 @@ test("failed-save view never broadens to unrelated selected or other store cards
 test("UI switches to retry list only after a partial batch; preserves saved selection",()=>{
  assert.match(editor,/const unfinished=bulkUnfinishedSaveKeys\(pendingRows,all\)/);
  assert.match(editor,/setSaveRetryKeys\(unfinished\)/);
- assert.match(editor,/if\(unfinished\.length\)\{setProductSearch\(" "\.trim\(\)\);/);
+ assert.ok(editor.includes('if(unfinished.length){setProductSearch("");setViewFilter("save_retries");}'));
  assert.match(editor,/setViewFilter\("save_retries"\)/);
  assert.match(editor,/else if\(viewFilter==="save_retries"\)setViewFilter\("all"\)/);
  assert.match(editor,/Fix \/ retry saves/);
