@@ -75,7 +75,7 @@ export function CheckoutPreview(){
  const total=demoTotals({quantities,shipping,coupon});
  const currentCartKey=JSON.stringify({quantities,shipping,coupon});
  const latestCartKey=useRef(currentCartKey);
- latestCartKey.current=currentCartKey;
+ useEffect(()=>{latestCartKey.current=currentCartKey;},[currentCartKey]);
  const quoteIsCurrent=Boolean(serverQuote)&&quoteKey===currentCartKey;
  const updateGuest=(key:GuestKey,value:string)=>{
   setGuest(current=>({...current,[key]:value}));
