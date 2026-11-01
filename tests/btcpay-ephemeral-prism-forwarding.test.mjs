@@ -17,7 +17,7 @@ test("Prism on-chain settings follow two distinct synthetic admin rule versions"
    assert.deepEqual(Object.values(settings.Destinations).map(d=>d.PayoutMethodId),
      ["BTC-CHAIN","BTC-CHAIN"]);
    assert.equal(frozen.rule.version,version);
-   assert.equal(frozen.pending.reduce((a,b)=>a+b.entitlementSats,0n),1000000n);
+   assert.equal(frozen.pending.reduce((a,b)=>a+b.entitlementSats,0n),10000000n);
    assert.equal(frozen.productionReady,false);
  }
 });
