@@ -136,7 +136,11 @@ test("payment proof-of-concept is not imported into any live checkout route", ()
   const read = path => readFileSync(path, "utf8");
   assert.match(read("src/lib/payments/btcpay-sandbox.mjs"), /testMode !== true/);
   assert.match(read("src/lib/payments/btcpay-sandbox.mjs"), /timingSafeEqual/);
-  assert.doesNotMatch(read("src/app/page.tsx"), /btcpay-sandbox|\/checkout/);
-  assert.doesNotMatch(read("src/app/catalog/page.tsx"), /btcpay-sandbox|\/checkout/);
+  for(const path of ["src/app/page.tsx","src/app/catalog/page.tsx"]){
+    const navigation=read(path).replaceAll('href="/checkout/preview"',"");
+    assert.doesNotMatch(navigation,/btcpay-sandbox|href="\/checkout(?:\/|")/);
+    assert.match(read(path),/href="\/checkout\/preview"/);
+  }
+  assert.doesNotMatch(read("src/app/checkout/preview/checkout-preview.tsx"),/btcpay-sandbox|\/api\/v1\/stores\/|\.insert\(/);
   assert.doesNotMatch(read("src/app/supplier/operations/actions.ts"), /btcpay-sandbox/);
 });
