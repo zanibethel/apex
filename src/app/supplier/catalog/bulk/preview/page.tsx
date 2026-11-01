@@ -7,17 +7,20 @@ import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
 import {privateReleaseDisplay} from "@/lib/catalog/private-release-decision.mjs";
 import {OfferTile} from "@/components/catalog/offer-tile";
 import {BulkPublishPanel} from "../../bulk-publish-panel";
+import {parseSavedPreviewPage,savedPreviewWindow,savedPreviewPageHref,SAVED_PREVIEW_PAGE_SIZE} from "@/lib/catalog/saved-offer-preview-pages.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Preview Saved Offers | Apex",robots:{index:false,follow:false}};
 
 export default async function BulkOfferPreview({searchParams}:{
- searchParams:Promise<{all?:string;ids?:string}>;
+ searchParams:Promise<{all?:string;ids?:string;page?:string}>;
 }){
  const query=await searchParams;
  const requestedIds=typeof query.ids==="string"&&query.ids.length<3000
   ?query.ids.split(",").filter(Boolean):[];
  const showAll=query.all==="1";
+ const page=showAll?parseSavedPreviewPage(query.page):1;
+ if(page===null)notFound();
  if(!showAll&&(!requestedIds.length||requestedIds.length>50||
    requestedIds.some(id=>!isValidId(id))||new Set(requestedIds).size!==requestedIds.length))
    notFound();
@@ -36,11 +39,16 @@ export default async function BulkOfferPreview({searchParams}:{
  if(storeError||!stores||stores.length!==1)notFound();
  const store=stores[0];
  let productQuery=client.from("products")
-  .select("id,store_id,sku,name,description,category_id,price_cents,compare_at_price_cents,currency,image_path,is_active,is_published")
+  .select("id,store_id,sku,name,description,category_id,price_cents,compare_at_price_cents,currency,image_path,is_active,is_published",{count:"exact"})
   .eq("store_id",store.id).eq("is_published",false);
  if(!showAll)productQuery=productQuery.in("id",requestedIds);
- const {data:products,error:productError}=await productQuery.order("name").limit(50);
+ const ordered=productQuery.order("name").order("id");
+ const {data:products,error:productError,count:productCount}=showAll
+  ?await ordered.range((page-1)*SAVED_PREVIEW_PAGE_SIZE,page*SAVED_PREVIEW_PAGE_SIZE-1)
+  :await ordered.limit(SAVED_PREVIEW_PAGE_SIZE);
  if(productError||(!showAll&&(!products||products.length!==requestedIds.length)))notFound();
+ const paging=showAll?savedPreviewWindow(page,productCount):null;
+ if(showAll&&(!paging||(paging.total>0&&!products?.length)))notFound();
  const ids=(products??[]).map(p=>p.id);
  const [cats,stocks,controls]=await Promise.all([
   client.from("categories").select("id,name").eq("store_id",store.id).limit(100),
@@ -87,7 +95,13 @@ export default async function BulkOfferPreview({searchParams}:{
   <h1>{showAll?"Preview all saved offers":"Preview selected offers"}</h1>
   <p className="lead">Review the same offer-tile layout customers will eventually see. These previews and images are accessible only to your supplier team.</p>
   <p className="notice">Offer previews are not public listings. Publishing below records private supplier intent, subject to admin holds and authorization requirements.</p>
-  {showAll&&previews.length===50&&<p className="notice">Showing the first 50 saved products. Publish in batches of up to 50.</p>}
+  {showAll&&paging&&<nav className="apex-bulk-preview-pagination" aria-label="Saved offer preview pages">
+   <span role="status">Showing {paging.first}–{paging.last} of {paging.total} saved offers · Page {paging.page} of {paging.pages}</span>
+   <div className="apex-bulk-preview-pagination-actions">
+    {paging.previous&&<Link className="button secondary" href={savedPreviewPageHref(paging.previous)!}>Previous 50</Link>}
+    {paging.next&&<Link className="button secondary" href={savedPreviewPageHref(paging.next)!}>Next 50</Link>}
+   </div>
+  </nav>}
   {!previews.length?<p role="status">No saved products available to preview. Add products in the bulk editor first.</p>
    :<>
     <div className="apex-offer-gallery">
@@ -105,7 +119,7 @@ export default async function BulkOfferPreview({searchParams}:{
       </div>
      </div>)}
     </div>
-    <BulkPublishPanel storeId={store.id} editable={canEdit}
+    <BulkPublishPanel storeId={store.id} editable={canEdit} pageScoped={showAll}
      products={previews.map(item=>({id:item.product.id,name:item.product.name,
       canRequest:item.canRequest,wantsListing:item.controls?.supplier_wants_listing??false}))}/>
    </>}
