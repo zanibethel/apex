@@ -51,7 +51,8 @@ export default async function CatalogPreview() {
           </div>
         </>
       )}
-      <p className="notice">Concept preview only. No checkout, ordering or live inventory.</p>
+      <div className="actions"><Link className="button secondary" href="/checkout/preview">Explore interactive checkout demo →</Link></div>
+      <p className="notice">Concept preview only. The checkout demo uses fictional products, local simulated statuses, and never creates an order or Bitcoin invoice.</p>
     </main>
   );
 }
