@@ -27,6 +27,31 @@ create policy btcpay_test_resume_permits_admin_read
      where a.user_id=(select auth.uid())) and
      (select auth.jwt()->'app_metadata'->>'apex_role')='platform_admin');
 
+-- Only OPEN -> CONSUMED / REVOKED is legal. Closing is permanent.
+create function apex_test_internal.enforce_test_resume_permit_terminal()
+returns trigger language plpgsql security definer set search_path='' as $
+begin
+ if tg_op='DELETE' then
+    raise exception 'Disposable checkout permit is append-only'
+      using errcode='55000';
+ end if;
+ if old.status<>'open' or new.status not in ('consumed','revoked') or
+    new.scope_id is distinct from old.scope_id or
+    new.request_id is distinct from old.request_id or
+    new.audit_head_id is distinct from old.audit_head_id or
+    new.created_at is distinct from old.created_at or
+    new.terminal_at is null then
+   raise exception 'Disposable checkout permit cannot be reset or rewritten'
+     using errcode='55000';
+ end if;
+ return new;
+end; $;
+revoke all on function apex_test_internal.enforce_test_resume_permit_terminal()
+ from PUBLIC,anon,authenticated;
+create trigger btcpay_test_resume_permits_terminal
+ before update or delete on public.btcpay_test_checkout_resume_permits
+ for each row execute function apex_test_internal.enforce_test_resume_permit_terminal();
+
 -- Internal disposable operator obtains a single-use permit only after the
 -- two-admin signatures and PINNED recovery evidence are revalidated while
 -- holding the exact same advisory lock as all test-journal invoice writers.
