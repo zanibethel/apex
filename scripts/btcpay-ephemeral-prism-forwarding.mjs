@@ -235,6 +235,18 @@ async function waitForPayouts(basic,p,minerAddress) {
     throw Error("Prism did not generate exactly two on-chain payout claims");
   progress("prism-payout-claim-states",
     [...new Set(claims.map(x=>String(x.state||"unknown")))].join(","));
+  // Only log payout role, state and integer amounts. Never payout IDs,
+  // addresses, secrets or raw provider objects.
+  function safeClaimStates(list){
+    return list.map(c=>{
+      const source=String(c.metadata?.Source||"");
+      const role=/^Prism \((supplier|platform)\)$/.exec(source)?.[1]||"unknown";
+      let amount="unavailable";
+      try{amount=sats(c.payoutAmount).toString();}catch{/* no amount */}
+      return {role,state:String(c.state||"unknown"),amountSats:amount};
+    });
+  }
+  progress("prism-payout-claim-snapshot",JSON.stringify(safeClaimStates(claims)));
   progress("prism-claims-created",String(claims.length));
   // Only count payouts whose metadata explicitly identifies source Prism.
   if(!claims.every(x=>JSON.stringify(x.metadata||{}).includes("Prism")&&
@@ -254,7 +266,11 @@ async function waitForPayouts(basic,p,minerAddress) {
         ?[...new Set(latest.map(x=>String(x.state||"unknown")))].join(",")
         :"unavailable";
       progress("prism-wallet-receipts-pending",
-        String(attempt)+" payoutStates="+states);
+        String(attempt)+" payoutStates="+states+
+        " receivedSats="+supplierSats+"/"+platformSats);
+      if(Array.isArray(latest)&&attempt%24===0)
+        progress("prism-payout-claim-snapshot",
+          JSON.stringify(safeClaimStates(latest)));
     }
     if(attempt%6===5)rpc("generatetoaddress","1",minerAddress);
     await delay(2000);
@@ -275,7 +291,12 @@ async function waitForPayouts(basic,p,minerAddress) {
         prismEventError:(serverLog.match(/Error while processing prism event/g)||[]).length,
       });
     }catch{/* no log availability */}
-    throw Error("No confirmed regtest Prism wallet receipts: "+diagnostics);
+    const states=await api(path,{auth:basic});
+    const statusReport=Array.isArray(states)
+      ?JSON.stringify(safeClaimStates(states)):"unavailable";
+    throw Error("No confirmed regtest Prism wallet receipts: "+
+      "claims="+statusReport+" receivedSats="+supplierSats+"/"+platformSats+
+      " diagnostics="+diagnostics);
   }
   rpc("generatetoaddress","2",minerAddress);
   const gotS=sats(wallet(p.sw,"getreceivedbyaddress",p.addresses.supplier,"1"));
