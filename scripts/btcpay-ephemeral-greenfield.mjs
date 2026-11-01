@@ -230,9 +230,9 @@ export async function runEphemeralGreenfield({
     ...webhookProof,
     ...(durableJournal ? {durableReceiptJournalVerified:true} : {}),
     ...(finalProof ? {prismForwardingVerified:finalProof.prismForwardingVerified,
-      prismPayoutScenarioCount:finalProof.scenarioCount} : {
-      prismForwardingVerified:false}),
-    prismVerified:false,productionReady:false,
+      prismPayoutScenarioCount:finalProof.scenarioCount} : {}),
+    prismVerified:Boolean(finalProof?.prismForwardingVerified),
+    productionReady:false,
   });
   } finally {
     if(receiver)await receiver.close();
