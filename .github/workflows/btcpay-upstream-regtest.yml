@@ -8,6 +8,9 @@ on:
       - ".github/workflows/btcpay-upstream-regtest.yml"
       - "scripts/btcpay-local-doctor.mjs"
       - "tests/btcpay-local-doctor.test.mjs"
+      - "scripts/btcpay-ephemeral-*.mjs"
+      - "tests/btcpay-ephemeral-*.test.mjs"
+      - "docs/BTCPAY_EPHEMERAL_SIGNED_WEBHOOK_20261101.md"
       - "docs/BTCPAY_LOCAL_FIRST_STRATEGY_20261031.md"
   workflow_dispatch:
 
