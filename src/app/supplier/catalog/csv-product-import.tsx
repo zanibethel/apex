@@ -3,6 +3,7 @@ import {useState} from "react";
 import {buildProductCsv,parseProductCsv} from "@/lib/catalog/product-csv.mjs";
 import {draftSkuFromUuid} from "@/lib/catalog/sku-format.mjs";
 import {privateProductCsvExportBatches} from "@/lib/catalog/private-csv-export-batches.mjs";
+import {csvEditableOptionalText,csvEditableCategoryId} from "@/lib/catalog/csv-optional-field-changes.mjs";
 import type {BulkEditRow} from "./bulk-editor";
 type Category={id:string;name:string};
 type ImportRow={key:string;line:number;row:BulkEditRow;issue?:string};
@@ -42,15 +43,15 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    if(item.product_id&&!explicit)issue="Product ID does not belong to this store.";
    if(explicit&&matched&&explicit.id!==matched.id)issue="Product ID and SKU identify different products.";
    const categoryName=(item.category||"").trim().toLowerCase();
-   const categoryId=categoryName?byCategory.get(categoryName):target?.categoryId??"";
+   const categoryId=csvEditableCategoryId(item,target?.categoryId,byCategory);
    if(categoryName&&!categoryId)issue="Unknown category. Add it first.";
    const id=target?.id??(sku?"sku:"+sku:"new:"+index);
    if(seen.has(id))issue="Duplicate product in CSV.";seen.add(id);
    const row:BulkEditRow={
     key:target?.key??crypto.randomUUID(),id:target?.id,
     name:item.title,sku:sku||target?.sku||draftSkuFromUuid(item.title,crypto.randomUUID()),
-    description:item.description||target?.description||"",price:item.price,
-    comparePrice:item.compare_at_price||target?.comparePrice||"",
+    description:csvEditableOptionalText(item,"description",target?.description),price:item.price,
+    comparePrice:csvEditableOptionalText(item,"compare_at_price",target?.comparePrice),
     sourceCost:item.source_cost||target?.sourceCost||"",
     categoryId:categoryId||"",
     isActive:item.active?["true","yes","1"].includes(item.active.toLowerCase()):target?.isActive??false,
@@ -104,7 +105,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    Your {exportBatches.reduce((n:number,b:typeof exportBatches[number])=>n+b.rows.length,0)} saved product cards are split into {exportBatches.length} CSV files of up to 100 rows each. Download each file separately; every file can be re-uploaded using the existing importer.
   </p>}
   {exportBatches.length>0&&<p className="notice">Exports use the current editor values, including any unsaved edits, for products with saved IDs. Save your changes before exporting if you need the exported file to match your stored catalog.</p>}
-  <p className="notice"><strong>Matching:</strong> product_id or SKU updates an existing private product; otherwise a new draft is created. Category uses the category name (GetSwole is a category, not a supplier). Blank source cost on updates preserves it. Images and inventory remain separate.</p>
+  <p className="notice"><strong>Matching:</strong> product_id or SKU updates an existing private product; otherwise a new draft is created. Category uses the category name (GetSwole is a category, not a supplier). Blank description, compare-at price or category clears that field when its CSV column is included. Omitted columns preserve existing values. Blank source cost preserves the existing cost. Images and inventory remain separate.</p>
   <label className="apex-csv-upload">Select CSV file
    <input type="file" accept=".csv,text/csv" disabled={disabled}
     onChange={e=>void upload(e.target.files?.[0])}/>
