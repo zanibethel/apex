@@ -13,6 +13,6 @@ export function matchRepeatedBlankSkuCard(previousFileName,nextFileName,previous
   typeof entry.row?.key==="string"&&Boolean(entry.row.key));
  if(candidates.length!==1)return undefined;
  const match=(Array.isArray(editorRows)?editorRows:[]).filter(row=>
-  row?.key===candidates[0].row.key&&!row?.id);
+  row?.key===candidates[0].row.key);
  return match.length===1?match[0]:undefined;
 }
