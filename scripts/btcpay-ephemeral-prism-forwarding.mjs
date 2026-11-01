@@ -5,7 +5,7 @@
  * This is NOT an Apex production integration or admin rule activation path.
  */
 import assert from "node:assert/strict";
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
 import { openSync, closeSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -20,6 +20,16 @@ const origin="http://127.0.0.1:14142";
 const id=/^[a-zA-Z0-9_-]{1,100}$/;
 const sha=/^[a-f0-9]{64}$/i;
 const COMPOSE="BTCPayServer.Tests/docker-compose.yml";
+const MAX_FORWARDED_TEST_MS=14*60*1000;
+const beginning=Date.now();
+function progress(stage,details="") {
+  // Only static phase names and numeric counts, never addresses or credentials.
+  process.stderr.write("[prism-regtest] "+stage+(details?" "+details:"")+"\n");
+}
+function bounded(stage) {
+  if(Date.now()-beginning>MAX_FORWARDED_TEST_MS)
+    throw Error("Prism regtest exceeded bounded runtime at "+stage);
+}
 
 function btc(v) {
   assert.equal(typeof v,"bigint");
@@ -116,6 +126,7 @@ export function payoutSettings(ratio,addresses) {
 function persistSettings(store,settings) {
   if(!id.test(store))throw Error("Bad synthetic store ID");
   const path="tests/payout-rls/prism-ephemeral-test-store-setting.sql";
+  progress("seed-store-settings");
   const r=invoke("psql",[
     "-X","-q","-At","-h","127.0.0.1","-p","39372","-U","postgres",
     "-d","btcpayserver","-v","ON_ERROR_STOP=1",
@@ -123,8 +134,10 @@ function persistSettings(store,settings) {
     "-f",join(process.env.GITHUB_WORKSPACE,path),
   ]);
   if(r!=="seeded")throw Error("Prism settings not installed in ephemeral BTCPay DB");
+  progress("seed-store-settings-complete");
 }
 async function restartLocalBTCPay() {
+  progress("restart-btcpay-start");
   const pidFile=join(process.env.RUNNER_TEMP,"btcpay-boot.pid");
   const n=Number(readFileSync(pidFile,"utf8").trim());
   if(!Number.isSafeInteger(n)||n<100)throw Error("Untrusted BTCPay test process ID");
@@ -155,13 +168,17 @@ async function restartLocalBTCPay() {
     try{
       const r=await fetch(origin+"/",{redirect:"manual",
         signal:AbortSignal.timeout(800)});
-      if([200,302,303].includes(r.status))return child.pid;
+      if([200,302,303].includes(r.status)){
+        progress("restart-btcpay-ready");
+        return child.pid;
+      }
     }catch{/* startup */}
     await delay(1600);
   }
   throw Error("BTCPay regtest restart failed to become ready");
 }
 async function storeConfig(basic,ratio,suffix){
+  progress("configure-regtest-store",String(ratio.version));
   const store=await api("/api/v1/stores",{
     method:"POST",auth:basic,
     json:{name:"Apex Prism synthetic "+ratio.supplier+" "+suffix},
@@ -196,29 +213,37 @@ async function storeConfig(basic,ratio,suffix){
   };
   const {settings,frozen}=payoutSettings(ratio,addresses);
   persistSettings(store.id,settings);
+  progress("configured-regtest-store",String(ratio.version));
   return {storeId:store.id,sw,pw,addresses,frozen,ratio};
 }
 async function waitForPayouts(basic,p,minerAddress) {
+  progress("await-prism-claims",String(p.ratio.version));
   const path="/api/v1/stores/"+p.storeId+"/payouts";
   let claims=[];
-  for(let attempt=0;attempt<100;attempt++){
+  for(let attempt=0;attempt<48;attempt++){
+    bounded("prism-claims");
     claims=await api(path,{auth:basic});
     if(Array.isArray(claims)&&claims.length>=2)break;
+    if(attempt%12===0)progress("prism-claims-pending",String(attempt));
     if(attempt%8===7)rpc("generatetoaddress","1",minerAddress);
     await delay(1500);
   }
   if(!Array.isArray(claims)||claims.length!==2)
     throw Error("Prism did not generate exactly two on-chain payout claims");
+  progress("prism-claims-created",String(claims.length));
   // Only count payouts whose metadata explicitly identifies source Prism.
   if(!claims.every(x=>JSON.stringify(x.metadata||{}).includes("Prism")&&
       x.payoutMethodId==="BTC-CHAIN"))
     throw Error("Payout claims are not both explicitly Prism-generated on chain");
+  progress("await-recipient-wallet-receipts",String(p.ratio.version));
   let supplierSats=0n,platformSats=0n;
-  for(let attempt=0;attempt<110;attempt++){
+  for(let attempt=0;attempt<60;attempt++){
+    bounded("prism-wallet-receipts");
     const supplier=wallet(p.sw,"getreceivedbyaddress",p.addresses.supplier,"0");
     const platform=wallet(p.pw,"getreceivedbyaddress",p.addresses.platform,"0");
     supplierSats=sats(supplier);platformSats=sats(platform);
     if(supplierSats>0n&&platformSats>0n)break;
+    if(attempt%12===0)progress("prism-wallet-receipts-pending",String(attempt));
     if(attempt%6===5)rpc("generatetoaddress","1",minerAddress);
     await delay(2000);
   }
@@ -240,6 +265,7 @@ async function waitForPayouts(basic,p,minerAddress) {
   const expectedP=p.frozen.pending[1].entitlementSats*98n/100n;
   if(gotS!==expectedS||gotP!==expectedP)
     throw Error("Prism recipient totals do not match 2% reserve policy");
+  progress("prism-wallet-receipts-confirmed",String(p.ratio.version));
   return {ruleVersion:p.ratio.version,
     supplierBasisPoints:p.ratio.supplier,
     platformBasisPoints:10000-p.ratio.supplier,
@@ -253,6 +279,7 @@ export async function runEphemeralPrismForwarding({basic}) {
   assertIsolation();
   if(typeof basic!=="string"||!basic.startsWith("Basic "))
     throw Error("Synthetic administrator not available");
+  progress("begin-forwarding-test");
   const chain=rpc("getblockchaininfo");
   if(chain?.chain!=="regtest")throw Error("STOP: Bitcoin Core was not regtest");
   const suffix=randomBytes(5).toString("hex");
@@ -261,10 +288,15 @@ export async function runEphemeralPrismForwarding({basic}) {
     throw Error("No existing disposable Bitcoin Core mining wallet");
   const minerAddress=wallet(miner,"getnewaddress","","bech32");
   const stores=[];
-  for(const ratio of ratios)stores.push(await storeConfig(basic,ratio,suffix));
+  for(const ratio of ratios){
+    bounded("configure-stores");
+    stores.push(await storeConfig(basic,ratio,suffix));
+  }
   await restartLocalBTCPay();
   const receipts=[];
   for(const p of stores){
+    bounded("prism-invoice");
+    progress("create-invoice",String(p.ratio.version));
     const invoice=await api("/api/v1/stores/"+p.storeId+"/invoices",{
       method:"POST",auth:basic,
       json:{amount:"0.01",currency:"BTC",
@@ -281,8 +313,10 @@ export async function runEphemeralPrismForwarding({basic}) {
     const tx=wallet(miner,"sendtoaddress",btcMethod.destination,btc(1000000n));
     if(!sha.test(tx))throw Error("Synthetic Prism invoice payment not broadcast");
     rpc("generatetoaddress","6",minerAddress);
+    progress("prism-invoice-funded",String(p.ratio.version));
     let settled=false;
-    for(let i=0;i<80;i++){
+    for(let i=0;i<45;i++){
+      bounded("invoice-settlement");
       const details=await api("/api/v1/stores/"+p.storeId+
         "/invoices/"+invoice.id,{auth:basic});
       if(details?.status==="Settled"&&details.additionalStatus==="None"){
@@ -293,10 +327,12 @@ export async function runEphemeralPrismForwarding({basic}) {
       await delay(1600);
     }
     if(!settled)throw Error("Prism test invoice did not settle");
+    progress("prism-invoice-settled",String(p.ratio.version));
     receipts.push(await waitForPayouts(basic,p,minerAddress));
   }
   if(receipts.length!==2)
     throw Error("Both versioned Prism regtest scenarios did not complete");
+  progress("both-prism-payout-ratios-confirmed");
   return Object.freeze({
     verifiedNetwork:"regtest",prismForwardingVerified:true,
     scenarioCount:receipts.length,receipts,productionReady:false,
