@@ -10,6 +10,28 @@
 - This deployment is isolated from the existing Apex Signet-only pending wallet requests; do **not** reuse them.
 - No production merchant transactions or commercial activation. Any later release requires merchant/product/payment authorization.
 
+## Hosting choice (selected for planning, NOT purchased)
+
+**Provider selected:** DigitalOcean, **Basic Droplet** (regular shared CPU), 2 vCPU / 4 GiB RAM / 80 GiB SSD, approximately **US$24/month** at the October 31, 2026 published rate. First-choice location: **NYC3** (verify plan capacity when creating). OS: Ubuntu 24.04 LTS x64. Weekly DigitalOcean Droplet backup adds 20% (approximately **US$4.80/month**), for a proposed total of **US$28.80/month** before taxes and other costs.
+
+This is a **provider recommendation and nonbinding configuration choice only**. No DigitalOcean account is connected, no Droplet has been created, no billing authorization has been granted, and the price must be confirmed in the DigitalOcean creation screen before purchase.
+
+This plan exceeds BTCPay's 2-core/4-GB starting profile and provides additional headroom beyond its 50-GB minimal pruned BTC installation. Use `opt-save-storage-xs` when evaluating a future small **pruned Bitcoin mainnet** installation, following the official storage documentation; the **initial test setup must stay regtest**. Do not represent a regtest test as a mainnet synchronization test.
+
+Recommended DigitalOcean creation checklist:
+1. Create a dedicated Apex-owned DigitalOcean project and Basic regular-CPU Droplet with the above parameters (only after explicit approval of the recurring charge).
+2. Add SSH public key authentication during creation. Do not use password-only SSH. Apply the provider firewall for TCP 22 from a trusted admin IP/VPN and TCP 80/443 for DNS validation and HTTPS. Never publicly expose Bitcoin RPC or PostgreSQL.
+3. Add a dedicated test BTCPay DNS name after the Apex domain is controlled. Do not assume a hostname exists or disclose secrets in the public repo.
+4. Enable weekly VM backups, plus **independent encrypted off-host BTCPay configuration and recovery backups**. A Droplet backup is not a complete wallet recovery plan.
+5. Follow the official BTCPay install and independently verify `bitcoin-cli.sh getblockchaininfo` reports `regtest` before creating test invoices.
+6. Do not enable mainnet or Prism-controlled payouts until separate technical, security and merchant-approval gates are complete.
+
+Sources (prices and requirements must be rechecked at order time):
+- https://www.digitalocean.com/pricing/droplets
+- https://docs.digitalocean.com/products/backups/details/pricing/
+- https://docs.digitalocean.com/products/droplets/details/availability/
+- https://docs.btcpayserver.org/Docker/specs/
+
 ## Operator prerequisites (still required)
 1. Confirm who owns the VPS account, an acceptable monthly recurring budget, DNS name and an administrator with restricted SSH access. Do not purchase or change DNS without approval.
 2. Choose a host with sufficient **persistent** storage and memory according to current BTCPay Docker/server-sizing documents. Do not use a temporary application container or Vercel for Bitcoin Core.
