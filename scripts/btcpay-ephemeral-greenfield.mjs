@@ -5,6 +5,7 @@
  * No real wallets, mainnet, Vercel, Supabase or public API access.
  */
 import { randomBytes } from "node:crypto";
+import { createEphemeralWebhookJournal } from "./btcpay-ephemeral-webhook.mjs";
 
 const ORIGIN = "http://127.0.0.1:14142";
 const safeId = /^[a-zA-Z0-9_-]{1,100}$/;
@@ -34,7 +35,8 @@ async function endpoint(path, { method="GET", json, auth, fetchImpl=fetch }={}) 
 
 export async function runEphemeralGreenfield({
   testOnly, network, fetchImpl=fetch, random=()=>randomBytes(18).toString("hex"),
-  payInvoice, sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),
+  payInvoice, verifyWebhook=false,
+  sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),
 }={}) {
   if(testOnly!==true||network!=="regtest") {
     throw Error("STOP: Greenfield smoke requires explicit disposable regtest mode");
@@ -92,12 +94,40 @@ export async function runEphemeralGreenfield({
   const readStore=await request("/api/v1/stores/"+store.id,{auth:token});
   if(readStore?.id!==store.id)throw Error("Synthetic read-only store check failed");
   const orderId="APEX-REGTEST-001";
+  if(verifyWebhook && typeof payInvoice!=="function")
+    throw Error("Signed webhook test requires real regtest funding");
+  let receiver,secret,hookId;
+  if(verifyWebhook) {
+    secret=randomBytes(24).toString("hex");
+    const journal=createEphemeralWebhookJournal({
+      testOnly:true,network:"regtest",storeId:store.id,
+      secret,orderId,amountSats:10000n,
+      readInvoice:id=>request("/api/v1/stores/"+store.id+
+        "/invoices/"+id,{auth:token}),
+    });
+    receiver=await journal.begin(process.env.APEX_BTCPAY_WEBHOOK_PORT==="48173"?48173:0);
+  }
+  try {
+  if(receiver) {
+    const hook=await request("/api/v1/stores/"+store.id+"/webhooks",{
+      method:"POST",auth:basic,
+      json:{url:receiver.url,secret,enabled:true,
+        automaticRedelivery:false,authorizedEvents:{
+          everything:false,specificEvents:["InvoiceSettled"],
+        }},
+    });
+    if(typeof hook?.id!=="string"||!safeId.test(hook.id)||
+       hook.enabled!==true)
+      throw Error("Synthetic webhook registration did not complete");
+    hookId=hook.id;
+  }
   const invoice=await request("/api/v1/stores/"+store.id+"/invoices",{
     method:"POST",auth:token,
     json:{amount:"0.0001",currency:"BTC",metadata:{orderId}},
   });
   if(typeof invoice?.id!=="string"||!safeId.test(invoice.id))
     throw Error("Synthetic invoice was not created");
+  receiver?.setInvoiceId(invoice.id);
   const observed=await request("/api/v1/stores/"+store.id+"/invoices/"+invoice.id,{
     auth:token,
   });
@@ -145,14 +175,50 @@ export async function runEphemeralGreenfield({
     }
     if(!settled)throw Error("BTCPay did not report a settled regtest invoice");
   }
+  let webhookProof={
+    signedSettlementWebhookReceived:false,
+    duplicateDeliveryIgnored:false,
+    tamperingRejected:false,
+    crossStoreRejected:false,
+  };
+  if(receiver) {
+    for(let attempt=0;attempt<30&&!receiver.isSettled;attempt++)
+      await sleep(500);
+    if(!receiver.isSettled){
+      let deliveries="unavailable";
+      try{
+        const list=await request("/api/v1/stores/"+store.id+
+          "/webhooks/"+hookId+"/deliveries",{auth:basic});
+        if(Array.isArray(list)) {
+          deliveries=JSON.stringify(list.slice(0,5).map(x=>({
+            status:x.status,httpCode:x.httpCode||null,
+          })));
+        }
+      }catch{/* diagnostic status remains unavailable */}
+      throw Error("No authenticated BTCPay InvoiceSettled webhook; "+
+        "received="+receiver.receivedRequests+
+        ",rejected="+receiver.rejectedRequests+
+        ",deliveries="+deliveries);
+    }
+    const result=await receiver.replayAssertions();
+    webhookProof={
+      signedSettlementWebhookReceived:true,
+      duplicateDeliveryIgnored:result.duplicateIgnored,
+      tamperingRejected:result.tamperingRejected,
+      crossStoreRejected:result.crossStoreRejected,
+    };
+  }
   return Object.freeze({
     chain:"regtest",accountCreated:true,storeCreated:true,
     testWalletConfigured:true,
     storeScopedKeyCreated:true,invoiceCreated:true,invoiceReadVerified:true,
     invoiceStatus:observed.status,
     paymentFunded:funded,invoiceSettledVerified:settled,
-    prismVerified:false,productionReady:false,
+    ...webhookProof,prismVerified:false,productionReady:false,
   });
+  } finally {
+    if(receiver)await receiver.close();
+  }
 }
 
 if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
@@ -166,6 +232,7 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
       ...payment,testOnly:true,network:"regtest",
       upstreamRoot:process.env.APEX_BTCPAY_UPSTREAM_ROOT,
     })}:{}),
+    verifyWebhook:process.env.APEX_BTCPAY_VERIFY_WEBHOOK==="true",
   })).then(out=>process.stdout.write(JSON.stringify(out,null,2)+"\\n"))
     .catch(e=>{process.stderr.write(e.message+"\\n");process.exitCode=1;});
 }

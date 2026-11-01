@@ -8,6 +8,9 @@ on:
       - ".github/workflows/btcpay-upstream-regtest.yml"
       - "scripts/btcpay-local-doctor.mjs"
       - "tests/btcpay-local-doctor.test.mjs"
+      - "scripts/btcpay-ephemeral-*.mjs"
+      - "tests/btcpay-ephemeral-*.test.mjs"
+      - "docs/BTCPAY_EPHEMERAL_SIGNED_WEBHOOK_20261101.md"
       - "docs/BTCPAY_LOCAL_FIRST_STRATEGY_20261031.md"
   workflow_dispatch:
 
@@ -73,6 +76,10 @@ jobs:
           test "$verified" = "1" || { echo "::error::Bitcoin regtest node did not become ready"; exit 1; }
           echo "Verified Bitcoin Core chain: regtest; no real funds"
       - name: Start official BTCPay Server on loopback-only development profile
+        env:
+          # Disposable runner only; keep SSRF protection enabled and narrowly
+          # permit only the temporary local callback port, not all private IPs.
+          BTCPAY_SSRFEXCEPTIONS: "127.0.0.1:48173"
         working-directory: ${{ runner.temp }}/btcpayserver
         run: |
           set -euo pipefail
@@ -97,11 +104,13 @@ jobs:
           test "$ready" = "1" || { echo "::error::BTCPay did not become ready at localhost:14142"; exit 1; }
           echo "Official BTCPay localhost startup verified on ephemeral regtest runner"
           echo "Not tested: Greenfield invoice, signed webhook, Prism plugin, actual split forwarding"
-      - name: Create, pay and confirm synthetic Greenfield invoice on real regtest
+      - name: Create, pay, and verify signed settled webhook on real regtest
         env:
           APEX_BTCPAY_EPHEMERAL: "true"
           APEX_BTCPAY_TEST_NETWORK: regtest
           APEX_BTCPAY_PAY_REGTEST: "true"
+          APEX_BTCPAY_VERIFY_WEBHOOK: "true"
+          APEX_BTCPAY_WEBHOOK_PORT: "48173"
           APEX_BTCPAY_UPSTREAM_ROOT: ${{ runner.temp }}/btcpayserver
         run: node scripts/btcpay-ephemeral-greenfield.mjs
       - name: Stop ephemeral test processes and destroy disposable Bitcoin data
