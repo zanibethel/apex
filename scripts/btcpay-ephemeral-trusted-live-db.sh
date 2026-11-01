@@ -13,7 +13,7 @@ test "${PGDATABASE:-}" = apex_test
 test -n "${PGPASSWORD:-}"
 psql -X -d postgres -v ON_ERROR_STOP=1 -q -c 'CREATE DATABASE apex_test'
 files=(
- tests/payout-rls/bootstrap.sql
+ tests/payout-rls/btcpay-real-provider-second-db-bootstrap.sql
  supabase/migrations/20261029233701_apex_initial_catalog_readonly.sql
  supabase/migrations/20261030222500_payout_reporting_readonly.sql
  supabase/migrations/20261030233000_multi_split_draft_rpc.sql
