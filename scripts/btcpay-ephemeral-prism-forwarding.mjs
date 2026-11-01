@@ -16,6 +16,9 @@ const STORE_SCOPE="90000000-0000-4000-8000-000000000001";
 const SUPPLIER="80000000-0000-4000-8000-000000000001";
 const PLATFORM="80000000-0000-4000-8000-000000000002";
 const ratios=[{supplier:9000,version:1},{supplier:8500,version:2}];
+// Wider fee headroom while preserving Prism\'s actual 2% reserve. A separate
+// negative test will cover small invoices and minimum-fee policy.
+const TEST_INVOICE_SATS=10_000_000n;
 const origin="http://127.0.0.1:14142";
 const id=/^[a-zA-Z0-9_-]{1,100}$/;
 const sha=/^[a-f0-9]{64}$/i;
@@ -103,8 +106,8 @@ export function payoutSettings(ratio,addresses) {
       {recipient_id:PLATFORM,basis_points:10000-ratio.supplier},
     ]};
   const frozen=snapshotSyntheticAdminSplit({testOnly:true,network:"regtest",
-    rule,orderId:"prism-test-"+ratio.version,amountSats:1000000n});
-  if(frozen.pending.reduce((a,b)=>a+b.entitlementSats,0n)!==1000000n)
+    rule,orderId:"prism-test-"+ratio.version,amountSats:TEST_INVOICE_SATS});
+  if(frozen.pending.reduce((a,b)=>a+b.entitlementSats,0n)!==TEST_INVOICE_SATS)
     throw Error("Synthetic order allocation mismatch");
   for(const a of Object.values(addresses))
     if(!/^bcrt1[ac-hj-np-z02-9]{12,100}$/i.test(a))
@@ -304,7 +307,7 @@ async function waitForPayouts(basic,p,minerAddress) {
   if(gotS!==supplierSats||gotP!==platformSats)
     throw Error("Prism transfers were not confirmed to both receivers");
   const gross=gotS+gotP;
-  if(gross<=0n||gross>1000000n||
+  if(gross<=0n||gross>TEST_INVOICE_SATS||
       gotS>=p.frozen.pending[0].entitlementSats||
       gotP>=p.frozen.pending[1].entitlementSats)
     throw Error("Prism reserve/recipient payout exceeds declared entitlement");
@@ -320,7 +323,7 @@ async function waitForPayouts(basic,p,minerAddress) {
     platformBasisPoints:10000-p.ratio.supplier,
     supplierReceivedSats:gotS.toString(),
     platformReceivedSats:gotP.toString(),
-    reserveSats:(1000000n-gross).toString(),
+    reserveSats:(TEST_INVOICE_SATS-gross).toString(),
     payoutsCreated:claims.length,
     pluginGenerated:true,productionReady:false};
 }
@@ -358,7 +361,7 @@ export async function runEphemeralPrismForwarding({basic}) {
     progress("create-invoice",String(p.ratio.version));
     const invoice=await api("/api/v1/stores/"+p.storeId+"/invoices",{
       method:"POST",auth:basic,
-      json:{amount:"0.01",currency:"BTC",
+      json:{amount:"0.10",currency:"BTC",
         metadata:{orderId:"prism-test-"+p.ratio.version}},
     });
     if(!id.test(invoice.id))throw Error("Prism test invoice not created");
@@ -367,9 +370,9 @@ export async function runEphemeralPrismForwarding({basic}) {
     });
     const btcMethod=methods.find(x=>x.paymentMethodId==="BTC-CHAIN");
     if(!btcMethod||!btcMethod.destination.startsWith("bcrt1")||
-       sats(btcMethod.due)!==1000000n)
+       sats(btcMethod.due)!==TEST_INVOICE_SATS)
       throw Error("Prism test payment details do not match regtest invoice");
-    const tx=wallet(miner,"sendtoaddress",btcMethod.destination,btc(1000000n));
+    const tx=wallet(miner,"sendtoaddress",btcMethod.destination,btc(TEST_INVOICE_SATS));
     if(!sha.test(tx))throw Error("Synthetic Prism invoice payment not broadcast");
     rpc("generatetoaddress","6",minerAddress);
     progress("prism-invoice-funded",String(p.ratio.version));
