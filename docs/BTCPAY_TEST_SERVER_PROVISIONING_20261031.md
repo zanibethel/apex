@@ -32,6 +32,24 @@ Sources (prices and requirements must be rechecked at order time):
 - https://docs.digitalocean.com/products/droplets/details/availability/
 - https://docs.btcpayserver.org/Docker/specs/
 
+## Verified domain and DigitalOcean handoff (2026-10-31)
+
+Vercel's connected team domain inventory confirms `apexanabolics.co` is owned/verified and attached to the Apex storefront project. **Do not purchase a second domain.** Choose `pay-test.apexanabolics.co` as the planned test BTCPay hostname, separate from the existing storefront. The DNS A record **does not exist by virtue of this plan**; it must be created only after the VPS obtains an assigned IPv4 address. Do not change apex/root/www DNS records.
+
+**DigitalOcean browser provisioning handoff — not executed:**
+1. Sign in at `https://cloud.digitalocean.com/`, select/create an Apex-specific project and choose **Create > Droplets**.
+2. Select **Ubuntu 24.04 LTS x64**, not the BTCPay Marketplace 1-Click image for this **first regtest** pass. DigitalOcean does offer a BTCPay 1-Click image, but its documented first-login wizard does not explicitly establish a regtest chain; use an independently verified `NBITCOIN_NETWORK=regtest` installation.
+3. Region `NYC3` if the matching size is in stock; Basic **Regular** shared CPU; **2 vCPU / 4 GiB RAM / 80 GiB SSD**. Confirm the displayed base price (published US$24/month) before purchase.
+4. Enable an SSH **public key** for admin access. Never send the SSH private key, server password or DigitalOcean API token to the public repo or chat.
+5. Enable appropriate Droplet backup/monitoring options deliberately after reviewing the additional cost; do not conflate provider snapshots with full recovery of wallet/configuration state.
+6. Create a DigitalOcean cloud firewall on the Droplet: inbound TCP 22 only from a trusted admin IP/VPN, TCP 80 and 443 for HTTPS and certificate issuance; default deny all other inbound application ports. No public Bitcoin RPC, PostgreSQL or Docker socket.
+7. When the Droplet has a public IPv4 address, add one **DNS A record** through the existing Vercel DNS for host `pay-test` pointing to that exact IPv4 address. Only add AAAA if IPv6 exists, is supported, and correctly firewalled. Allow DNS to resolve before running the BTCPay installer.
+8. Using **key-based** `ssh root@<DROPLET_IP>`, perform non-destructive OS, memory, disk, port and DNS checks before installing. Confirm the machine is dedicated and not already hosting an application or Bitcoin mainnet.
+9. Run the reviewed official Docker installation profile **with `NBITCOIN_NETWORK="regtest"`**, `BTCPAYGEN_LIGHTNING="none"`, and `BTCPAY_HOST="pay-test.apexanabolics.co"` only on the verified target. The installer changes Docker, system services and potentially SSH host integration; inspect official instructions and approve host changes first.
+10. Verify service health, full certificate validity (no `curl -k`), `bitcoin-cli.sh getblockchaininfo` reports `chain: regtest`, and correct administrator enrollment. Only then configure a synthetic test store and private read-only Greenfield credentials.
+
+**Provider-specific information:** https://docs.digitalocean.com/products/marketplace/catalog/btcpay-server/ documents the 1-Click alternative, but it is not selected here. https://docs.btcpayserver.org/Docker/installation/ and https://docs.btcpayserver.org/Docker/networking/ remain authoritative for installation and HTTPS.
+
 ## Operator prerequisites (still required)
 1. Confirm who owns the VPS account, an acceptable monthly recurring budget, DNS name and an administrator with restricted SSH access. Do not purchase or change DNS without approval.
 2. Choose a host with sufficient **persistent** storage and memory according to current BTCPay Docker/server-sizing documents. Do not use a temporary application container or Vercel for Bitcoin Core.
@@ -48,7 +66,7 @@ mkdir -p /opt/BTCPayServer
 cd /opt/BTCPayServer
 git clone https://github.com/btcpayserver/btcpayserver-docker
 cd btcpayserver-docker
-export BTCPAY_HOST="btcpay-test.example.com"
+export BTCPAY_HOST="pay-test.apexanabolics.co"
 export NBITCOIN_NETWORK="regtest"
 export BTCPAYGEN_CRYPTO1="btc"
 export BTCPAYGEN_LIGHTNING="none"
@@ -75,7 +93,7 @@ Record and independently inspect `chain: "regtest"`. Reject any other value, esp
 ```sh
 export APEX_BTCPAY_TEST_MODE="true"
 export APEX_BTCPAY_TEST_NETWORK="regtest"
-export APEX_BTCPAY_TEST_URL="https://btcpay-test.example.com/"
+export APEX_BTCPAY_TEST_URL="https://pay-test.apexanabolics.co/"
 export APEX_BTCPAY_TEST_STORE_ID="<store-id>"
 export APEX_BTCPAY_TEST_READONLY_API_KEY="<scoped-readonly-key>"
 node scripts/btcpay-readiness.mjs
