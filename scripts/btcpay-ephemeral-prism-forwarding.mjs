@@ -86,7 +86,7 @@ async function api(path,{method="GET",auth,json}={}) {
     path.replace(/[a-z0-9_-]{26,}/ig,"<id>")+" HTTP "+r.status);
   return r.json();
 }
-function payoutSettings(ratio,addresses) {
+export function payoutSettings(ratio,addresses) {
   const rule={status:"approved_test_fixture",scope_type:"storefront",
     scope_id:STORE_SCOPE,version:ratio.version,allocations:[
       {recipient_id:SUPPLIER,basis_points:ratio.supplier},
