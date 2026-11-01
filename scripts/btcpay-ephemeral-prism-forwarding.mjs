@@ -164,6 +164,9 @@ async function restartLocalBTCPay() {
   closeSync(fd);
   if(!child.pid)throw Error("BTCPay regtest restart did not spawn");
   writeFileSync(pidFile,String(child.pid)+"\n");
+  // A detached BTCPay web server must not keep the test harness alive
+  // after the main assertion rejects; GitHub cleanup kills this recorded PID.
+  child.unref();
   for(let i=0;i<90;i++){
     try{
       const r=await fetch(origin+"/",{redirect:"manual",
@@ -230,6 +233,8 @@ async function waitForPayouts(basic,p,minerAddress) {
   }
   if(!Array.isArray(claims)||claims.length!==2)
     throw Error("Prism did not generate exactly two on-chain payout claims");
+  progress("prism-payout-claim-states",
+    [...new Set(claims.map(x=>String(x.state||"unknown")))].join(","));
   progress("prism-claims-created",String(claims.length));
   // Only count payouts whose metadata explicitly identifies source Prism.
   if(!claims.every(x=>JSON.stringify(x.metadata||{}).includes("Prism")&&
@@ -243,12 +248,35 @@ async function waitForPayouts(basic,p,minerAddress) {
     const platform=wallet(p.pw,"getreceivedbyaddress",p.addresses.platform,"0");
     supplierSats=sats(supplier);platformSats=sats(platform);
     if(supplierSats>0n&&platformSats>0n)break;
-    if(attempt%12===0)progress("prism-wallet-receipts-pending",String(attempt));
+    if(attempt%12===0) {
+      const latest=await api(path,{auth:basic});
+      const states=Array.isArray(latest)
+        ?[...new Set(latest.map(x=>String(x.state||"unknown")))].join(",")
+        :"unavailable";
+      progress("prism-wallet-receipts-pending",
+        String(attempt)+" payoutStates="+states);
+    }
     if(attempt%6===5)rpc("generatetoaddress","1",minerAddress);
     await delay(2000);
   }
-  if(supplierSats===0n||platformSats===0n)
-    throw Error("Prism-created payouts did not arrive in both wallets");
+  if(supplierSats===0n||platformSats===0n) {
+    // Collect ONLY fixed-word log-match counts, never raw diagnostics, addresses,
+    // wallet material or provider responses.
+    let diagnostics="unavailable";
+    try {
+      const serverLog=readFileSync(
+        join(process.env.RUNNER_TEMP,"btcpay-prism-restart.log"),"utf8"
+      );
+      diagnostics=JSON.stringify({
+        insufficientFunds:(serverLog.match(/NotEnoughFundsException/g)||[]).length,
+        processorDisabled:(serverLog.match(/DisableProcessor/g)||[]).length,
+        broadcastError:(serverLog.match(/Could not finalize and broadcast/g)||[]).length,
+        processingFound:(serverLog.match(/found to process/g)||[]).length,
+        prismEventError:(serverLog.match(/Error while processing prism event/g)||[]).length,
+      });
+    }catch{/* no log availability */}
+    throw Error("No confirmed regtest Prism wallet receipts: "+diagnostics);
+  }
   rpc("generatetoaddress","2",minerAddress);
   const gotS=sats(wallet(p.sw,"getreceivedbyaddress",p.addresses.supplier,"1"));
   const gotP=sats(wallet(p.pw,"getreceivedbyaddress",p.addresses.platform,"1"));
@@ -293,6 +321,16 @@ export async function runEphemeralPrismForwarding({basic}) {
     stores.push(await storeConfig(basic,ratio,suffix));
   }
   await restartLocalBTCPay();
+  for(const p of stores) {
+    const active=await api("/api/v1/stores/"+p.storeId+
+      "/payout-processors/OnChainAutomatedPayoutSenderFactory/BTC-CHAIN",{
+      auth:basic,
+    });
+    if(!Array.isArray(active)||active.length!==1||
+       active[0].payoutMethodId!=="BTC-CHAIN")
+      throw Error("Prism on-chain payout processor not active after BTCPay restart");
+    progress("verified-active-payout-processor",String(p.ratio.version));
+  }
   const receipts=[];
   for(const p of stores){
     bounded("prism-invoice");
