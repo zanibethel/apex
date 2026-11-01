@@ -32,3 +32,14 @@ The checkout is responsive and follows Apex’s black/silver/crimson theme with 
 ## Intentional next pass
 
 After partner review, refine the checkout appearance and usability. Only then plan a real, server-side cart/order schema and payment integration under a separate gated implementation pass. User-facing checkout is not ready for real commercial acceptance.
+
+## Public test-mode deployment gate (Nov 1 follow-up)
+
+The checkout demo is now authorized for a **public test-mode-only** rollout to the existing Apex domain.
+
+- `APEX_CHECKOUT_MODE` is a **server-only** environment variable. Undefined, `off`, `live`, or any unrecognized value returns 404 on `/checkout/preview`. Only exact `demo` displays the UI.
+- The page shows a prominent "TEST MODE — SIMULATED PAYMENTS ONLY" disclaimer, makes clear that Bitcoin cannot be sent, and warns testers not to enter actual personal information.
+- The production setting `APEX_CHECKOUT_MODE=demo` **exposes only the nontransactional demonstration**. It does not enable any BTCPay, Prism, order, refund or payout operation. No client-side or server-side code is able to turn payments on.
+- Future transactional mode will require a separately reviewed service, secure credentials, merchant permissions, legally authorized products, fulfillment/tax/shipping policies, server-side order/payment accounting, fraud checks, expiry/idempotency, fail-closed error handling and verified provider-side payout configuration. Merely changing a flag from demo to live is intentionally not sufficient.
+- To hide the demonstration, set `APEX_CHECKOUT_MODE=off` and **redeploy** (Vercel environment changes require a deployment before they take effect). Existing production account/supplier functionality is otherwise unchanged.
+- Require exact-head GitHub CI, Vercel production deployment READY on the intended main commit, domain assignment and public route verification. Do not promote the BTCPay experimental PR stack.
