@@ -16,6 +16,7 @@ import {privateBulkReadiness} from "@/lib/catalog/private-bulk-readiness.mjs";
 import {supplierAdminFeedback} from "@/lib/catalog/supplier-admin-feedback.mjs";
 import {bulkSetupHref} from "@/lib/catalog/bulk-setup-targets.mjs";
 import {bulkViewAfterEdit,selectEditedBulkRow} from "@/lib/catalog/bulk-edit-visibility.mjs";
+import {bulkRowsRequiringSave,reconcileBulkSaveBatch,bulkSaveProgress} from "@/lib/catalog/bulk-save-retry.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -55,6 +56,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const newlyRequested=new Set(publishResults.filter(item=>item.ok).map(item=>item.id));
  const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested);
  const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key));
+ const pendingSaveRows=bulkRowsRequiringSave(selectedRows,lastSave);
  const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
  const selectedIds=savedSelected.map(r=>r.id!);
  const previewSelected=selectedIds.length&&selectedIds.length<=50
@@ -62,10 +64,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   :null;
 
  function saveSelected(_form:FormData){
-  if(!editable||busy)return;
-  // Server enforces a 20-row maximum per call. The UI safely submits a larger
-  // CSV selection in bounded sequential chunks and reports every row.
-  const pendingRows=selectedRows.slice();
+  if(!editable||busy||!pendingSaveRows.length)return;
+  // Server enforces a 20-row maximum per call. Only unfinished, failed or
+  // changed selected rows are retried. Previously confirmed saved rows stay
+  // selected so the supplier can still preview the full selection together.
+  const pendingRows=pendingSaveRows.slice();
   const submittedByKey=new Map(pendingRows.map(r=>[r.key,r]));
   startTransition(async()=>{
    const all: {key:string;ok:boolean;name:string;message:string;id?:string;sku?:string}[]=[];
@@ -76,22 +79,20 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     batchForm.set("rows",JSON.stringify(pendingRows.slice(i,i+20)));
     try{
      const next=await saveBulkProductDrafts({ok:false,message:"",results:[]},batchForm);
-     if(!next.results.length){stopped=true;break;}
-     all.push(...next.results);
+     const batch=reconcileBulkSaveBatch(pendingRows.slice(i,i+20),next.results);
+     all.push(...batch.results);
+     if(!batch.complete){stopped=true;break;}
     }catch{stopped=true;break;}
    }
-   const completed=all.filter(r=>r.ok).length;
-   setResult({ok:!stopped&&all.length===pendingRows.length&&completed===all.length,
-    message:String(completed)+" of "+String(pendingRows.length)+" rows saved."+
-     (stopped?" A batch stopped before completion; review and retry remaining rows.":""),
-    results:all});
+   const progress=bulkSaveProgress(pendingRows,all,stopped);
+   setResult({ok:progress.ok,message:progress.message,results:all});
    setLastSave(prev=>({...prev,...Object.fromEntries(all.map(r=>[
     r.key,{ok:r.ok,message:r.message}
    ]))}));
    const savedByKey=new Map(all.filter(o=>o.ok&&o.id).map(o=>[o.key,o]));
    setRows(prev=>prev.map(r=>reconcileSavedBulkRow(r,
     submittedByKey.get(r.key),savedByKey.get(r.key))));
-   if(completed>0)router.refresh();
+   if(progress.saved>0)router.refresh();
   });
  }
 
@@ -135,7 +136,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   if(busy)return;
   setRows(prev=>prev.filter(r=>r.key!==key));setSelected(prev=>prev.filter(k=>k!==key));
  }
- const selectedValid=selectedRows.length>0&&selectedRows.length<=250;
+ const selectedValid=pendingSaveRows.length>0&&pendingSaveRows.length<=250;
  const allVisibleSelected=visibleRows.length>0&&visibleRows.every(r=>selectedSet.has(r.key));
  const listingByProduct=new Map(listing.map(item=>[item.productId,item]));
  const publicationById=new Map(publishResults.map(item=>[item.id,item]));
@@ -325,10 +326,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   <div className="apex-bulk-footer" aria-label="Bulk product actions">
    <form action={saveSelected}>
     <button type="submit" className="button primary" disabled={!editable||busy||!selectedValid}
-     aria-label={pending?"Saving selected products":"Save selected ("+selectedRows.length+")"}>
+     aria-label={pending?"Saving selected products":"Save selected ("+pendingSaveRows.length+" pending changes)"}>
      {pending?"Saving…":<>
-      <span className="apex-bulk-action-long">Save selected ({selectedRows.length})</span>
-      <span className="apex-bulk-action-short" aria-hidden="true">Save ({selectedRows.length})</span>
+      <span className="apex-bulk-action-long">Save selected ({pendingSaveRows.length})</span>
+      <span className="apex-bulk-action-short" aria-hidden="true">Save ({pendingSaveRows.length})</span>
      </>}
     </button>
    </form>
@@ -366,7 +367,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    More than 50 eligible products loaded. Publish selected groups of up to 50.
   </p>}
   {publicationMessage&&<p role="status" className="apex-bulk-result">{publicationMessage}</p>}
-  {selectedRows.length>20&&<p className="notice">The selected products will be saved in sequential batches of 20.</p>}
+  {pendingSaveRows.length>20&&<p className="notice">Pending changes will be saved in sequential batches of 20.</p>}
   {result.message&&<p role="status" className="apex-bulk-result">{result.message}</p>}
  </section>;
 }
