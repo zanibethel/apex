@@ -4,6 +4,8 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'tests/payout-rls/**'
+      - 'src/lib/payments/btcpay-provider-drain.mjs'
+      - 'tests/btcpay-provider-drain.test.mjs'
       - 'database/sql/apex_btcpay_*_REVIEW_ONLY.sql'
       - '.github/workflows/payout-rls.yml'
   workflow_dispatch:
