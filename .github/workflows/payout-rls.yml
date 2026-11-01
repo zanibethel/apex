@@ -65,4 +65,6 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_split_activation_REVIEW_ONLY.sql
       - name: Verify admin approvals, pending invoice safety, historical immutability and denials
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-split-activation-gate.sql
+      - name: Prove two concurrent administrator reviews cannot approve two rule versions
+        run: bash tests/payout-rls/btcpay-concurrent-split-reviews.sh
 
