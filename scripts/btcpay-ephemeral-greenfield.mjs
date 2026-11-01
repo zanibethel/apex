@@ -96,9 +96,9 @@ export async function runEphemeralGreenfield({
   const orderId="APEX-REGTEST-001";
   if(verifyWebhook && typeof payInvoice!=="function")
     throw Error("Signed webhook test requires real regtest funding");
-  let receiver;
+  let receiver,secret;
   if(verifyWebhook) {
-    const secret=randomBytes(24).toString("hex");
+    secret=randomBytes(24).toString("hex");
     const journal=createEphemeralWebhookJournal({
       testOnly:true,network:"regtest",storeId:store.id,
       secret,orderId,amountSats:10000n,
