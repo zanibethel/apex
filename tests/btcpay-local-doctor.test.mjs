@@ -81,6 +81,17 @@ test("doctor invokes only read-only tools and parses normalized upstream config"
     assert.ok(!args.some(x=>["up","down","exec","run","start","stop","rm","build"].includes(x)));
   }
 });
+test("doctor supports Docker Compose v5 on current hosted GitHub runners",()=>{
+  const exec=(program,args)=>{
+    if(program==="dotnet")return "10.0.403";
+    if(args[1]==="version")return "Docker Compose version v5.1.3";
+    if(args.includes("config"))return JSON.stringify(compose);
+    throw Error("unexpected tool");
+  };
+  const read=(path)=>path.endsWith("launchSettings.json")
+    ?JSON.stringify(launch):"upstream compose";
+  assert.equal(runBTCPayLocalDoctor("/synthetic/btcpayserver",{exec,read}).localDevConfigVerified,true);
+});
 test("doctor needs a real source path, Compose v2 and .NET 10 before config parsing",()=>{
   assert.throws(()=>runBTCPayLocalDoctor("relative/path"),/absolute/);
   const exec=(program,args)=>{
