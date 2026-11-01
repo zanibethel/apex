@@ -190,6 +190,18 @@ jobs:
           APEX_BTCPAY_WEBHOOK_PORT: "48173"
           APEX_BTCPAY_UPSTREAM_ROOT: ${{ runner.temp }}/btcpayserver
         run: node scripts/btcpay-ephemeral-greenfield.mjs
+      - name: Build separate disposable approval/intent database for real Greenfield worker
+        env:
+          PGDATABASE: apex_test
+          APEX_BTCPAY_EPHEMERAL: "true"
+          APEX_BTCPAY_TEST_NETWORK: regtest
+        run: bash scripts/btcpay-ephemeral-trusted-live-db.sh
+      - name: Verify trusted pre-POST PostgreSQL authorization against ACTUAL loopback Greenfield
+        env:
+          PGDATABASE: apex_test
+          APEX_BTCPAY_EPHEMERAL: "true"
+          APEX_BTCPAY_TEST_NETWORK: regtest
+        run: node scripts/btcpay-ephemeral-trusted-live-greenfield.mjs
       - name: Stop ephemeral test processes and destroy disposable Bitcoin data
         if: always()
         working-directory: ${{ runner.temp }}/btcpayserver/BTCPayServer.Tests
