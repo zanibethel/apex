@@ -36,6 +36,16 @@ function mockServer({override}={}){
       result=account;
     } else if(u.pathname==="/api/v1/stores"&&options.method==="POST"){
       result=store;
+    } else if(u.pathname==="/api/v1/stores/"+store.id+
+        "/payment-methods/BTC-CHAIN/wallet/generate"){
+      assert.equal(options.method,"POST");
+      assert.equal(options.headers.Authorization.startsWith("Basic "),true);
+      const request=JSON.parse(options.body);
+      assert.equal(request.savePrivateKeys,false);
+      assert.equal(request.scriptPubKeyType,"Segwit");
+      result={paymentMethodId:"BTC-CHAIN",enabled:true,
+        config:{derivationScheme:"tpub-synthetic-regtest-descriptor-not-real"},
+        mnemonic:"test-only-mnemonic-never-to-be-logged"};
     } else if(u.pathname==="/api/v1/api-keys"){
       assert.equal(options.method,"POST");
       assert.deepEqual(JSON.parse(options.body).permissions,perms);
@@ -74,10 +84,11 @@ test("creates synthetic account, exact store scoped key, invoice and re-fetch on
   const result=await runEphemeralGreenfield({
     testOnly:true,network:"regtest",fetchImpl,random:()=>fixed,
   });
-  assert.equal(calls.length,7);
-  assert.equal(calls.filter(x=>x.options.method==="POST").length,4);
+  assert.equal(calls.length,8);
+  assert.equal(calls.filter(x=>x.options.method==="POST").length,5);
   assert.deepEqual(result,{
     chain:"regtest",accountCreated:true,storeCreated:true,
+    testWalletConfigured:true,
     storeScopedKeyCreated:true,invoiceCreated:true,invoiceReadVerified:true,
     invoiceStatus:"New",paymentFunded:false,prismVerified:false,productionReady:false,
   });
