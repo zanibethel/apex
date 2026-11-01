@@ -77,7 +77,7 @@ test("integer satoshis always round upward without floating-point FX multiplicat
 test("fictional guest validation checks required fields and optional phone",()=>{
  assert.deepEqual(validateDemoGuest(good),{});
  const errors=validateDemoGuest({...good,
-  firstName:"",lastName:"",email:"bad",street:"",city:"",state:"Texas",postal:"abc",
+  firstName:"",lastName:"",email:"bad",street:"",city:"",state:"ZZ",postal:"abc",
   phone:"!"});
  assert.deepEqual(Object.keys(errors).sort(),
   ["firstName","lastName","email","street","city","state","postal","phone"].sort());
