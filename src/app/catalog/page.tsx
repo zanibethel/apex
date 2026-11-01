@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { readPublishedCatalog } from "@/lib/supabase/public-catalog";
+import { DemoCatalogShelf } from "./demo-catalog-shelf";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Catalog Preview | Apex", robots: { index: false, follow: false } };
@@ -14,6 +15,7 @@ export default async function CatalogPreview() {
       <p className="eyebrow">APEX ANABOLICS / CATALOG PREVIEW</p>
       <h1>DISCOVER THE<br /><em>APEX STANDARD.</em></h1>
       <p className="lead">A protected technical preview of the public catalog. No checkout or live inventory is available.</p>
+      {process.env.APEX_CHECKOUT_MODE==="demo"&&<DemoCatalogShelf/>}
       {result.state === "connected" ? (
         result.products.length > 0 ? (
           <div className="catalog-grid">
