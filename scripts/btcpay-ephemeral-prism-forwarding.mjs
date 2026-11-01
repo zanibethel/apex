@@ -11,6 +11,9 @@ import { openSync, closeSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { snapshotSyntheticAdminSplit } from "../src/lib/payments/synthetic-payout-rule-snapshot.mjs";
+import {
+  assessSyntheticPrismFeeBudget,reconcileSyntheticPrismPayout,
+} from "../src/lib/payments/prism-payout-reliability.mjs";
 
 const STORE_SCOPE="90000000-0000-4000-8000-000000000001";
 const SUPPLIER="80000000-0000-4000-8000-000000000001";
@@ -109,6 +112,16 @@ export function payoutSettings(ratio,addresses) {
     rule,orderId:"prism-test-"+ratio.version,amountSats:TEST_INVOICE_SATS});
   if(frozen.pending.reduce((a,b)=>a+b.entitlementSats,0n)!==TEST_INVOICE_SATS)
     throw Error("Synthetic order allocation mismatch");
+  // CI fixture ceilings, not measured mainnet fees: the conservative limit
+  // is supplied explicitly and is not asserted to guarantee wallet UTXOs.
+  const feeBudget=assessSyntheticPrismFeeBudget({
+    testOnly:true,network:"regtest",invoiceSats:TEST_INVOICE_SATS,
+    recipientBasisPoints:[ratio.supplier,10000-ratio.supplier],
+    reserveBasisPoints:200,estimatedMaxNetworkFeeSats:15000n,
+    feeSafetyMarginSats:15000n,minimumRecipientSats:50000n,
+  });
+  if(feeBudget.status!=="test_budget_eligible")
+    throw Error("Synthetic payout fee budget is not approved for testing");
   for(const a of Object.values(addresses))
     if(!/^bcrt1[ac-hj-np-z02-9]{12,100}$/i.test(a))
       throw Error("Non-regtest payment destination rejected");
@@ -124,7 +137,7 @@ export function payoutSettings(ratio,addresses) {
       {Destination:"platform",Percentage:(10000-ratio.supplier)/100},
     ]}],
   };
-  return {settings,frozen};
+  return {settings,frozen,feeBudget};
 }
 function persistSettings(store,settings) {
   if(!id.test(store))throw Error("Bad synthetic store ID");
@@ -217,10 +230,10 @@ async function storeConfig(basic,ratio,suffix){
     supplier:wallet(sw,"getnewaddress","","bech32"),
     platform:wallet(pw,"getnewaddress","","bech32"),
   };
-  const {settings,frozen}=payoutSettings(ratio,addresses);
+  const {settings,frozen,feeBudget}=payoutSettings(ratio,addresses);
   persistSettings(store.id,settings);
   progress("configured-regtest-store",String(ratio.version));
-  return {storeId:store.id,sw,pw,addresses,frozen,ratio};
+  return {storeId:store.id,sw,pw,addresses,frozen,feeBudget,ratio};
 }
 async function waitForPayouts(basic,p,minerAddress) {
   progress("await-prism-claims",String(p.ratio.version));
@@ -318,6 +331,30 @@ async function waitForPayouts(basic,p,minerAddress) {
   if(gotS!==expectedS||gotP!==expectedP)
     throw Error("Prism recipient totals do not match 2% reserve policy");
   progress("prism-wallet-receipts-confirmed",String(p.ratio.version));
+  // A completed-looking transaction is insufficient: both *Prism claim states*
+  // must also settle to Completed, matching confirmed independent wallets.
+  let finalStatus;
+  for(let attempt=0;attempt<30;attempt++){
+    bounded("prism-final-reconciliation");
+    const claimsNow=await api(path,{auth:basic});
+    finalStatus=reconcileSyntheticPrismPayout({
+      testOnly:true,network:"regtest",expected:p.feeBudget.expected,
+      claims:claimsNow,
+      walletReceipts:{
+        supplier:{confirmedSats:gotS,confirmations:2},
+        platform:{confirmedSats:gotP,confirmations:2},
+      },
+      pendingAgeMinutes:0,pendingAlertMinutes:15,
+    });
+    if(finalStatus.status==="verified_complete")break;
+    if(finalStatus.status==="manual_review")
+      throw Error("Prism payout claims require manual reconciliation review");
+    if(attempt%6===5)rpc("generatetoaddress","1",minerAddress);
+    await delay(1000);
+  }
+  if(finalStatus?.status!=="verified_complete")
+    throw Error("Prism recipient wallets settled but claim states remain pending");
+  progress("both-prism-payout-claims-completed",String(p.ratio.version));
   return {ruleVersion:p.ratio.version,
     supplierBasisPoints:p.ratio.supplier,
     platformBasisPoints:10000-p.ratio.supplier,
