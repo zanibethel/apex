@@ -38,14 +38,14 @@ export function createTrustedRegtestPgWorker({
 }={}){
   requireIsolation(env);
   if(typeof fetchImpl!=="function")throw Error("Missing test fetch adapter");
-  const exec=runPsql||async(args)=>{
+  const exec=runPsql||(async(args)=>{
     // No provider credential, wallet secret or identity token goes to psql.
     const {stdout}=await execAsync("psql",args,{
       encoding:"utf8",timeout:12000,maxBuffer:32768,
       env,stdio:["ignore","pipe","pipe"],
     });
     return stdout.trim();
-  };
+  });
   if(typeof exec!=="function")throw Error("Invalid isolated SQL executor");
 
   async function sql(operation,values){
