@@ -157,3 +157,23 @@ test("mobile checkout field size avoids iPhone keyboard-induced zoom without dis
  assert.match(jsx,/setStateSearch\(event\.target\.value\)/);
  assert.match(jsx,/role="option" aria-selected/);
 });
+
+
+test("State and ZIP share a compact two-column mobile row at all iPhone widths",()=>{
+ const css=readFileSync("src/app/checkout/preview/checkout-preview.css","utf8");
+ const jsx=readFileSync("src/app/checkout/preview/checkout-preview.tsx","utf8");
+ const mobile=css.slice(css.indexOf("/* iPhone checkout refinement:"));
+ assert.ok(mobile.startsWith("/* iPhone checkout refinement:"));
+ assert.match(mobile,/@media\(max-width:600px\)[\s\S]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(mobile,/\.apex-checkout-preview \.apex-checkout-state\{grid-column:1 \/ 2\}/);
+ assert.match(mobile,/\.apex-checkout-preview \.apex-checkout-postal\{grid-column:2 \/ 3\}/);
+ assert.match(mobile,/@media\(max-width:390px\)[\s\S]*\.apex-checkout-state\{[\s\S]*grid-column:1 \/ 2/);
+ assert.match(mobile,/@media\(max-width:390px\)[\s\S]*\.apex-checkout-postal\{[\s\S]*grid-column:2 \/ 3/);
+ assert.match(mobile,/\.apex-checkout-preview \.apex-checkout-ship\{padding:12px;gap:10px\}/);
+ assert.match(mobile,/\.apex-checkout-preview \.apex-checkout-shipping\{margin-top:22px;gap:9px\}/);
+ assert.match(css,/\.apex-checkout-preview \.apex-checkout-field input,[\s\S]*?\.apex-state-search\{\s*font-size:16px;/);
+ assert.doesNotMatch(css,/user-scalable\s*:\s*no|maximum-scale\s*:/i);
+ assert.ok(jsx.includes('name:"state",label:"State"'));
+ assert.ok(jsx.includes('name:"postal",label:"ZIP code"'));
+ assert.ok(jsx.indexOf('name:"state"')<jsx.indexOf('name:"postal"'));
+});
