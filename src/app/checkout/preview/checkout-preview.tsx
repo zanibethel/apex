@@ -1,0 +1,249 @@
+"use client";
+
+import Link from "next/link";
+import {useState, type FormEvent} from "react";
+import {
+ DEMO_ITEMS,DEMO_SHIPPING,DEMO_RATE_CENTS,applyDemoCoupon,
+ demoTotals,formatDemoUsd,formatDemoBtc,validateDemoGuest,
+ normalizeDemoQuantity,
+} from "@/lib/checkout/preview-model.mjs";
+
+type Step="details"|"bitcoin"|"complete";
+type PaymentState="awaiting"|"detected"|"confirmed"|"expired";
+type Guest={
+ firstName:string;lastName:string;email:string;phone:string;
+ street:string;city:string;state:string;postal:string;
+};
+type GuestKey=keyof Guest;
+
+const INITIAL_GUEST:Guest={
+ firstName:"Demo",lastName:"Customer",email:"demo@example.invalid",phone:"",
+ street:"123 Example Way",city:"Sample City",state:"TX",postal:"00000",
+};
+const FIELDS: {name:GuestKey;label:string;type?:string;autoComplete?:string}[]=[
+ {name:"firstName",label:"First name",autoComplete:"off"},
+ {name:"lastName",label:"Last name",autoComplete:"off"},
+ {name:"email",label:"Email address",type:"email",autoComplete:"off"},
+ {name:"phone",label:"Phone (optional)",type:"tel",autoComplete:"off"},
+ {name:"street",label:"Street address",autoComplete:"off"},
+ {name:"city",label:"City",autoComplete:"off"},
+ {name:"state",label:"State",autoComplete:"off"},
+ {name:"postal",label:"ZIP code",autoComplete:"off"},
+];
+
+export function CheckoutPreview(){
+ const [step,setStep]=useState<Step>("details");
+ const [status,setStatus]=useState<PaymentState>("awaiting");
+ const [guest,setGuest]=useState<Guest>(INITIAL_GUEST);
+ const [errors,setErrors]=useState<Partial<Record<GuestKey,string>>>({});
+ const [quantities,setQuantities]=useState<Record<string,number>>({
+  "demo-shirt":1,"demo-bottle":1,
+ });
+ const [shipping,setShipping]=useState<"standard"|"express">("standard");
+ const [couponInput,setCouponInput]=useState("");
+ const [coupon,setCoupon]=useState("");
+ const [couponError,setCouponError]=useState("");
+ const total=demoTotals({quantities,shipping,coupon});
+ const updateGuest=(key:GuestKey,value:string)=>{
+  setGuest(current=>({...current,[key]:value}));
+  setErrors(current=>({...current,[key]:undefined}));
+ };
+ const changeQuantity=(id:string,direction:number)=>{
+  setQuantities(current=>({
+    ...current,[id]:normalizeDemoQuantity((current[id]??0)+direction),
+  }));
+ };
+ const applyCoupon=()=>{
+  const result=applyDemoCoupon(couponInput);
+  setCoupon(result.accepted?result.code:"");
+  setCouponError(result.error??"");
+ };
+ const proceed=(event:FormEvent<HTMLFormElement>)=>{
+  event.preventDefault();
+  const nextErrors=validateDemoGuest(guest);
+  setErrors(nextErrors);
+  if(Object.keys(nextErrors).length||!total.items.length)return;
+  setStatus("awaiting");
+  setStep("bitcoin");
+  window.scrollTo({top:0,behavior:"instant"});
+ };
+ const reset=()=>{
+  setStep("details");
+  setStatus("awaiting");
+  setGuest(INITIAL_GUEST);
+  setErrors({});
+  setQuantities({"demo-shirt":1,"demo-bottle":1});
+  setShipping("standard");
+  setCoupon("");
+  setCouponInput("");
+  setCouponError("");
+ };
+ return <main className="container apex-checkout-preview">
+  <div className="apex-checkout-live-test-banner" role="status" aria-label="Checkout simulation mode">
+   <strong>TEST MODE — SIMULATED PAYMENTS ONLY</strong>
+   <span>This public demo cannot accept Bitcoin, place orders, or trigger shipments. Do not send funds or enter real personal information.</span>
+  </div>
+  <div className="apex-checkout-topline">
+   <Link href="/catalog" className="apex-checkout-back">← Back to catalog</Link>
+   <span className="apex-checkout-safe">● SANDBOX EXPERIENCE · NO REAL PAYMENTS</span>
+  </div>
+  <div className="apex-checkout-head">
+   <p className="eyebrow">APEX ANABOLICS / CHECKOUT DESIGN PREVIEW</p>
+   <h1>THE FINAL <span>STEP.</span></h1>
+   <p>Try a complete checkout journey with fictional products and sample guest details. Everything stays in your browser. No order, invoice, QR address, or payment is created.</p>
+  </div>
+  <ol className="apex-checkout-steps" aria-label="Checkout preview progress">
+   {[["details","01","Information"],["bitcoin","02","Bitcoin"],["complete","03","Confirmation"]].map(([id,number,label])=>
+    <li key={id} className={step===id?"is-active":(id==="details"&&step!=="details")||(id==="bitcoin"&&step==="complete")?"is-done":""}
+      aria-current={step===id?"step":undefined}>
+     <span className="apex-checkout-step-num">{number}</span>
+     <span>{label}</span>
+    </li>
+   )}
+  </ol>
+  <div className="apex-checkout-layout">
+   <section className="apex-checkout-workspace" aria-live="polite">
+    {step==="details"&&<form onSubmit={proceed} noValidate>
+      <div className="apex-checkout-section-top">
+       <div>
+        <p className="apex-checkout-kicker">01 / YOUR INFORMATION</p>
+        <h2>Guest checkout</h2>
+       </div>
+       <span className="apex-checkout-mini">No account required</span>
+      </div>
+      <p className="apex-checkout-support">The form is prefilled with fictional data so you can test the flow immediately. Please do not enter real personal information.</p>
+      <div className="apex-checkout-fields">
+       {FIELDS.map(field=><label className={"apex-checkout-field apex-checkout-"+field.name} key={field.name} htmlFor={"apex-preview-"+field.name}>
+        <span>{field.label}</span>
+        <input id={"apex-preview-"+field.name} type={field.type??"text"}
+         value={guest[field.name]} autoComplete={field.autoComplete??"off"}
+         onChange={event=>updateGuest(field.name,event.target.value)}
+         aria-invalid={Boolean(errors[field.name])} aria-describedby={errors[field.name]?"apex-error-"+field.name:undefined}
+         maxLength={field.name==="email"?160:field.name==="street"?140:75}/>
+        {errors[field.name]&&<small id={"apex-error-"+field.name} className="apex-checkout-error">{errors[field.name]}</small>}
+       </label>)}
+      </div>
+      <fieldset className="apex-checkout-shipping">
+       <legend>Delivery method <span>· sample options</span></legend>
+       {(Object.entries(DEMO_SHIPPING) as [typeof shipping,{label:string;detail:string;cents:number}][]).map(([id,option])=>
+        <label className={"apex-checkout-ship"+(shipping===id?" is-selected":"")} key={id}>
+         <input type="radio" name="apex-shipping-preview" checked={shipping===id}
+          onChange={()=>setShipping(id)}/>
+         <span><strong>{option.label}</strong><small>{option.detail}</small></span>
+         <b>{formatDemoUsd(option.cents)}</b>
+        </label>
+       )}
+      </fieldset>
+      <p className="apex-checkout-privacy">Demo only · No shipping, account, notifications, or data submission takes place.</p>
+      <button type="submit" className="apex-checkout-cta" disabled={!total.items.length}>
+       Continue to Bitcoin preview <span aria-hidden="true">→</span>
+      </button>
+    </form>}
+    {step==="bitcoin"&&<div>
+      <div className="apex-checkout-section-top">
+       <div><p className="apex-checkout-kicker">02 / PAYMENT</p><h2>Pay with Bitcoin</h2></div>
+       <span className="apex-checkout-mini">Simulation</span>
+      </div>
+      <p className="apex-checkout-support">This is an interactive stand-in for the BTCPay invoice screen. It does not contact BTCPay, generate an address, or request a transfer.</p>
+      <div className="apex-checkout-invoice">
+       <div className="apex-checkout-invoice-head">
+        <span className="apex-checkout-kicker">SIMULATED INVOICE</span>
+        <strong className={"apex-checkout-state state-"+status}>{status==="awaiting"?"Awaiting payment":status==="detected"?"Payment detected":status==="confirmed"?"Payment confirmed":"Invoice expired"}</strong>
+       </div>
+       <div className="apex-checkout-payment-body">
+        <div className="apex-checkout-not-qr" role="img" aria-label="Sample placeholder, not a scannable Bitcoin QR code">
+         <span className="apex-checkout-qr-icon" aria-hidden="true">₿</span>
+         <strong>QR PREVIEW</strong>
+         <small>Not scannable</small>
+        </div>
+        <div className="apex-checkout-invoice-amount">
+         <span>Fictional Bitcoin amount</span>
+         <strong>{formatDemoBtc(total.mockSats)}</strong>
+         <small>Based on a fixed sample conversion of {formatDemoUsd(DEMO_RATE_CENTS)} per BTC. This is not a live exchange rate or payment quote.</small>
+         <div className="apex-checkout-address">
+          <span>Destination address</span>
+          <strong>Not generated in demo</strong>
+         </div>
+        </div>
+       </div>
+       <p className="apex-checkout-invoice-note">No wallet address, payment link, transaction, or real invoice exists. Use the controls below to test status messaging.</p>
+      </div>
+      <div className="apex-checkout-status-controls">
+       <h3>Test payment states</h3>
+       <p>These controls only change the demonstration on this page.</p>
+       {status==="awaiting"&&<div className="apex-checkout-actions">
+        <button className="apex-checkout-cta" type="button" onClick={()=>setStatus("detected")}>Simulate payment detected</button>
+        <button className="apex-checkout-subtle" type="button" onClick={()=>setStatus("expired")}>Simulate expiry</button>
+       </div>}
+       {status==="detected"&&<div className="apex-checkout-actions">
+        <button type="button" className="apex-checkout-cta" onClick={()=>setStatus("confirmed")}>Simulate blockchain confirmation</button>
+        <button type="button" className="apex-checkout-subtle" onClick={()=>setStatus("expired")}>Simulate expiry</button>
+       </div>}
+       {status==="confirmed"&&<button type="button" className="apex-checkout-cta" onClick={()=>{setStep("complete");window.scrollTo({top:0,behavior:"instant"});}}>View confirmation screen →</button>}
+       {status==="expired"&&<button type="button" className="apex-checkout-cta" onClick={()=>setStatus("awaiting")}>Restart simulated invoice</button>}
+      </div>
+      <button type="button" className="apex-checkout-back-button" onClick={()=>{setStep("details");setStatus("awaiting");}}>← Edit checkout details</button>
+    </div>}
+    {step==="complete"&&<div className="apex-checkout-confirmed">
+      <div className="apex-checkout-confirm-icon" aria-hidden="true">✓</div>
+      <p className="apex-checkout-kicker">03 / CONFIRMATION</p>
+      <h2>Preview complete.</h2>
+      <p>You reached the final screen. In a real purchase, a confirmed payment would be verified on the server before an order could be marked paid.</p>
+      <div className="apex-checkout-confirm-details">
+       <div><span>Reference</span><strong>DEMO-ONLY · NO ORDER</strong></div>
+       <div><span>Sample customer</span><strong>{guest.firstName} {guest.lastName}</strong></div>
+       <div><span>Simulated total</span><strong>{formatDemoUsd(total.totalCents)}</strong></div>
+       <div><span>Payment</span><strong>Simulated confirmation</strong></div>
+      </div>
+      <div className="apex-checkout-actions">
+       <button className="apex-checkout-cta" type="button" onClick={reset}>Start preview again</button>
+       <Link className="apex-checkout-subtle" href="/catalog">Back to storefront</Link>
+      </div>
+      <p className="apex-checkout-privacy">No purchase, email, record, shipment, or blockchain event occurred.</p>
+    </div>}
+   </section>
+   <aside className="apex-checkout-summary" aria-label="Simulated order summary">
+    <div className="apex-checkout-summary-head">
+      <span className="apex-checkout-kicker">DEMO BAG</span>
+      <span>{total.items.reduce((n,item)=>n+item.quantity,0)} items</span>
+    </div>
+    <h2>Your order</h2>
+    {DEMO_ITEMS.map(item=>{
+      const qty=quantities[item.id]??0;
+      return <div className="apex-checkout-item" key={item.id}>
+       <div className="apex-checkout-product-art" aria-hidden="true">{item.id==="demo-shirt"?"A":"▲"}</div>
+       <div className="apex-checkout-item-copy">
+        <strong>{item.name}</strong>
+        <span>{item.category}</span>
+        {step==="details"?<div className="apex-checkout-qty" aria-label={"Quantity for "+item.name}>
+          <button type="button" onClick={()=>changeQuantity(item.id,-1)} disabled={qty===0} aria-label={"Remove one "+item.name}>−</button>
+          <output aria-label={"Quantity "+item.name}>{qty}</output>
+          <button type="button" onClick={()=>changeQuantity(item.id,1)} disabled={qty===5} aria-label={"Add one "+item.name}>+</button>
+        </div>:<span>Qty {qty}</span>}
+       </div>
+       <strong>{formatDemoUsd(item.unitCents*qty)}</strong>
+      </div>;
+    })}
+    {step==="details"&&<div className="apex-checkout-coupon">
+      <label htmlFor="apex-demo-coupon">Discount code</label>
+      <div>
+       <input id="apex-demo-coupon" value={couponInput} onChange={e=>{setCouponInput(e.target.value);setCouponError("");}}
+        placeholder="Try DEMO10" maxLength={20}/>
+       <button type="button" onClick={applyCoupon}>Apply</button>
+      </div>
+      {couponError&&<small role="status" className="apex-checkout-error">{couponError}</small>}
+      {coupon&&<small role="status" className="apex-checkout-success">DEMO10 applied · 10% off sample subtotal <button type="button" onClick={()=>{setCoupon("");setCouponInput("");}}>Remove</button></small>}
+    </div>}
+    <dl className="apex-checkout-prices">
+      <div><dt>Subtotal</dt><dd>{formatDemoUsd(total.subtotalCents)}</dd></div>
+      {coupon&&<div className="apex-checkout-discount"><dt>Demo discount</dt><dd>−{formatDemoUsd(total.discountCents)}</dd></div>}
+      <div><dt>Shipping</dt><dd>{formatDemoUsd(total.shippingCents)}</dd></div>
+      <div><dt>Taxes</dt><dd>Not calculated</dd></div>
+      <div className="apex-checkout-price-total"><dt>Illustrative total</dt><dd>{formatDemoUsd(total.totalCents)}</dd></div>
+    </dl>
+    {!total.items.length&&<p className="apex-checkout-error">Add at least one sample item to continue.</p>}
+    <div className="apex-checkout-summary-foot">Fictional products and prices · No checkout, payment, or tax calculation is active.</div>
+   </aside>
+  </div>
+ </main>;
+}

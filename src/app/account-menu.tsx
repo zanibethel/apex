@@ -31,6 +31,7 @@ export function AccountMenu({ signedIn, admin, supplier }: { signedIn: boolean; 
     <button type="button" className="apex-menu-toggle" aria-label="Navigation menu" aria-expanded={open} aria-controls="apex-menu-panel" onClick={() => setOpen(v => !v)}>☰</button>
     {open && <div className="apex-menu-panel" id="apex-menu-panel">
       <Link href="/catalog" onClick={() => setOpen(false)}>Catalog</Link>
+      <Link href="/checkout/preview" onClick={() => setOpen(false)}>Try checkout preview</Link>
       <Link href="/#approach" onClick={() => setOpen(false)}>Approach</Link>
       {signedIn && <Link href="/account/profile" onClick={() => setOpen(false)}>My profile</Link>}
       {admin && <Link href="/admin" onClick={() => setOpen(false)}>Admin dashboard</Link>}

@@ -17,6 +17,7 @@ export default function Home() {
           <div className="actions">
             <Link className="button primary" href="/catalog">Explore catalog <span aria-hidden="true">→</span></Link>
             <Link className="button secondary" href="/#approach">Explore Apex</Link>
+            <Link className="button secondary" href="/checkout/preview">Try demo checkout</Link>
           </div>
           <p className="notice">Private concept preview. No live products, ordering or payments.</p>
         </div>
