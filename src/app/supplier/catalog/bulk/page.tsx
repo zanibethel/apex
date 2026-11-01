@@ -4,6 +4,7 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {BulkDraftEditor} from "../bulk-editor";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
+import {SUPPLIER_BULK_PRODUCT_CAPACITY,SUPPLIER_BULK_PRODUCT_QUERY_LIMIT,supplierBulkProductWindowStatus} from "@/lib/catalog/supplier-bulk-capacity.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Bulk Product Editor | Apex Supplier",robots:{index:false,follow:false}};
@@ -32,8 +33,8 @@ export default async function BulkProductWorkspace(){
  const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:inventory,error:inventoryError},{data:listingControls,error:listingError}]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
-   .eq("store_id",store.id).eq("is_published",false).order("name").limit(100),
-  client.from("categories").select("id,name").eq("store_id",store.id).order("name").limit(100),
+   .eq("store_id",store.id).eq("is_published",false).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
+  client.from("categories").select("id,name").eq("store_id",store.id).order("name").limit(SUPPLIER_BULK_PRODUCT_CAPACITY),
   client.from("supplier_candidate_drafts").select("product_id").eq("store_id",store.id).limit(500),
   client.from("inventory_items").select("product_id,quantity_on_hand,quantity_reserved").eq("store_id",store.id).limit(250),
   client.from("supplier_listing_controls")
@@ -42,6 +43,15 @@ export default async function BulkProductWorkspace(){
  ]);
  if(productError||categoryError||linkedError||inventoryError)return <main className="container supplier-shell">
   <h1>Private catalog temporarily unavailable.</h1>
+  <Link href="/supplier/catalog">Back to product manager</Link>
+ </main>;
+ // Never silently display only a subset of a supplier's private products.
+ // Truncating product reads also prevents CSV from matching off-page SKUs, so
+ // fail closed before rendering an incomplete bulk workspace.
+ if(supplierBulkProductWindowStatus(products)!=="complete")return <main className="container supplier-shell">
+  <h1>Bulk workspace product limit reached.</h1>
+  <p>This private catalog has more than {SUPPLIER_BULK_PRODUCT_CAPACITY} products, or its product list could not be verified. No products were changed.</p>
+  <p>Use the standard product manager while a larger-catalog workflow is prepared. Bulk edits are available for storefronts with {SUPPLIER_BULK_PRODUCT_CAPACITY} or fewer private products.</p>
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
  // Signed URLs are generated only for draft products in this authenticated
@@ -93,6 +103,6 @@ export default async function BulkProductWorkspace(){
   <p className="notice">New products begin as private drafts with zero stock. Save a draft to unlock its inline image picker and stock editor, then preview the completed offer. Nothing is made public by saving.</p>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
    categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}/>
-  <p className="notice">Upload a new PNG/JPEG/WebP image or reuse an existing private product image; each reuse makes its own private copy. On-hand inventory updates use expected-count checks and are audited. Private source cost for linked variants still requires Source review. The first 100 private products are shown.</p>
+  <p className="notice">Upload a new PNG/JPEG/WebP image or reuse an existing private product image; each reuse makes its own private copy. On-hand inventory updates use expected-count checks and are audited. Private source cost for linked variants still requires Source review. The bulk editor loads all private products in storefronts with 250 or fewer private products.</p>
  </main>;
 }
