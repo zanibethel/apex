@@ -5,6 +5,9 @@ on:
     paths:
       - "infra/regtest/**"
       - "scripts/regtest-smoke.mjs"
+      - "scripts/regtest-admin-split-smoke.mjs"
+      - "src/lib/payments/synthetic-payout-rule-snapshot.mjs"
+      - "tests/synthetic-payout-rule-snapshot.test.mjs"
       - "tests/regtest-smoke.test.mjs"
       - "src/lib/payments/btcpay-sandbox.mjs"
       - ".github/workflows/regtest.yml"
@@ -40,6 +43,8 @@ jobs:
           docker inspect apex-regtest-node-1 --format '{{json .State.Health}}' || true
       - name: Verify a synthetic BTC payment and two output destinations
         run: node scripts/regtest-smoke.mjs
+      - name: Verify two distinct admin-versioned payout plans with real regtest outputs
+        run: node scripts/regtest-admin-split-smoke.mjs
       - name: Destroy disposable test wallets and chain
         if: always()
         run: docker compose -p apex-regtest -f infra/regtest/compose.yml down --volumes --remove-orphans
