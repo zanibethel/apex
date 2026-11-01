@@ -30,7 +30,7 @@ export function createEphemeralWebhookJournal({
  let expectedInvoiceId;
  const receipts=new Map();
  const latest={raw:null,signature:null};
- let settled=false,observations=0;
+ let settled=false,observations=0,requestsReceived=0,requestsRejected=0;
  function setInvoiceId(id){
    if(expectedInvoiceId!==undefined || typeof id!=="string"||!safeId.test(id))
      throw Error("Synthetic invoice reference must be set exactly once");
@@ -71,11 +71,13 @@ export function createEphemeralWebhookJournal({
    if(event.type==="InvoiceSettled"&&invoice.status==="Settled")settled=true;
    return {kind:"accepted",status:200};
  }
- async function begin(){
+ async function begin(port=0){
+   if(port!==0&&port!==48173)throw Error("Invalid synthetic webhook port");
    const server=createServer(async(req,res)=>{
      if(req.url!=="/hooks/apex-regtest"||req.method!=="POST"){
        res.writeHead(404).end();return;
      }
+     requestsReceived++;
      const sig=req.headers["btcpay-sig"];
      const parts=[];let bytes=0;
      try{
@@ -94,7 +96,7 @@ export function createEphemeralWebhookJournal({
    });
    await new Promise((resolve,reject)=>{
      server.once("error",reject);
-     server.listen(0,"127.0.0.1",resolve);
+     server.listen(port,"127.0.0.1",resolve);
    });
    const address=server.address();
    if(!address || typeof address==="string" ||
@@ -116,6 +118,8 @@ export function createEphemeralWebhookJournal({
      get isSettled(){return settled;},
      get observationCount(){return observations;},
      get deliveryCount(){return receipts.size;},
+     get receivedRequests(){return requestsReceived;},
+     get rejectedRequests(){return requestsRejected;},
      async replayAssertions(){
        if(!settled || !latest.raw || !latest.signature)
          throw Error("No authenticated settled webhook to replay");
