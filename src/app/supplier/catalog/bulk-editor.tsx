@@ -385,6 +385,6 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    </button>}
    <a href="#bulk-product-cards">Jump to product cards</a>.
    Return to All products to preview the full saved selection.
-  </div>
+  </div>}
  </section>;
 }
