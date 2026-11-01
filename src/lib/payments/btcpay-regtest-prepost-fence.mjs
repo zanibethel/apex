@@ -9,6 +9,17 @@
 const safeId=/^[A-Za-z0-9_-]{1,100}$/;
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+function observedBtcAmountMatches(value,expectedSats){
+  // Greenfield JSON can serialize decimal BTC as numeric 0.0001 or a string.
+  // Never use floating-point multiplication for the equality proof.
+  const text=typeof value==="string"?value:
+    typeof value==="number"&&Number.isFinite(value)?String(value):"";
+  if(!/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,8})?$/.test(text))return false;
+  const [whole,fraction=""]=text.split(".");
+  return BigInt(whole)*100000000n+
+    BigInt(fraction.padEnd(8,"0"))===expectedSats;
+}
+
 function btcAmount(sats){
   if(typeof sats!=="bigint"||sats<1000n||sats>100000000n)
     throw Error("Invalid regtest amount");
@@ -80,7 +91,7 @@ export async function createPreauthorizedRegtestInvoice({
              invoice.currency==="BTC"&&
              invoice.metadata?.orderId===orderRef&&
              invoice.metadata?.apexIntentId===intentId&&
-             invoice.amount===amount&&
+             observedBtcAmountMatches(invoice.amount,amountSats)&&
              ["New","Processing","Settled","Expired","Invalid"].includes(invoice.status)){
             confirmedId=invoice.id;
             outcome="invoice_seen_by_readback";

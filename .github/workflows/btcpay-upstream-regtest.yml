@@ -178,6 +178,12 @@ jobs:
             exit 1
           fi
           echo "Prism route registered and protected on isolated regtest runner"
+      - name: Build separate disposable approval/intent database for real Greenfield worker
+        env:
+          PGDATABASE: apex_test
+          APEX_BTCPAY_EPHEMERAL: "true"
+          APEX_BTCPAY_TEST_NETWORK: regtest
+        run: bash scripts/btcpay-ephemeral-trusted-live-db.sh
       - name: Verify signed payment and real Prism-generated on-chain regtest forwarding
         env:
           APEX_BTCPAY_EPHEMERAL: "true"
@@ -186,6 +192,7 @@ jobs:
           APEX_BTCPAY_VERIFY_WEBHOOK: "true"
           APEX_BTCPAY_DURABLE_TEST_JOURNAL: "true"
           APEX_BTCPAY_PRISM_FORWARDING: "true"
+          APEX_BTCPAY_TRUSTED_REAL_WORKER: "true"
           BTCPAY_PLUGINDIR: ${{ runner.temp }}/apex-prism-plugins
           APEX_BTCPAY_WEBHOOK_PORT: "48173"
           APEX_BTCPAY_UPSTREAM_ROOT: ${{ runner.temp }}/btcpayserver
