@@ -11,6 +11,7 @@ import { openSync, closeSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { snapshotSyntheticAdminSplit } from "../src/lib/payments/synthetic-payout-rule-snapshot.mjs";
+import { readRegtestGreenfieldInventory } from "../src/lib/payments/btcpay-provider-drain.mjs";
 import {
   assessSyntheticPrismFeeBudget,reconcileSyntheticPrismPayout,
 } from "../src/lib/payments/prism-payout-reliability.mjs";
@@ -364,6 +365,42 @@ async function waitForPayouts(basic,p,minerAddress) {
     payoutsCreated:claims.length,
     pluginGenerated:true,productionReady:false};
 }
+// Exercise PR #121 against the ACTUAL disposable upstream Greenfield API,
+ // not a mocked fetch. Fresh store-scoped key can only view invoices/payouts.
+ // No provider settings access, wallet authority or payout ability is granted.
+async function verifyReadOnlyProviderInventory(basic, p, expectedInvoiceId) {
+  const permissions=[
+    "btcpay.store.canviewinvoices:"+p.storeId,
+    "btcpay.store.canviewpayouts:"+p.storeId,
+  ];
+  const key=await api("/api/v1/api-keys",{
+    method:"POST",auth:basic,json:{
+      label:"Ephemeral read-only PR122 inventory "+p.ratio.version,permissions,
+    },
+  });
+  if(typeof key?.apiKey!=="string" || key.apiKey.length<12 ||
+     !Array.isArray(key.permissions) ||
+     !permissions.every(item=>key.permissions.some(x=>
+       x===item || x?.policy===item || x?.toString?.()===item)) ||
+     key.permissions.length!==permissions.length)
+    throw Error("Disposable read-only key permissions not exact");
+  const result=await readRegtestGreenfieldInventory({
+    testOnly:true,network:"regtest",storeId:p.storeId,
+    apiKey:key.apiKey,serverUrl:origin+"/",pageSize:10,maxPages:3,
+  });
+  if(!result.inventoryComplete || result.invoices.length!==1 ||
+     result.payouts.length!==2 ||
+     !result.invoices.some(x=>x.id===expectedInvoiceId &&
+       x.status==="Settled" && x.additionalStatus==="None" &&
+       x.metadata?.orderId==="prism-test-"+p.ratio.version) ||
+     !result.payouts.every(x=>x.state==="Completed" &&
+       x.payoutMethodId==="BTC-CHAIN"))
+    throw Error("Actual upstream Greenfield inventory mismatched Prism regtest");
+  // Sanitized CI evidence: never log keys, payout addresses or invoice IDs.
+  progress("read-only-greenfield-inventory-confirmed",String(p.ratio.version));
+  return true;
+}
+
 export async function runEphemeralPrismForwarding({basic}) {
   assertIsolation();
   if(typeof basic!=="string"||!basic.startsWith("Basic "))
@@ -428,6 +465,7 @@ export async function runEphemeralPrismForwarding({basic}) {
     if(!settled)throw Error("Prism test invoice did not settle");
     progress("prism-invoice-settled",String(p.ratio.version));
     receipts.push(await waitForPayouts(basic,p,minerAddress));
+    await verifyReadOnlyProviderInventory(basic,p,invoice.id);
   }
   if(receipts.length!==2)
     throw Error("Both versioned Prism regtest scenarios did not complete");
