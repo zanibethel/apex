@@ -44,7 +44,7 @@ function mockServer({override}={}){
       assert.equal(request.savePrivateKeys,false);
       assert.equal(request.scriptPubKeyType,"Segwit");
       result={paymentMethodId:"BTC-CHAIN",enabled:true,
-        config:{derivationScheme:"tpub-synthetic-regtest-descriptor-not-real"},
+        config:{accountDerivation:"tpub-synthetic-regtest-descriptor-not-real"},
         mnemonic:"test-only-mnemonic-never-to-be-logged"};
     } else if(u.pathname==="/api/v1/api-keys"){
       assert.equal(options.method,"POST");
