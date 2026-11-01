@@ -149,6 +149,13 @@ test("unknown and missing invoices, duplicate IDs, invalid and partial statuses 
   }
 });
 
+test("duplicate order references on provider and ledger side never pass",()=>{
+  const pi=inventory(); pi.invoices=[invoice(),invoice("inv-2","order-1")];
+  assert.ok(check({inventory:pi}).reasons.includes("DUPLICATE_PROVIDER_ORDER_REFERENCE"));
+  const rows=[ledgerInvoice(),{...ledgerInvoice(),invoiceId:"inv-2"}];
+  assert.ok(check({ledgerInvoices:rows}).reasons.includes("DUPLICATE_LEDGER_ORDER_REFERENCE"));
+});
+
 test("provider claim states, unknown payouts, wrong amounts and destinations block",()=>{
   const scenarios=[
     {payouts:[payout("supplier-payout","regtest_supplier_wallet","0.00001000")],
