@@ -70,3 +70,6 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_listing_admin_override_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/private_release_decision_engine_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_hold_correction_roundtrip_integration.sql
+          # Each command starts a fresh psql connection; verifies readback after commit.
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_batch_persistence_seed_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_batch_persistence_readback_integration.sql
