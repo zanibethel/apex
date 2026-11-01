@@ -145,7 +145,7 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001'
 do $$
 begin
  if (select count(*) from public.btcpay_test_invoices)<>2 or
-    (select count(*) from public.btcpay_test_webhook_receipts)<>2 or
+    (select count(*) from public.btcpay_test_webhook_receipts)<>3 or
     (select count(*) from public.btcpay_test_invoice_observations)<>2 then
   raise exception 'admin cannot read full test journal'; end if;
 end $$;
