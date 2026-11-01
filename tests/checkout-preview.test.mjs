@@ -177,3 +177,15 @@ test("State and ZIP share a compact two-column mobile row at all iPhone widths",
  assert.ok(jsx.includes('name:"postal",label:"ZIP code"'));
  assert.ok(jsx.indexOf('name:"state"')<jsx.indexOf('name:"postal"'));
 });
+
+
+test("keyboard focus uses a thin Apex crimson outline, never gold",()=>{
+ const css=readFileSync("src/app/checkout/preview/checkout-preview.css","utf8");
+ assert.match(css,/\.apex-checkout-preview :is\(button,input,a\):focus-visible\{outline:2px solid #ed4b77;outline-offset:2px\}/);
+ assert.match(css,/\.apex-checkout-preview \.apex-state-trigger:focus-visible\{border-color:#ed4b77;outline:2px solid #ed4b77;outline-offset:2px\}/);
+ assert.doesNotMatch(css,/#ffc36b|#f5c46c|gold|outline:0(?:;|\})|outline:none/i);
+ assert.match(css,/-webkit-tap-highlight-color:rgba\(237,75,119,\.12\)/);
+ assert.match(css,/\.apex-checkout-preview \.apex-state-trigger\{-webkit-appearance:none;appearance:none\}/);
+ assert.match(css,/font-size:16px;/);
+ assert.doesNotMatch(css,/user-scalable\s*:\s*no|maximum-scale\s*:/i);
+});
