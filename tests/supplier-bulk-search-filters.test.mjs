@@ -30,7 +30,7 @@ test("search matches title or SKU, ignores whitespace and case, and preserves or
  assert.deepEqual(keys(filterSupplierBulkRows(rows,"","all",listing)),keys(rows));
 });
 test("status views separate unsaved, ready, requested and held rows",()=>{
- assert.deepEqual(BULK_VIEW_FILTERS,["all","unsaved","ready","requested","needs_attention"]);
+ assert.deepEqual(BULK_VIEW_FILTERS,["all","unsaved","ready","requested","needs_attention","save_retries"]);
  assert.deepEqual(keys(filterSupplierBulkRows(rows,"","unsaved",listing,newRequests)),["unsaved","edited"]);
  assert.deepEqual(keys(filterSupplierBulkRows(rows,"","ready",listing,newRequests)),["ready"]);
  assert.deepEqual(keys(filterSupplierBulkRows(rows,"","requested",listing,newRequests)),["requested","newrequest"]);
@@ -49,7 +49,7 @@ test("title/SKU search scales across imported cards without changing source",()=
  assert.equal(big.length,150);
 });
 test("actions use only selected visible cards and changing view clears selection",()=>{
- assert.ok(editor.includes("const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested)"));
+ assert.ok(editor.includes("const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested,new Set(saveRetryKeys))"));
  assert.ok(editor.includes("const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key))"));
  assert.ok(editor.includes("setSelected(allVisibleSelected?[]:visibleRows.map(r=>r.key))"));
  assert.ok(editor.includes("setProductSearch(e.target.value);setSelected([])"));
