@@ -112,7 +112,7 @@ export function DemoCartProvider({children,enabled}:{children:ReactNode;enabled:
      <button ref={closeRef} type="button" className="apex-cart-close"
       aria-label="Close cart" onClick={close}>✕</button>
     </div>
-    <p className="apex-cart-notice">Fictional sample items only. Cart data is stored on this device; no orders or payments are created.</p>
+    <p className="apex-cart-notice">Sample items only · Saved on this device. No purchases or payments.</p>
     <div className="apex-cart-lineitems">
      {DEMO_ITEMS.filter(item=>(quantities[item.id]??0)>0).map(item=>{
       const qty=quantities[item.id]??0;
@@ -143,7 +143,7 @@ export function DemoCartProvider({children,enabled}:{children:ReactNode;enabled:
     </div>
     <div className="apex-cart-footer">
      <div className="apex-cart-subtotal"><span>Sample subtotal</span><strong>{formatDemoUsd(subtotal)}</strong></div>
-     <p>Shipping and the sample discount are calculated in the demo checkout. Tax is not calculated.</p>
+     <p>Shipping and discounts appear in demo checkout. Tax not calculated.</p>
      {count>0?<Link className="apex-cart-checkout" href="/checkout/preview" onClick={close}>
       Continue to demo checkout <span aria-hidden="true">→</span>
      </Link>:<button className="apex-cart-checkout" type="button" disabled>Demo checkout · cart empty</button>}
