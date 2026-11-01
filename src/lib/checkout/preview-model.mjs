@@ -1,3 +1,5 @@
+import {resolveDemoState} from "./us-states.mjs";
+
 /**
  * Static, non-transactional checkout model. Deliberately contains NO actual
  * products, addresses, payment links, API calls, persistence or FX quotes.
@@ -66,8 +68,8 @@ export function validateDemoGuest(values={}){
  const email=String(values.email??"").trim();
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
   errors.email="Enter a valid-looking sample email.";
- if(!/^[A-Za-z]{2}$/.test(String(values.state??"").trim()))
-  errors.state="Enter a two-letter state.";
+ if(!resolveDemoState(values.state))
+  errors.state="Select a valid state from the list.";
  if(!/^\d{5}(?:-\d{4})?$/.test(String(values.postal??"").trim()))
   errors.postal="Enter a 5-digit sample ZIP code.";
  const phone=String(values.phone??"").trim();
