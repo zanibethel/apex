@@ -1,0 +1,136 @@
+/* Apex preview-only storefront checkout. All classes scoped to this route. */
+.apex-checkout-preview{padding-block:34px 104px;max-width:1200px}
+.apex-checkout-preview button,.apex-checkout-preview input{font:inherit}
+.apex-checkout-preview button{cursor:pointer}
+.apex-checkout-preview button:disabled{opacity:.45;cursor:not-allowed}
+.apex-checkout-preview :is(button,input,a):focus-visible{outline:3px solid #ffc36b;outline-offset:3px}
+.apex-checkout-topline{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:42px}
+.apex-checkout-back{color:#c7c8d0;font-size:13px;font-weight:700}
+.apex-checkout-back:hover{text-decoration:underline}
+.apex-checkout-safe{font-size:10px;letter-spacing:.12em;color:#f3b3c3;border:1px solid #713445;background:#2a1520;padding:9px 12px;border-radius:50px;font-weight:800}
+.apex-checkout-head{max-width:760px;margin-bottom:36px}
+.apex-checkout-head .eyebrow{margin-bottom:13px;color:#ff668d}
+.apex-checkout-head h1{font-weight:900;letter-spacing:-.057em;font-size:clamp(42px,6vw,70px);line-height:1.02;margin:0 0 18px}
+.apex-checkout-head h1 span{color:#ef315f}
+.apex-checkout-head>p:last-child{color:#c2c3cb;max-width:730px;margin:0;font-size:15px}
+.apex-checkout-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;list-style:none;margin:0 0 30px;padding:0}
+.apex-checkout-steps li{display:flex;align-items:center;gap:12px;background:#121318;color:#878b97;border:1px solid #282a33;border-radius:10px;padding:14px 16px;font-size:13px;font-weight:800;min-width:0}
+.apex-checkout-steps li.is-active{background:#24131c;border-color:#9d2648;color:#fff}
+.apex-checkout-steps li.is-done{background:#16201e;border-color:#3a6254;color:#c1e9d5}
+.apex-checkout-step-num{font-size:12px;border:1px solid currentColor;border-radius:50%;width:31px;height:31px;flex:none;display:grid;place-items:center}
+.apex-checkout-layout{display:grid;grid-template-columns:minmax(0,1.48fr) minmax(300px,.88fr);gap:22px;align-items:start}
+.apex-checkout-workspace,.apex-checkout-summary{min-width:0;background:linear-gradient(145deg,#15161b,#0e0f14);border:1px solid #343640;border-radius:20px;box-shadow:0 18px 70px rgba(0,0,0,.1)}
+.apex-checkout-workspace{padding:clamp(20px,3vw,34px)}
+.apex-checkout-summary{padding:clamp(20px,2.3vw,29px);position:sticky;top:93px}
+.apex-checkout-section-top{display:flex;justify-content:space-between;gap:10px;align-items:start;flex-wrap:wrap;margin-bottom:12px}
+.apex-checkout-kicker{font-size:10px;font-weight:900;letter-spacing:.18em;color:#e86284;margin:0 0 12px}
+.apex-checkout-section-top h2,.apex-checkout-confirmed h2{font-size:clamp(27px,3.5vw,34px);line-height:1.18;letter-spacing:-.04em;margin:0}
+.apex-checkout-mini{font-size:11px;font-weight:800;border:1px solid #393b44;padding:7px 10px;border-radius:20px;color:#c4c6ce;white-space:nowrap}
+.apex-checkout-support{color:#b7bac3;font-size:13px;line-height:1.65;margin:12px 0 27px}
+.apex-checkout-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.apex-checkout-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.apex-checkout-field span{font-size:12px;color:#dadbe2;font-weight:700}
+.apex-checkout-field input,.apex-checkout-coupon input{width:100%;min-width:0;background:#0b0c10;color:#f1f2f4;border:1px solid #464954;border-radius:9px;padding:12px 13px;min-height:48px}
+.apex-checkout-field input:focus,.apex-checkout-coupon input:focus{border-color:#fa5a83}
+.apex-checkout-field input[aria-invalid=true]{border-color:#ed7c98}
+.apex-checkout-street{grid-column:1 / -1}
+.apex-checkout-error{display:block;font-size:11px;color:#ffa3bc;line-height:1.45}
+.apex-checkout-success{font-size:12px;color:#a8e8ce}
+.apex-checkout-success button{border:0;background:transparent;color:#fff;text-decoration:underline;font-size:12px}
+.apex-checkout-shipping{border:0;padding:0;margin:32px 0 0;display:grid;gap:10px;min-width:0}
+.apex-checkout-shipping legend{font-size:16px;font-weight:800;margin-bottom:13px}
+.apex-checkout-shipping legend span{color:#b3b4be;font-size:12px;font-weight:400}
+.apex-checkout-ship{min-width:0;display:flex;align-items:center;gap:12px;background:#0b0c10;border:1px solid #3b3d47;border-radius:11px;padding:15px;cursor:pointer}
+.apex-checkout-ship.is-selected{background:#21131b;border-color:#ad3158}
+.apex-checkout-ship input{accent-color:#df2155;width:17px;height:17px;flex:none}
+.apex-checkout-ship>span{flex:1;display:grid;min-width:0}
+.apex-checkout-ship strong{font-size:13px}
+.apex-checkout-ship small{font-size:11px;color:#a8aab4;margin-top:2px}
+.apex-checkout-ship>b{font-size:13px;white-space:nowrap}
+.apex-checkout-privacy{font-size:11px;color:#aeb0bc;margin:24px 0}
+.apex-checkout-cta{display:inline-flex;align-items:center;justify-content:space-between;gap:20px;width:100%;background:linear-gradient(110deg,#b20836,#e72359);border:1px solid #ec3968;color:#fff;border-radius:10px;min-height:53px;padding:13px 18px;font-size:13px;font-weight:900;text-align:center;line-height:1.3;transition:filter .1s ease}
+.apex-checkout-cta:hover:not(:disabled){filter:brightness(1.15)}
+.apex-checkout-summary-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.apex-checkout-summary-head span:last-child{font-size:11px;color:#bfc2ca}
+.apex-checkout-summary h2{font-size:24px;letter-spacing:-.03em;margin:0 0 20px}
+.apex-checkout-item{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:11px;align-items:start;padding:16px 0;border-bottom:1px solid #30323b;min-width:0}
+.apex-checkout-product-art{width:58px;height:61px;display:grid;place-items:center;background:radial-gradient(circle,#4e2330,#101116);border:1px solid #403039;border-radius:9px;font-weight:900;font-size:29px;color:#e25a7c}
+.apex-checkout-item-copy{display:grid;gap:3px;min-width:0}
+.apex-checkout-item-copy strong{font-size:12px;line-height:1.4}
+.apex-checkout-item-copy>span{font-size:11px;color:#adb0bb}
+.apex-checkout-item>strong{font-size:12px;white-space:nowrap}
+.apex-checkout-qty{display:flex;align-items:center;gap:7px;margin-top:9px}
+.apex-checkout-qty button{display:grid;place-items:center;width:27px;height:27px;border-radius:6px;background:#22242a;color:#fff;border:1px solid #4e505c}
+.apex-checkout-qty output{min-width:16px;text-align:center;font-size:12px}
+.apex-checkout-coupon{margin:26px 0 18px}
+.apex-checkout-coupon label{font-size:12px;font-weight:800;display:block;margin-bottom:9px}
+.apex-checkout-coupon>div{display:flex;gap:7px;min-width:0}
+.apex-checkout-coupon input{flex:1;font-size:13px}
+.apex-checkout-coupon>div>button{border:1px solid #62636e;color:#fff;background:#292b31;padding:0 12px;border-radius:8px;font-size:12px;font-weight:700}
+.apex-checkout-coupon>small{display:block;margin-top:8px}
+.apex-checkout-prices{margin:16px 0 0}
+.apex-checkout-prices>div{display:flex;justify-content:space-between;gap:12px;margin:12px 0;font-size:12px;color:#bfc1cb}
+.apex-checkout-prices dd{margin:0;text-align:right;white-space:nowrap}
+.apex-checkout-prices .apex-checkout-discount{color:#8fe4be}
+.apex-checkout-prices .apex-checkout-price-total{font-size:17px;font-weight:900;color:#fff;padding-top:18px;border-top:1px solid #40414c;margin-top:24px}
+.apex-checkout-summary-foot{border:1px solid #41424e;border-radius:10px;color:#b5b7c1;padding:12px;margin-top:25px;font-size:11px;line-height:1.5}
+.apex-checkout-invoice{border:1px solid #41434f;border-radius:14px;background:#0b0c10;margin:24px 0 20px;padding:20px}
+.apex-checkout-invoice-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:15px;border-bottom:1px solid #2e3038}
+.apex-checkout-invoice-head .apex-checkout-kicker{margin:0}
+.apex-checkout-state{font-size:11px;letter-spacing:.02em;padding:7px 10px;border:1px solid #746438;color:#ffe29d;border-radius:50px;background:#2c2818}
+.apex-checkout-state.state-detected{background:#12243b;border-color:#456d9f;color:#a9d9ff}
+.apex-checkout-state.state-confirmed{background:#142a20;border-color:#397b56;color:#a5e8b7}
+.apex-checkout-state.state-expired{background:#32181b;border-color:#8b3f4d;color:#ffb9c6}
+.apex-checkout-payment-body{display:grid;grid-template-columns:minmax(130px,165px) minmax(0,1fr);gap:22px;align-items:center;padding-top:21px}
+.apex-checkout-not-qr{min-height:164px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;border:2px dashed #61616a;border-radius:8px;background:repeating-linear-gradient(45deg,#101115 0 12px,#16171c 12px 24px);text-align:center;color:#bcbec6}
+.apex-checkout-qr-icon{font-weight:900;font-size:33px;color:#f34c7b;line-height:1}
+.apex-checkout-not-qr strong{font-size:13px;letter-spacing:.1em}
+.apex-checkout-not-qr small{font-size:11px}
+.apex-checkout-invoice-amount{display:grid;gap:7px;min-width:0}
+.apex-checkout-invoice-amount>span{color:#b6b8c2;font-size:12px}
+.apex-checkout-invoice-amount>strong{font-size:clamp(17px,2.5vw,25px);font-weight:900;letter-spacing:-.03em;overflow-wrap:anywhere}
+.apex-checkout-invoice-amount>small{font-size:11px;color:#9fa2ae}
+.apex-checkout-address{margin-top:10px;display:grid;gap:3px;border-top:1px solid #30313c;padding-top:10px}
+.apex-checkout-address span{font-size:11px;color:#acaeb9}
+.apex-checkout-address strong{font-size:12px}
+.apex-checkout-invoice-note{color:#9fa1ad;font-size:11px;line-height:1.6;margin:20px 0 0}
+.apex-checkout-status-controls{margin:25px 0;border:1px solid #3b3d47;background:#15161c;padding:20px;border-radius:13px}
+.apex-checkout-status-controls h3{font-size:17px;margin:0 0 5px}
+.apex-checkout-status-controls p{font-size:12px;color:#acafb9;margin:0 0 17px}
+.apex-checkout-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
+.apex-checkout-actions .apex-checkout-cta{flex:1 1 190px}
+.apex-checkout-subtle{display:inline-flex;align-items:center;justify-content:center;min-height:50px;border:1px solid #646572;border-radius:9px;padding:12px 16px;background:transparent;color:#fff;font-size:13px;font-weight:800}
+.apex-checkout-back-button{border:0;background:transparent;color:#c7c8cf;font-size:13px;padding:9px 0}
+.apex-checkout-confirmed{text-align:center;padding:16px 0 0}
+.apex-checkout-confirmed>p:not(.apex-checkout-kicker):not(.apex-checkout-privacy){color:#b9bbc5;max-width:510px;margin:18px auto;line-height:1.7;font-size:14px}
+.apex-checkout-confirm-icon{width:75px;height:75px;border:2px solid #408b67;background:#133222;color:#b1efcb;display:grid;place-items:center;border-radius:100%;font-size:40px;font-weight:900;margin:0 auto 26px}
+.apex-checkout-confirm-details{border:1px solid #3a3d47;border-radius:13px;margin:28px 0;text-align:left;padding:11px 22px}
+.apex-checkout-confirm-details>div{display:flex;justify-content:space-between;gap:14px;align-items:center;border-bottom:1px solid #30323a;padding:13px 0;font-size:12px}
+.apex-checkout-confirm-details>div:last-child{border:0}
+.apex-checkout-confirm-details span{color:#b0b2bc}
+.apex-checkout-confirm-details strong{text-align:right;overflow-wrap:anywhere}
+@media(max-width:900px){
+ .apex-checkout-layout{grid-template-columns:minmax(0,1fr)}
+ .apex-checkout-summary{position:static}
+}
+@media(max-width:600px){
+ .apex-checkout-preview{padding-block:22px 60px}
+ .apex-checkout-topline{margin-bottom:28px}
+ .apex-checkout-safe{font-size:9px}
+ .apex-checkout-steps{gap:5px}
+ .apex-checkout-steps li{padding:10px 8px;gap:6px;justify-content:center;flex-wrap:wrap;font-size:10px;text-align:center}
+ .apex-checkout-step-num{width:26px;height:26px;font-size:10px}
+ .apex-checkout-layout{gap:14px}
+ .apex-checkout-workspace,.apex-checkout-summary{padding:19px 16px;border-radius:13px}
+ .apex-checkout-fields{gap:12px}
+ .apex-checkout-email,.apex-checkout-phone,.apex-checkout-street{grid-column:1 / -1}
+ .apex-checkout-payment-body{grid-template-columns:1fr}
+ .apex-checkout-not-qr{max-width:180px;width:100%;margin-inline:auto}
+ .apex-checkout-head{margin-bottom:25px}
+}
+@media(max-width:390px){
+ .apex-checkout-fields{grid-template-columns:minmax(0,1fr)}
+ .apex-checkout-fields .apex-checkout-field{grid-column:auto}
+ .apex-checkout-ship{flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){.apex-checkout-preview *{transition:none!important}}
