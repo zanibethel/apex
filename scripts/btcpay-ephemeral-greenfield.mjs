@@ -67,8 +67,8 @@ export async function runEphemeralGreenfield({
     },
   });
   if(wallet?.paymentMethodId!=="BTC-CHAIN" ||
-     typeof wallet?.config?.derivationScheme!=="string" ||
-     wallet.config.derivationScheme.length<20) {
+     typeof wallet?.config?.accountDerivation!=="string" ||
+     wallet.config.accountDerivation.length<20) {
     throw Error("Synthetic regtest on-chain wallet configuration was not verified");
   }
   const permissions=[
