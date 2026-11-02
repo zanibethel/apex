@@ -30,6 +30,7 @@ export default async function SupplierImportReviewPage() {
     <div className="actions"><Link href="/supplier/catalog" className="button secondary">Product editor</Link>
       <Link href="/supplier/inventory" className="button secondary">Inventory</Link>
       <Link href="/supplier/imports/sold-out-preview" className="button primary">Preview all sold-out cards</Link>
+      <Link href="/supplier/imports/bulk-review" className="button primary">Bulk review imported products</Link>
       <Link href="/supplier/imports/bulk-drafts" className="button secondary">Prepare reviewed drafts in bulk</Link></div>
     {error ? <section className="supplier-panel"><h2>Import records unavailable</h2><p>The private review queue has not been configured.</p></section>
       : mappings.error ? <section className="supplier-panel"><h2>Draft linkage unavailable</h2><p>Try again after the draft-link migration is verified.</p></section>
