@@ -64,7 +64,8 @@ test("bulk create action uses trusted membership, only approved source, atomic R
  assert.match(form,/required disabled=\{!enabled\|\|pending\}/);
  assert.match(form,/name="candidateIds"/);
  assert.match(form,/name="reviewConfirmed"/);
- assert.match(form,/disabled=\{!enabled\|\|pending\|\|selected\.length===0\}/);
+ assert.match(form,/disabled=\{!enabled\|\|pending\|\|selectedReady\.length===0\}/);
+ assert.match(form,/selectedReady=selected\.filter\(id=>eligible\.has\(id\)\)/);
 });
 test("customer storefront still cannot read imported sources or create real orders",()=>{
  const catalog=readFileSync("src/app/catalog/page.tsx","utf8");
