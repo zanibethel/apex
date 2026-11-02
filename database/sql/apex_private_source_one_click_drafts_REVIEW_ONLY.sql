@@ -25,16 +25,17 @@ create policy supplier_candidate_draft_insert on public.supplier_candidate_draft
   and exists (
    select 1 from public.stores s
    join public.supplier_memberships m on m.supplier_id=s.supplier_id
-   where s.id=store_id and s.is_public=false
+   where s.id=supplier_candidate_drafts.store_id and s.is_public=false
     and m.user_id=(select auth.uid()) and m.role in ('owner','manager')
   )
   and exists (
    select 1 from public.supplier_import_candidates c
-   where c.id=candidate_id and c.store_id=store_id
+   where c.id=supplier_candidate_drafts.candidate_id
+     and c.store_id=supplier_candidate_drafts.store_id
   )
   and exists (
-   select 1 from public.products p where p.id=product_id
-    and p.store_id=store_id and p.is_published=false
+   select 1 from public.products p where p.id=supplier_candidate_drafts.product_id
+    and p.store_id=supplier_candidate_drafts.store_id and p.is_published=false
   )
  );
 
