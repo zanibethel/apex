@@ -122,15 +122,18 @@ export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):
 type PublishOutcome={id:string;ok:boolean;message:string};
 type PublishResult={ok:boolean;message:string;results:PublishOutcome[]};
 
-export async function saveBulkPublicationRequests(_previous:PublishResult,form:FormData):Promise<PublishResult>{
- const storeId=form.get("storeId"),raw=form.get("ids");
- if(typeof storeId!=="string"||typeof raw!=="string")
+// Shared authenticated action for an individual card switch or a batch.
+// This saves audited supplier INTENT only; it cannot release products publicly.
+export async function saveBulkListingIntents(_previous:PublishResult,form:FormData):Promise<PublishResult>{
+ const storeId=form.get("storeId"),raw=form.get("ids"),action=form.get("action");
+ if(typeof storeId!=="string"||typeof raw!=="string"||
+  (action!=="publish"&&action!=="unpublish"))
   return {ok:false,message:denied,results:[]};
  const client=await verifiedStore(storeId);
  if(!client)return {ok:false,message:denied,results:[]};
  const ids=raw.split(",").filter(Boolean);
  if(ids.length<1||ids.length>50||new Set(ids).size!==ids.length||ids.some(x=>!isValidId(x)))
-  return {ok:false,message:"Choose 1–50 different products per publication batch.",results:[]};
+  return {ok:false,message:"Choose 1–50 different products per batch.",results:[]};
  const {data:found,error}=await client.from("products")
   .select("id,store_id,is_published").eq("store_id",storeId).in("id",ids);
  if(error||!found||found.length!==ids.length||found.some(p=>p.is_published))
@@ -138,11 +141,11 @@ export async function saveBulkPublicationRequests(_previous:PublishResult,form:F
  const results:PublishOutcome[]=[];
  for(const id of ids){
   const {data,error:rpcError}=await client.rpc("set_supplier_listing_intent",{
-   p_store_id:storeId,p_product_id:id,p_action:"publish",
+   p_store_id:storeId,p_product_id:id,p_action:action,
   });
-  results.push({id,ok:!rpcError&&!!data,message:rpcError?
-   "Not requested: check required product details and any administrator hold.":
-   "Publication request saved privately."});
+  results.push({id,ok:!rpcError&&!!data,message:rpcError
+   ?(action==="publish"?"Not requested: check required details and any administrator lock.":"Unpublish failed; refresh and retry.")
+   :(action==="publish"?"Publish preference saved; public release still gated.":"Publication preference turned off.")});
  }
  revalidatePath("/supplier/catalog");
  revalidatePath("/supplier/catalog/bulk");
@@ -150,6 +153,15 @@ export async function saveBulkPublicationRequests(_previous:PublishResult,form:F
  revalidatePath("/admin/listing-controls");
  const saved=results.filter(r=>r.ok).length;
  return {ok:saved===results.length,
-  message:`${saved} of ${results.length} product requests saved. Public release remains disabled.`,
+  message:`${saved} of ${results.length} listing preferences updated. Public release and purchasing remain independently restricted.`,
   results};
+}
+
+// Backwards-compatible wrapper for existing publish-only screens.
+export async function saveBulkPublicationRequests(previous:PublishResult,form:FormData):Promise<PublishResult>{
+ const copy=new FormData();
+ copy.set("storeId",String(form.get("storeId")??""));
+ copy.set("ids",String(form.get("ids")??""));
+ copy.set("action","publish");
+ return saveBulkListingIntents(previous,copy);
 }
