@@ -83,3 +83,5 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_private_source_one_click_drafts_REVIEW_ONLY.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/private_source_one_click_drafts_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/verified_only_sold_out_feed_integration.sql
+          # New synthetic full workflow uses only disposable data in a rollback.
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/full_supplier_card_workflow_e2e.sql
