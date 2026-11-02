@@ -41,7 +41,7 @@ test("server always verifies signed-in owner-manager tenant-scoped draft store b
  assert.match(actions,/new Set\(rows\.map\(r=>r\.key\)\)/);
  assert.match(actions,/new Set\(ids\)\.size!==ids\.length/);
  assert.match(actions,/\.eq\("store_id",storeId\)\.in\("id",ids\)/);
- assert.match(actions,/p_store_id:storeId,p_product_id:id,p_action:"publish"/);
+ assert.match(actions,/p_store_id:storeId,p_product_id:id,p_action:action/);
  assert.match(actions,/result[s]?:PublishOutcome/);
  assert.doesNotMatch(actions,/service_role|auth\.admin|is_published:true|is_public:true|publish_storefront/);
 });
@@ -71,8 +71,8 @@ test("publish single, publish selected, publish all use existing guarded intent 
  assert.match(publishPanel,/status[es]*\.get/);
  assert.match(preview,/Preview single \/ Publish single/);
  assert.match(actions,/set_supplier_listing_intent/);
- assert.match(actions,/administrator hold/i);
- assert.match(actions,/Public release remains disabled/);
+ assert.match(actions,/administrator lock/i);
+ assert.match(actions,/Public release and purchasing remain independently restricted/);
  assert.match(catalog,/Bulk add \/ edit \/ preview/);
  assert.match(dashboard,/Bulk product manager/);
  assert.match(tile,/apex-offer-tile/);
