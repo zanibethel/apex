@@ -53,7 +53,7 @@ export default async function AdminMediaReadiness(){
    <p className="notice">The complete private evidence ledger could not be checked.
     No public-image approval or release is possible.</p>
   </main>;
- const latestEvidence=new Map<string,(typeof evidence.data)[number]>();
+ const latestEvidence=new Map<string,NonNullable<typeof evidence.data>[number]>();
  for(const item of evidence.data??[]){
   const key=item.store_id+":"+item.product_id;
   if(!latestEvidence.has(key))latestEvidence.set(key,item);
