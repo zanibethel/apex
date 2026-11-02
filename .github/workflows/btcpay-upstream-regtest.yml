@@ -146,7 +146,8 @@ jobs:
             ln -s "${RUNNER_TEMP}/btcpayserver" "${RUNNER_TEMP}/prism-source/submodules/btcpayserver"
             test -f "${RUNNER_TEMP}/prism-source/submodules/btcpayserver/BTCPayServer/BTCPayServer.csproj"
             mkdir -p "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism"
-            dotnet publish "${project}" --configuration Release \
+            # Match the already proven upstream --launch-profile Bitcoin Debug build.
+            dotnet publish "${project}" --configuration Debug \
               --output "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism" \
               --property:UseAppHost=false
             echo "Prism source: linked source SHA ${source_ref}; locally built in disposable CI, not published archive"
