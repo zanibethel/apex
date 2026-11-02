@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {useDemoCart} from "@/app/demo-cart";
+import {requestDemoServerQuote} from "@/lib/checkout/demo-quote-client.mjs";
 import {useEffect,useRef,useState, type FormEvent} from "react";
 import {
  DEMO_ITEMS,DEMO_SHIPPING,DEMO_RATE_CENTS,applyDemoCoupon,
@@ -44,6 +45,11 @@ export function CheckoutPreview(){
  const [couponInput,setCouponInput]=useState("");
  const [coupon,setCoupon]=useState("");
  const [couponError,setCouponError]=useState("");
+ const [quotePending,setQuotePending]=useState(false);
+ const [quoteExpired,setQuoteExpired]=useState(false);
+ const [quoteError,setQuoteError]=useState("");
+ const [serverQuote,setServerQuote]=useState<{illustrativeTotalCents:number;illustrativeBtcSats:string;expiresAt:string}|null>(null);
+ const [quoteKey,setQuoteKey]=useState("");
  const [statePickerOpen,setStatePickerOpen]=useState(false);
  const [stateSearch,setStateSearch]=useState("");
  const stateButtonRef=useRef<HTMLButtonElement>(null);
@@ -68,6 +74,16 @@ export function CheckoutPreview(){
   };
  },[statePickerOpen]);
  const total=demoTotals({quantities,shipping,coupon});
+ const currentCartKey=JSON.stringify({quantities,shipping,coupon});
+ const latestCartKey=useRef(currentCartKey);
+ useEffect(()=>{latestCartKey.current=currentCartKey;},[currentCartKey]);
+ const quoteIsCurrent=Boolean(serverQuote)&&!quoteExpired&&quoteKey===currentCartKey;
+ useEffect(()=>{
+  if(!serverQuote||step!=="bitcoin")return;
+  const remaining=Math.max(0,Date.parse(serverQuote.expiresAt)-Date.now());
+  const timer=window.setTimeout(()=>setQuoteExpired(true),remaining);
+  return ()=>window.clearTimeout(timer);
+ },[serverQuote,step]);
  const updateGuest=(key:GuestKey,value:string)=>{
   setGuest(current=>({...current,[key]:value}));
   setErrors(current=>({...current,[key]:undefined}));
@@ -92,14 +108,32 @@ export function CheckoutPreview(){
   setCoupon(result.accepted?result.code:"");
   setCouponError(result.error??"");
  };
- const proceed=(event:FormEvent<HTMLFormElement>)=>{
+ const proceed=async(event:FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
+  if(quotePending)return;
   const nextErrors=validateDemoGuest(guest);
   setErrors(nextErrors);
   if(Object.keys(nextErrors).length||!total.items.length)return;
-  setStatus("awaiting");
-  setStep("bitcoin");
-  window.scrollTo({top:0,behavior:"instant"});
+  setQuoteError("");
+  setQuotePending(true);
+  try{
+   // Never send contact, address, prices or personal details to quote API.
+   const verified=await requestDemoServerQuote({quantities,shipping,coupon});
+   if(latestCartKey.current!==currentCartKey)
+    throw Error("Demo cart changed during verification");
+   setServerQuote(verified);
+   setQuoteExpired(false);
+   setQuoteKey(currentCartKey);
+   setStatus("awaiting");
+   setStep("bitcoin");
+   window.scrollTo({top:0,behavior:"instant"});
+  }catch{
+   setServerQuote(null);
+   setQuoteKey("");
+   setQuoteError("The server could not verify this sample total. Please try again. No order or payment was created.");
+  }finally{
+   setQuotePending(false);
+  }
  };
  const reset=()=>{
   setStep("details");
@@ -111,6 +145,10 @@ export function CheckoutPreview(){
   setCoupon("");
   setCouponInput("");
   setCouponError("");
+  setQuoteError("");
+  setQuoteExpired(false);
+  setServerQuote(null);
+  setQuoteKey("");
   setStatePickerOpen(false);
   setStateSearch("");
  };
@@ -223,16 +261,21 @@ export function CheckoutPreview(){
        )}
       </fieldset>
       <p className="apex-checkout-privacy">Demo only · No shipping, account, notifications, or data submission takes place.</p>
-      <button type="submit" className="apex-checkout-cta" disabled={!total.items.length}>
-       Continue to Bitcoin preview <span aria-hidden="true">→</span>
+      {quoteError&&<p className="apex-checkout-error" role="alert">{quoteError}</p>}
+      <button type="submit" className="apex-checkout-cta" disabled={!total.items.length||quotePending}>
+       {quotePending?"Verifying demo total on server…":"Continue to Bitcoin preview"} <span aria-hidden="true">→</span>
       </button>
     </form>}
-    {step==="bitcoin"&&<div>
+    {step==="bitcoin"&&(!quoteIsCurrent||!serverQuote)?<div role="alert" className="apex-checkout-empty-cart">
+      <strong>Demo quote expired or cart changed.</strong><span>Verify your current sample total before continuing.</span>
+      <button type="button" className="apex-checkout-cta" onClick={()=>setStep("details")}>Return to details</button>
+    </div>:null}
+    {step==="bitcoin"&&quoteIsCurrent&&serverQuote&&<div>
       <div className="apex-checkout-section-top">
        <div><p className="apex-checkout-kicker">02 / PAYMENT</p><h2>Pay with Bitcoin</h2></div>
        <span className="apex-checkout-mini">Simulation</span>
       </div>
-      <p className="apex-checkout-support">This is an interactive stand-in for the BTCPay invoice screen. It does not contact BTCPay, generate an address, or request a transfer.</p>
+      <p className="apex-checkout-support">Server-verified fictional total: {formatDemoUsd(serverQuote.illustrativeTotalCents)}. This is an interactive stand-in for BTCPay; it cannot contact BTCPay, generate an address, or request a transfer. Tax is not calculated.</p>
       <div className="apex-checkout-invoice">
        <div className="apex-checkout-invoice-head">
         <span className="apex-checkout-kicker">SIMULATED INVOICE</span>
@@ -246,7 +289,7 @@ export function CheckoutPreview(){
         </div>
         <div className="apex-checkout-invoice-amount">
          <span>Fictional Bitcoin amount</span>
-         <strong>{formatDemoBtc(total.mockSats)}</strong>
+         <strong>{formatDemoBtc(serverQuote.illustrativeBtcSats)}</strong>
          <small>Based on a fixed sample conversion of {formatDemoUsd(DEMO_RATE_CENTS)} per BTC. This is not a live exchange rate or payment quote.</small>
          <div className="apex-checkout-address">
           <span>Destination address</span>
@@ -280,7 +323,7 @@ export function CheckoutPreview(){
       <div className="apex-checkout-confirm-details">
        <div><span>Reference</span><strong>DEMO-ONLY · NO ORDER</strong></div>
        <div><span>Sample customer</span><strong>{guest.firstName} {guest.lastName}</strong></div>
-       <div><span>Simulated total</span><strong>{formatDemoUsd(total.totalCents)}</strong></div>
+       <div><span>Simulated total</span><strong>{formatDemoUsd(serverQuote?.illustrativeTotalCents??0)}</strong></div>
        <div><span>Payment</span><strong>Simulated confirmation</strong></div>
       </div>
       <div className="apex-checkout-actions">
