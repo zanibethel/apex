@@ -1045,3 +1045,15 @@ body { background:#07080b; }
 @media(max-width:500px){
  .apex-bulk-visibility-state{font-size:10px;padding:5px 8px}
 }
+
+/* Supplier-only correction preview, below the nonwrapping title/edit/toggle. */
+.apex-bulk-image-status{display:inline-flex;max-width:100%;align-items:center;
+ border:1px solid #5b5364;border-radius:999px;padding:5px 9px;
+ color:#dfd0de;background:#29202d;font-weight:700;font-size:11px;
+ line-height:1.3;overflow-wrap:anywhere}
+.apex-bulk-image-missing,.apex-bulk-image-correction,
+.apex-bulk-image-changed{border-color:#9a6267;background:#38242b;color:#f8d0d6}
+.apex-bulk-image-unavailable{border-color:#967b4c;color:#eedbb9}
+.apex-bulk-image-recorded{border-color:#466c61;background:#20342f;color:#c2e7da}
+.apex-bulk-media-fix{font-size:12px;min-height:38px;margin:4px 0 10px}
+@media(max-width:500px){.apex-bulk-image-status{font-size:10px;padding:5px 8px}}
