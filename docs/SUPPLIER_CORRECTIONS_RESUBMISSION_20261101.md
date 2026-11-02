@@ -19,12 +19,21 @@ without treating an update as automatic publication or overriding a hold.
    further corrections, or retain the hold. Unlock does not publish anything.
 
 ## Database / rollout
-- `database/sql/apex_supplier_corrections_resubmit_REVIEW_ONLY.sql` is a
-  **proposal, not an applied migration**. It adds an allowed immutable audit
-  event and a permission-limited, membership-checked RPC. It modifies no
-  public product, store, payment, release gate or authorization.
-- The UI is hidden unless `APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED=true`
-  **AND** the reviewed hosted RPC has been separately installed and read back.
-- Run disposable Postgres RLS tests, confirm anon cannot execute, then apply
-  only with explicit deployment review. Keep public release gate OFF.
+- The reviewed source `database/sql/apex_supplier_corrections_resubmit_REVIEW_ONLY.sql`
+  was applied to hosted Apex Supabase as migration
+  `supplier_private_corrections_resubmission` (2026-11-02 UTC), after
+  disposable PostgreSQL/RLS CI passed. It adds an immutable correction event
+  and a store membership-checked RPC. No public product, store, payment,
+  release gate or product authorization was modified.
+- Hosted readback verified function presence, authenticated-only EXECUTE,
+  no anon EXECUTE, membership validation, the new audit action, zero public
+  products/stores, and the independent global public release gate OFF.
+- UI is enabled only with
+  `APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED=true`; absent/false still
+  shows existing manual review guidance.
+- Supabase security advisor flags the new intentionally privileged,
+  authenticated-executable SECURITY DEFINER function; its body checks
+  `auth.uid()` and active supplier owner/manager membership on a private store
+  before mutating anything. The advisor warning is expected and merits review
+  alongside the existing privileged RPCs.
 - No fabricated public inventory or public-facing product tiles.
