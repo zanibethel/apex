@@ -29,7 +29,8 @@ export default async function SupplierImportReviewPage() {
     <p className="notice">Costs are internal wholesale estimates. Confirm product details, sale eligibility, retail prices, source documentation and real stock before creating any draft catalog entries.</p>
     <div className="actions"><Link href="/supplier/catalog" className="button secondary">Product editor</Link>
       <Link href="/supplier/inventory" className="button secondary">Inventory</Link>
-      <Link href="/supplier/imports/sold-out-preview" className="button primary">Preview all sold-out cards</Link></div>
+      <Link href="/supplier/imports/sold-out-preview" className="button primary">Preview all sold-out cards</Link>
+      <Link href="/supplier/imports/bulk-drafts" className="button secondary">Prepare reviewed drafts in bulk</Link></div>
     {error ? <section className="supplier-panel"><h2>Import records unavailable</h2><p>The private review queue has not been configured.</p></section>
       : mappings.error ? <section className="supplier-panel"><h2>Draft linkage unavailable</h2><p>Try again after the draft-link migration is verified.</p></section>
       : !data?.length ? <section className="supplier-panel"><h2>No source entries available.</h2><p>No supplier variants have been imported yet.</p></section>
