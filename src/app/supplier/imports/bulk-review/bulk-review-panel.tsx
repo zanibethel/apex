@@ -12,7 +12,7 @@ export type ReviewRow={
  id:string;sourceIndex:number;name:string;strength:string;status:string;
  linked:boolean;costCents:number|null;retailCents:number|null;
  compareAtCents:number|null;description:string|null;
- needsIdentityCheck:boolean;validForDraft:boolean;
+ needsIdentityCheck:boolean;validForDraft:boolean;validForSourceReview:boolean;
 };
 const initial:BulkReviewResult={ok:false,message:"",results:[]};
 const stateLabel=(state:string)=>state==="approved_for_draft"?"Ready for draft":
@@ -38,14 +38,14 @@ export function BulkSourceReviewPanel({storeId,rows,sharedImage,enabled}:{
  }),[rows,filter,search]);
  const chosen=rows.filter(r=>selected.includes(r.id));
  const approvalsReady=chosen.length>0&&chosen.every(r=>
-  r.validForDraft&&r.costCents!==null&&verified.includes(r.id));
+  r.validForSourceReview&&r.costCents!==null&&verified.includes(r.id));
  const canSubmit=enabled&&!pending&&chosen.length>0&&
   (action!=="approved_for_draft"||(approvalsReady&&overall));
  const batch=JSON.stringify({action,rows:chosen.map(r=>({
   id:r.id,status:r.status,costCents:r.costCents,checked:verified.includes(r.id),
  }))});
  const selectedCount=selected.length;
- const allVisible=visible.filter(r=>!r.linked&&r.costCents!==null);
+ const allVisible=visible.filter(r=>r.costCents!==null);
  const selectVisible=()=>setSelected(old=>{
   const next=new Set(old);
   for(const row of allVisible){
@@ -88,7 +88,7 @@ export function BulkSourceReviewPanel({storeId,rows,sharedImage,enabled}:{
    {visible.map(r=>{
     const isSelected=selected.includes(r.id);
     const isVerified=verified.includes(r.id);
-    const disabled=r.linked||r.costCents===null||!enabled||pending||
+    const disabled=r.costCents===null||!enabled||pending||
      (!isSelected&&selectedCount>=SOURCE_REVIEW_BATCH_LIMIT);
     return <article key={r.id} className={"apex-review-card"+(isSelected?" is-selected":"")}>
      <div className="apex-review-card-head">
@@ -98,7 +98,7 @@ export function BulkSourceReviewPanel({storeId,rows,sharedImage,enabled}:{
         aria-label={"Select "+r.name+" "+r.strength}/>
        <span>Source #{r.sourceIndex+1}</span>
       </label>
-      <span className="apex-review-status">{r.linked?"Saved draft":stateLabel(r.status)}</span>
+      <span className="apex-review-status">{r.linked?"Saved · "+stateLabel(r.status):stateLabel(r.status)}</span>
      </div>
      <div className="apex-review-summary">
       {sharedImage?<div className="apex-review-image">
@@ -148,7 +148,7 @@ export function BulkSourceReviewPanel({storeId,rows,sharedImage,enabled}:{
     <span>Changes are auditable. They do not publish products.</span>
    </div>
    {action==="approved_for_draft"&&<>
-    <p className="notice">To approve, check the individual verification box
+    <p className="notice">Saved private cards may still need source verification. To approve, check the individual verification box
      on <strong>every selected record</strong>. Approval only permits a private draft;
      it does not certify authorization for sale, verify inventory or enable checkout.</p>
     <label className="apex-review-confirm">
