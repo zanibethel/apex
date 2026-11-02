@@ -2,6 +2,9 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {BulkDraftEditor} from "../bulk-editor";
+import {SourceDraftImport} from "../source-draft-import";
+import {proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs";
+import {importDefaultDescription} from "@/lib/catalog/import-default-descriptions.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
 import {awaitingAdministratorCorrectionReview} from "@/lib/catalog/listing-resubmission.mjs";
@@ -31,12 +34,14 @@ export default async function BulkProductWorkspace(){
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
  const store=stores[0];
- const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError}]=await Promise.all([
+ const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:sources,error:sourceError,count:sourceCount},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError}]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
   client.from("categories").select("id,name").eq("store_id",store.id).order("name").limit(SUPPLIER_BULK_PRODUCT_CAPACITY),
-  client.from("supplier_candidate_drafts").select("product_id").eq("store_id",store.id).limit(500),
+  client.from("supplier_candidate_drafts").select("candidate_id,product_id").eq("store_id",store.id).limit(500),
+  client.from("supplier_import_candidates").select("id,source_index,product_name,strength,wholesale_cost_cents",{count:"exact"})
+   .eq("store_id",store.id).order("source_index").limit(250),
   client.from("inventory_items").select("product_id,quantity_on_hand,quantity_reserved").eq("store_id",store.id).limit(250),
   client.from("supplier_listing_controls")
    .select("product_id,supplier_wants_listing,admin_gate,republish_approval_required,republish_approved,reason")
@@ -98,6 +103,14 @@ export default async function BulkProductWorkspace(){
   };
  });
  const linkedProducts=new Set((linked??[]).map(p=>p.product_id));
+ const linkedSources=new Set((linked??[]).map(p=>p.candidate_id));
+ const sourceListUsable=!sourceError&&sourceCount!==null&&sourceCount===sources?.length&&sourceCount<=250;
+ const sourceOptions=sourceListUsable?(sources??[]).filter(s=>!linkedSources.has(s.id)).map(s=>{
+  const cost=proposedSoldOutPricing(s.wholesale_cost_cents);
+  const name=[s.product_name?.trim(),s.strength?.trim()].join(" — ");
+  return {id:s.id,sourceIndex:s.source_index,name:s.product_name,strength:s.strength,
+   costCents:cost?.sourceCostCents??0,eligible:Boolean(cost)&&Boolean(importDefaultDescription(s.product_name,s.strength))&&name.length<=120};
+ }):[];
  const initialRows=(products??[]).map(p=>({
   key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",
   price:(Number(p.price_cents)/100).toFixed(2),
@@ -112,6 +125,9 @@ export default async function BulkProductWorkspace(){
   <h1>Add and edit multiple products</h1>
   <p className="lead">Select products, make changes, save them, then choose Preview single or Preview all before publishing.</p>
   <p className="notice">New products begin as private drafts with zero stock. Save a draft to unlock its inline image picker and stock editor, then preview the completed offer. Nothing is made public by saving.</p>
+  {sourceListUsable?<SourceDraftImport storeId={store.id} sources={sourceOptions}
+    enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"&&process.env.APEX_PRIVATE_SOURCE_DRAFTS_ENABLED==="true"}/>
+   :<p role="status" className="notice">Source import queue unavailable or incomplete. Existing private product editing remains available.</p>}
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
    categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}
    resubmissionEnabled={process.env.APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED==="true"}/>
