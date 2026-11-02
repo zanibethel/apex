@@ -165,8 +165,8 @@ export function BulkSourceReviewPanel({storeId,rows,sharedImage,enabled}:{
     {state.results.filter(r=>!r.ok).length>0&&<p>
      {state.results.filter(r=>!r.ok).length} rows could not be saved. Refresh
      before retrying to avoid stale changes.</p>}
-    <p>After approval, open <Link href="/supplier/imports/bulk-drafts">
-     Create reviewed zero-stock drafts</Link>. Refresh this page to see saved statuses.</p>
+    <p>After approval, use <a href="#create-reviewed-drafts">Step 2 · Create approved private product cards</a>
+     on this page. Refresh to load newly approved entries into the selection list.</p>
    </div>}
    <p className="notice">Source review and draft creation never open the public
     storefront or make a product purchasable. No Bitcoin invoices are created.</p>
