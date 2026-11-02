@@ -270,6 +270,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         ?readiness.missing.length+" setup item"+(readiness.missing.length===1?"":"s")+" remaining"
         :"Status details"}</summary>
       <p>{readiness.description}</p>
+      {adminFeedback&&r.id&&<Link className="button secondary" href={"/supplier/catalog#details-"+r.id}>Edit and resubmit for review</Link>}
       {adminFeedback&&<p className="apex-bulk-admin-feedback">
        <strong>{adminFeedback.heading}:</strong> {adminFeedback.message}
       </p>}
