@@ -13,7 +13,7 @@ test("approved public gallery defaults OFF, only calls pinned Apex read-only RPC
  assert.match(loader,/method:"GET"/);
  assert.match(loader,/cache:"no-store"/);
  assert.match(loader,/AbortSignal\.timeout\(6000\)/);
- assert.match(loader,/state:"disabled",products:\[\]/);
+ assert.match(loader,/return empty\("disabled"\)/);
  assert.doesNotMatch(loader,/service_role|SUPABASE_SECRET|\.insert\(|\.update\(|\.delete\(|Bearer /);
 });
 test("strict product result permits ONLY approved public price, not private IDs or stock",()=>{
@@ -53,7 +53,7 @@ test("only approved projection is rendered; demo is visually and commercially se
  const page=read("src/app/catalog/page.tsx");
  const shelf=read("src/app/catalog/approved-sold-out-shelf.tsx");
  const css=read("src/app/catalog/sold-out-catalog.css");
- assert.match(page,/readApprovedSoldOutCatalog\(\)/);
+ assert.match(page,/readApprovedSoldOutCatalog\(page\)/);
  assert.match(page,/<ApprovedSoldOutShelf result=\{approved\}/);
  assert.match(page,/readPublishedCatalog\(\)/);
  assert.doesNotMatch(page,/connection\.products\.map|result\.products\.map/);
