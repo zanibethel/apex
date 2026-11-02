@@ -4,7 +4,7 @@ import {importDefaultDescription} from "./import-default-descriptions.mjs";
 export const SOURCE_REVIEW_BATCH_LIMIT=20;
 export const SOURCE_REVIEW_ACTIONS=Object.freeze(["under_review","hold","approved_for_draft"]);
 export const SOURCE_REVIEW_STATES=Object.freeze(["unverified","under_review","hold","approved_for_draft"]);
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function sourceReviewSummary(row,linked=false){
  if(!row||typeof row!=="object"||typeof row.id!=="string"||
