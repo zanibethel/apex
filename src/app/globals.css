@@ -1026,3 +1026,22 @@ body { background:#07080b; }
  .apex-source-quick-actions{align-items:stretch;flex-direction:column}
  .apex-source-quick-actions .button{width:100%}
 }
+
+/* Distinguish public visibility from the supplier's checked Publish intent. */
+.apex-bulk-visibility-state{
+ display:inline-flex;align-items:center;max-width:100%;
+ border:1px solid #675e6d;border-radius:999px;padding:5px 9px;
+ color:#e4dce6;background:#28212d;font-size:11px;font-weight:750;
+ line-height:1.3;overflow-wrap:anywhere;
+}
+.apex-bulk-visibility-requested{border-color:#58718a;color:#d2e5ff;background:#1c2b3b}
+.apex-bulk-visibility-held{border-color:#875761;color:#f1d0d5;background:#37252f}
+.apex-bulk-visibility-unavailable{border-color:#89754c;color:#f7dfac;background:#382d20}
+.apex-bulk-visibility-live{border-color:#447c63;color:#c9f4df;background:#1b372b}
+.apex-storefront-visibility-requested{color:#cadbff}
+.apex-storefront-visibility-held{color:#f2c3cc}
+.apex-storefront-visibility-unavailable{color:#ecd5a6}
+.apex-storefront-visibility-live{color:#bdebd3}
+@media(max-width:500px){
+ .apex-bulk-visibility-state{font-size:10px;padding:5px 8px}
+}
