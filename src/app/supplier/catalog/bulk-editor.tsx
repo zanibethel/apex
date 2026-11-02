@@ -6,7 +6,7 @@ import {BulkCardMedia} from "./bulk-card-media";
 import {BulkInlineOffer} from "./bulk-inline-offer";
 import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
 import {useMemo,useState,useTransition} from "react";
-import {saveBulkProductDrafts,saveBulkPublicationRequests} from "./bulk-actions";
+import {saveBulkProductDrafts,saveBulkPublicationRequests,saveBulkListingIntents} from "./bulk-actions";
 import {eligiblePrivatePublishIds} from "@/lib/catalog/bulk-publish-selection.mjs";
 import {CsvProductImport} from "./csv-product-import";
 import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-products.mjs";
@@ -51,11 +51,14 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [pending,startTransition]=useTransition();
  const [publishPending,startPublishTransition]=useTransition();
  const [publishResults,setPublishResults]=useState<PublishOutcome[]>([]);
+ const [listingOverrides,setListingOverrides]=useState<Record<string,boolean>>({});
+ const [editOpenKeys,setEditOpenKeys]=useState<string[]>([]);
  const [publicationMessage,setPublicationMessage]=useState("");
  const busy=pending||publishPending;
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
- const newlyRequested=new Set(publishResults.filter(item=>item.ok).map(item=>item.id));
- const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,listing,newlyRequested,new Set(saveRetryKeys));
+ const effectiveListing=listing.map(item=>({...item,requested:listingOverrides[item.productId]??item.requested}));
+ const newlyRequested=new Set(Object.entries(listingOverrides).filter(([,value])=>value).map(([id])=>id));
+ const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,effectiveListing,newlyRequested,new Set(saveRetryKeys));
  const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key));
  const pendingSaveRows:BulkEditRow[]=bulkRowsRequiringSave(selectedRows,lastSave);
  const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
@@ -145,26 +148,33 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  }
  const selectedValid=pendingSaveRows.length>0&&pendingSaveRows.length<=250;
  const allVisibleSelected=visibleRows.length>0&&visibleRows.every(r=>selectedSet.has(r.key));
- const listingByProduct=new Map(listing.map(item=>[item.productId,item]));
+ const listingByProduct=new Map(effectiveListing.map(item=>[item.productId,item]));
  const publicationById=new Map(publishResults.map(item=>[item.id,item]));
- const eligiblePublishIds=eligiblePrivatePublishIds(rows,listing,newlyRequested);
+ const eligiblePublishIds=eligiblePrivatePublishIds(rows,effectiveListing,newlyRequested);
  const eligiblePublishSet=new Set(eligiblePublishIds);
  const eligibleSelectedIds=selectedRows.filter(r=>r.id&&eligiblePublishSet.has(r.id)).map(r=>r.id!);
+ const eligibleUnpublishIds=selectedRows.filter(r=>r.id&&listingByProduct.get(r.id)?.requested).map(r=>r.id!);
  const publicationLimit=50;
- function publish(ids:string[]){
+ function toggleEdit(key:string){if(busy)return;setEditOpenKeys(previous=>previous.includes(key)?previous.filter(id=>id!==key):[...previous,key]);}
+ function publish(ids:string[],action:"publish"|"unpublish"="publish"){
   if(!editable||pending||publishPending||ids.length<1||ids.length>publicationLimit||
-   new Set(ids).size!==ids.length||ids.some(id=>!eligiblePublishSet.has(id)))return;
+   new Set(ids).size!==ids.length||ids.some(id=>action==="publish"
+     ?!eligiblePublishSet.has(id):!listingByProduct.get(id)?.requested))return;
   startPublishTransition(async()=>{
    const form=new FormData();
    form.set("storeId",storeId);
    form.set("ids",ids.join(","));
+    form.set("action",action);
    try{
-    const response=await saveBulkPublicationRequests({ok:false,message:"",results:[]},form);
+    const response=action==="publish"
+      ?await saveBulkPublicationRequests({ok:false,message:"",results:[]},form)
+      :await saveBulkListingIntents({ok:false,message:"",results:[]},form);
     setPublishResults(previous=>[
      ...previous.filter(item=>!ids.includes(item.id)),
      ...response.results,
     ]);
     setPublicationMessage(response.message);
+    setListingOverrides(previous=>({...previous,...Object.fromEntries(response.results.filter(item=>item.ok).map(item=>[item.id,action==="publish"]))}));
     if(response.results.some(item=>item.ok))router.refresh();
    }catch{
     setPublicationMessage("Publication requests could not be saved. Refresh and check product status.");
@@ -211,7 +221,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     {showOfferTiles?"Hide live offer tiles":"Show live offer tiles"}
    </button>
   </div>
-  <p className="notice">Upload a CSV or edit existing products and see the offer tile change immediately. Save selected to keep changes, unlock image/stock controls and proceed to a single or group publication preview. These tiles are private simulations, never live listings.</p>
+  <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch saves supplier publishing preference. Zero stock means Sold Out, not a missing listing; public eligibility remains separate.</p>
   {recentImportKeys.length>0&&<p className="apex-bulk-import-notice" role="status">
    {recentImportKeys.length} CSV product {recentImportKeys.length===1?"card is":"cards are"} at the top of the workspace.
    Review their live previews and choose Save selected when ready.
@@ -228,8 +238,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const category=categories.find(c=>c.id===r.categoryId)?.name??"Uncategorized";
     const listingStatus=r.id?listingByProduct.get(r.id):undefined;
     const publication=r.id?publicationById.get(r.id):undefined;
-    const requested=Boolean(listingStatus?.requested||publication?.ok);
-    const readiness=privateBulkReadiness(r,listingStatus,Boolean(publication?.ok));
+    const requested=Boolean(listingStatus?.requested);
+    const readiness=privateBulkReadiness(r,listingStatus,requested&&Boolean(publication?.ok));
     const adminFeedback=r.id?supplierAdminFeedback(listingStatus):null;
     const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
     return <article key={r.key} className="apex-bulk-row">
@@ -240,6 +250,17 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        <strong>{r.name||"New product "+(i+1)}</strong>
        {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
       </label>
+      <div className="apex-bulk-card-top-actions">
+       <button type="button" className="apex-bulk-card-pencil"
+        aria-label={"Edit "+(r.name||"new product")+" details"} aria-expanded={editOpenKeys.includes(r.key)||!r.id}
+        onClick={()=>toggleEdit(r.key)} disabled={busy} title="Edit product, image and inventory">✎</button>
+       <label className="apex-bulk-card-publish-switch">
+        <span>{requested?"Publish requested":"Publish"}</span>
+        <input type="checkbox" role="switch" aria-label={"Publish "+(r.name||"new product")}
+         checked={requested} disabled={!editable||busy||!r.id||r.needsSave||(!requested&&!publishReady)}
+         onChange={e=>r.id&&publish([r.id],e.target.checked?"publish":"unpublish")}/>
+       </label>
+      </div>
       <span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>
      </div>
      <details className="apex-bulk-readiness-details">
@@ -262,7 +283,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       </ul>}
      </details>
      <div className={"apex-bulk-card-layout"+(showOfferTiles?"":" apex-bulk-card-layout-single")}>
-      <div className="apex-bulk-editor-side">
+      {(editOpenKeys.includes(r.key)||!r.id)&&<div className="apex-bulk-editor-side">
      <div className="apex-bulk-fields">
       <label>Name<input id={"bulk-fix-"+r.key+"-name"} value={r.name} maxLength={120}
        disabled={!editable||busy} onChange={e=>change(r.key,"name",e.target.value)}/></label>
@@ -316,11 +337,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
          {r.id?"Save product edits to unlock image and stock tools.":"Save this draft to upload or reuse an image and set stock."}
         </p>}
      </div>
-      </div>
+      </div>}
       {showOfferTiles&&<BulkInlineOffer row={r} category={category}
         imageUrl={cardMedia?.imageUrl} availableStock={availableStock}
         canPublish={publishReady} requested={requested}
-        publishing={publishPending} onPublish={()=>r.id&&publish([r.id])}
+        publishing={publishPending} onPublish={()=>r.id&&publish([r.id])} showPublishAction={false}
         publicationMessage={publication?.message}
         publicationNote={r.id&&!r.needsSave&&!requested&&!publishReady
           ?listingStatus?.missing.length
@@ -360,6 +381,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
      <span className="apex-bulk-action-short" aria-hidden="true">Publish selected ({eligibleSelectedIds.length})</span>
     </>}
    </button>
+   <button type="button" className="button secondary"
+    disabled={!editable||pending||publishPending||!eligibleUnpublishIds.length||eligibleUnpublishIds.length>publicationLimit}
+    aria-label={"Unpublish selected ("+eligibleUnpublishIds.length+")"}
+    onClick={()=>publish(eligibleUnpublishIds,"unpublish")}>Unpublish selected ({eligibleUnpublishIds.length})</button>
    <button type="button" className="button primary"
     disabled={!editable||pending||publishPending||!eligiblePublishIds.length||eligiblePublishIds.length>publicationLimit}
     aria-label={publishPending?"Saving eligible publication requests":"Publish all eligible ("+eligiblePublishIds.length+")"}
@@ -370,7 +395,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     </>}
    </button>
   </div>
-  <p className="notice">Publish submits private supplier requests only after saved product details and stock pass checks. Administrative holds remain enforced; no offer becomes publicly visible.</p>
+  <p className="notice">Card switches and selected actions save supplier listing preferences. Owner holds and product eligibility remain enforced. The public release gate is OFF; toggling currently does not make a product public or purchasable.</p>
   {eligiblePublishIds.length>publicationLimit&&<p role="status" className="notice">
    More than 50 eligible products loaded. Publish selected groups of up to 50.
   </p>}
