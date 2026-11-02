@@ -55,7 +55,8 @@ export async function recordPrivateMediaEvidence(_prior:Result,form:FormData):Pr
  if(saved.error||!saved.data)
   return failed("Evidence record was not saved. Refresh and verify your access and current image.");
  revalidatePath("/admin/media-readiness");
+ revalidatePath("/supplier/catalog/bulk");
  return {ok:true,message:result==="evidence_recorded"
-  ?"Evidence references saved for this private image version. Public approval and checkout remain disabled."
+  ?"Evidence references saved privately for this image version. Public approval and checkout remain disabled."
   :"Correction request recorded for this private image. No public approval was granted."};
 }
