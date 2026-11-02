@@ -328,7 +328,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       {imageNeedsAction&&<button type="button" className="button secondary apex-bulk-media-fix"
        disabled={busy} onClick={()=>setEditOpenKeys(prev=>prev.includes(r.key)?prev:[...prev,r.key])}>
        Edit image and product details
-      </button>
+      </button>}
       <p>{readiness.description}</p>
       {adminFeedback&&r.id&&<div className="apex-bulk-admin-corrections">
        <button type="button" className="button secondary" disabled={busy}
