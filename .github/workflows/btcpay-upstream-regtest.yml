@@ -9,6 +9,11 @@ on:
       - "scripts/btcpay-local-doctor.mjs"
       - "tests/btcpay-local-doctor.test.mjs"
       - "scripts/btcpay-ephemeral-*.mjs"
+      - "src/lib/payments/prism-payout-reliability.mjs"
+      - "tests/prism-payout-reliability.test.mjs"
+      - "tests/payout-rls/prism-ephemeral-test-store-setting.sql"
+      - "scripts/install_prism_regtest.py"
+      - "tests/prism-install-safety.test.py"
       - "database/sql/apex_btcpay_*_REVIEW_ONLY.sql"
       - "tests/payout-rls/btcpay-live-journal-*.sql"
       - "tests/btcpay-ephemeral-*.test.mjs"
@@ -101,11 +106,77 @@ jobs:
           done
           test "$verified" = "1" || { echo "::error::Bitcoin regtest node did not become ready"; exit 1; }
           echo "Verified Bitcoin Core chain: regtest; no real funds"
+      - name: Download pinned published Prism plugin (CI test only)
+        env:
+          APEX_BTCPAY_EPHEMERAL: "true"
+          APEX_BTCPAY_TEST_NETWORK: regtest
+        run: |
+          set -euo pipefail
+          # Published release from official BTCPay Plugin Builder over HTTPS.
+          # Prefer the published archive. A fallback checks out EXACT source SHA
+          # linked from the official Prism 1.3.3 listing; it is not binary-equal.
+          if curl --fail --location --silent --show-error \
+            --ipv4 --connect-timeout 15 --max-time 90 \
+            --retry 4 --retry-all-errors --retry-delay 8 \
+            --proto '=https' --proto-redir '=https' --tlsv1.2 \
+            'https://plugin-builder.btcpayserver.org/api/v1/plugins/%5BBTCPayServer.Plugins.Prism%5D/versions/1.3.3.0/download' \
+            -o "${RUNNER_TEMP}/prism-1.3.3.0.btcpay"; then
+            printf '%s  %s\n' \
+              '851f1c629ed40c398f9e0f383f2e6ca5b17f8572b9a158bd109625139d95e681' \
+              "${RUNNER_TEMP}/prism-1.3.3.0.btcpay" | sha256sum --check --status
+            python3 scripts/install_prism_regtest.py \
+              "${RUNNER_TEMP}/prism-1.3.3.0.btcpay" \
+              "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism"
+            echo "Prism source: official published archive SHA256 verified"
+          else
+            echo "::warning::Plugin package host unavailable; build exact linked Prism 1.3.3 source only for disposable regtest"
+            source_ref='2b951b6f696396c29ae58e8d5dea981e2c3a1092'
+            git init "${RUNNER_TEMP}/prism-source"
+            git -C "${RUNNER_TEMP}/prism-source" remote add origin https://github.com/Kukks/BTCPayServerPlugins.git
+            git -C "${RUNNER_TEMP}/prism-source" fetch --depth 1 origin "${source_ref}"
+            git -C "${RUNNER_TEMP}/prism-source" checkout --detach FETCH_HEAD
+            test "$(git -C "${RUNNER_TEMP}/prism-source" rev-parse HEAD)" = "${source_ref}"
+            project="${RUNNER_TEMP}/prism-source/Plugins/BTCPayServer.Plugins.Prism/BTCPayServer.Plugins.Prism.csproj"
+            test -f "${project}"
+            grep -Eq '<Version>1[.]3[.]3</Version>' "${project}"
+            # Build in the canonical upstream BTCPay tree, not through a
+            # symlinked ProjectReference: MSBuild incorrectly resolves some
+            # restored dependencies under two different physical roots.
+            source_project="${RUNNER_TEMP}/prism-source/Plugins/BTCPayServer.Plugins.Prism"
+            compile_project="${RUNNER_TEMP}/btcpayserver/BTCPayServer.Plugins.Prism"
+            test ! -e "${compile_project}"
+            cp -a "${source_project}" "${compile_project}"
+            project="${compile_project}/BTCPayServer.Plugins.Prism.csproj"
+            python3 - "${project}" <<'PY'
+          import pathlib, sys
+          p = pathlib.Path(sys.argv[1])
+          old = r"..\..\submodules\btcpayserver\BTCPayServer\BTCPayServer.csproj"
+          new = r"..\BTCPayServer\BTCPayServer.csproj"
+          data = p.read_text()
+          assert data.count(old) == 1, "Unexpected Prism source project reference"
+          p.write_text(data.replace(old, new))
+          PY
+            test -f "${RUNNER_TEMP}/btcpayserver/BTCPayServer/BTCPayServer.csproj"
+            mkdir -p "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism"
+            # Source code from SHA is untouched; only disposable csproj path
+            # is adapted for the already-pinned BTCPay tree.
+            dotnet publish "${project}" --configuration Debug \
+              --output "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism" \
+              --property:UseAppHost=false
+            echo "Prism source: linked source SHA ${source_ref}; locally built in disposable CI, not published archive"
+          fi
+          test -s "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism/BTCPayServer.Plugins.Prism.dll"
+      - name: Verify Prism package safety unit tests
+        env:
+          APEX_BTCPAY_EPHEMERAL: "true"
+          APEX_BTCPAY_TEST_NETWORK: regtest
+        run: python3 tests/prism-install-safety.test.py -v
       - name: Start official BTCPay Server on loopback-only development profile
         env:
           # Disposable runner only; keep SSRF protection enabled and narrowly
           # permit only the temporary local callback port, not all private IPs.
           BTCPAY_SSRFEXCEPTIONS: "127.0.0.1:48173"
+          BTCPAY_PLUGINDIR: ${{ runner.temp }}/apex-prism-plugins
         working-directory: ${{ runner.temp }}/btcpayserver
         run: |
           set -euo pipefail
@@ -129,14 +200,31 @@ jobs:
           done
           test "$ready" = "1" || { echo "::error::BTCPay did not become ready at localhost:14142"; exit 1; }
           echo "Official BTCPay localhost startup verified on ephemeral regtest runner"
-          echo "HTTP readiness only; Greenfield invoice, signed webhook, and durable journal are checked in the next step"
-      - name: Create, pay, and verify signed settled webhook on real regtest
+          echo "BTCPay HTTP readiness verified; signed invoice/webhook and actual Prism forwarding are verified in the final step"
+      - name: Verify Prism route is installed in the disposable BTCPay server
+        run: |
+          set -euo pipefail
+          test -s "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism/BTCPayServer.Plugins.Prism.dll"
+          # Authenticated store form, expected redirect without a logged-in browser.
+          result="$(curl --silent --output /dev/null --write-out '%{http_code}'             --max-time 8 http://127.0.0.1:14142/plugins/synthetic-test-store/prism)"
+          if [[ "$result" != "302" && "$result" != "401" ]]; then
+            echo "::error::Prism store configuration endpoint not registered (HTTP $result)"
+            exit 1
+          fi
+          if grep -Eiq 'Error when loading plugin BTCPayServer.Plugins.Prism|Prism plugin.*disabled|Prism version does not match' "${RUNNER_TEMP}/btcpay-boot.log"; then
+            echo "::error::Prism load failure found in BTCPay startup log"
+            exit 1
+          fi
+          echo "Prism route registered and protected on isolated regtest runner"
+      - name: Verify signed payment and real Prism-generated on-chain regtest forwarding
         env:
           APEX_BTCPAY_EPHEMERAL: "true"
           APEX_BTCPAY_TEST_NETWORK: regtest
           APEX_BTCPAY_PAY_REGTEST: "true"
           APEX_BTCPAY_VERIFY_WEBHOOK: "true"
           APEX_BTCPAY_DURABLE_TEST_JOURNAL: "true"
+          APEX_BTCPAY_PRISM_FORWARDING: "true"
+          BTCPAY_PLUGINDIR: ${{ runner.temp }}/apex-prism-plugins
           APEX_BTCPAY_WEBHOOK_PORT: "48173"
           APEX_BTCPAY_UPSTREAM_ROOT: ${{ runner.temp }}/btcpayserver
         run: node scripts/btcpay-ephemeral-greenfield.mjs
@@ -149,3 +237,4 @@ jobs:
           fi
           docker compose down --volumes --remove-orphans || true
           rm -f "${RUNNER_TEMP}/chain.json" "${RUNNER_TEMP}/btcpay-boot.log" "${RUNNER_TEMP}/btcpay-boot.pid"
+          rm -rf "${RUNNER_TEMP}/apex-prism-plugins" "${RUNNER_TEMP}/prism-1.3.3.0.btcpay"
