@@ -30,7 +30,7 @@ test("never use hosted credentials or remote mainnet payment endpoints",()=>{
  assert.match(receiver,/parseVerifiedInvoiceEvent\(raw,signature,secret,storeId\)/);
  assert.match(script,/createEphemeralWebhookJournal/);
  assert.match(bridge,/Disposable regtest PostgreSQL bridge only/);
- assert.match(bridge,/record_verified_btcpay_event/);
+ assert.match(bridge,/btcpay-live-journal-record\\.sql/);\n assert.match(status,/record_verified_btcpay_event/);
 });
 test("signed receipt must persist before a 200 acknowledgment and duplicate never bumps status",()=>{
  const process=receiver.slice(receiver.indexOf("async function process(raw,signature)"),
