@@ -23,6 +23,7 @@ test("requesting publication never means a product is live",()=>{
  assert.equal(requested.publiclyVisible,false);
  assert.match(requested.description,/switched off/);
  assert.equal(supplierStorefrontVisibility({...control,requested:false},positive()).kind,"private");
+ assert.equal(supplierStorefrontVisibility({...control,requested:false},positive(),true).publiclyVisible,false);
  assert.equal(supplierStorefrontVisibility(control,null).kind,"unavailable");
  assert.equal(supplierStorefrontVisibility({...control,available:false},positive()).kind,"unavailable");
 });
