@@ -2,13 +2,13 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-01
+Last reviewed: 2026-11-02
 
 ## 1. Isolate Bitcoin signing and payment authority from web/worker compromise
 
 **Status:** Evaluate / release-gate evidence pending  
 **Added:** 2026-10-30  
-**Last reviewed:** 2026-11-01
+**Last reviewed:** 2026-11-02
 
 **Finding:** Binance reported an estimated $6.3B exchange theft on Oct 29–30; its *preliminary* investigation suggests a compromised DevOps laptop/service container enabled unauthorized withdrawals, without evidence of leaked private keys. This is a separate exchange incident, **not** evidence that BTCPay Server, Prism or Apex were compromised. Source: https://www.binance.com/en/square/post/10-30-2026-binance-stated-that-the-security-incident-affected-approximately-6-3-billion-with-about-3-billion-frozen-382718598048399 .
 
@@ -24,11 +24,13 @@ Last reviewed: 2026-11-01
 
 ---
 
+**2026-11-02 evidence:** Reuters reports approximately **$4.72B net customer outflows** following Binance's phased reopening, with about $2.7B flowing back; the exchange says outflows are stabilizing. This reinforces custody/incident-recovery and independent settlement controls but does **not** establish Apex/BTCPay/Prism exposure. **Recommendation unchanged:** keep signer isolation, revocation, recipient verification and no-mainnet gate. Source: https://www.reuters.com/business/finance/binance-sees-outflows-stabilising-exchange-returns-online-after-63-billion-heist-2026-11-02/ .
+
 ## 2. Storefront deployment versus catalog acceptance
 
 **Status:** Evaluate / supplier-data acceptance pending  
 **Added:** 2026-10-31  
-**Last reviewed:** 2026-11-01
+**Last reviewed:** 2026-11-02
 
 **Evidence:** Vercel's latest READY production deployment is Apex main commit `7c106fcc` (mobile supplier product cards/source-cost editing); the connected Supabase `products` table currently has **0 rows**. This is a working UI/deployment milestone, not evidence that supplier inventory, image access, permissions or checkout acceptance are complete. The existing catalog-input dependency is already risk R2 in `docs/CRITICAL_PATH_RISKS.md`.
 
@@ -39,6 +41,8 @@ Last reviewed: 2026-11-01
 **2026-11-01 evidence:** Hosted Apex Supabase now contains **one product (SKU 1001), active but unpublished** (versus zero products in Oct 31 review). This is a material change from empty catalog to first saved draft, **not** public catalog acceptance. Latest verified Vercel production deployment is READY at main commit `1c4367e` (CSV blank-SKU reimport identity fix); payment PRs #109–#119 remain separate draft/test branches. **Recommendation:** verify supplier bulk import, image/price privacy, publication, role scope and checkout acceptance before claiming storefront readiness.
 
 ---
+
+**2026-11-02 material status change:** Apex production Vercel deployment is **READY at `4f42400b`** (merged PR #151, verified-only read-only sold-out storefront projection with pagination and an independent global release gate); merged PR #150 enables private source-linked cards without a review-first UI blocker. Hosted Supabase has **63 import candidates** (62 `unverified`, 1 `approved_for_draft`), but still **only 1 saved product** (SKU 1001, active, **unpublished**), and zero payment allocations/split drafts. A private source-card path or read-only sold-out projection does **not** make unverified candidates public, publish products, create inventory, or establish checkout readiness. **Possible solution:** test import→verification→private draft→published visibility under the global gate, zero-stock projection, role isolation, truthful price and image permissions with nontransactional fixtures. **Recommendation:** acceptance review only; no public sellable inventory or live checkout activation without separate approval. References: https://github.com/zanibethel/apex/pull/150 ; https://github.com/zanibethel/apex/pull/151 .
 
 ## 3. Runtime patch readiness for the deployed storefront
 
