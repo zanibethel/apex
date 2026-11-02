@@ -347,7 +347,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
          :listingStatus.reviewStatus==="approved_internal"
           ?"Approved for internal content only; separate eligibility and public-image approval are still required."
           :"Finish the remaining setup items before requesting review."}</p>}
-      </section>
+      </section>}
       {adminFeedback&&r.id&&<div className="apex-bulk-admin-corrections">
        <button type="button" className="button secondary" disabled={busy}
         onClick={()=>setEditOpenKeys(prev=>prev.includes(r.key)?prev:[...prev,r.key])}>
