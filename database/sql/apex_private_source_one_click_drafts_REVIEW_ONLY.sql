@@ -83,13 +83,13 @@ begin
  -- Compare-at value is a PROPOSAL, never evidence of a past discount.
  insert into public.products(
   store_id,sku,name,description,price_cents,compare_at_price_cents,
-  internal_source_cost_cents,currency,is_published,is_active
+  internal_source_cost_cents,currency,is_active
  ) values(
   p_store_id,p_sku,v_title,p_description,v_sale,v_compare,
-  v_source.wholesale_cost_cents,'USD',false,false
+  v_source.wholesale_cost_cents,'USD',false
  ) returning id into v_product_id;
- insert into public.inventory_items(store_id,product_id,quantity_on_hand,quantity_reserved)
- values(p_store_id,v_product_id,0,0);
+ insert into public.inventory_items(store_id,product_id,quantity_on_hand)
+ values(p_store_id,v_product_id,0);
  insert into public.supplier_candidate_drafts(candidate_id,store_id,product_id,created_by)
  values(p_candidate_id,p_store_id,v_product_id,(select auth.uid()));
  return v_product_id;
