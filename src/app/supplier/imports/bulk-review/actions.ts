@@ -51,9 +51,9 @@ export async function updateBulkSourceReviews(
  for(const selected of batch.rows){
   const current=found.get(selected.id);
   const summary=sourceReviewSummary(current,linked.has(selected.id));
-  if(!summary||summary.linked||summary.status!==selected.status||
+  if(!summary||summary.status!==selected.status||
     summary.costCents!==selected.costCents||
-    (batch.action==="approved_for_draft"&&!summary.validForDraft)){
+    (batch.action==="approved_for_draft"&&!summary.validForSourceReview)){
    return {ok:false,message:"An item was changed, already drafted, or lacks valid source details. Refresh and review again; nothing changed.",results:[]};
   }
  }
