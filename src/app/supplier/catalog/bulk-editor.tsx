@@ -27,6 +27,7 @@ type Category={id:string;name:string};
 type ListingReadiness={
  productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
  visibilityKind:string;visibilityLabel:string;visibilityDescription:string;
+ imageStatusKind:string;imageStatusLabel:string;imageStatusMessage:string;imageNeedsAction:boolean;
 };
 type PublishOutcome={id:string;ok:boolean;message:string};
 
@@ -269,6 +270,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const publication=r.id?publicationById.get(r.id):undefined;
     const requested=Boolean(listingStatus?.requested);
     const readiness=privateBulkReadiness(r,listingStatus,requested&&Boolean(publication?.ok));
+    const imageKind=!r.id?"missing":listingStatus?.imageStatusKind??"unavailable";
+    const imageLabel=!r.id?"Image needed":listingStatus?.imageStatusLabel??"Image status unavailable";
+    const imageMessage=!r.id?"Save the product, then add an image from the pencil editor.":
+     listingStatus?.imageStatusMessage??"Refresh to check image evidence.";
+    const imageNeedsAction=!r.id||listingStatus?.imageNeedsAction===true;
     const adminFeedback=r.id?supplierAdminFeedback(listingStatus):null;
     const correctionsPending=Boolean(listingStatus?.correctionsPending||(r.id&&correctionConfirmed.includes(r.id)));
     const override=r.id?listingOverrides[r.id]:undefined;
@@ -306,6 +312,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         Storefront: {visibilityLabel}
        </span>
        {readiness.kind!=="requested"&&<span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>}
+       <span className={"apex-bulk-image-status apex-bulk-image-"+imageKind}
+        title={imageMessage} aria-label={"Product image: "+imageLabel}>{imageLabel}</span>
        {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
       </div>
      </div>
@@ -316,6 +324,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         ?readiness.missing.length+" setup item"+(readiness.missing.length===1?"":"s")+" remaining"
         :"Status details"}</summary>
       <p><strong>Customer visibility:</strong> {visibilityDescription}</p>
+      <p><strong>Image evidence:</strong> {imageMessage}</p>
+      {imageNeedsAction&&<button type="button" className="button secondary apex-bulk-media-fix"
+       disabled={busy} onClick={()=>setEditOpenKeys(prev=>prev.includes(r.key)?prev:[...prev,r.key])}>
+       Edit image and product details
+      </button>}
       <p>{readiness.description}</p>
       {adminFeedback&&r.id&&<div className="apex-bulk-admin-corrections">
        <button type="button" className="button secondary" disabled={busy}

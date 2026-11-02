@@ -9,6 +9,7 @@ import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
 import {supplierStorefrontVisibility} from "@/lib/catalog/supplier-storefront-visibility.mjs";
 import {awaitingAdministratorCorrectionReview} from "@/lib/catalog/listing-resubmission.mjs";
+import {supplierImageCorrectionStatus} from "@/lib/catalog/supplier-image-correction-status.mjs";
 import {SUPPLIER_BULK_PRODUCT_CAPACITY,SUPPLIER_BULK_PRODUCT_QUERY_LIMIT,supplierBulkProductWindowStatus} from "@/lib/catalog/supplier-bulk-capacity.mjs";
 
 export const dynamic="force-dynamic";
@@ -35,7 +36,7 @@ export default async function BulkProductWorkspace(){
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
  const store=stores[0];
- const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:sources,error:sourceError,count:sourceCount},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError}]=await Promise.all([
+ const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:sources,error:sourceError,count:sourceCount},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError},{data:reviewRows,error:reviewError,count:reviewCount},{data:imageFeedback,error:feedbackError,count:feedbackCount}]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
@@ -49,6 +50,13 @@ export default async function BulkProductWorkspace(){
    .eq("store_id",store.id).limit(250),
   client.from("supplier_listing_events").select("product_id,action")
    .eq("store_id",store.id).order("id",{ascending:false}).limit(500),
+  client.from("private_product_review_states")
+   .select("store_id,product_id,submission_id,status,snapshot",{count:"exact"})
+   .eq("store_id",store.id).limit(250),
+  client.from("supplier_media_feedback_events")
+   .select("store_id,product_id,submission_id,image_path,outcome,supplier_note,created_at,evidence_event_id",{count:"exact"})
+   .eq("store_id",store.id).order("created_at",{ascending:false})
+   .order("evidence_event_id",{ascending:false}).limit(1000),
  ]);
  if(productError||categoryError||linkedError||inventoryError)return <main className="container supplier-shell">
   <h1>Private catalog temporarily unavailable.</h1>
@@ -81,6 +89,14 @@ export default async function BulkProductWorkspace(){
   quantityReserved:quantities.get(p.id)?.quantity_reserved,
  }));
  const listingByProduct=new Map((listingControls??[]).map(c=>[c.product_id,c]));
+ const mediaFeedbackAvailable=!reviewError&&!feedbackError&&
+  reviewCount!==null&&reviewCount===reviewRows?.length&&reviewCount<=250&&
+  feedbackCount!==null&&feedbackCount===imageFeedback?.length&&feedbackCount<=1000;
+ const reviewsByProduct=new Map((reviewRows??[]).map(r=>[r.product_id,r]));
+ const latestImageFeedback=new Map<string,NonNullable<typeof imageFeedback>[number]>();
+ if(mediaFeedbackAvailable)for(const feedback of imageFeedback??[])
+  if(!latestImageFeedback.has(feedback.product_id))
+   latestImageFeedback.set(feedback.product_id,feedback);
  // Only products requesting publication need a protected release check.
  // Fail closed on RPC failures; a supplier preference is never live status.
  const releases=new Map<string,unknown>();
@@ -102,6 +118,9 @@ export default async function BulkProductWorkspace(){
   const status=listingControlStatus(control);
   const setup=draftSetupSteps(p,quantities.get(p.id));
   const missing=setup.steps.filter(step=>!step.complete).map(step=>step.label);
+  const mediaStatus=supplierImageCorrectionStatus(
+   {id:p.id,store_id:store.id,image_path:p.image_path},
+   reviewsByProduct.get(p.id),latestImageFeedback.get(p.id),mediaFeedbackAvailable);
   const visibility=supplierStorefrontVisibility({
    available:!listingError,requested:!!control?.supplier_wants_listing,
    adminGate:control?.admin_gate,
@@ -119,6 +138,8 @@ export default async function BulkProductWorkspace(){
    correctionsPending:!eventsError&&awaitingAdministratorCorrectionReview(eventsByProduct.get(p.id)),
    visibilityKind:visibility.kind,visibilityLabel:visibility.label,
    visibilityDescription:visibility.description,
+   imageStatusKind:mediaStatus.kind,imageStatusLabel:mediaStatus.label,
+   imageStatusMessage:mediaStatus.message,imageNeedsAction:mediaStatus.needsAction,
   };
  });
  const linkedProducts=new Set((linked??[]).map(p=>p.product_id));
