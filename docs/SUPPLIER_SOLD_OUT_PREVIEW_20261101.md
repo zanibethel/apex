@@ -32,3 +32,26 @@ A later narrowly reviewed staging pass can promote verified variants into privat
 - Exact-head GitHub lint, typecheck, Node tests and build.
 - Vercel preview READY; merge only if green.
 - Production may host the authorized private preview without enabling any public products, orders or Bitcoin.
+
+
+## November 1 follow-up — 47 name-specific default descriptions
+
+`src/lib/catalog/import-default-descriptions.mjs` now contains 47 individually authored, neutral compound/ingredient summaries, covering all 63 imported name/strength variants. This is **editable suggested draft copy**, not prevalidated product labeling, claims approval, pharmaceutical identity or a substitute for supplier batch documentation.
+
+- `/supplier/imports/sold-out-preview` shows the defaults under each card's collapsible **Default product description**, to keep 63 mobile cards compact.
+- On `/supplier/imports`, promoting a separately reviewed source variant prefills the **editable** draft description field; an authenticated supplier may edit, trim or replace the suggestion before saving. The existing supplier product editor supports subsequent price and description edits and the inventory editor supports stock changes.
+- The one previously approved/saved product's temporary test text was replaced in the hosted Apex database with its neutral default. The remaining 62 remain `unverified` source candidates and have no saved `products` or `inventory_items` rows. **Nothing was automatically approved, promoted or made public.**
+- Source labels `FOX-04`, `SLU-PP-322`, `GLOW`, `KLOW`, `T2` and `T3` require extra identity or strength confirmation. Do not silently equate similar identifiers (for example `SLU-PP-322` and `SLU-PP-332`).
+- Updating on-hand stock is **not** public listing approval. Future customer availability requires (1) complete and independently validated identity/authorization, (2) approved store/category/product release, (3) trusted stock and price rechecks and (4) separately enabled ordering/payment infrastructure. Under present settings no imported product is orderable regardless of inventory.
+- A proposed compare-at reference derived only from a markup formula is **not proof of a previously charged price**; do not display strike-through or percentage savings based solely on that formula.
+
+### Research/reference anchors for neutral summaries
+
+- U.S. FDA, significant safety concerns and knowledge gaps for selected peptides (including BPC-157, AOD-9604, CJC-1295, LL-37, ipamorelin, GHK-Cu): https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks
+- U.S. FDA, 2024 Pharmacy Compounding Advisory Committee peptide chemistry: https://www.fda.gov/media/183641/download
+- PubChem, 5-Amino-1-methylquinolinium: https://pubchem.ncbi.nlm.nih.gov/compound/5-Amino-1-methylquinolinium
+- U.S. DailyMed, EGRIFTA SV (tesamorelin) specific authorized prescription formulation: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=3d783378-b02d-4f19-99dd-0fc91a042224
+- Tocris/Bio-Techne identifies `SLU-PP-332` as a separate named research material: https://www.bio-techne.com/p/small-molecules-peptides/slu-pp-332_8112
+- Further primary documentation is required before stating batch-specific form, concentration, purity, efficacy, or use directions.
+
+The summaries intentionally do **not** assert route, dose, purity, packaging form, therapeutic claims, FDA authorization, or that the imported supplier variant is molecularly identical to a named published compound. Do not promote these drafts into customer marketing or public commerce without independent product-specific review.

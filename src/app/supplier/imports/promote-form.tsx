@@ -2,6 +2,7 @@
 
 import { useActionState, useId } from "react";
 import { createDraftFromReviewedVariant } from "./actions";
+import {importDefaultDescription} from "@/lib/catalog/import-default-descriptions.mjs";
 
 export function PromoteReviewedVariantForm({storeId,candidateId,productName,strength,enabled}:{
   storeId:string;
@@ -34,8 +35,9 @@ export function PromoteReviewedVariantForm({storeId,candidateId,productName,stre
       <label htmlFor={id+"quantity"}>Actual on-hand quantity (0 if unknown)</label>
       <input id={id+"quantity"} name="confirmedStock" type="number" min={0} max={1000000} step={1}
         defaultValue={0} required disabled={!enabled}/>
-      <label htmlFor={id+"desc"}>Private draft description (optional)</label>
-      <textarea id={id+"desc"} name="description" rows={2} maxLength={1500} disabled={!enabled}/>
+      <label htmlFor={id+"desc"}>Private draft description (editable suggested text)</label>
+      <textarea id={id+"desc"} name="description" rows={4} maxLength={1500} disabled={!enabled}
+       defaultValue={importDefaultDescription(productName,strength)??""}/>
       <label>
         <input type="checkbox" name="confirmedPrice" required disabled={!enabled}/>
         I verified this price separately; it is not copied from the wholesale-cost sheet.
