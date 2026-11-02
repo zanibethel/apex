@@ -8,6 +8,17 @@ update public.private_product_review_states r set status='approved_internal'
  where exists(select 1 from public.products p
   where p.id=r.product_id and p.store_id=r.store_id
    and p.sku='APX-BETA-DRAFT-002');
+-- Capture immutable synthetic fixture identifiers as PostgreSQL test settings.
+-- The negative inserts below use literal known inputs, not SELECT from RLS-
+-- hidden rows, so a denial can never be mistaken for a no-op insert.
+select set_config('apex.test.media_store',r.store_id::text,false),
+ set_config('apex.test.media_product',r.product_id::text,false),
+ set_config('apex.test.media_submission',r.submission_id::text,false),
+ set_config('apex.test.media_path',r.snapshot->>'image_path',false)
+from public.private_product_review_states r where r.status='approved_internal'
+  and exists(select 1 from public.products p where p.id=r.product_id
+   and p.store_id=r.store_id and p.sku='APX-BETA-DRAFT-002');
+
 
 do $check$
 begin
@@ -30,10 +41,12 @@ begin
   insert into public.private_media_evidence_events(
    store_id,product_id,submission_id,image_path,review_status,
    identity_reference,rights_reference,note,created_by)
-  select r.store_id,r.product_id,r.submission_id,r.snapshot->>'image_path',
+  values(current_setting('apex.test.media_store')::uuid,
+   current_setting('apex.test.media_product')::uuid,
+   current_setting('apex.test.media_submission')::uuid,
+   current_setting('apex.test.media_path'),
     'evidence_recorded','synthetic identity docs','synthetic licensed rights',
-    'Supplier trying to forge an admin approval', '50000000-0000-4000-8000-000000000002'
-  from public.private_product_review_states r where r.status='approved_internal';
+    'Supplier trying to forge an admin approval', '50000000-0000-4000-8000-000000000002');
   inserted:=true;
  exception when others then null;end;
  if inserted then raise exception 'Supplier forged media evidence';end if;
@@ -48,10 +61,12 @@ begin
   insert into public.private_media_evidence_events(
    store_id,product_id,submission_id,image_path,review_status,
    identity_reference,rights_reference,note,created_by)
-  select r.store_id,r.product_id,r.submission_id,r.snapshot->>'image_path',
+  values(current_setting('apex.test.media_store')::uuid,
+   current_setting('apex.test.media_product')::uuid,
+   current_setting('apex.test.media_submission')::uuid,
+   current_setting('apex.test.media_path'),
    'evidence_recorded','synthetic identity docs','synthetic licensed rights',
-   'Unauthorized reviewer attempted evidence', '50000000-0000-4000-8000-000000000003'
-  from public.private_product_review_states r where r.status='approved_internal';
+   'Unauthorized reviewer attempted evidence', '50000000-0000-4000-8000-000000000003');
   inserted:=true;
  exception when others then null;end;
  if inserted then raise exception 'Untrusted admin claim recorded evidence';end if;
