@@ -4,6 +4,7 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {BulkDraftEditor} from "../bulk-editor";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
+import {awaitingAdministratorCorrectionReview} from "@/lib/catalog/listing-resubmission.mjs";
 import {SUPPLIER_BULK_PRODUCT_CAPACITY,SUPPLIER_BULK_PRODUCT_QUERY_LIMIT,supplierBulkProductWindowStatus} from "@/lib/catalog/supplier-bulk-capacity.mjs";
 
 export const dynamic="force-dynamic";
@@ -30,7 +31,7 @@ export default async function BulkProductWorkspace(){
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
  const store=stores[0];
- const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:inventory,error:inventoryError},{data:listingControls,error:listingError}]=await Promise.all([
+ const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError}]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
@@ -40,6 +41,8 @@ export default async function BulkProductWorkspace(){
   client.from("supplier_listing_controls")
    .select("product_id,supplier_wants_listing,admin_gate,republish_approval_required,republish_approved,reason")
    .eq("store_id",store.id).limit(250),
+  client.from("supplier_listing_events").select("product_id,action")
+   .eq("store_id",store.id).order("id",{ascending:false}).limit(500),
  ]);
  if(productError||categoryError||linkedError||inventoryError)return <main className="container supplier-shell">
   <h1>Private catalog temporarily unavailable.</h1>
@@ -72,6 +75,12 @@ export default async function BulkProductWorkspace(){
   quantityReserved:quantities.get(p.id)?.quantity_reserved,
  }));
  const listingByProduct=new Map((listingControls??[]).map(c=>[c.product_id,c]));
+ const eventsByProduct=new Map<string,{action:string}[]>();
+ for(const event of listingEvents??[]){
+  const existing=eventsByProduct.get(event.product_id)??[];
+  existing.push({action:event.action});
+  eventsByProduct.set(event.product_id,existing);
+ }
  const listing=(products??[]).map(p=>{
   const control=listingByProduct.get(p.id);
   const status=listingControlStatus(control);
@@ -85,6 +94,7 @@ export default async function BulkProductWorkspace(){
    kind:listingError?"unavailable":status.kind,
    reason:!listingError&&["hold","review"].includes(status.kind)?control?.reason??null:null,
    missing,
+   correctionsPending:!eventsError&&awaitingAdministratorCorrectionReview(eventsByProduct.get(p.id)),
   };
  });
  const linkedProducts=new Set((linked??[]).map(p=>p.product_id));
@@ -103,7 +113,8 @@ export default async function BulkProductWorkspace(){
   <p className="lead">Select products, make changes, save them, then choose Preview single or Preview all before publishing.</p>
   <p className="notice">New products begin as private drafts with zero stock. Save a draft to unlock its inline image picker and stock editor, then preview the completed offer. Nothing is made public by saving.</p>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
-   categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}/>
+   categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}
+   resubmissionEnabled={process.env.APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED==="true"}/>
   <p className="notice">Upload a new PNG/JPEG/WebP image or reuse an existing private product image; each reuse makes its own private copy. On-hand inventory updates use expected-count checks and are audited. Private source cost for linked variants still requires Source review. The bulk editor loads all private products in storefronts with 250 or fewer private products.</p>
  </main>;
 }
