@@ -4,6 +4,7 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isValidId} from "@/lib/catalog/private-review-utils.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
+import {supplierStorefrontVisibility} from "@/lib/catalog/supplier-storefront-visibility.mjs";
 import {privateReleaseDisplay} from "@/lib/catalog/private-release-decision.mjs";
 import {OfferTile} from "@/components/catalog/offer-tile";
 import {BulkPublishPanel} from "../../bulk-publish-panel";
@@ -86,6 +87,11 @@ export default async function BulkOfferPreview({searchParams}:{
    category:categoryNames.get(p.category_id??"")??"Uncategorized",
    imageUrl:imageUrls.get(p.id),status,controls:c,
    release:privateReleaseDisplay(decision.get(p.id)),
+   visibility:supplierStorefrontVisibility({
+    available:!controls.error,requested:c?.supplier_wants_listing===true,
+    adminGate:c?.admin_gate,republishApprovalRequired:c?.republish_approval_required,
+    republishApproved:c?.republish_approved,
+   },decision.get(p.id)),
    canRequest:canEdit&&setup.setupComplete&&!controls.error&&decision.has(p.id)&&status.canRequest};
  });
 
@@ -111,7 +117,10 @@ export default async function BulkOfferPreview({searchParams}:{
        compareAtCents={item.product.compare_at_price_cents==null?null:Number(item.product.compare_at_price_cents)}
        currency={item.product.currency} imageUrl={item.imageUrl} availableStock={item.stockAvailable}/>
       <div className="apex-offer-gallery-meta">
-       <p><strong>{item.status.label}</strong></p>
+       <p className={"apex-offer-publish-state apex-storefront-visibility-"+item.visibility.kind}>
+        <strong>Storefront: {item.visibility.label}</strong></p>
+       <p className="notice">{item.visibility.description}</p>
+       <p className="notice">Supplier setting: {item.status.label}</p>
        <p className="notice">{item.setup.completed}/{item.setup.total} setup details</p>
        <details><summary>Release check: {item.release.label}</summary>
         <p>{item.release.description}</p></details>
