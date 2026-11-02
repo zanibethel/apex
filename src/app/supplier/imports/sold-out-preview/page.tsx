@@ -114,5 +114,6 @@ export default async function SoldOutImportPreview(){
    separately reconciled before a public sold-out display can be released.
    Public product release and checkout remain disabled.</p>
   <Link href="/supplier/imports" className="button secondary">Review source records</Link>
+  <Link href="/supplier/imports/bulk-drafts" className="button secondary">Prepare reviewed private drafts</Link>
  </main>;
 }
