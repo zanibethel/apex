@@ -49,3 +49,15 @@
 @media(max-width:380px){
  .apex-review-toolbar{grid-template-columns:minmax(0,1fr)}
 }
+
+/* Single-page, two-step private source review and draft creation. */
+.apex-source-review-steps{
+ display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:14px 0;
+ padding:12px 14px;border:1px solid #513c4c;border-radius:12px;
+ background:#19151c;color:#ead7e3;font-size:12px;
+}
+.apex-source-review-steps .button{min-height:40px;font-size:12px}
+@media(max-width:640px){
+ .apex-source-review-steps{align-items:stretch;flex-direction:column}
+ .apex-source-review-steps .button{width:100%;text-align:center}
+}
