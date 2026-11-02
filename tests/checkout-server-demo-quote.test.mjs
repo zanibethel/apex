@@ -114,5 +114,8 @@ test("route is demo only, origin checked, bounded, nonpayable, no DB/BTCPay writ
  assert.match(checkout,/requestDemoServerQuote\(\{quantities,shipping,coupon\}\)/);
  assert.match(checkout,/quoteIsCurrent&&serverQuote/);
  assert.match(checkout,/quotePending/);
+ assert.match(checkout,/setQuoteExpired\(true\)/);
+ assert.match(checkout,/quoteKey===currentCartKey/);
+ assert.match(checkout,/Demo quote expired or cart changed/);
  assert.match(checkout,/Server-verified fictional total/);
 });
