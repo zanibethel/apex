@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {privateSourceDraftDescription} from "../src/lib/catalog/private-source-draft-description.mjs";
+import {sourceReviewSummary} from "../src/lib/catalog/bulk-source-review.mjs";
 const read=p=>readFileSync(p,"utf8");
 
 test("bulk workspace imports original source records directly without a review gate",()=>{
@@ -58,4 +59,22 @@ test("unknown supplier variant gets a neutral editable private description, not 
  assert.doesNotMatch(unknown,/treats|heals|proven/i);
  assert.equal(privateSourceDraftDescription("","5 MG"),null);
  assert.equal(privateSourceDraftDescription("Sample",""),null);
+});
+
+test("after draft creation, source status can still be verified; card does not count as approval",()=>{
+ const source={id:"11111111-1111-4111-8111-111111111111",
+  source_index:0,product_name:"BPC-157",strength:"10 MG",
+  wholesale_cost_cents:1201,review_status:"unverified"};
+ const linked=sourceReviewSummary(source,true);
+ assert.equal(linked?.linked,true);
+ assert.equal(linked?.status,"unverified");
+ assert.equal(linked?.validForDraft,false);
+ assert.equal(linked?.validForSourceReview,true);
+ const actions=read("src/app/supplier/imports/bulk-review/actions.ts");
+ const panel=read("src/app/supplier/imports/bulk-review/bulk-review-panel.tsx");
+ assert.match(actions,/!summary\.validForSourceReview/);
+ assert.doesNotMatch(actions,/summary\.linked\|\|summary\.status/);
+ assert.match(panel,/r\.validForSourceReview/);
+ assert.doesNotMatch(panel,/const disabled=r\.linked\|\|/);
+ assert.match(panel,/Saved · /);
 });
