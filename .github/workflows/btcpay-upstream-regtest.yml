@@ -150,8 +150,8 @@ jobs:
             python3 - "${project}" <<'PY'
           import pathlib, sys
           p = pathlib.Path(sys.argv[1])
-          old = r"..\\..\\submodules\\btcpayserver\\BTCPayServer\\BTCPayServer.csproj"
-          new = r"..\\BTCPayServer\\BTCPayServer.csproj"
+          old = r"..\..\submodules\btcpayserver\BTCPayServer\BTCPayServer.csproj"
+          new = r"..\BTCPayServer\BTCPayServer.csproj"
           data = p.read_text()
           assert data.count(old) == 1, "Unexpected Prism source project reference"
           p.write_text(data.replace(old, new))
