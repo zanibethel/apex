@@ -78,6 +78,7 @@ export default async function BulkReviewedDrafts(){
     <Link className="button secondary" href="/supplier/imports/bulk-review">Bulk review source variants</Link>
     <Link className="button secondary" href="/supplier/imports">Review pending variants</Link>
     <Link className="button secondary" href="/supplier/catalog/bulk">Edit saved product cards</Link>
+    <Link className="button secondary" href="/supplier/catalog/media-readiness">Check product images</Link>
     <Link className="button secondary" href="/supplier/imports/sold-out-preview">Preview sold-out gallery</Link>
    </div>
   </section>
