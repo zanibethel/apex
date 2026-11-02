@@ -45,7 +45,7 @@ test("live offer preview appears before long edit form on mobile",()=>{
  assert.match(css,/order:-1/);
  assert.match(css,/@media\(max-width:500px\)/);
  assert.match(css,/max-width:100%/);
- assert.match(editor,/Hide live offer tiles/);
+ assert.match(editor,/Hide previews/);
 });
 
 test("preview changes do not bypass draft-save or private publishing safeguards",()=>{
