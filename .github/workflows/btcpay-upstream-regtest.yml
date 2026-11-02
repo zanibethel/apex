@@ -139,14 +139,27 @@ jobs:
             project="${RUNNER_TEMP}/prism-source/Plugins/BTCPayServer.Plugins.Prism/BTCPayServer.Plugins.Prism.csproj"
             test -f "${project}"
             grep -Eq '<Version>1[.]3[.]3</Version>' "${project}"
-            mkdir -p "${RUNNER_TEMP}/prism-source/submodules"
-            # Git may create an empty gitlink directory before submodule init.
-            # Remove only that empty directory to make the intended symlink.
-            rmdir "${RUNNER_TEMP}/prism-source/submodules/btcpayserver"
-            ln -s "${RUNNER_TEMP}/btcpayserver" "${RUNNER_TEMP}/prism-source/submodules/btcpayserver"
-            test -f "${RUNNER_TEMP}/prism-source/submodules/btcpayserver/BTCPayServer/BTCPayServer.csproj"
+            # Build in the canonical upstream BTCPay tree, not through a
+            # symlinked ProjectReference: MSBuild incorrectly resolves some
+            # restored dependencies under two different physical roots.
+            source_project="${RUNNER_TEMP}/prism-source/Plugins/BTCPayServer.Plugins.Prism"
+            compile_project="${RUNNER_TEMP}/btcpayserver/BTCPayServer.Plugins.Prism"
+            test ! -e "${compile_project}"
+            cp -a "${source_project}" "${compile_project}"
+            project="${compile_project}/BTCPayServer.Plugins.Prism.csproj"
+            python3 - "${project}" <<'PY'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1])
+old = r"..\..\submodules\btcpayserver\BTCPayServer\BTCPayServer.csproj"
+new = r"..\BTCPayServer\BTCPayServer.csproj"
+data = p.read_text()
+assert data.count(old) == 1, "Unexpected Prism source project reference"
+p.write_text(data.replace(old, new))
+PY
+            test -f "${RUNNER_TEMP}/btcpayserver/BTCPayServer/BTCPayServer.csproj"
             mkdir -p "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism"
-            # Match the already proven upstream --launch-profile Bitcoin Debug build.
+            # Source code from SHA is untouched; only disposable csproj path
+            # is adapted for the already-pinned BTCPay tree.
             dotnet publish "${project}" --configuration Debug \
               --output "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism" \
               --property:UseAppHost=false
