@@ -3,6 +3,7 @@ import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {BulkDraftEditor} from "../bulk-editor";
 import {SourceDraftImport} from "../source-draft-import";
+import {SharedPrivateImageBulkApply} from "../shared-private-image-bulk-apply";
 import {proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs";
 import {privateSourceDraftDescription} from "@/lib/catalog/private-source-draft-description.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
@@ -171,6 +172,10 @@ export default async function BulkProductWorkspace(){
   {sourceListUsable?<SourceDraftImport storeId={store.id} sources={sourceOptions}
     enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"&&process.env.APEX_PRIVATE_SOURCE_DRAFTS_ENABLED==="true"}/>
    :<p role="status" className="notice">Source import queue unavailable or incomplete. Existing private product editing remains available.</p>}
+  <SharedPrivateImageBulkApply storeId={store.id}
+   products={(products??[]).map(p=>({productId:p.id,hasImage:Boolean(p.image_path)}))}
+   sources={imageLibrary}
+   enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}/>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
    categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}
    resubmissionEnabled={process.env.APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED==="true"}/>
