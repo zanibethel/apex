@@ -43,7 +43,7 @@ test("admin input makes supplier visibility explicit and refreshes the correct p
  assert.match(form,/Reason for supplier/);
  assert.match(form,/This note is visible to the supplier/);
  assert.match(form,/Avoid confidential internal notes/);
- assert.match(actions,/action!=="approve_republish"&&!note\.trim\(\)/);
+ assert.match(actions,/action!=="approve_republish"&&action!=="unpublish"&&!note\.trim\(\)/);
  assert.match(actions,/isVerifiedPlatformAdmin/);
  assert.match(actions,/set_admin_listing_override/);
  assert.match(actions,/revalidatePath\("\/supplier\/catalog\/bulk"\)/);

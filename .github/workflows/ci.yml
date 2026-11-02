@@ -73,3 +73,6 @@ jobs:
           # Each command starts a fresh psql connection; verifies readback after commit.
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_batch_persistence_seed_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_batch_persistence_readback_integration.sql
+          # New card toggles: reviewed DB changes in disposable PostgreSQL only.
+          psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_simple_listing_controls_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/simple_card_listing_controls_integration.sql

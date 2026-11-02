@@ -55,7 +55,7 @@ test("complete private draft can request but never implies public sale approval"
 });
 test("supplier cards render status and collapsed next steps from server-derived gates",()=>{
  assert.match(page,/kind:listingError\?"unavailable":status\.kind/);
- assert.match(source,/privateBulkReadiness\(r,listingStatus,Boolean\(publication\?\.ok\)\)/);
+ assert.match(source,/privateBulkReadiness\(r,listingStatus,requested&&Boolean\(publication\?\.ok\)\)/);
  assert.match(source,/className="apex-bulk-readiness-details"/);
  assert.match(source,/readiness\.missing\.map/);
  assert.match(source,/readiness\.description/);

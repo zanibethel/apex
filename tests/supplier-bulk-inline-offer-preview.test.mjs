@@ -32,8 +32,8 @@ test("compare-at discounts display only with valid greater reference prices",()=
 test("editable bulk rows render a storefront-style offer tile from current fields",()=>{
  assert.match(editor,/import \{BulkInlineOffer\}/);
  assert.match(editor,/const \[showOfferTiles,setShowOfferTiles\]=useState\(true\)/);
- assert.match(editor,/Hide live offer tiles/);
- assert.match(editor,/Show live offer tiles/);
+ assert.match(editor,/Hide previews/);
+ assert.match(editor,/Show previews/);
  assert.match(editor,/aria-pressed=\{showOfferTiles\}/);
  assert.match(editor,/const category=categories\.find\(c=>c\.id===r\.categoryId\)\?\.name/);
  assert.match(editor,/const cardMedia=r\.id\?savedMedia\.get\(r\.id\):undefined/);

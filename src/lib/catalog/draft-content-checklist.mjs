@@ -26,7 +26,7 @@ export function draftContentChecklist(product) {
 export function draftSetupSteps(product, inventory) {
   const count=Number(inventory?.quantity_on_hand);
   const reserved=Number(inventory?.quantity_reserved);
-  const validStock=Number.isSafeInteger(count)&&count>0&&
+  const validStock=inventory!=null&&Number.isSafeInteger(count)&&count>=0&&
     Number.isSafeInteger(reserved)&&reserved>=0&&reserved<=count;
   const positivePrice=Number.isSafeInteger(product.price_cents)&&product.price_cents>0;
   const steps=[
@@ -37,7 +37,7 @@ export function draftSetupSteps(product, inventory) {
     {id:"image",label:"Saved product image",complete:typeof product.image_path==="string"&&Boolean(product.image_path),action:"image"},
     {id:"price",label:"Purchase price",complete:positivePrice,action:"details"},
     {id:"active",label:"Active in internal catalog",complete:product.is_active===true,action:"details"},
-    {id:"stock",label:"Confirmed stock on hand",complete:validStock,action:"inventory"},
+    {id:"stock",label:"Inventory record (0 allowed · Sold Out)",complete:validStock,action:"inventory"},
   ];
   const completed=steps.filter(step=>step.complete).length;
   return {steps,completed,total:steps.length,remaining:steps.length-completed,

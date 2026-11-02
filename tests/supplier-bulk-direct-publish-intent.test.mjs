@@ -53,7 +53,7 @@ test("saved tile has a real single Publish action, while unsaved cards cannot re
 });
 
 test("bulk actions publish selected or all eligible with a bounded database request",()=>{
- assert.match(editor,/eligiblePrivatePublishIds\(rows,listing,newlyRequested\)/);
+ assert.match(editor,/eligiblePrivatePublishIds\(rows,effectiveListing,newlyRequested\)/);
  assert.match(editor,/eligibleSelectedIds/);
  assert.match(editor,/publish\(eligibleSelectedIds\)/);
  assert.match(editor,/publish\(eligiblePublishIds\)/);
@@ -63,10 +63,10 @@ test("bulk actions publish selected or all eligible with a bounded database requ
  assert.match(editor,/new Set\(ids\)\.size!==ids\.length/);
  assert.match(editor,/saveBulkPublicationRequests/);
  assert.match(actions,/\.rpc\("set_supplier_listing_intent"/);
- assert.match(actions,/p_action:"publish"/);
+ assert.match(actions,/p_action:action/);
  assert.match(actions,/ids\.length>50/);
  assert.match(actions,/\.eq\("store_id",storeId\)\.in\("id",ids\)/);
- assert.match(actions,/Public release remains disabled/);
+ assert.match(actions,/Public release and purchasing remain independently restricted/);
  assert.doesNotMatch(editor+tile,/\.update\(\{is_published|\.update\(\{is_public|createPublicUrl|service_role/);
 });
 
@@ -75,7 +75,7 @@ test("per-product publish status is displayed and all controls are touch friendl
  assert.match(editor,/setPublishResults/);
  assert.match(editor,/publication\?\.message/);
  assert.match(editor,/listingStatus\?\.missing\.length/);
- assert.match(editor,/Administrative holds remain enforced/);
+ assert.match(editor,/Owner holds and product eligibility remain enforced/);
  assert.match(css,/\.apex-bulk-inline-publish-actions/);
  assert.match(css,/@media\(max-width:500px\)/);
  assert.match(css,/\.apex-bulk-footer>button/);

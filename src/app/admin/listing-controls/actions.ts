@@ -9,9 +9,9 @@ type Result={ok:boolean;message:string};
 export async function saveAdminListingOverride(_previous:Result,form:FormData):Promise<Result>{
  const storeId=form.get("storeId"),productId=form.get("productId"),action=form.get("action"),note=form.get("reason");
  if(!isValidId(storeId)||!isValidId(productId)||
-   !["hold","require_review","approve_republish"].includes(String(action))||
+   !["hold","require_review","approve_republish","unpublish"].includes(String(action))||
    typeof note!=="string"||note.length>1000||
-   (action!=="approve_republish"&&!note.trim()))
+   (action!=="approve_republish"&&action!=="unpublish"&&!note.trim()))
   return {ok:false,message:"Choose a valid admin override with a reason."};
  const client=await createSupplierServerClient();
  if(!client)return {ok:false,message:"Admin login required."};
