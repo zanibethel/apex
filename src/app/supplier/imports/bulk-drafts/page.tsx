@@ -75,6 +75,7 @@ export default async function BulkReviewedDrafts(){
     Actual inventory starts at zero. A supplier can edit stock, but stock alone
     never switches a product to public or available-for-purchase.</p>
    <div className="actions">
+    <Link className="button secondary" href="/supplier/imports/bulk-review">Bulk review source variants</Link>
     <Link className="button secondary" href="/supplier/imports">Review pending variants</Link>
     <Link className="button secondary" href="/supplier/catalog/bulk">Edit saved product cards</Link>
     <Link className="button secondary" href="/supplier/imports/sold-out-preview">Preview sold-out gallery</Link>
