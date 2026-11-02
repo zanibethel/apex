@@ -176,7 +176,8 @@ export async function resubmitSupplierCorrections(
  if(process.env.APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED!=="true")
   return {ok:false,message:"Correction resubmission is not enabled yet."};
  const storeId=form.get("storeId"),productId=form.get("productId"),raw=form.get("note");
- if(!isValidId(storeId)||!isValidId(productId)||typeof raw!=="string"||
+ if(typeof storeId!=="string"||typeof productId!=="string"||
+  !isValidId(storeId)||!isValidId(productId)||typeof raw!=="string"||
   raw.length>500||raw.trim().length<5)
   return {ok:false,message:"Describe what you corrected (5–500 characters)."};
  const client=await verifiedStore(storeId);
