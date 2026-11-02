@@ -12,7 +12,7 @@ import {eligiblePrivatePublishIds} from "@/lib/catalog/bulk-publish-selection.mj
 import {CsvProductImport} from "./csv-product-import";
 import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-products.mjs";
 import {reconcileSavedBulkRow} from "@/lib/catalog/bulk-save-revision.mjs";
-import {filterSupplierBulkRows} from "@/lib/catalog/bulk-workspace-filter.mjs";
+import {filterSupplierBulkRows,supplierBulkWorkspaceSummary} from "@/lib/catalog/bulk-workspace-filter.mjs";
 import {privateBulkReadiness} from "@/lib/catalog/private-bulk-readiness.mjs";
 import {supplierAdminFeedback} from "@/lib/catalog/supplier-admin-feedback.mjs";
 import {bulkSetupHref} from "@/lib/catalog/bulk-setup-targets.mjs";
@@ -28,7 +28,7 @@ type Category={id:string;name:string};
 type ListingReadiness={
  productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
  visibilityKind:string;visibilityLabel:string;visibilityDescription:string;
- imageStatusKind:string;imageStatusLabel:string;imageStatusMessage:string;imageNeedsAction:boolean;
+ imageStatusKind:string;imageStatusLabel:string;imageStatusMessage:string;imageNeedsAction:boolean;hasImage:boolean;
  reviewStatusAvailable:boolean;reviewStatus:string;canSubmitReview:boolean;
 };
 type PublishOutcome={id:string;ok:boolean;message:string};
@@ -66,6 +66,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const effectiveListing=listing.map(item=>({...item,requested:listingOverrides[item.productId]??item.requested}));
  const newlyRequested=new Set(Object.entries(listingOverrides).filter(([,value])=>value).map(([id])=>id));
+ const overview=supplierBulkWorkspaceSummary(rows,effectiveListing);
  const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,effectiveListing,newlyRequested,new Set(saveRetryKeys));
  const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key));
  const pendingSaveRows:BulkEditRow[]=bulkRowsRequiringSave(selectedRows,lastSave);
@@ -217,6 +218,12 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
 
  return <section className="apex-bulk-workspace" aria-label="Bulk product creation and editing">
   <CsvProductImport rows={rows} categories={categories} disabled={!editable||busy} onLoad={loadFromCsv}/>
+  <p className="apex-bulk-workspace-summary" role="status">
+   <strong>{overview.privateSaved} saved private cards</strong>
+   <span>· {overview.imagesAttached} images attached</span>
+   <span>· {overview.publishRequested} publication requests</span>
+   <span>· {overview.adminHolds} admin holds</span>
+  </p>
   <div className="apex-bulk-filterbar" aria-label="Find and filter private products">
    <label htmlFor="apex-bulk-search">Find product
     <input id="apex-bulk-search" type="search" value={productSearch}
@@ -230,7 +237,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
      <option value="unsaved">Unsaved drafts</option>
      <option value="ready">Ready to request</option>
      <option value="requested">Publication requested</option>
-     <option value="needs_attention">Needs setup / held</option>
+     <option value="needs_attention">Needs setup / held ({overview.needsAttention})</option>
+     <option value="image_fixes">Image corrections / missing ({overview.imageFixes})</option>
+     <option value="admin_holds">Admin holds ({overview.adminHolds})</option>
+     <option value="review_pending">Awaiting review ({overview.reviewPending})</option>
      {saveRetryKeys.length>0&&<option value="save_retries">Fix / retry saves ({saveRetryKeys.length})</option>}
     </select>
    </label>
