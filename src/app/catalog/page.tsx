@@ -1,60 +1,38 @@
 import Link from "next/link";
-import { readPublishedCatalog } from "@/lib/supabase/public-catalog";
-import { DemoCatalogShelf } from "./demo-catalog-shelf";
+import {readPublishedCatalog} from "@/lib/supabase/public-catalog";
+import {readApprovedSoldOutCatalog} from "@/lib/supabase/approved-sold-out-catalog";
+import {ApprovedSoldOutShelf} from "./approved-sold-out-shelf";
+import {DemoCatalogShelf} from "./demo-catalog-shelf";
 
-export const dynamic = "force-dynamic";
-export const metadata = { title: "Catalog Preview | Apex", robots: { index: false, follow: false } };
+export const dynamic="force-dynamic";
+export const metadata={title:"Catalog Preview | Apex",robots:{index:false,follow:false}};
 
-const previewCollections = ["Collection 01", "Collection 02", "Collection 03"];
-
-export default async function CatalogPreview() {
-  const result = await readPublishedCatalog();
-  return (
-    <main className="container catalog apex-branded-catalog">
-      <Link className="back" href="/">← Home</Link>
-      <p className="eyebrow">APEX ANABOLICS / CATALOG PREVIEW</p>
-      <h1>DISCOVER THE<br /><em>APEX STANDARD.</em></h1>
-      <p className="lead">A protected technical preview of the public catalog. No checkout or live inventory is available.</p>
-      {process.env.APEX_CHECKOUT_MODE==="demo"&&<DemoCatalogShelf/>}
-      {result.state === "connected" ? (
-        result.products.length > 0 ? (
-          <div className="catalog-grid">
-            {result.products.map((product) => (
-              <article className="catalog-card" key={product.id}>
-                <div className="catalog-art apex-catalog-art" aria-hidden="true"><span>▲</span></div>
-                <div className="catalog-info">
-                  <p className="eyebrow">PUBLIC CATALOG PREVIEW</p>
-                  <h2>{product.name}</h2>
-                  <p>{product.description ?? "Additional details pending review."}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="catalog-empty" role="status">
-            <h2>Catalog connection established.</h2>
-            <p>No published entries yet. Supplier-approved content will be added after onboarding and review.</p>
-          </div>
-        )
-      ) : (
-        <>
-          <p className="notice">{result.state === "unconfigured" ? "Standalone UI preview — the Supabase connection is not configured in this environment." : "Catalog data is temporarily unavailable. This preview does not fall back to unverified merchandise."}</p>
-          <div className="catalog-grid">
-            {previewCollections.map((title, index) => (
-              <article className="catalog-card" key={title}>
-                <div className="catalog-art apex-catalog-art" aria-hidden="true"><span>0{index + 1}</span></div>
-                <div className="catalog-info">
-                  <p className="eyebrow">DESIGN PLACEHOLDER</p>
-                  <h2>{title}</h2>
-                  <p>Not real merchandise.</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </>
-      )}
-      <div className="actions"><Link className="button secondary" href="/checkout/preview">Explore interactive checkout demo →</Link></div>
-      <p className="notice">No checkout, ordering or live inventory is enabled. The separate demo uses fictional products, local simulated statuses, and never creates an order or Bitcoin invoice.</p>
-    </main>
-  );
+export default async function CatalogPreview(){
+ // Existing public catalog read is preserved for connection verification only.
+ // It is NOT a sale-authorization decision and its rows are never rendered.
+ const [connection,approved]=await Promise.all([
+  readPublishedCatalog(),readApprovedSoldOutCatalog(),
+ ]);
+ return <main className="container catalog apex-branded-catalog">
+  <Link className="back" href="/">← Home</Link>
+  <p className="eyebrow">APEX ANABOLICS / CATALOG PREVIEW</p>
+  <h1>DISCOVER THE<br/><em>APEX STANDARD.</em></h1>
+  <p className="lead">Public catalog preview. Released items will appear as
+   Sold Out until separate authorization and checkout systems are approved.</p>
+  <ApprovedSoldOutShelf result={approved}/>
+  {process.env.APEX_CHECKOUT_MODE==="demo"&&<DemoCatalogShelf/>}
+  {connection.state!=="connected"&&<p className="notice" role="status">
+   {connection.state==="unconfigured"
+    ?"Standalone UI preview — the read-only catalog connection is not configured."
+    :"Public catalog connection is temporarily unavailable. Private products are not displayed."}
+  </p>}
+  <div className="actions">
+   <Link className="button secondary" href="/checkout/preview">
+    Explore fictional checkout demo</Link>
+  </div>
+  <p className="notice">No checkout, ordering or live inventory is enabled.
+   The separate cart demonstration uses fictional products, simulated statuses
+   and never creates an order or Bitcoin invoice. Inventory updates do not
+   automatically grant product or payment authorization.</p>
+ </main>;
 }

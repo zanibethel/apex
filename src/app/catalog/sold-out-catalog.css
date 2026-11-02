@@ -1,0 +1,28 @@
+.apex-approved-soldout{margin:26px 0 52px}
+.apex-approved-soldout-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.apex-approved-soldout-head .eyebrow{margin:0 0 8px}
+.apex-approved-soldout-head h2{font-size:clamp(25px,4vw,34px);margin:0;color:#faf6fa}
+.apex-approved-soldout-head p:not(.eyebrow){font-size:13px;color:#c6bcc7;max-width:560px}
+.apex-approved-status{background:#31212b;border:1px solid #77415d;color:#f6bbce;padding:8px 12px;border-radius:30px;font-size:11px;font-weight:750}
+.apex-approved-empty{border:1px solid #433039;border-radius:14px;background:#19151b;padding:24px 22px;min-height:150px}
+.apex-approved-empty h3{font-size:18px;margin:0 0 8px}
+.apex-approved-empty p{font-size:13px;color:#c7bac5;max-width:610px;line-height:1.55;margin:0}
+.apex-approved-soldout-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:15px}
+.apex-approved-item{background:#17131a;border:1px solid #42333e;border-radius:14px;overflow:hidden;min-width:0}
+.apex-approved-art{aspect-ratio:4/3;background:radial-gradient(ellipse at center,#30232e 5%,#141117 73%);display:grid;place-items:center;position:relative}
+.apex-approved-triangle{font-size:58px;color:#85455d;opacity:.65}
+.apex-approved-art small{position:absolute;bottom:12px;font-size:10px;color:#b3a5b0}
+.apex-approved-badge{position:absolute;top:12px;left:12px;background:#74283c;color:#fff;border-radius:7px;padding:6px 9px;font-size:10px;font-weight:800;letter-spacing:.08em}
+.apex-approved-body{padding:17px}
+.apex-approved-body .eyebrow{font-size:9px;margin:0 0 9px}
+.apex-approved-body h3{font-size:19px;line-height:1.25;margin:0 0 12px;color:#fff;overflow-wrap:anywhere}
+.apex-approved-description{border:1px solid #3d313c;border-radius:8px;padding:8px 10px;margin-bottom:12px}
+.apex-approved-description summary{font-size:11px;color:#e9b1c9;cursor:pointer}
+.apex-approved-description p{font-size:12px;color:#c5bac7;line-height:1.55;overflow-wrap:anywhere}
+.apex-approved-price{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:16px 0}
+.apex-approved-price strong{font-size:24px;color:#fff}
+.apex-approved-price span{font-size:11px;color:#afa4ae}
+.apex-approved-disabled{height:43px;width:100%;border:1px solid #4d3945;border-radius:10px;background:#33232d;color:#e7a6bd;cursor:not-allowed;font-size:13px;font-weight:800}
+.apex-approved-meta{color:#bbaeba;font-size:10px;text-align:center}
+@media(max-width:600px){.apex-approved-soldout-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.apex-approved-body{padding:11px}.apex-approved-body h3{font-size:15px}.apex-approved-art{aspect-ratio:1/1}.apex-approved-art small{font-size:9px;text-align:center;bottom:9px}.apex-approved-price strong{font-size:20px}}
+@media(max-width:350px){.apex-approved-soldout-grid{grid-template-columns:minmax(0,1fr)}}
