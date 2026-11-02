@@ -14,12 +14,12 @@ The platform admin retains its independent listing-control dashboard. A newly pr
 ## Zero-stock changes
 The supplier draft setup checklist is updated to count an existing inventory row with quantity_on_hand = 0, quantity_reserved = 0 as **complete** for listing. The product appears Sold Out when independently authorized.
 
-`database/sql/apex_simple_listing_controls_REVIEW_ONLY.sql` is a separate **not automatically installed** SQL proposal that updates only:
+`database/sql/apex_simple_listing_controls_REVIEW_ONLY.sql` is the reviewed SQL source now installed in hosted Apex as migration \`apex_simple_zero_stock_listing_and_owner_unpublish\` on 2026-11-02 UTC that updates only:
 - the existing private product-review snapshot to accept nonnegative on-hand inventory, with reserved units within on-hand;
 - the existing audited admin listing override RPC to allow a separate `unpublish` action while preserving trusted platform-admin app_metadata checks, admin lock reason validations and all existing public-release restrictions;
 - the immutable listing event action constraint to include `admin_unpublish`.
 
-The SQL preserves global `apex_internal.private_release_gate.enabled=false`, grants no new privileges, does not change `products.is_published`, `stores.is_public`, seller/product eligibility, image hosting or checkout authorization. Deploy the vetted SQL separately after hosted preflight and security review; until then zero-stock supplier intent and owner unpublish may fail closed.
+The SQL preserves global `apex_internal.private_release_gate.enabled=false`, grants no new privileges, does not change `products.is_published`, `stores.is_public`, seller/product eligibility, image hosting or checkout authorization. The vetted SQL passed disposable PostgreSQL CI and was applied with a hosted preflight. Subsequent readback verified zero-stock support, admin unpublish action, non-executable admin RPC for anon and the unchanged public release gate OFF. Existing Supabase security-advisor warnings for intentionally privileged role-gated RPCs remain and were not expanded.
 
 ## Safety and future public release
 A supplier Publish switch is an **intent** control, not proof of legal or product-specific eligibility. With the present global public release gate OFF and zero public stores/products, switching it on CANNOT show imported medical products to customers.
