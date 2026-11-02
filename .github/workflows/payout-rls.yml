@@ -6,6 +6,7 @@ on:
       - 'tests/payout-rls/**'
       - 'database/sql/apex_private_checkout_product_snapshot_REVIEW_ONLY.sql'
       - 'database/sql/apex_public_sold_out_catalog_REVIEW_ONLY.sql'
+      - 'database/sql/apex_btcpay_*_REVIEW_ONLY.sql'
       - '.github/workflows/payout-rls.yml'
   workflow_dispatch:
 jobs:
@@ -62,3 +63,13 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f database/sql/apex_public_sold_out_catalog_REVIEW_ONLY.sql
       - name: Verify gate denial, approved-only display, and no private fields
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/public-soldout-release.sql
+      - name: Load isolated BTCPay receipt journal (no production database)
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_receipt_journal_REVIEW_ONLY.sql
+      - name: Load isolated BTCPay order-status fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_order_status_REVIEW_ONLY.sql
+      - name: Load review-only admin split activation fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_split_activation_REVIEW_ONLY.sql
+      - name: Verify only eligible draft split candidates can be reviewed
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-split-activation-gate.sql
+      - name: Prove competing administrator reviews serialize
+        run: bash tests/payout-rls/btcpay-concurrent-split-reviews.sh
