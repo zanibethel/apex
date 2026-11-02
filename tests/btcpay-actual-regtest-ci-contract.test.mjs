@@ -57,7 +57,7 @@ test("receipt SQL remains review-only in disposable PG, not a live migration",()
  assert.match(flow,/Initialize synthetic Apex test receipt and status schema in disposable PostgreSQL/);
  assert.match(flow,/psql -X -v ON_ERROR_STOP=1 -f database\/sql\/apex_btcpay_test_receipt_journal_REVIEW_ONLY.sql/);
  assert.match(flow,/psql -X -v ON_ERROR_STOP=1 -f database\/sql\/apex_btcpay_test_order_status_REVIEW_ONLY.sql/);
- assert.match(flow,/durableReceiptJournalVerified/);
+ assert.match(script,/durableReceiptJournalVerified/);
  for(const p of ["src/app/page.tsx","src/app/catalog/page.tsx",
   "src/app/supplier/operations/actions.ts"]){
    const runtime=read(p);
