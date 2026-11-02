@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {useActionState,useMemo,useState} from "react";
 import {updateBulkSourceReviews,type BulkReviewResult} from "./actions";
 import {formatPrivatePreviewUsd} from "@/lib/catalog/sold-out-import-pricing.mjs";
@@ -20,6 +21,7 @@ const stateLabel=(state:string)=>state==="approved_for_draft"?"Ready for draft":
 export function BulkSourceReviewPanel({storeId,rows,sharedImage,enabled}:{
  storeId:string;rows:ReviewRow[];sharedImage?:string;enabled:boolean;
 }){
+ const router=useRouter();
  const [selected,setSelected]=useState<string[]>([]);
  const [verified,setVerified]=useState<string[]>([]);
  const [action,setAction]=useState("under_review");
@@ -165,8 +167,12 @@ export function BulkSourceReviewPanel({storeId,rows,sharedImage,enabled}:{
     {state.results.filter(r=>!r.ok).length>0&&<p>
      {state.results.filter(r=>!r.ok).length} rows could not be saved. Refresh
      before retrying to avoid stale changes.</p>}
-    <p>After approval, use <a href="#create-reviewed-drafts">Step 2 · Create approved private product cards</a>
-     on this page. Refresh to load newly approved entries into the selection list.</p>
+    <p>Approved entries can become zero-stock cards in
+     <a href="#create-reviewed-drafts"> Step 2 · Create approved private product cards</a>
+     on this page.</p>
+    <button type="button" className="button secondary" onClick={()=>{
+     setSelected([]);setVerified([]);setOverall(false);router.refresh();
+    }}>Refresh approved entries</button>
    </div>}
    <p className="notice">Source review and draft creation never open the public
     storefront or make a product purchasable. No Bitcoin invoices are created.</p>
