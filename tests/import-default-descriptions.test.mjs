@@ -22,7 +22,7 @@ test("all 47 source names have individually authored neutral research descriptio
   assert.equal(typeof description,"string");
   assert.ok(description.length<1500,name);
   assert.match(description,/Supplier-listed variant/);
-  assert.match(description,/not|unverified|verification|review|confirm|verified/i);
+  assert.match(description,/must be checked against product-specific documentation/);
   assert.doesNotMatch(description,/guaranteed|cures|eliminates disease|approved for all|dose daily/i);
  }
 });
