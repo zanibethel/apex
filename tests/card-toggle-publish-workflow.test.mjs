@@ -78,3 +78,22 @@ test("purchase and public display remain separate gates",()=>{
  assert.match(sql,/sa\.status='verified'/);
  assert.match(gate,/APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled"/);
 });
+
+test("mobile card header keeps title, pencil and publish control on one row",()=>{
+ const css=read("src/app/globals.css");
+ const card=read("src/app/supplier/catalog/bulk-editor.tsx");
+ const heading=card.slice(card.indexOf('<div className="apex-bulk-row-title">'),
+  card.indexOf('<details className="apex-bulk-readiness-details">'));
+ assert.match(css,/\.apex-bulk-row-title\{\s*display:grid;grid-template-columns:minmax\(0,1fr\) max-content;/);
+ assert.match(css,/\.apex-bulk-card-top-actions\{[^}]*flex-wrap:nowrap;/);
+ assert.match(css,/\.apex-bulk-select\{[^}]*min-width:0;white-space:nowrap/);
+ assert.match(css,/\.apex-bulk-row-title strong\{[^}]*text-overflow:ellipsis;white-space:nowrap;/);
+ assert.match(css,/\.apex-bulk-card-status-row\{grid-column:1 \/ -1;/);
+ assert.match(css,/@media\(max-width:650px\)\{\s*\.apex-bulk-card-publish-switch>span\{/);
+ assert.doesNotMatch(css,/\.apex-bulk-card-top-actions\{width:100%;justify-content:flex-end/);
+ assert.doesNotMatch(css,/\.apex-bulk-select\{flex-wrap:wrap/);
+ assert.match(heading,/<label className="apex-bulk-select">[\s\S]*?<strong title=/);
+ assert.match(heading,/<div className="apex-bulk-card-top-actions">[\s\S]*?apex-bulk-card-pencil[\s\S]*?apex-bulk-card-publish-switch/);
+ assert.match(heading,/<div className="apex-bulk-card-status-row">[\s\S]*?FROM CSV/);
+ assert.match(heading,/role="switch" aria-label=\{"Publish "/);
+});
