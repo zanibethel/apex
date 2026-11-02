@@ -1,0 +1,51 @@
+.apex-bulk-review-page{min-width:0;padding-bottom:100px}
+.apex-review-summary-strip{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 22px}
+.apex-review-summary-strip span{padding:8px 10px;border-radius:9px;background:#1d1920;border:1px solid #463743;color:#c8bdc6;font-size:12px}
+.apex-review-summary-strip strong{color:#fff;font-size:16px;margin-left:4px}
+.apex-import-review{min-width:0}
+.apex-review-toolbar{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;margin:10px 0}
+.apex-review-toolbar label,.apex-review-action-row label{display:grid;gap:5px;color:#c9bdc6;font-size:12px;font-weight:650}
+.apex-review-toolbar input,.apex-review-toolbar select,.apex-review-action-row select{height:43px;width:100%;min-width:0;background:#151217;color:#f3edf2;border:1px solid #4a3948;border-radius:9px;padding:9px 11px;font-size:16px}
+.apex-review-toolbar input:focus-visible,.apex-review-toolbar select:focus-visible,.apex-review-action-row select:focus-visible{outline:2px solid #ed4b77;outline-offset:2px}
+.apex-review-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.apex-review-tools span{font-size:12px;color:#c8bdc6;margin-right:auto}
+.apex-review-tools button{padding:9px 11px;min-height:40px;font-size:11px}
+.apex-review-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,310px),1fr));gap:13px;align-items:start;margin:16px 0}
+.apex-review-card{background:#19151c;border:1px solid #463743;border-radius:13px;min-width:0;padding:12px}
+.apex-review-card.is-selected{border-color:#bc4d76;background:#201720}
+.apex-review-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.apex-review-pick{display:flex;align-items:center;gap:8px;color:#c3abb8;font-size:12px;cursor:pointer}
+.apex-review-pick input,.apex-review-verify input,.apex-review-confirm input{width:18px;height:18px;min-width:18px;accent-color:#d63b6d;margin:0}
+.apex-review-status{background:#332130;color:#edc3d0;padding:5px 8px;border-radius:7px;font-size:10px;white-space:nowrap}
+.apex-review-summary{display:flex;gap:10px;min-width:0}
+.apex-review-image{width:80px;height:80px;flex:none;border-radius:8px;overflow:hidden;background:#0c0b0f;display:grid;place-items:center}
+.apex-review-image img{width:100%;height:100%;object-fit:contain}
+.apex-review-summary-text{min-width:0}
+.apex-review-summary-text h3{font-size:16px;color:#fff;margin:0 0 9px;line-height:1.25;overflow-wrap:anywhere}
+.apex-review-summary-text p{font-size:11px;color:#c2b5bf;margin:4px 0}
+.apex-review-summary-text strong{color:#fff}
+.apex-review-description{margin:12px 0 0;border-top:1px solid #403440;padding-top:9px;color:#bfb5c0}
+.apex-review-description summary{font-size:11px;color:#f0a4c0;cursor:pointer}
+.apex-review-description p{font-size:11px;line-height:1.5}
+.apex-review-verify{display:flex;align-items:flex-start;gap:9px;padding:11px 9px;background:#291b29;border-radius:8px;margin-top:10px;color:#efc5d5;font-size:11px;line-height:1.5;cursor:pointer}
+.apex-review-linked{font-size:11px;color:#bfb0bd}
+.apex-review-footer{display:grid;gap:12px;margin:20px 0 28px;padding:17px;background:#1d171f;border:1px solid #55404d;border-radius:13px}
+.apex-review-action-row{display:flex;align-items:end;flex-wrap:wrap;gap:12px}
+.apex-review-action-row label{flex:1 1 190px}
+.apex-review-action-row span{flex:1 1 150px;color:#c0b2bc;font-size:11px}
+.apex-review-confirm{display:flex;align-items:flex-start;gap:9px;color:#efd5df;font-size:12px}
+.apex-review-footer>.button{width:100%;max-width:380px;min-height:44px}
+.apex-review-footer>.button:disabled{opacity:.55}
+@media(max-width:640px){
+ .apex-review-summary-strip{gap:6px;margin:12px 0 18px}
+ .apex-review-summary-strip span{padding:7px 8px;font-size:11px}
+ .apex-review-grid{grid-template-columns:minmax(0,1fr);gap:10px}
+ .apex-review-card{padding:11px}
+ .apex-review-toolbar{gap:8px}
+ .apex-review-toolbar label{font-size:11px}
+ .apex-review-toolbar input,.apex-review-toolbar select{padding:8px;font-size:16px}
+ .apex-review-summary-text h3{font-size:15px}
+}
+@media(max-width:380px){
+ .apex-review-toolbar{grid-template-columns:minmax(0,1fr)}
+}
