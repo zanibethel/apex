@@ -30,6 +30,7 @@ export async function submitProductForInternalReview(_previous:Result,form:FormD
  });
  if(error||!data)return {ok:false,message:"Could not submit. Confirm all eight steps are complete, or refresh the current review status."};
  revalidatePath("/supplier/catalog");
+ revalidatePath("/supplier/catalog/bulk");
  revalidatePath("/admin/product-reviews");
  return {ok:true,message:"Submitted for internal admin review. Nothing was published."};
 }
