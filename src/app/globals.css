@@ -1083,3 +1083,16 @@ body { background:#07080b; }
  .apex-shared-image-controls{align-items:stretch;flex-direction:column}
  .apex-shared-image-controls label{width:100%}
 }
+
+/* Compact counts for all scoped private product cards; never public release metrics. */
+.apex-bulk-workspace-summary{
+ display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;
+ padding:9px 12px;margin:8px 0 12px;color:#d7cbd5;
+ border:1px solid rgba(238,173,191,.24);border-radius:9px;
+ background:#241c27;font-size:12px;line-height:1.5;
+}
+.apex-bulk-workspace-summary strong{font-weight:760;color:#f6e5ec}
+.apex-bulk-workspace-summary span{white-space:normal}
+@media(max-width:600px){
+ .apex-bulk-workspace-summary{padding:8px 10px;gap:3px 8px;font-size:11px}
+}
