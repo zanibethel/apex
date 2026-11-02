@@ -40,7 +40,7 @@ test("two administrator-selected test split versions send real Prism claims to i
  assert.match(engine,/prism-wallet-receipts-confirmed/);
  assert.match(engine,/both-prism-payout-claims-completed/);
  assert.match(engine,/both-prism-payout-ratios-confirmed/);
- assert.match(engine,/finalStatus\.status!=="verified_complete"/);
+ assert.ok(engine.includes('finalStatus?.status!=="verified_complete"'));
  assert.match(engine,/productionReady:false/);
 });
 
