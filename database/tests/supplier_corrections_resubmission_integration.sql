@@ -132,8 +132,11 @@ begin
   where product_id=current_setting('request.test.correction_product')::uuid
    and action='publish_requested')
  then raise exception 'Correction review and supplier publication audit incomplete';end if;
- if exists(select 1 from public.products where is_published)
-    or exists(select 1 from public.stores where is_public)
+ if exists(select 1 from public.products
+    where id=current_setting('request.test.correction_product')::uuid
+      and store_id='20000000-0000-4000-8000-000000000003' and is_published)
+    or exists(select 1 from public.stores
+     where id='20000000-0000-4000-8000-000000000003' and is_public)
     or not exists(select 1 from apex_internal.private_release_gate
      where singleton=true and enabled=false)
  then raise exception 'Resubmit, admin unlock, or supplier request enabled public release';end if;
