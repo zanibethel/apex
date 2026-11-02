@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {BulkCardMedia} from "./bulk-card-media";
+import {SupplierReviewSubmission} from "./review-submission";
 import {BulkInlineOffer} from "./bulk-inline-offer";
 import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
 import {useMemo,useState,useTransition} from "react";
@@ -28,6 +29,7 @@ type ListingReadiness={
  productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
  visibilityKind:string;visibilityLabel:string;visibilityDescription:string;
  imageStatusKind:string;imageStatusLabel:string;imageStatusMessage:string;imageNeedsAction:boolean;
+ reviewStatusAvailable:boolean;reviewStatus:string;canSubmitReview:boolean;
 };
 type PublishOutcome={id:string;ok:boolean;message:string};
 
@@ -330,6 +332,22 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        Edit image and product details
       </button>}
       <p>{readiness.description}</p>
+      {r.id&&listingStatus?.reviewStatusAvailable&&<section className="apex-bulk-inline-review">
+       <strong>Internal product review: {listingStatus.reviewStatus==="approved_internal"
+        ?"Approved internally":listingStatus.reviewStatus==="pending_review"
+        ?"Pending admin review":listingStatus.reviewStatus==="changes_requested"
+        ?"Changes requested":"Not submitted"}</strong>
+       {listingStatus.canSubmitReview
+        ?r.needsSave
+         ?<p className="notice">Save your product changes first, then submit the updated draft here.</p>
+         :<SupplierReviewSubmission storeId={storeId} productId={r.id}
+           enabled={editable&&!busy}/>
+        :<p className="notice">{listingStatus.reviewStatus==="pending_review"
+         ?"The administrator is reviewing this private submission."
+         :listingStatus.reviewStatus==="approved_internal"
+          ?"Approved for internal content only; separate eligibility and public-image approval are still required."
+          :"Finish the remaining setup items before requesting review."}</p>}
+      </section>
       {adminFeedback&&r.id&&<div className="apex-bulk-admin-corrections">
        <button type="button" className="button secondary" disabled={busy}
         onClick={()=>setEditOpenKeys(prev=>prev.includes(r.key)?prev:[...prev,r.key])}>
