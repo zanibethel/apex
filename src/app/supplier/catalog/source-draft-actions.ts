@@ -4,7 +4,7 @@ import {revalidatePath} from "next/cache";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
 import {chooseNewSku} from "@/lib/catalog/sku.mjs";
 import {proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs";
-import {importDefaultDescription} from "@/lib/catalog/import-default-descriptions.mjs";
+import {privateSourceDraftDescription} from "@/lib/catalog/private-source-draft-description.mjs";
 
 type ItemResult={candidateId:string;ok:boolean;message:string};
 type Result={ok:boolean;message:string;results:ItemResult[]};
@@ -46,7 +46,7 @@ export async function createPrivateSourceCards(form:FormData):Promise<Result>{
   const source=byId.get(id);
   const prices=proposedSoldOutPricing(source?.wholesale_cost_cents);
   const title=source?[source.product_name,source.strength].map(s=>s?.trim()).join(" — "):"";
-  const description=source?importDefaultDescription(source.product_name,source.strength):null;
+  const description=source?privateSourceDraftDescription(source.product_name,source.strength):null;
   return {id,source,prices,title,description};
  });
  if(plans.some(p=>!p.source||!p.prices||!p.description||p.title.length>120))
