@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {notFound} from "next/navigation";
 import {readPublishedCatalog} from "@/lib/supabase/public-catalog";
 import {readApprovedSoldOutCatalog} from "@/lib/supabase/approved-sold-out-catalog";
 import {ApprovedSoldOutShelf} from "./approved-sold-out-shelf";
@@ -7,11 +8,15 @@ import {DemoCatalogShelf} from "./demo-catalog-shelf";
 export const dynamic="force-dynamic";
 export const metadata={title:"Catalog Preview | Apex",robots:{index:false,follow:false}};
 
-export default async function CatalogPreview(){
+export default async function CatalogPreview({searchParams}:{searchParams:Promise<{page?:string}>}){
+ const query=await searchParams;
+ const raw=typeof query.page==="string"?query.page:"1";
+ if(!/^[1-9][0-9]{0,2}$/.test(raw)||Number(raw)>417)notFound();
+ const page=Number(raw);
  // Existing public catalog read is preserved for connection verification only.
  // It is NOT a sale-authorization decision and its rows are never rendered.
  const [connection,approved]=await Promise.all([
-  readPublishedCatalog(),readApprovedSoldOutCatalog(),
+  readPublishedCatalog(),readApprovedSoldOutCatalog(page),
  ]);
  return <main className="container catalog apex-branded-catalog">
   <Link className="back" href="/">← Home</Link>

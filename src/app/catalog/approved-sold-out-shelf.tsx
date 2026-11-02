@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type {SoldOutCatalogResult} from "@/lib/supabase/approved-sold-out-catalog";
 import "./sold-out-catalog.css";
 
@@ -52,6 +53,12 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
       "The approved catalog is temporarily unavailable. No products are shown without a verified release decision.":
       "The supplier and product release review is still in progress. Unverified imports and private product drafts are not displayed here."}</p>
    </div>}
+  {result.state==="connected"&&(result.page>1||result.hasNext)&&
+   <nav className="apex-approved-pagination" aria-label="Approved product pages">
+    {result.page>1&&<Link className="button secondary" href={"/catalog?page="+(result.page-1)}>Previous</Link>}
+    <span>Page {result.page}</span>
+    {result.hasNext&&<Link className="button secondary" href={"/catalog?page="+(result.page+1)}>Next</Link>}
+   </nav>}
   <p className="notice">Availability in this read-only gallery does not authorize
    purchasing. Source costs, private stock counts, supplier documents and
    payment details are never displayed.</p>
