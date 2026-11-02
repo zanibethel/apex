@@ -64,5 +64,5 @@ test("single-card save does not falsely clear later edits while response is in f
  const result=reconcileSavedBulkRow(current,submitted,{key:base.key,id:base.id,ok:true,sku:"TEST-A"});
  assert.equal(result.name,"Newer change");
  assert.equal(result.needsSave,true);
- assert.deepEqual(mergeBulkSaveRetryKeys(["cardB"],[base,next],["cardA"]),["cardB","cardA"]);
+ assert.deepEqual(mergeBulkSaveRetryKeys(["cardB"],[base,next],["cardA"]),["cardA"]);
 });
