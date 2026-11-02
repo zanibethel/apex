@@ -26,6 +26,7 @@ export type BulkEditRow={
 type Category={id:string;name:string};
 type ListingReadiness={
  productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
+ visibilityKind:string;visibilityLabel:string;visibilityDescription:string;
 };
 type PublishOutcome={id:string;ok:boolean;message:string};
 
@@ -249,7 +250,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     {showOfferTiles?"Hide previews":"Show previews"}
    </button>
   </div>
-  <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch saves supplier publishing preference. Zero stock means Sold Out, not a missing listing; public eligibility remains separate.</p>
+  <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch saves a supplier request. Storefront status below each title shows the protected visibility decision; a checked switch does not mean live. Zero stock may display Sold Out only after independent release approval.</p>
   {recentImportKeys.length>0&&<p className="apex-bulk-import-notice" role="status">
    {recentImportKeys.length} CSV product {recentImportKeys.length===1?"card is":"cards are"} at the top of the workspace.
    Review their live previews and choose Save selected when ready.
@@ -270,6 +271,16 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const readiness=privateBulkReadiness(r,listingStatus,requested&&Boolean(publication?.ok));
     const adminFeedback=r.id?supplierAdminFeedback(listingStatus):null;
     const correctionsPending=Boolean(listingStatus?.correctionsPending||(r.id&&correctionConfirmed.includes(r.id)));
+    const override=r.id?listingOverrides[r.id]:undefined;
+    const locallyChanged=override!==undefined&&override!==listingStatus?.requested;
+    const visibilityKind=!r.id?"private":locallyChanged
+     ?override?"requested":"private":listingStatus?.visibilityKind??"unavailable";
+    const visibilityLabel=!r.id?"Draft · not live":locallyChanged
+     ?override?"Requested · not live":"Not live":listingStatus?.visibilityLabel??"Visibility unavailable";
+    const visibilityDescription=!r.id?"Save your private draft before requesting publication.":
+     locallyChanged
+      ?"The supplier preference changed. A fresh protected release decision is needed before customer visibility can be confirmed.":
+      listingStatus?.visibilityDescription??"Refresh to check the protected release decision.";
     const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
     return <article key={r.key} className="apex-bulk-row">
      <div className="apex-bulk-row-title">
@@ -290,7 +301,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        </label>
       </div>
       <div className="apex-bulk-card-status-row">
-       <span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>
+       <span className={"apex-bulk-visibility-state apex-bulk-visibility-"+visibilityKind}
+        title={visibilityDescription} aria-label={"Customer storefront: "+visibilityLabel}>
+        Storefront: {visibilityLabel}
+       </span>
+       {readiness.kind!=="requested"&&<span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>}
        {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
       </div>
      </div>
@@ -300,6 +315,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        :readiness.missing.length
         ?readiness.missing.length+" setup item"+(readiness.missing.length===1?"":"s")+" remaining"
         :"Status details"}</summary>
+      <p><strong>Customer visibility:</strong> {visibilityDescription}</p>
       <p>{readiness.description}</p>
       {adminFeedback&&r.id&&<div className="apex-bulk-admin-corrections">
        <button type="button" className="button secondary" disabled={busy}

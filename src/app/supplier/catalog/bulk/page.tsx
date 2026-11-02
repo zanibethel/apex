@@ -7,6 +7,7 @@ import {proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs"
 import {privateSourceDraftDescription} from "@/lib/catalog/private-source-draft-description.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
+import {supplierStorefrontVisibility} from "@/lib/catalog/supplier-storefront-visibility.mjs";
 import {awaitingAdministratorCorrectionReview} from "@/lib/catalog/listing-resubmission.mjs";
 import {SUPPLIER_BULK_PRODUCT_CAPACITY,SUPPLIER_BULK_PRODUCT_QUERY_LIMIT,supplierBulkProductWindowStatus} from "@/lib/catalog/supplier-bulk-capacity.mjs";
 
@@ -80,6 +81,16 @@ export default async function BulkProductWorkspace(){
   quantityReserved:quantities.get(p.id)?.quantity_reserved,
  }));
  const listingByProduct=new Map((listingControls??[]).map(c=>[c.product_id,c]));
+ // Only products requesting publication need a protected release check.
+ // Fail closed on RPC failures; a supplier preference is never live status.
+ const releases=new Map<string,unknown>();
+ if(!listingError)await Promise.all((products??[]).filter(p=>
+  listingByProduct.get(p.id)?.supplier_wants_listing===true).map(async p=>{
+   const {data,error}=await client.rpc("get_private_release_readiness",{
+    p_store_id:store.id,p_product_id:p.id,
+   });
+   if(!error&&data)releases.set(p.id,data);
+  }));
  const eventsByProduct=new Map<string,{action:string}[]>();
  for(const event of listingEvents??[]){
   const existing=eventsByProduct.get(event.product_id)??[];
@@ -91,6 +102,12 @@ export default async function BulkProductWorkspace(){
   const status=listingControlStatus(control);
   const setup=draftSetupSteps(p,quantities.get(p.id));
   const missing=setup.steps.filter(step=>!step.complete).map(step=>step.label);
+  const visibility=supplierStorefrontVisibility({
+   available:!listingError,requested:!!control?.supplier_wants_listing,
+   adminGate:control?.admin_gate,
+   republishApprovalRequired:control?.republish_approval_required,
+   republishApproved:control?.republish_approved,
+  },releases.get(p.id));
   return {
    productId:p.id,
    canRequest:!listingError&&setup.setupComplete&&status.canRequest&&!control?.supplier_wants_listing,
@@ -100,6 +117,8 @@ export default async function BulkProductWorkspace(){
    reason:!listingError&&["hold","review"].includes(status.kind)?control?.reason??null:null,
    missing,
    correctionsPending:!eventsError&&awaitingAdministratorCorrectionReview(eventsByProduct.get(p.id)),
+   visibilityKind:visibility.kind,visibilityLabel:visibility.label,
+   visibilityDescription:visibility.description,
   };
  });
  const linkedProducts=new Set((linked??[]).map(p=>p.product_id));

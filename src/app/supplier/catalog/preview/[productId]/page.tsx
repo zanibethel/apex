@@ -4,6 +4,7 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isValidId} from "@/lib/catalog/private-review-utils.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
+import {supplierStorefrontVisibility} from "@/lib/catalog/supplier-storefront-visibility.mjs";
 import {privateReleaseDisplay} from "@/lib/catalog/private-release-decision.mjs";
 import {OfferTile} from "@/components/catalog/offer-tile";
 import {SupplierListingControls} from "../../listing-control-form";
@@ -59,6 +60,12 @@ export default async function SupplierOfferPreview({params}:{params:Promise<{pro
  const listing=listingResult.error?null:listingResult.data;
  const listingStatus=listingControlStatus(listing);
  const release=privateReleaseDisplay(decisionResult.error?null:decisionResult.data);
+ const visibility=supplierStorefrontVisibility({
+  available:!listingResult.error,requested:listing?.supplier_wants_listing===true,
+  adminGate:listing?.admin_gate,
+  republishApprovalRequired:listing?.republish_approval_required,
+  republishApproved:listing?.republish_approved,
+ },decisionResult.error?null:decisionResult.data);
 
  let imageUrl:string|undefined;
  if(product.image_path){
@@ -88,7 +95,10 @@ export default async function SupplierOfferPreview({params}:{params:Promise<{pro
    <section className="apex-offer-publish-panel" aria-label="Publish offer">
     <p className="eyebrow">FINAL STEP</p>
     <h2>Publish your offer</h2>
-    <p className="apex-offer-publish-state">{listingResult.error?"Status unavailable":listingStatus.label}</p>
+    <p className={"apex-offer-publish-state apex-storefront-visibility-"+visibility.kind}>
+     Storefront: {visibility.label}</p>
+    <p className="notice">{visibility.description}</p>
+    <p className="notice">Supplier setting: {listingResult.error?"Unavailable":listingStatus.label}</p>
     {!setup.setupComplete&&<div className="apex-offer-missing" role="status">
      <strong>Finish {missing.length} {missing.length===1?"detail":"details"} first</strong>
      <p>{missing.map(item=>item.label).join(", ")}</p>
