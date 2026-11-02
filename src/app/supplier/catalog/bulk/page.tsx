@@ -4,7 +4,7 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {BulkDraftEditor} from "../bulk-editor";
 import {SourceDraftImport} from "../source-draft-import";
 import {proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs";
-import {importDefaultDescription} from "@/lib/catalog/import-default-descriptions.mjs";
+import {privateSourceDraftDescription} from "@/lib/catalog/private-source-draft-description.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
 import {awaitingAdministratorCorrectionReview} from "@/lib/catalog/listing-resubmission.mjs";
@@ -109,7 +109,7 @@ export default async function BulkProductWorkspace(){
   const cost=proposedSoldOutPricing(s.wholesale_cost_cents);
   const name=[s.product_name?.trim(),s.strength?.trim()].join(" — ");
   return {id:s.id,sourceIndex:s.source_index,name:s.product_name,strength:s.strength,
-   costCents:cost?.sourceCostCents??0,eligible:Boolean(cost)&&Boolean(importDefaultDescription(s.product_name,s.strength))&&name.length<=120};
+   costCents:cost?.sourceCostCents??0,eligible:Boolean(cost)&&Boolean(privateSourceDraftDescription(s.product_name,s.strength))&&name.length<=120};
  }):[];
  const initialRows=(products??[]).map(p=>({
   key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",
