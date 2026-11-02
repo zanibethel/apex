@@ -131,3 +131,13 @@ test("no production network or missing confirmation evidence accepted",()=>{
  assert.throws(()=>reconcile({pendingAgeMinutes:-1}));
  assert.throws(()=>reconcile({expectedAmounts:[expected[0]]}));
 });
+
+test("unknown extra Prism payout blocks reconciliation even if known recipients are confirmed",()=>{
+ const extra={id:"unknown-third-claim",metadata:{Source:"Manual third-party payout"},
+   payoutMethodId:"BTC-CHAIN",payoutAmount:"0.00001000",state:"Completed"};
+ const outcome=reconcile({claims:[claim("supplier"),claim("platform"),extra]});
+ assert.equal(outcome.status,"manual_review");
+ assert.equal(outcome.nextAction,"escalate_operator");
+ assert.equal(outcome.automaticRetryAllowed,false);
+ assert.ok(outcome.recipients.every(x=>x.reason==="EXTRANEOUS_PAYOUT_CLAIM"));
+});
