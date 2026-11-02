@@ -140,6 +140,9 @@ export default async function BulkProductWorkspace(){
    visibilityDescription:visibility.description,
    imageStatusKind:mediaStatus.kind,imageStatusLabel:mediaStatus.label,
    imageStatusMessage:mediaStatus.message,imageNeedsAction:mediaStatus.needsAction,
+   reviewStatusAvailable:!reviewError,reviewStatus:reviewsByProduct.get(p.id)?.status??"draft",
+   canSubmitReview:!reviewError&&setup.setupComplete&&
+    (!reviewsByProduct.has(p.id)||reviewsByProduct.get(p.id)?.status==="changes_requested"),
   };
  });
  const linkedProducts=new Set((linked??[]).map(p=>p.product_id));
