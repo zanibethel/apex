@@ -22,7 +22,7 @@ test("every server-side private checklist label has a matching same-card target"
   "Saved product image":"media",
   "Purchase price":"price",
   "Active in internal catalog":"active",
-  "Confirmed stock on hand":"media",
+  "Inventory record (0 allowed · Sold Out)":"media",
  };
  for(const step of fields){
   assert.ok(step.label in expected,step.label);
