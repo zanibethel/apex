@@ -70,7 +70,7 @@ test("header + catalog + checkout reuse one client-side cart context",()=>{
  assert.match(provider,/demoCartCount\(quantities\)/);
  assert.match(checkout,/const \{quantities\}=cart/);
  assert.doesNotMatch(checkout,/useState<Record<string,number>>/);
- assert.match(checkout,/disabled=\{!total\.items\.length\}/);
+ assert.match(checkout,/disabled=\{!total\.items\.length\|\|quotePending\}/);
  assert.match(checkout,/Browse sample items/);
  for(const code of [provider,shelf,checkout]){
   assert.doesNotMatch(code,/\bfetch\s*\(|XMLHttpRequest|sendBeacon|\baxios\b/);
