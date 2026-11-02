@@ -56,6 +56,51 @@ begin
     and image_path is not null and is_active and price_cents=2999)<>1
  then raise exception 'E2E: supplier card metadata edits did not persist';end if;
 end $assert$;
+-- Card stock editor: supplier CAS works, stale quantity cannot overwrite,
+-- and another supplier cannot change this tenant's private inventory.
+do $assert$
+declare n integer;
+begin
+ update public.inventory_items set quantity_on_hand=4
+ where store_id=current_setting('apex.e2e.store')::uuid
+  and product_id=current_setting('apex.e2e.product')::uuid
+  and quantity_on_hand=0;
+ get diagnostics n=row_count;
+ if n<>1 then raise exception 'E2E: supplier inventory adjustment failed';end if;
+ update public.inventory_items set quantity_on_hand=9
+ where store_id=current_setting('apex.e2e.store')::uuid
+  and product_id=current_setting('apex.e2e.product')::uuid
+  and quantity_on_hand=0;
+ get diagnostics n=row_count;
+ if n<>0 then raise exception 'E2E: stale inventory value overwrote current stock';end if;
+end $assert$;
+select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',false);
+do $assert$
+declare n integer;
+begin
+ update public.inventory_items set quantity_on_hand=10
+ where store_id=current_setting('apex.e2e.store')::uuid
+  and product_id=current_setting('apex.e2e.product')::uuid
+  and quantity_on_hand=4;
+ get diagnostics n=row_count;
+ if n<>0 then raise exception 'E2E: cross-store supplier changed private stock';end if;
+end $assert$;
+select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
+do $assert$
+declare n integer;
+begin
+ update public.inventory_items set quantity_on_hand=0
+ where store_id=current_setting('apex.e2e.store')::uuid
+  and product_id=current_setting('apex.e2e.product')::uuid
+  and quantity_on_hand=4;
+ get diagnostics n=row_count;
+ if n<>1 or not exists(
+  select 1 from public.inventory_items
+   where product_id=current_setting('apex.e2e.product')::uuid
+    and quantity_on_hand=0 and quantity_reserved=0
+ ) then raise exception 'E2E: zero stock was not restored before review';end if;
+end $assert$;
+
 select public.set_supplier_listing_intent(
  current_setting('apex.e2e.store')::uuid,current_setting('apex.e2e.product')::uuid,
  'publish');
