@@ -1096,3 +1096,82 @@ body { background:#07080b; }
 @media(max-width:600px){
  .apex-bulk-workspace-summary{padding:8px 10px;gap:3px 8px;font-size:11px}
 }
+
+/* Compact supplier workspace only. Do not change actual customer-facing
+   offer tiles: this is a private product-management density adjustment. */
+.apex-bulk-workspace .apex-bulk-rows{gap:10px}
+.apex-bulk-workspace .apex-bulk-row{
+ padding:11px;
+ border-radius:11px;
+}
+.apex-bulk-workspace .apex-bulk-row-title{
+ row-gap:6px;
+ margin-bottom:5px;
+}
+.apex-bulk-workspace .apex-bulk-card-status-row{gap:5px}
+.apex-bulk-workspace .apex-bulk-readiness-details{margin-bottom:5px}
+.apex-bulk-workspace .apex-bulk-inline-preview{
+ padding:8px;
+ gap:6px;
+ border-radius:10px;
+ align-content:start;
+}
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-image{
+ aspect-ratio:auto;
+ height:136px;
+ max-height:136px;
+ padding:8px;
+}
+/* Image itself occupies only part of its frame: no crop/zoom-in. */
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-image img{
+ width:100%;
+ height:100%;
+ max-width:70%;
+ max-height:82%;
+ object-fit:contain;
+ object-position:center;
+}
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-content{padding:10px 12px}
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-category{font-size:10px;margin:0 0 3px}
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-content h2{
+ font-size:15px;
+ line-height:1.25;
+}
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-sku{font-size:11px;margin:3px 0 0}
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-description{
+ margin:5px 0;
+ font-size:11px;
+ line-height:1.4;
+ -webkit-line-clamp:2;
+}
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-price{gap:8px;margin:7px 0 3px}
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-price strong{font-size:18px}
+.apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-availability{margin:3px 0 0;font-size:11px}
+.apex-bulk-workspace .apex-bulk-inline-caption{font-size:11px;line-height:1.35}
+.apex-bulk-workspace .apex-bulk-inline-preview-header strong{font-size:12px}
+.apex-bulk-workspace .apex-bulk-card-layout{gap:12px}
+.apex-bulk-workspace .apex-bulk-card-media{gap:10px;margin-top:10px;padding-top:10px}
+.apex-bulk-workspace .apex-bulk-media-photo{width:105px;height:87px}
+.apex-bulk-workspace .apex-bulk-media-photo img{
+ max-width:72%;
+ max-height:80%;
+ object-fit:contain;
+}
+@media(min-width:1120px){
+ .apex-bulk-workspace .apex-bulk-rows{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+ .apex-bulk-workspace .apex-bulk-row-editing{grid-column:1 / -1}
+}
+@media(max-width:600px){
+ .apex-bulk-workspace .apex-bulk-rows{grid-template-columns:minmax(0,1fr)}
+ .apex-bulk-workspace .apex-bulk-row{padding:9px}
+ .apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-image{
+  height:124px;max-height:124px;
+ }
+ .apex-bulk-workspace .apex-bulk-inline-preview .apex-offer-image img{
+  max-width:65%;max-height:82%;
+ }
+ .apex-bulk-workspace .apex-bulk-media-photo{width:105px;height:87px}
+}
+/* Preserve full-size accessible touch targets for editing and publication. */
+.apex-bulk-workspace .apex-bulk-card-pencil{min-width:40px;min-height:40px}
+.apex-bulk-workspace .apex-bulk-preview-link{min-height:44px}
