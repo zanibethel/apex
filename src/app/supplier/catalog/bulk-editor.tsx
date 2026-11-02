@@ -217,8 +217,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    </button>
    <button type="button" className="button secondary"
     aria-pressed={showOfferTiles}
-    onClick={()=>setShowOfferTiles(value=>!value)}>
-    {showOfferTiles?"Hide live offer tiles":"Show live offer tiles"}
+    onClick={()=>{if(showOfferTiles)setEditOpenKeys(rows.map(row=>row.key));setShowOfferTiles(value=>!value);}}>
+    {showOfferTiles?"Hide previews":"Show previews"}
    </button>
   </div>
   <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch saves supplier publishing preference. Zero stock means Sold Out, not a missing listing; public eligibility remains separate.</p>
