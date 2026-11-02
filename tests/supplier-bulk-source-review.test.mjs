@@ -66,7 +66,8 @@ test("review action enforces owner/manager, private store, fresh cost/status and
  assert.match(action,/from\("supplier_candidate_drafts"\)/);
  assert.match(action,/status!==selected\.status/);
  assert.match(action,/costCents!==selected\.costCents/);
- assert.match(action,/summary\.linked/);
+ assert.match(action,/!summary\.validForSourceReview/);
+ assert.doesNotMatch(action,/summary\.linked\|\|/);
  assert.match(action,/\.eq\("review_status",selected\.status\)/);
  assert.match(action,/\.eq\("wholesale_cost_cents",selected\.costCents\)/);
  assert.match(action,/\.select\("id"\)\.maybeSingle\(\)/);
