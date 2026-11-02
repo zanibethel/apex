@@ -29,7 +29,8 @@ test("supplier product card has an explicit pencil editor, selection and switch"
  assert.match(c,/Publish selected/);
  assert.match(c,/showPublishAction=\{false\}/);
  assert.match(inline,/showPublishAction&&<button/);
- assert.match(c,/Edit and resubmit for review/);
+ assert.match(c,/Open product editor/);
+ assert.match(c,/Resubmit saved corrections for review/);
  assert.match(c,/BulkCardMedia/);
  assert.match(c,/r\.description|description/);
 });

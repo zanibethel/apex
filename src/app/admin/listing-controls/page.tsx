@@ -5,6 +5,7 @@ import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {listingControlStatus,listingControlAuditAction} from "@/lib/catalog/listing-control.mjs";
 import {privateReleaseDisplay} from "@/lib/catalog/private-release-decision.mjs";
 import {formatReviewTime} from "@/lib/catalog/review-time.mjs";
+import {awaitingAdministratorCorrectionReview} from "@/lib/catalog/listing-resubmission.mjs";
 import {AdminListingOverrideForm} from "./form";
 
 export const dynamic="force-dynamic";
@@ -28,7 +29,7 @@ export default async function ListingControlsPage(){
  }));
  const {data:events,error:historyError}=await client.from("supplier_listing_events")
   .select("id,store_id,product_id,action,reason,created_at")
-  .order("created_at",{ascending:false}).limit(200);
+  .order("id",{ascending:false}).limit(500);
  return <main className="container supplier-shell apex-review-queue">
   <Link href="/admin" className="back">← Admin dashboard</Link>
   <p className="eyebrow">APEX / PRIVATE LISTING CONTROLS</p>
@@ -47,6 +48,8 @@ export default async function ListingControlsPage(){
        <h2>{item.product_name||"Private product"}</h2>
       </div>
       <p className="notice">SKU {item.product_sku} · Updated {formatReviewTime(item.changed_at)}</p>
+      {["hold","review"].includes(status.kind)&&awaitingAdministratorCorrectionReview(ownEvents)&&
+       <p role="status" className="apex-review-note"><strong>Supplier corrections awaiting review.</strong> Check the latest resubmission note in history before unlocking.</p>}
       <p className="notice"><strong>Effective release decision:</strong> {decision.label}</p>
       <p className="notice">{decision.description}</p>
       {item.reason&&<p className="apex-review-note"><strong>Latest admin note:</strong> {item.reason}</p>}

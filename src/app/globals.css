@@ -972,3 +972,16 @@ body { background:#07080b; }
 .apex-bulk-card-publish-switch input[type="checkbox"]:disabled{opacity:.47;cursor:not-allowed}
 .apex-bulk-card-publish-switch input[type="checkbox"]:focus-visible,.apex-bulk-card-pencil:focus-visible{outline:2px solid #ffb9d1;outline-offset:3px}
 @media(max-width:650px){.apex-bulk-card-top-actions{width:100%;justify-content:flex-end;margin-top:4px}.apex-bulk-card-publish-switch{font-size:11px}}
+
+/* Private supplier correction notes, deliberately separated from Publish. */
+.apex-bulk-admin-corrections{display:grid;gap:9px;margin:9px 0}
+.apex-bulk-admin-corrections>label{display:grid;gap:5px;font-weight:650;font-size:13px}
+.apex-bulk-admin-corrections textarea{
+ display:block;width:100%;max-width:100%;min-height:70px;
+ border:1px solid #6d4d5b;border-radius:8px;background:#19171b;
+ color:#f5edf1;padding:10px;font:inherit;font-size:16px;
+}
+.apex-bulk-admin-corrections textarea:focus-visible{
+ outline:2px solid #f0a1bd;outline-offset:2px;
+}
+.apex-bulk-admin-corrections .button{justify-self:start;min-height:40px}

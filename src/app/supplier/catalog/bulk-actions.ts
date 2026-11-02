@@ -165,3 +165,28 @@ export async function saveBulkPublicationRequests(previous:PublishResult,form:Fo
  copy.set("action","publish");
  return saveBulkListingIntents(previous,copy);
 }
+
+
+type CorrectionResult={ok:boolean;message:string};
+// This is only an audited "please review my corrections" signal. Admin
+// restrictions remain in place; it does not toggle public listing or sales.
+export async function resubmitSupplierCorrections(
+ _previous:CorrectionResult,form:FormData,
+):Promise<CorrectionResult>{
+ if(process.env.APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED!=="true")
+  return {ok:false,message:"Correction resubmission is not enabled yet."};
+ const storeId=form.get("storeId"),productId=form.get("productId"),raw=form.get("note");
+ if(typeof storeId!=="string"||typeof productId!=="string"||
+  !isValidId(storeId)||!isValidId(productId)||typeof raw!=="string"||
+  raw.length>500||raw.trim().length<5)
+  return {ok:false,message:"Describe what you corrected (5–500 characters)."};
+ const client=await verifiedStore(storeId);
+ if(!client)return {ok:false,message:denied};
+ const {data,error}=await client.rpc("resubmit_supplier_listing_corrections",{
+  p_store_id:storeId,p_product_id:productId,p_note:raw.trim(),
+ });
+ if(error||!data)return {ok:false,message:"Unable to resubmit. Confirm that the product is saved and still under admin review."};
+ revalidatePath("/admin/listing-controls");
+ revalidatePath("/supplier/catalog/bulk");
+ return {ok:true,message:"Corrections sent for admin review. The product remains private and held."};
+}
