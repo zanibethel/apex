@@ -107,9 +107,13 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     else if(viewFilter==="save_retries")setViewFilter("all");
    }
    setResult({ok:progress.ok,message:progress.message,results:all});
+   const returnedKeys=new Set(all.map(item=>item.key));
+   const missingResults=Object.fromEntries(pendingRows
+    .filter(item=>!returnedKeys.has(item.key))
+    .map(item=>[item.key,{ok:false,message:"Save was not confirmed. Retry this card."}]));
    setLastSave(prev=>({...prev,...Object.fromEntries(all.map(r=>[
     r.key,{ok:r.ok,message:r.message}
-   ]))}));
+   ])),...missingResults}));
    const savedByKey=new Map(all.filter(o=>o.ok&&o.id).map(o=>[o.key,o]));
    setRows(prev=>prev.map(r=>reconcileSavedBulkRow(r,
     submittedByKey.get(r.key),savedByKey.get(r.key))));
