@@ -21,7 +21,7 @@ end $check$;
 -- identifiers are returned. Stock is intentionally not a listing blocker:
 -- every approved listing is represented as Sold Out while checkout is disabled.
 create or replace function public.get_public_sold_out_catalog(
- p_offset integer default 0,p_limit integer default 24
+ p_offset integer,p_limit integer
 ) returns jsonb language plpgsql stable security definer
  set search_path=pg_catalog as $fn$
 declare v_result jsonb;
@@ -85,6 +85,15 @@ begin
  ) eligible;
  return v_result;
 end $fn$;
+-- Replace any legacy no-argument public feed with the same strict filter.
+-- An explicit two-argument signature avoids PostgREST overload ambiguity.
+create or replace function public.get_public_sold_out_catalog()
+ returns jsonb language sql stable security definer set search_path=pg_catalog as $legacy$
+ select public.get_public_sold_out_catalog(0,24);
+$legacy$;
+revoke all on function public.get_public_sold_out_catalog() from public,anon,authenticated;
+grant execute on function public.get_public_sold_out_catalog() to anon,authenticated;
+
 revoke all on function public.get_public_sold_out_catalog(integer,integer)
  from public,anon,authenticated;
 grant execute on function public.get_public_sold_out_catalog(integer,integer)
