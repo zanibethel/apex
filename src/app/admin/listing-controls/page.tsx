@@ -5,7 +5,7 @@ import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {listingControlStatus,listingControlAuditAction} from "@/lib/catalog/listing-control.mjs";
 import {privateReleaseDisplay} from "@/lib/catalog/private-release-decision.mjs";
 import {formatReviewTime} from "@/lib/catalog/review-time.mjs";
-import {awaitingAdministratorCorrectionReview} from "@/lib/catalog/listing-resubmission.mjs";
+import {latestPendingSupplierCorrection} from "@/lib/catalog/listing-resubmission.mjs";
 import {AdminListingOverrideForm} from "./form";
 
 export const dynamic="force-dynamic";
@@ -42,14 +42,20 @@ export default async function ListingControlsPage(){
      const status=listingControlStatus(item);
      const decision=privateReleaseDisplay(releaseDecisions.get(item.store_id+":"+item.product_id));
      const ownEvents=(events??[]).filter(e=>e.store_id===item.store_id&&e.product_id===item.product_id).slice(0,10);
+     const pendingCorrection=!historyError&&["hold","review"].includes(status.kind)
+      ?latestPendingSupplierCorrection(ownEvents):null;
      return <article key={item.store_id+":"+item.product_id} className="apex-product-card">
       <div className="apex-product-card-head">
        <span className="eyebrow">{status.label}</span>
        <h2>{item.product_name||"Private product"}</h2>
       </div>
       <p className="notice">SKU {item.product_sku} · Updated {formatReviewTime(item.changed_at)}</p>
-      {["hold","review"].includes(status.kind)&&awaitingAdministratorCorrectionReview(ownEvents)&&
-       <p role="status" className="apex-review-note"><strong>Supplier corrections awaiting review.</strong> Check the latest resubmission note in history before unlocking.</p>}
+      {pendingCorrection&&<div role="status" className="apex-review-note apex-admin-pending-corrections">
+       <strong>Supplier corrections awaiting review.</strong>
+       <p>{pendingCorrection.note||"The supplier submitted corrections without an explanatory note."}</p>
+       {pendingCorrection.createdAt&&<p className="notice">Submitted {formatReviewTime(pendingCorrection.createdAt)}</p>}
+       <p className="notice">Review the saved private product evidence before unlocking. Submission alone never authorizes publication.</p>
+      </div>}
       <p className="notice"><strong>Effective release decision:</strong> {decision.label}</p>
       <p className="notice">{decision.description}</p>
       {item.reason&&<p className="apex-review-note"><strong>Latest admin note:</strong> {item.reason}</p>}

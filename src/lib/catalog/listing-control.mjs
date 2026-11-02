@@ -18,5 +18,6 @@ export function listingControlAuditAction(value) {
   admin_unpublish:"Administrator unpublished the listing",
   admin_review_required:"Administrator required review",
   admin_republish_approved:"Administrator approved republishing",
+  supplier_corrections_resubmitted:"Supplier resubmitted corrections for review",
  }[value]??"Listing action";
 }

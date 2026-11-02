@@ -998,3 +998,7 @@ body { background:#07080b; }
  outline:2px solid #f0a1bd;outline-offset:2px;
 }
 .apex-bulk-admin-corrections .button{justify-self:start;min-height:40px}
+
+/* Surfaced corrections retain the existing private review styling. */
+.apex-admin-pending-corrections{display:grid;gap:6px}
+.apex-admin-pending-corrections p{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}

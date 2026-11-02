@@ -37,3 +37,15 @@ without treating an update as automatic publication or overriding a hold.
   before mutating anything. The advisor warning is expected and merits review
   alongside the existing privileged RPCs.
 - No fabricated public inventory or public-facing product tiles.
+
+## 2026-11-02: administrator visibility and complete synthetic roundtrip
+- The admin's authenticated private listing card now displays the most recent
+  supplier correction note and timestamp directly when a hold/review remains,
+  rather than hiding the explanation exclusively in the event accordion.
+- The audit timeline names the `supplier_corrections_resubmitted` action.
+  A later admin hold/review/unlock/unpublish decision closes the pending
+  correction indication; the supplier's note does not authorize release.
+- Disposable PostgreSQL integration now exercises supplier note RLS isolation,
+  admin review/unlock, independent supplier publication intent after unlock,
+  required audit events, and the still-disabled global public release gate.
+- No production product data or administrative holds are created for testing.

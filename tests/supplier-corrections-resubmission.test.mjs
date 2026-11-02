@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {awaitingAdministratorCorrectionReview} from "../src/lib/catalog/listing-resubmission.mjs";
+import {awaitingAdministratorCorrectionReview,latestPendingSupplierCorrection} from "../src/lib/catalog/listing-resubmission.mjs";
+import {listingControlAuditAction} from "../src/lib/catalog/listing-control.mjs";
 const read=p=>readFileSync(p,"utf8");
 
 test("an admin decision resolves pending supplier correction events",()=>{
@@ -49,4 +50,38 @@ test("card correction flow is explicit: save first, add note, submit and keep ho
  assert.doesNotMatch(editor,/href=\{\"\/supplier\/catalog#details-\"\+r\.id\}/);
  assert.match(page,/awaitingAdministratorCorrectionReview/);
  assert.match(admin,/Supplier corrections awaiting review/);
+});
+
+test("pending correction card shows latest supplier note until a newer admin decision",()=>{
+ const supplierEvent={action:"supplier_corrections_resubmitted",reason:"Fixed identity image and corrected label",
+  created_at:"2026-11-02T05:00:00Z"};
+ const olderHold={action:"admin_hold",reason:"Identity mismatch"};
+ assert.deepEqual(latestPendingSupplierCorrection([supplierEvent,olderHold]),{
+  note:"Fixed identity image and corrected label",createdAt:"2026-11-02T05:00:00Z",
+ });
+ assert.equal(awaitingAdministratorCorrectionReview([supplierEvent,olderHold]),true);
+ assert.equal(latestPendingSupplierCorrection([{
+  action:"admin_review_required",reason:"Please provide new evidence",
+ },supplierEvent,olderHold]),null);
+ assert.equal(latestPendingSupplierCorrection([{
+  action:"admin_republish_approved",
+ },supplierEvent,olderHold]),null);
+ assert.equal(latestPendingSupplierCorrection([{
+  action:"admin_unpublish",
+ },supplierEvent,olderHold]),null);
+ assert.deepEqual(latestPendingSupplierCorrection([{action:"publish_requested"},supplierEvent]),
+  latestPendingSupplierCorrection([supplierEvent]));
+ assert.equal(latestPendingSupplierCorrection(undefined),null);
+ assert.equal(latestPendingSupplierCorrection([]),null);
+ assert.equal(listingControlAuditAction("supplier_corrections_resubmitted"),
+  "Supplier resubmitted corrections for review");
+});
+
+test("admin listing card prominently shows the latest correction note without unlocking",()=>{
+ const page=read("src/app/admin/listing-controls/page.tsx");
+ assert.match(page,/latestPendingSupplierCorrection\(ownEvents\)/);
+ assert.match(page,/Supplier corrections awaiting review/);
+ assert.match(page,/pendingCorrection\.note/);
+ assert.match(page,/formatReviewTime\(pendingCorrection\.createdAt\)/);
+ assert.match(page,/Review the saved private product evidence before unlocking/);
 });
