@@ -15,14 +15,16 @@ export function AdminListingOverrideForm({storeId,productId,gate}:{
    placeholder="Explain the hold or required changes. This note is visible to the supplier."/>
   <p className="notice">Hold and review reasons are shown to the assigned supplier owner or manager. Avoid confidential internal notes.</p>
   <div className="apex-listing-control-buttons">
-   <button type="submit" className="button secondary" name="action" value="hold"
-    disabled={pending}>Place on hold</button>
+   <button type="submit" className="button secondary" name="action" value="unpublish"
+     disabled={pending}>Unpublish (no lock)</button>
+    <button type="submit" className="button secondary" name="action" value="hold"
+    disabled={pending}>Lock with reason</button>
    <button type="submit" className="button secondary" name="action" value="require_review"
-    disabled={pending}>Require review</button>
+    disabled={pending}>Require corrections</button>
    <button type="submit" className="button primary" name="action" value="approve_republish"
-    disabled={pending||gate==="clear"}>Approve republishing</button>
+    disabled={pending||gate==="clear"}>Unlock after review</button>
   </div>
-  <p className="notice">Approving a release removes the admin restriction but never publishes automatically. The supplier must request publication again.</p>
+  <p className="notice">Unpublish removes the supplier publishing request without a lock. Lock and Require corrections need a written reason. After correction and review, Unlock clears the lock; the supplier can toggle Publish again.</p>
   {state.message&&<p role="status">{state.message}</p>}
  </form>;
 }
