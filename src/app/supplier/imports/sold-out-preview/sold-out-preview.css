@@ -27,3 +27,8 @@
  .apex-soldout-summary span{padding:7px 9px}
 }
 @media(max-width:350px){.apex-soldout-grid{grid-template-columns:minmax(0,1fr)}}
+
+.apex-soldout-description{margin:10px 0;background:#18161c;border:1px solid #3a333f;border-radius:8px;padding:7px 9px}
+.apex-soldout-description summary{cursor:pointer;color:#eab1c5;font-size:12px;font-weight:650}
+.apex-soldout-description p{font-size:12px;line-height:1.5;color:#c7c0cc;margin:8px 0 2px;overflow-wrap:anywhere}
+@media(max-width:600px){.apex-soldout-description{padding:6px 7px}.apex-soldout-description summary{font-size:11px}}
