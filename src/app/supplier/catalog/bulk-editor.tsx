@@ -276,8 +276,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       <label className="apex-bulk-select">
        <input type="checkbox" disabled={busy} checked={selectedSet.has(r.key)}
         onChange={()=>toggle(r.key)} aria-label={"Select "+(r.name||"new product "+(i+1))}/>
-       <strong>{r.name||"New product "+(i+1)}</strong>
-       {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
+       <strong title={r.name||"New product "+(i+1)}>{r.name||"New product "+(i+1)}</strong>
       </label>
       <div className="apex-bulk-card-top-actions">
        <button type="button" className="apex-bulk-card-pencil"
@@ -290,7 +289,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
          onChange={e=>r.id&&publish([r.id],e.target.checked?"publish":"unpublish")}/>
        </label>
       </div>
-      <span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>
+      <div className="apex-bulk-card-status-row">
+       <span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>
+       {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
+      </div>
      </div>
      <details className="apex-bulk-readiness-details">
       <summary>{adminFeedback
