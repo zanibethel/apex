@@ -1,0 +1,29 @@
+.apex-soldout-preview{padding-bottom:100px}
+.apex-soldout-summary{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
+.apex-soldout-summary span{display:flex;align-items:center;gap:7px;padding:10px 12px;background:#18171d;border:1px solid #3e303c;border-radius:10px;color:#bdbbc4;font-size:12px}
+.apex-soldout-summary strong{color:#fff;font-size:17px}
+.apex-soldout-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,255px),1fr));gap:16px;margin:22px 0 28px}
+.apex-soldout-card{min-width:0;overflow:hidden}
+.apex-soldout-card .apex-offer-image{aspect-ratio:16/12;max-height:220px;background:#17131c;position:relative}
+.apex-soldout-card .apex-offer-image img{padding:8px}
+.apex-soldout-badge{position:absolute;left:10px;top:10px;padding:6px 10px;border-radius:6px;background:#5a2439;color:#fff;font-size:11px;font-weight:800;letter-spacing:.08em}
+.apex-soldout-card .apex-offer-content{padding:15px}
+.apex-soldout-card .apex-offer-content h2{font-size:19px;line-height:1.25;min-height:44px}
+.apex-soldout-prices{display:grid;gap:4px;margin:14px 0 8px}
+.apex-soldout-prices strong{font-size:23px;color:#fff}
+.apex-soldout-prices span{font-size:12px;color:#e0bdcc}
+.apex-soldout-prices small{font-size:11px;color:#9b9ba9}
+.apex-soldout-stock{font-size:12px;color:#f5a7bf;font-weight:800;margin:10px 0}
+.apex-soldout-disabled{width:100%;height:42px;border:1px solid #45404b;background:#2a2730;color:#a9a5ae;border-radius:9px;font-weight:800;cursor:not-allowed}
+.apex-soldout-status{color:#a3a1ac;font-size:11px;margin:10px 0 0}
+@media(max-width:600px){
+ .apex-soldout-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .apex-soldout-card .apex-offer-image{aspect-ratio:1/1}
+ .apex-soldout-card .apex-offer-content{padding:10px}
+ .apex-soldout-card .apex-offer-content h2{font-size:15px;min-height:unset}
+ .apex-soldout-prices strong{font-size:20px}
+ .apex-soldout-prices span{font-size:11px}
+ .apex-soldout-summary{gap:6px}
+ .apex-soldout-summary span{padding:7px 9px}
+}
+@media(max-width:350px){.apex-soldout-grid{grid-template-columns:minmax(0,1fr)}}
