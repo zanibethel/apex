@@ -18,6 +18,7 @@ import {supplierAdminFeedback} from "@/lib/catalog/supplier-admin-feedback.mjs";
 import {bulkSetupHref} from "@/lib/catalog/bulk-setup-targets.mjs";
 import {bulkViewAfterEdit,selectEditedBulkRow} from "@/lib/catalog/bulk-edit-visibility.mjs";
 import {bulkRowsRequiringSave,reconcileBulkSaveBatch,bulkSaveProgress,bulkUnfinishedSaveKeys} from "@/lib/catalog/bulk-save-retry.mjs";
+import {mergeBulkSaveRetryKeys} from "@/lib/catalog/bulk-inline-save-retry.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
@@ -76,12 +77,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   ?"/supplier/catalog/bulk/preview?ids="+encodeURIComponent(selectedIds.join(","))
   :null;
 
- function saveSelected(_form:FormData){
-  if(!editable||busy||!pendingSaveRows.length)return;
-  // Server enforces a 20-row maximum per call. Only unfinished, failed or
-  // changed selected rows are retried. Previously confirmed saved rows stay
-  // selected so the supplier can still preview the full selection together.
-  const pendingRows=pendingSaveRows.slice();
+ function saveRows(chosenRows:BulkEditRow[],mode:"selected"|"single"){
+  if(!editable||busy||!chosenRows.length)return;
+  // The single-card button uses the same authenticated 20-row server action
+  // as Save selected, but never submits unrelated checked cards.
+  const pendingRows=chosenRows.slice();
   const submittedByKey=new Map(pendingRows.map(r=>[r.key,r]));
   startTransition(async()=>{
    const all: {key:string;ok:boolean;name:string;message:string;id?:string;sku?:string}[]=[];
@@ -99,11 +99,13 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    }
    const progress=bulkSaveProgress(pendingRows,all,stopped);
    const unfinished=bulkUnfinishedSaveKeys(pendingRows,all);
-   setSaveRetryKeys(unfinished);
-   // If a batch partially fails, immediately show only the rows that need
-   // correction/retry. Selection survives for a later grouped preview.
-   if(unfinished.length){setProductSearch("");setViewFilter("save_retries");}
-   else if(viewFilter==="save_retries")setViewFilter("all");
+   setSaveRetryKeys(previous=>mergeBulkSaveRetryKeys(previous,pendingRows,unfinished));
+   // The selected batch view focuses failures. For an individual card,
+   // keep the editor in place and show its own success/failure message.
+   if(mode==="selected"){
+    if(unfinished.length){setProductSearch("");setViewFilter("save_retries");}
+    else if(viewFilter==="save_retries")setViewFilter("all");
+   }
    setResult({ok:progress.ok,message:progress.message,results:all});
    setLastSave(prev=>({...prev,...Object.fromEntries(all.map(r=>[
     r.key,{ok:r.ok,message:r.message}
@@ -113,6 +115,12 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     submittedByKey.get(r.key),savedByKey.get(r.key))));
    if(progress.saved>0)router.refresh();
   });
+ }
+ function saveSelected(_form:FormData){
+  if(pendingSaveRows.length)saveRows(pendingSaveRows,"selected");
+ }
+ function saveSingle(row:BulkEditRow){
+  if(row.needsSave===true||!row.id)saveRows([row],"single");
  }
 
  function change(key:string,field:keyof BulkEditRow,value:string|boolean){
@@ -428,8 +436,15 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
      <div className="apex-bulk-row-footer">
       {status?<p role="status" className={status.ok&&!r.needsSave?"apex-bulk-saved":"apex-bulk-error"}>
        {status.ok?(r.needsSave?"Previous version saved · newer edits unsaved":"✓ Saved"):"Not saved"} — {status.message}</p>
-       :<p className="notice">Select to include in your next save.</p>}
+       :<p className="notice">{r.needsSave||!r.id
+        ?"Save here or use Save selected below for multiple products."
+        :"No unsaved edits."}</p>}
       <div className="actions">
+       {(!r.id||r.needsSave===true)&&<button type="button" className="button primary apex-bulk-save-single"
+        disabled={!editable||busy} onClick={()=>saveSingle(r)}
+        aria-label={"Save changes to "+(r.name||"new product")}>
+        {pending?"Saving…":"Save changes"}
+       </button>}
        {r.id&&!r.needsSave&&<Link className="button secondary" href={"/supplier/catalog/preview/"+r.id}>
         Preview single
        </Link>}
