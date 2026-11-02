@@ -89,7 +89,7 @@ test("bulk UI only reuses existing authenticated signed-copy and attach actions"
  assert.match(ui,/uploadToSignedUrl\(path,token,blob/);
  assert.match(ui,/private placeholder only/);
  assert.match(ui,/No products were published or approved/);
- assert.match(actions,/sourceProductId===productId/);
+ assert.match(actions,/productId===sourceProductId/);
  assert.match(actions,/\.eq\("store_id",storeId\)/);
  assert.match(actions,/\.eq\("is_published",false\)/);
  assert.match(actions,/createSignedUploadUrl\(path\)/);
