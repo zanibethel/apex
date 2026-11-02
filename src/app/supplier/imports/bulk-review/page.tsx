@@ -2,6 +2,8 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
 import {sourceReviewSummary} from "@/lib/catalog/bulk-source-review.mjs";
+import {reviewedImportDraftPlan} from "@/lib/catalog/reviewed-import-draft-batch.mjs";
+import {ReviewedDraftBatchForm} from "../bulk-drafts/reviewed-draft-batch-form";
 import {BulkSourceReviewPanel} from "./bulk-review-panel";
 import "./bulk-review.css";
 
@@ -53,6 +55,9 @@ export default async function BulkSourceReview(){
   .from("apex-draft-product-images").createSignedUrl(originalImage,120):null;
  const imageUrl=signed&&!signed.error?signed.data?.signedUrl:undefined;
  const count=(status:string)=>records.filter(r=>r.status===status&&!r.linked).length;
+ const readyPlans=(source.data??[]).map(candidate=>
+  reviewedImportDraftPlan(candidate,linkedIds.has(candidate.id)))
+  .filter(plan=>plan?.status==="ready");
  return <main className="container supplier-shell apex-bulk-review-page">
   <Link className="back" href="/supplier/imports">← Private source import review</Link>
   <p className="eyebrow">APEX / PRIVATE SUPPLIER WORKSPACE</p>
@@ -72,11 +77,24 @@ export default async function BulkSourceReview(){
    <span>Ready for draft <strong>{count("approved_for_draft")}</strong></span>
    <span>Saved <strong>{records.filter(r=>r.linked).length}</strong></span>
   </div>
+  <div className="apex-source-review-steps" aria-label="Review and create private cards">
+   <span><strong>Step 1</strong> Verify source records below</span>
+   <a href="#create-reviewed-drafts" className="button secondary">
+    Step 2 · Create approved private cards ({readyPlans.length})
+   </a>
+  </div>
   <BulkSourceReviewPanel storeId={store.id} rows={records} sharedImage={imageUrl}
    enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}/>
+  <ReviewedDraftBatchForm storeId={store.id}
+   enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
+   ready={readyPlans.map(p=>({
+    candidateId:p!.candidateId,name:p!.name,sourceIndex:p!.sourceIndex,
+    sourceCostCents:p!.sourceCostCents!,salePriceCents:p!.salePriceCents!,
+    proposedCompareAtCents:p!.proposedCompareAtCents!,
+   }))}/>
   <div className="actions">
    <Link href="/supplier/imports/bulk-drafts" className="button secondary">
-    Continue to zero-stock draft creation</Link>
+    Open dedicated draft queue</Link>
    <Link href="/supplier/imports/sold-out-preview" className="button secondary">
     View all sold-out preview cards</Link>
   </div>
