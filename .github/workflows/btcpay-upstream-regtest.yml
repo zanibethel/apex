@@ -113,18 +113,40 @@ jobs:
         run: |
           set -euo pipefail
           # Published release from official BTCPay Plugin Builder over HTTPS.
-          curl --fail --location --silent --show-error \
+          # Prefer the published archive. A fallback checks out EXACT source SHA
+          # linked from the official Prism 1.3.3 listing; it is not binary-equal.
+          if curl --fail --location --silent --show-error \
             --ipv4 --connect-timeout 15 --max-time 90 \
-            --retry 6 --retry-all-errors --retry-delay 10 \
+            --retry 4 --retry-all-errors --retry-delay 8 \
             --proto '=https' --proto-redir '=https' --tlsv1.2 \
             'https://plugin-builder.btcpayserver.org/api/v1/plugins/%5BBTCPayServer.Plugins.Prism%5D/versions/1.3.3.0/download' \
-            -o "${RUNNER_TEMP}/prism-1.3.3.0.btcpay"
-          # Pin the exact package bytes observed in the initial trusted release fetch.
-          # This is an integrity pin, not an independent security audit.
-          printf '%s  %s\n' \
-            '851f1c629ed40c398f9e0f383f2e6ca5b17f8572b9a158bd109625139d95e681' \
-            "${RUNNER_TEMP}/prism-1.3.3.0.btcpay" | sha256sum --check --status
-          python3 scripts/install_prism_regtest.py             "${RUNNER_TEMP}/prism-1.3.3.0.btcpay"             "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism"
+            -o "${RUNNER_TEMP}/prism-1.3.3.0.btcpay"; then
+            printf '%s  %s\n' \
+              '851f1c629ed40c398f9e0f383f2e6ca5b17f8572b9a158bd109625139d95e681' \
+              "${RUNNER_TEMP}/prism-1.3.3.0.btcpay" | sha256sum --check --status
+            python3 scripts/install_prism_regtest.py \
+              "${RUNNER_TEMP}/prism-1.3.3.0.btcpay" \
+              "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism"
+            echo "Prism source: official published archive SHA256 verified"
+          else
+            echo "::warning::Plugin package host unavailable; build exact linked Prism 1.3.3 source only for disposable regtest"
+            source_ref='2b951b6f696396c29ae58e8d5dea981e2c3a1092'
+            git init "${RUNNER_TEMP}/prism-source"
+            git -C "${RUNNER_TEMP}/prism-source" remote add origin https://github.com/Kukks/BTCPayServerPlugins.git
+            git -C "${RUNNER_TEMP}/prism-source" fetch --depth 1 origin "${source_ref}"
+            git -C "${RUNNER_TEMP}/prism-source" checkout --detach FETCH_HEAD
+            test "$(git -C "${RUNNER_TEMP}/prism-source" rev-parse HEAD)" = "${source_ref}"
+            project="${RUNNER_TEMP}/prism-source/Plugins/BTCPayServer.Plugins.Prism/BTCPayServer.Plugins.Prism.csproj"
+            test -f "${project}"
+            grep -Eq '<Version>1[.]3[.]3</Version>' "${project}"
+            mkdir -p "${RUNNER_TEMP}/prism-source/submodules"
+            ln -s "${RUNNER_TEMP}/btcpayserver" "${RUNNER_TEMP}/prism-source/submodules/btcpayserver"
+            mkdir -p "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism"
+            dotnet publish "${project}" --configuration Release \
+              --output "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism" \
+              --property:UseAppHost=false
+            echo "Prism source: linked source SHA ${source_ref}; locally built in disposable CI, not published archive"
+          fi
           test -s "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism/BTCPayServer.Plugins.Prism.dll"
       - name: Verify Prism package safety unit tests
         env:
