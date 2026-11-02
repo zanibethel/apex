@@ -31,9 +31,9 @@ test("server-side source preparation requires supplier membership and source rea
  assert.match(sql,/m\.user_id=\(select auth\.uid\(\)\)/);
  assert.match(sql,/p\.is_published=false/);
  assert.match(sql,/v_source\.wholesale_cost_cents<>p_expected_cost_cents/);
- assert.match(sql,/quantity_on_hand,quantity_reserved/);
- assert.match(sql,/values\(p_store_id,v_product_id,0,0\)/);
- assert.match(sql,/false,false/);
+ assert.match(sql,/inventory_items\(store_id,product_id,quantity_on_hand\)/);
+ assert.match(sql,/values\(p_store_id,v_product_id,0\)/);
+ assert.match(sql,/v_source\.wholesale_cost_cents,'USD',false/);
  assert.match(sql,/from public,anon/);
  assert.doesNotMatch(sql,/update public\.supplier_import_candidates set|update public\.stores set|update apex_internal\.private_release_gate set|create_invoice/i);
 });
