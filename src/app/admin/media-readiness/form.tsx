@@ -23,9 +23,9 @@ export function MediaEvidenceForm({storeId,productId,submissionId,imagePath}:{st
    <input type="text" name="rightsReference" maxLength={300} disabled={pending}
     placeholder="License, authorization or original-photography record"/>
   </label>
-  <label>Review note (required)
+  <label>Review note (shared with supplier if corrections are required)
    <textarea name="note" rows={3} minLength={10} maxLength={1000} required disabled={pending}
-    placeholder="Record what was checked or which correction is required."/>
+    placeholder="For corrections, tell the supplier exactly what to change. Do not include private document references."/>
   </label>
   <button type="submit" className="button secondary" disabled={pending}>
    {pending?"Saving private evidence…":"Save evidence review"}
