@@ -3,6 +3,7 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
 import {formatPrivatePreviewUsd,proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs";
+import {importDefaultDescription} from "@/lib/catalog/import-default-descriptions.mjs";
 import "./sold-out-preview.css";
 
 export const dynamic="force-dynamic";
@@ -56,7 +57,7 @@ export default async function SoldOutImportPreview(){
   <Link href="/supplier/imports" className="back">← Private import review</Link>
   <p className="eyebrow">APEX / PRIVATE SUPPLIER GALLERY</p>
   <h1>Sold-out catalog preview</h1>
-  <p className="lead">Your imported variants in storefront-style cards, all displayed as
+  <p className="lead">Your imported variants with editable draft-description suggestions in storefront-style cards, all displayed as
    sold out, using the same existing uploaded image where available.</p>
   <p className="notice"><strong>Not public or purchasable.</strong> These are
    proposed listing previews. Nothing on this page creates a product record,
@@ -91,6 +92,7 @@ export default async function SoldOutImportPreview(){
      <div className="apex-offer-content">
       <p className="apex-offer-category">SOURCE #{candidate.source_index+1} · PRIVATE PREVIEW</p>
       <h2>{title}</h2>
+      <p className="apex-soldout-description">{importDefaultDescription(candidate.product_name,candidate.strength)??"Product identity pending supplier review; no verified technical description is available."}</p>
       {prices?<div className="apex-soldout-prices">
        <strong>{formatPrivatePreviewUsd(prices.salePriceCents)}</strong>
        <span>Proposed compare-at: {formatPrivatePreviewUsd(prices.compareAtCents)}</span>
