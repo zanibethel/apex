@@ -124,7 +124,7 @@ export function BulkSourceReviewPanel({storeId,rows,sharedImage,enabled}:{
         setVerified(old=>e.target.checked?[...old,r.id]:old.filter(id=>id!==r.id));
         setOverall(false);
        }}/>
-      <span>I verified this item's name, strength, cost and source documentation.</span>
+      <span>I verified this item&apos;s name, strength, cost and source documentation.</span>
      </label>}
      {r.linked&&<p className="apex-review-linked">Already in private product drafts ·
       <Link href="/supplier/catalog/bulk"> edit saved details</Link></p>}
