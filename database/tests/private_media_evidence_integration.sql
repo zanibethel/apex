@@ -2,6 +2,13 @@
 \set ON_ERROR_STOP on
 \ir ../sql/apex_private_media_evidence_ledger_REVIEW_ONLY.sql
 
+-- Isolate this test's synthetic review change: all fixture edits roll back.
+begin;
+update public.private_product_review_states r set status='approved_internal'
+ where exists(select 1 from public.products p
+  where p.id=r.product_id and p.store_id=r.store_id
+   and p.sku='APX-BETA-DRAFT-002');
+
 do $check$
 begin
  if has_table_privilege('anon','public.private_media_evidence_events','SELECT')
@@ -90,4 +97,5 @@ begin
     where p.is_published)
  then raise exception 'Evidence tracking enabled storefront publication';end if;
 end $check$;
+rollback;
 \echo PASS: admin-only immutable per-submission media evidence, forged records rejected, no public release.
