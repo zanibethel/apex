@@ -48,7 +48,7 @@ export function supplierStorefrontVisibility(control,releaseDecision,requestJust
  // Both a positive effective-public verdict and a positive named release state
  // are necessary. No client-side inputs or provisional pricing can make "Live".
  const checks=releaseDecision.checks;
- const live=releaseDecision.status_code==="public_visible"&&
+ const live=control?.requested===true&&releaseDecision.status_code==="public_visible"&&
   releaseDecision.effective_public===true&&checks&&typeof checks==="object"&&
   checks.supplier_requested===true&&checks.admin_clear===true&&
   checks.supplier_authorized===true&&checks.product_authorized===true&&
