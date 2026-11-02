@@ -13,10 +13,12 @@ export function ReviewedDraftBatchForm({storeId,ready,enabled}:{
 }){
  const [selected,setSelected]=useState<string[]>([]);
  const [result,action,pending]=useActionState(createReviewedImportDraftBatch,initial);
- const all=ready.filter(row=>selected.includes(row.candidateId));
- const atCapacity=selected.length>=10;
- return <section className="supplier-panel" style={{margin:"18px 0",maxWidth:"none"}}>
-  <h2>Create reviewed drafts in batches of 10</h2>
+ // Product cards created by the server are removed from the eligible list.
+ const eligible=new Set(ready.map(row=>row.candidateId));
+ const selectedReady=selected.filter(id=>eligible.has(id));
+ const atCapacity=selectedReady.length>=10;
+ return <section id="create-reviewed-drafts" className="supplier-panel" style={{margin:"18px 0",maxWidth:"none",scrollMarginTop:96}}>
+  <h2>Step 2 · Create approved private product cards</h2>
   <p className="notice">Only previously reviewed and approved sources are selectable.
    Proposed selling price = 2× source cost; proposed compare-at = 2.5×.
    The compare-at value is not verified as a historical price. New SKUs are
@@ -26,13 +28,13 @@ export function ReviewedDraftBatchForm({storeId,ready,enabled}:{
    using this tool. This button cannot approve imports or bypass product reviews.
   </p>:<form action={action} className="supplier-form">
    <input type="hidden" name="storeId" value={storeId}/>
-   <input type="hidden" name="candidateIds" value={JSON.stringify(selected)}/>
+   <input type="hidden" name="candidateIds" value={JSON.stringify(selectedReady)}/>
    <div style={{display:"grid",gap:10,maxHeight:420,overflowY:"auto",padding:4}}>
     {ready.map(row=><label key={row.candidateId}
      style={{display:"flex",gap:12,alignItems:"flex-start",padding:10,
       border:"1px solid #40343f",borderRadius:9}}>
-     <input type="checkbox" checked={selected.includes(row.candidateId)}
-      disabled={!enabled||pending||(!selected.includes(row.candidateId)&&atCapacity)}
+     <input type="checkbox" checked={selectedReady.includes(row.candidateId)}
+      disabled={!enabled||pending||(!selectedReady.includes(row.candidateId)&&atCapacity)}
       onChange={e=>setSelected(previous=>e.target.checked
        ?[...previous,row.candidateId]:previous.filter(id=>id!==row.candidateId))}/>
      <span><strong>{row.name}</strong><small style={{display:"block"}}>
@@ -42,7 +44,7 @@ export function ReviewedDraftBatchForm({storeId,ready,enabled}:{
      </small></span>
     </label>)}
    </div>
-   <p className="notice">{selected.length}/10 selected · Drafts remain private,
+   <p className="notice">{selectedReady.length}/10 selected · Drafts remain private,
     unlisted, non-purchasable, and out of stock.</p>
    <label style={{display:"flex",gap:10,alignItems:"flex-start"}}>
     <input type="checkbox" name="reviewConfirmed" value="yes" required disabled={!enabled||pending}/>
@@ -50,8 +52,8 @@ export function ReviewedDraftBatchForm({storeId,ready,enabled}:{
      I want to create private zero-stock drafts with the proposed pricing.</span>
    </label>
    <button type="submit" className="button primary"
-    disabled={!enabled||pending||selected.length===0}>
-    {pending?"Preparing reviewed drafts…":`Create ${selected.length} private drafts`}
+    disabled={!enabled||pending||selectedReady.length===0}>
+    {pending?"Preparing reviewed drafts…":`Create ${selectedReady.length} private cards`}
    </button>
   </form>}
   {!enabled&&<p className="notice">Supplier draft writes are disabled in this deployment.</p>}
@@ -63,7 +65,8 @@ export function ReviewedDraftBatchForm({storeId,ready,enabled}:{
       href={"/supplier/catalog/preview/"+r.productId}>Review saved private offer</Link>}
     </li>)}
    </ul>}
-   <p>Refresh this page to update the ready list after saving.</p>
+   <p>New private product cards are available in the <Link href="/supplier/catalog/bulk">product manager</Link>.
+    Refresh the review page to update remaining source entries.</p>
   </div>}
  </section>;
 }
