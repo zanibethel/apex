@@ -1002,3 +1002,27 @@ body { background:#07080b; }
 /* Surfaced corrections retain the existing private review styling. */
 .apex-admin-pending-corrections{display:grid;gap:6px}
 .apex-admin-pending-corrections p{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+
+/* Private import preparation: source verification happens later, before release. */
+.apex-source-quick-import{min-width:0;margin:16px 0 22px;padding:15px;
+ border:1px solid #4b3847;border-radius:14px;background:#1b161e}
+.apex-source-quick-heading{display:flex;align-items:start;justify-content:space-between;
+ flex-wrap:wrap;gap:12px}
+.apex-source-quick-heading h2{margin:4px 0 9px;font-size:20px}
+.apex-source-quick-heading>strong{border:1px solid #794763;border-radius:10px;
+ color:#efc2d3;padding:7px 10px;white-space:nowrap}
+.apex-source-quick-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:12px 0}
+.apex-source-quick-actions label{display:flex;align-items:center;gap:9px}
+.apex-source-quick-import input[type=checkbox]{width:19px;height:19px;accent-color:#d24372}
+.apex-source-quick-details{border-top:1px solid #46343f;padding-top:10px}
+.apex-source-quick-details summary{cursor:pointer;color:#f0b6ca}
+.apex-source-quick-list{max-height:330px;overflow-y:auto;display:grid;gap:8px;padding:10px 2px}
+.apex-source-quick-list label{display:flex;gap:12px;align-items:start;
+ border:1px solid #493640;border-radius:9px;padding:9px;min-width:0}
+.apex-source-quick-list span{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}
+.apex-source-quick-list small{font-size:11px;color:#bcb1b9}
+@media(max-width:640px){
+ .apex-source-quick-import{padding:12px}
+ .apex-source-quick-actions{align-items:stretch;flex-direction:column}
+ .apex-source-quick-actions .button{width:100%}
+}
