@@ -5,6 +5,8 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {assessAdminMediaRelease} from "@/lib/catalog/admin-media-release-readiness.mjs";
 import {privateProductMediaPath} from "@/lib/catalog/private-media-readiness.mjs";
+import {privateMediaEvidenceStatus} from "@/lib/catalog/private-media-evidence.mjs";
+import {MediaEvidenceForm} from "./form";
 import "./media-readiness.css";
 
 export const dynamic="force-dynamic";
@@ -35,6 +37,27 @@ export default async function AdminMediaReadiness(){
    <p className="notice">The complete authenticated private review queue could not be verified.
     No image is cleared for public release.</p>
   </main>;
+
+ // Evidence records are readable only by verified admins under table RLS.
+ // A truncated audit response is unavailable, never silently accepted.
+ const evidence=reviews.length?await client.from("private_media_evidence_events")
+  .select("id,store_id,product_id,submission_id,image_path,review_status,identity_reference,rights_reference,note,created_at",{count:"exact"})
+  .in("product_id",reviews.map(item=>item.product_id))
+  .order("created_at",{ascending:false}).limit(500)
+  :{data:[],error:null,count:0};
+ if(evidence.error||evidence.count===null||evidence.count!==evidence.data?.length||
+    evidence.count>500)
+  return <main className="container supplier-shell">
+   <Link href="/admin" className="back">← Admin dashboard</Link>
+   <h1>Media evidence temporarily unavailable</h1>
+   <p className="notice">The complete private evidence ledger could not be checked.
+    No public-image approval or release is possible.</p>
+  </main>;
+ const latestEvidence=new Map<string,(typeof evidence.data)[number]>();
+ for(const item of evidence.data??[]){
+  const key=item.store_id+":"+item.product_id;
+  if(!latestEvidence.has(key))latestEvidence.set(key,item);
+ }
 
  // Use only the existing admin-review snapshot, not unrestricted supplier
  // product reads (those are intentionally denied by Supabase RLS).
@@ -74,7 +97,7 @@ export default async function AdminMediaReadiness(){
    <span><strong>{reviewed.length}</strong> submitted review records</span>
    <span><strong>{privatePreviews}</strong> private images accessible</span>
    <span><strong>{approvedInternally}</strong> content approvals</span>
-   <span><strong>0</strong> public media approvals made here</span>
+   <span><strong>{evidence.data?.length??0}</strong> private media evidence events</span>
   </div>
   {reviewed.length===0?<section className="supplier-panel">
    <h2>No submitted product reviews</h2>
@@ -91,6 +114,10 @@ export default async function AdminMediaReadiness(){
      ?review.snapshot as Record<string,unknown>:{};
     const name=typeof s.name==="string"&&s.name.trim()?s.name:"Submitted private product";
     const sku=typeof s.sku==="string"&&s.sku.trim()?s.sku:"Not supplied";
+    const path=typeof s.image_path==="string"?s.image_path:null;
+    const validPath=privateProductMediaPath(review.store_id,review.product_id,path);
+    const event=latestEvidence.get(review.store_id+":"+review.product_id);
+    const mediaEvidence=privateMediaEvidenceStatus(review,event);
     return <article className="apex-admin-media-card"
       key={review.store_id+":"+review.product_id}>
      <div className="apex-admin-media-image">
@@ -115,6 +142,20 @@ export default async function AdminMediaReadiness(){
         </li>)}
        </ul>
       </details>
+      <p className="apex-admin-media-evidence-status">
+       <strong>Image evidence: {mediaEvidence.label}</strong>
+      </p>
+      {event&&<details className="apex-admin-media-checklist">
+       <summary>Latest private evidence record</summary>
+       <p className="notice">Review outcome: {event.review_status==="evidence_recorded"?"Evidence checked":"Correction required"}</p>
+       <p className="notice">Recorded {new Date(event.created_at).toLocaleString("en-US",{timeZone:"America/Chicago"})} Central</p>
+       <p className="notice">Identity reference: {event.identity_reference||"Not supplied"}</p>
+       <p className="notice">Rights reference: {event.rights_reference||"Not supplied"}</p>
+       <p className="notice">Reviewer note: {event.note}</p>
+      </details>}
+      {validPath&&preview&&<MediaEvidenceForm storeId={review.store_id}
+       productId={review.product_id} submissionId={review.submission_id}
+       imagePath={validPath.path}/>}
       <p className="notice">Current product revision, image accuracy,
        copyright permission, seller/product authorization and immutable
        public hosting still require separate evidence and approval.</p>
