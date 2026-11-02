@@ -78,3 +78,5 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f database/tests/simple_card_listing_controls_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_corrections_resubmit_REVIEW_ONLY.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_corrections_resubmission_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_private_source_one_click_drafts_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/private_source_one_click_drafts_integration.sql
