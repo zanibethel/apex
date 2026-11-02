@@ -269,6 +269,9 @@ test("scenario is strictly synthetic; no live routes, actual wallets, or product
   const source=readFileSync(name,"utf8");
   assert.match(source,/regtest/);
  }
- const checkout=readFileSync("src/app/checkout/page.tsx","utf8");
- assert.doesNotMatch(checkout,/btcpay-regtest-prepost-fence|prism-payout-reliability|btcpay-provider-drain/);
+ for(const path of ["src/app/page.tsx","src/app/catalog/page.tsx",
+  "src/app/supplier/operations/actions.ts"]){
+  const activeRoute=readFileSync(path,"utf8");
+  assert.doesNotMatch(activeRoute,/btcpay-regtest-prepost-fence|prism-payout-reliability|btcpay-provider-drain/);
+ }
 });
