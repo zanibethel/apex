@@ -70,12 +70,14 @@ do $check$ begin
 end $check$;
 update apex_internal.supplier_release_authorizations set valid_until=current_date+1;
 
-update public.inventory_items set quantity_on_hand=2;
+update public.inventory_items set quantity_on_hand=2
+ where store_id='62000000-0000-0000-0000-000000000001' and product_id='64000000-0000-0000-0000-000000000001';
 do $check$ begin
  if jsonb_array_length(public.get_public_sold_out_catalog())<>0
  then raise exception 'Product with nonzero inventory shown as sold out';end if;
 end $check$;
-update public.inventory_items set quantity_on_hand=0;
+update public.inventory_items set quantity_on_hand=0
+ where store_id='62000000-0000-0000-0000-000000000001' and product_id='64000000-0000-0000-0000-000000000001';
 
 update public.supplier_listing_controls set supplier_wants_listing=false;
 do $check$ begin
