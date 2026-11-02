@@ -282,7 +282,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         })}
       </ul>}
      </details>
-     <div className={"apex-bulk-card-layout"+(showOfferTiles?"":" apex-bulk-card-layout-single")}>
+     <div className={"apex-bulk-card-layout"+(showOfferTiles&&(editOpenKeys.includes(r.key)||!r.id)?"":" apex-bulk-card-layout-single")}>
       {(editOpenKeys.includes(r.key)||!r.id)&&<div className="apex-bulk-editor-side">
      <div className="apex-bulk-fields">
       <label>Name<input id={"bulk-fix-"+r.key+"-name"} value={r.name} maxLength={120}
