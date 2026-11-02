@@ -1,4 +1,6 @@
--- REVIEW-ONLY database proposal: no public product release, payment, or stock change.
+-- REVIEWED source of hosted Apex migration named
+-- apex_simple_zero_stock_listing_and_owner_unpublish, applied 2026-11-02 UTC.
+-- No public product release, payment, or stock changes.
 begin;
 set local lock_timeout='5s';
 set local statement_timeout='30s';
