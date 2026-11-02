@@ -44,7 +44,7 @@ begin
   or item ? 'image_path' or item ? 'source_cost_cents'
   or item ? 'inventory' or item ? 'quantity_on_hand'
   or item ? 'supplier_id' or item ? 'wallet'
-  or jsonb_object_length(item)<>7
+  or (select count(*) from jsonb_object_keys(item))<>7
  then raise exception 'Public result contained unsafe or incorrect data'; end if;
 end $check$;
 commit;
