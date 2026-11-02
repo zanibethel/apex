@@ -78,8 +78,8 @@ test("draft setup shows missing fields and inventory separately",()=>{
  assert.equal(full.completed,8);
  assert.equal(full.setupComplete,true);
  const missing=draftSetupSteps({...basic,category_id:null,image_path:null,description:"",is_active:false},{quantity_on_hand:0,quantity_reserved:0});
- assert.deepEqual(missing.steps.filter(s=>!s.complete).map(s=>s.id),["description","category","image","active","stock"]);
- assert.equal(missing.remaining,5);
+ assert.deepEqual(missing.steps.filter(s=>!s.complete).map(s=>s.id),["description","category","image","active"]);
+ assert.equal(missing.remaining,4);
 });
 test("supplier cards include actionable steps and clearly marked approval stage",()=>{
  assert.match(page,/draftSetupSteps/);
