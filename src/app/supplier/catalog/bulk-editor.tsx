@@ -312,7 +312,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       ?"The supplier preference changed. A fresh protected release decision is needed before customer visibility can be confirmed.":
       listingStatus?.visibilityDescription??"Refresh to check the protected release decision.";
     const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
-    return <article key={r.key} className="apex-bulk-row">
+    return <article key={r.key} className={"apex-bulk-row"+((editOpenKeys.includes(r.key)||!r.id)?" apex-bulk-row-editing":"")}>
      <div className="apex-bulk-row-title">
       <label className="apex-bulk-select">
        <input type="checkbox" disabled={busy} checked={selectedSet.has(r.key)}
