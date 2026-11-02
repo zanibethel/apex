@@ -41,7 +41,7 @@ test("private preview is tenant-scoped and does not reveal unauthorized products
 test("offer tile contains customer-visible information, not private source costs",()=>{
  assert.match(tile,/category/);
  assert.match(tile,/imageUrl/);
- assert.match(tile,/compareAtCents>priceCents/);
+ assert.doesNotMatch(tile,/% OFF|<s>\\{|apex-offer-discount/);
  assert.match(tile,/SKU:/);
  assert.match(tile,/In stock/);
  assert.match(tile,/Out of stock/);
