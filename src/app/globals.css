@@ -957,3 +957,18 @@ body { background:#07080b; }
 @media(max-width:650px){
  .site-header .header-inner nav.apex-navigation{gap:12px}
 }
+
+/* Card-first supplier publishing: the pencil opens editing, the switch
+   records supplier intent. Neither control asserts public sale eligibility. */
+.apex-bulk-card-top-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-left:auto}
+.apex-bulk-card-pencil{height:35px;min-width:35px;display:grid;place-items:center;background:transparent;border:1px solid #5c4151;border-radius:9px;color:#ffc5d9;font-size:23px;cursor:pointer}
+.apex-bulk-card-pencil[aria-expanded="true"]{background:#3e2534;border-color:#d95b87}
+.apex-bulk-card-pencil:disabled{opacity:.45;cursor:not-allowed}
+.apex-bulk-card-publish-switch{display:flex;align-items:center;gap:8px;color:#edd6df;font-size:12px;font-weight:700;cursor:pointer}
+.apex-bulk-card-publish-switch input[type="checkbox"]{appearance:none;position:relative;width:43px;height:24px;border:1px solid #725563;border-radius:999px;background:#333139;cursor:pointer;margin:0;transition:background .2s}
+.apex-bulk-card-publish-switch input[type="checkbox"]::before{content:"";position:absolute;width:17px;height:17px;left:3px;top:2.5px;background:#fff;border-radius:50%;transition:transform .2s}
+.apex-bulk-card-publish-switch input[type="checkbox"]:checked{background:#8b3b60;border-color:#d95c88}
+.apex-bulk-card-publish-switch input[type="checkbox"]:checked::before{transform:translateX(19px)}
+.apex-bulk-card-publish-switch input[type="checkbox"]:disabled{opacity:.47;cursor:not-allowed}
+.apex-bulk-card-publish-switch input[type="checkbox"]:focus-visible,.apex-bulk-card-pencil:focus-visible{outline:2px solid #ffb9d1;outline-offset:3px}
+@media(max-width:650px){.apex-bulk-card-top-actions{width:100%;justify-content:flex-end;margin-top:4px}.apex-bulk-card-publish-switch{font-size:11px}}
