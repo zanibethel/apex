@@ -22,6 +22,7 @@ export function sourceReviewSummary(row,linked=false){
   description:description??null,
   needsIdentityCheck:!description||
    ["FOX-04","SLU-PP-322","GLOW","KLOW","T2","T3"].includes(row.product_name),
+  validForSourceReview:Boolean(pricing)&&Boolean(description),
   validForDraft:!linked&&Boolean(pricing)&&Boolean(description),
   publicEligible:false,purchasable:false,
  });
