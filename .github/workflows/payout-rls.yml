@@ -79,3 +79,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-invoice-sync-hold.sql
       - name: Prove invoice writer blocks on same store lock during split hold
         run: bash tests/payout-rls/btcpay-invoice-sync-hold-concurrency.sh
+
+      - name: Install disposable append-only BTCPay reconciliation recovery audit
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_sync_recovery_audit_REVIEW_ONLY.sql
+      - name: Verify idempotent recovery, incident revocation and permanent checkout hold
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-sync-recovery-audit.sql
