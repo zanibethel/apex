@@ -46,6 +46,7 @@ export function CheckoutPreview(){
  const [coupon,setCoupon]=useState("");
  const [couponError,setCouponError]=useState("");
  const [quotePending,setQuotePending]=useState(false);
+ const [quoteExpired,setQuoteExpired]=useState(false);
  const [quoteError,setQuoteError]=useState("");
  const [serverQuote,setServerQuote]=useState<{illustrativeTotalCents:number;illustrativeBtcSats:string;expiresAt:string}|null>(null);
  const [quoteKey,setQuoteKey]=useState("");
@@ -76,7 +77,13 @@ export function CheckoutPreview(){
  const currentCartKey=JSON.stringify({quantities,shipping,coupon});
  const latestCartKey=useRef(currentCartKey);
  useEffect(()=>{latestCartKey.current=currentCartKey;},[currentCartKey]);
- const quoteIsCurrent=Boolean(serverQuote)&&quoteKey===currentCartKey;
+ const quoteIsCurrent=Boolean(serverQuote)&&!quoteExpired&&quoteKey===currentCartKey;
+ useEffect(()=>{
+  if(!serverQuote||step!=="bitcoin")return;
+  const remaining=Math.max(0,Date.parse(serverQuote.expiresAt)-Date.now());
+  const timer=window.setTimeout(()=>setQuoteExpired(true),remaining);
+  return ()=>window.clearTimeout(timer);
+ },[serverQuote,step]);
  const updateGuest=(key:GuestKey,value:string)=>{
   setGuest(current=>({...current,[key]:value}));
   setErrors(current=>({...current,[key]:undefined}));
@@ -115,6 +122,7 @@ export function CheckoutPreview(){
    if(latestCartKey.current!==currentCartKey)
     throw Error("Demo cart changed during verification");
    setServerQuote(verified);
+   setQuoteExpired(false);
    setQuoteKey(currentCartKey);
    setStatus("awaiting");
    setStep("bitcoin");
@@ -138,6 +146,7 @@ export function CheckoutPreview(){
   setCouponInput("");
   setCouponError("");
   setQuoteError("");
+  setQuoteExpired(false);
   setServerQuote(null);
   setQuoteKey("");
   setStatePickerOpen(false);
@@ -258,7 +267,7 @@ export function CheckoutPreview(){
       </button>
     </form>}
     {step==="bitcoin"&&(!quoteIsCurrent||!serverQuote)?<div role="alert" className="apex-checkout-empty-cart">
-      <strong>Demo cart has changed.</strong><span>Verify your updated sample total before continuing.</span>
+      <strong>Demo quote expired or cart changed.</strong><span>Verify your current sample total before continuing.</span>
       <button type="button" className="apex-checkout-cta" onClick={()=>setStep("details")}>Return to details</button>
     </div>:null}
     {step==="bitcoin"&&quoteIsCurrent&&serverQuote&&<div>
