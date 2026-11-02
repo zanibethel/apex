@@ -1,7 +1,7 @@
 // Private supplier readiness ONLY. A correctly stored image is not proof of
 // authenticity, content approval or legal/public listing authorization.
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const FILE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:png|jpg|webp)$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const FILE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:png|jpg|webp)$/i;
 export function privateProductMediaPath(storeId,productId,path){
  if(typeof storeId!=="string"||!UUID.test(storeId)||
   typeof productId!=="string"||!UUID.test(productId)||
