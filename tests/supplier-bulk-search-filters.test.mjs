@@ -30,7 +30,7 @@ test("search matches title or SKU, ignores whitespace and case, and preserves or
  assert.deepEqual(keys(filterSupplierBulkRows(rows,"","all",listing)),keys(rows));
 });
 test("status views separate unsaved, ready, requested and held rows",()=>{
- assert.deepEqual(BULK_VIEW_FILTERS,["all","unsaved","ready","requested","needs_attention","save_retries"]);
+ assert.deepEqual(BULK_VIEW_FILTERS,["all","unsaved","ready","requested","needs_attention","image_fixes","admin_holds","review_pending","save_retries"]);
  assert.deepEqual(keys(filterSupplierBulkRows(rows,"","unsaved",listing,newRequests)),["unsaved","edited"]);
  assert.deepEqual(keys(filterSupplierBulkRows(rows,"","ready",listing,newRequests)),["ready"]);
  assert.deepEqual(keys(filterSupplierBulkRows(rows,"","requested",listing,newRequests)),["requested","newrequest"]);
