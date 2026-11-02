@@ -14,7 +14,7 @@ export const MEDIA_RELEASE_CHECKS=Object.freeze([
  Object.freeze({key:"product_release_authorized",label:"Independent product and supplier release authorization"}),
  Object.freeze({key:"public_asset_published",label:"Approved immutable public asset created"}),
 ]);
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const allowedStatus=new Set(["pending_review","approved_internal","changes_requested"]);
 export function assessAdminMediaRelease(record,privatePreviewAccessible=false){
  const unavailable=()=>Object.freeze({
