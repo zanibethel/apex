@@ -61,12 +61,9 @@ create policy private_media_evidence_admin_insert
     and (private_media_evidence_events.review_status='needs_correction'
       or r.status='approved_internal')
   )
-  and exists (
-   select 1 from public.products p
-   where p.store_id=private_media_evidence_events.store_id
-    and p.id=private_media_evidence_events.product_id
-    and p.is_published=false and p.image_path=private_media_evidence_events.image_path
-  )
+  -- Reviewed snapshot is invalidated by existing product-change triggers.
+  -- Do not query products here: authenticated platform admins intentionally
+  -- cannot bypass supplier product SELECT RLS.
  );
 
 do $postflight$
