@@ -549,11 +549,17 @@ body { background:#07080b; }
  padding:15px;background:#1a1820;
 }
 .apex-bulk-row-title{
- display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
- gap:10px;margin-bottom:12px;color:#bbb4c0;font-size:12px;
+ display:grid;grid-template-columns:minmax(0,1fr) max-content;
+ align-items:center;column-gap:8px;row-gap:9px;
+ margin-bottom:12px;color:#bbb4c0;font-size:12px;
 }
-.apex-bulk-row-title strong{color:#f6eef2;font-size:15px;overflow-wrap:anywhere}
-.apex-bulk-select{display:flex;align-items:center;gap:11px;min-width:0}
+.apex-bulk-row-title strong{
+ display:block;min-width:0;flex:1 1 auto;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;
+ color:#f6eef2;font-size:15px;
+}
+.apex-bulk-select{display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap}
+.apex-bulk-card-status-row{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:7px;min-width:0}
 .apex-bulk-select input{width:19px;height:19px;flex-shrink:0;accent-color:#dc668b}
 .apex-bulk-fields{
  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;
@@ -790,8 +796,6 @@ body { background:#07080b; }
  }
 }
 @media(max-width:500px){
- .apex-bulk-row-title{align-items:flex-start}
- .apex-bulk-select{flex-wrap:wrap}
  .apex-bulk-inline-preview .apex-offer-tile{
    min-width:0;
  }
@@ -960,18 +964,27 @@ body { background:#07080b; }
 
 /* Card-first supplier publishing: the pencil opens editing, the switch
    records supplier intent. Neither control asserts public sale eligibility. */
-.apex-bulk-card-top-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-left:auto}
-.apex-bulk-card-pencil{height:35px;min-width:35px;display:grid;place-items:center;background:transparent;border:1px solid #5c4151;border-radius:9px;color:#ffc5d9;font-size:23px;cursor:pointer}
+.apex-bulk-card-top-actions{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:max-content;justify-self:end;margin-left:0}
+.apex-bulk-card-pencil{height:40px;min-width:40px;display:grid;place-items:center;background:transparent;border:1px solid #5c4151;border-radius:9px;color:#ffc5d9;font-size:23px;cursor:pointer}
 .apex-bulk-card-pencil[aria-expanded="true"]{background:#3e2534;border-color:#d95b87}
 .apex-bulk-card-pencil:disabled{opacity:.45;cursor:not-allowed}
-.apex-bulk-card-publish-switch{display:flex;align-items:center;gap:8px;color:#edd6df;font-size:12px;font-weight:700;cursor:pointer}
+.apex-bulk-card-publish-switch{display:flex;align-items:center;gap:8px;min-height:40px;white-space:nowrap;color:#edd6df;font-size:12px;font-weight:700;cursor:pointer}
 .apex-bulk-card-publish-switch input[type="checkbox"]{appearance:none;position:relative;width:43px;height:24px;border:1px solid #725563;border-radius:999px;background:#333139;cursor:pointer;margin:0;transition:background .2s}
 .apex-bulk-card-publish-switch input[type="checkbox"]::before{content:"";position:absolute;width:17px;height:17px;left:3px;top:2.5px;background:#fff;border-radius:50%;transition:transform .2s}
 .apex-bulk-card-publish-switch input[type="checkbox"]:checked{background:#8b3b60;border-color:#d95c88}
 .apex-bulk-card-publish-switch input[type="checkbox"]:checked::before{transform:translateX(19px)}
 .apex-bulk-card-publish-switch input[type="checkbox"]:disabled{opacity:.47;cursor:not-allowed}
 .apex-bulk-card-publish-switch input[type="checkbox"]:focus-visible,.apex-bulk-card-pencil:focus-visible{outline:2px solid #ffb9d1;outline-offset:3px}
-@media(max-width:650px){.apex-bulk-card-top-actions{width:100%;justify-content:flex-end;margin-top:4px}.apex-bulk-card-publish-switch{font-size:11px}}
+/* The switch already has a product-specific accessible name. On narrow screens,
+   hide only its redundant visible caption to preserve room for the title. */
+@media(max-width:650px){
+ .apex-bulk-card-publish-switch>span{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+ }
+ .apex-bulk-row-title strong{font-size:14px}
+}
+
 
 /* Private supplier correction notes, deliberately separated from Publish. */
 .apex-bulk-admin-corrections{display:grid;gap:9px;margin:9px 0}
