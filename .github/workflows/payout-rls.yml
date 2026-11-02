@@ -4,6 +4,7 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'tests/payout-rls/**'
+      - 'database/sql/apex_private_checkout_product_snapshot_REVIEW_ONLY.sql'
       - '.github/workflows/payout-rls.yml'
   workflow_dispatch:
 jobs:
@@ -50,3 +51,7 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/non-draft-immutable.sql
       - name: Verify concurrent draft versions
         run: bash tests/payout-rls/concurrent-versions.sh
+      - name: Apply private admin quote snapshot fixture (disposable database only)
+        run: psql -v ON_ERROR_STOP=1 -f database/sql/apex_private_checkout_product_snapshot_REVIEW_ONLY.sql
+      - name: Verify protected snapshot returns private price and stock but never checkout rights
+        run: psql -v ON_ERROR_STOP=1 -f tests/payout-rls/private-checkout-snapshot.sql
