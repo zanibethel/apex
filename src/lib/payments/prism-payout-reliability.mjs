@@ -134,9 +134,11 @@ export function reconcileSyntheticPrismPayout({
      return {role,status:"manual_review",reason:"PENDING_TIMEOUT_REQUIRES_INVESTIGATION"};
    return {role,status:"pending",reason:"STATUS_POLL_ONLY_NO_RESEND"};
  });
+ // A third/unknown payout is a reconciliation exception even when both
+ // expected recipients are independently confirmed. Never call a ledger
+ // complete while an unaccounted outgoing transfer could exist.
  if(claims.length!==2){
    for(const result of results){
-     if(result.status==="confirmed")continue;
      result.status="manual_review";
      result.reason="EXTRANEOUS_PAYOUT_CLAIM";
    }
