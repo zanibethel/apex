@@ -92,7 +92,9 @@ export default async function SoldOutImportPreview(){
      <div className="apex-offer-content">
       <p className="apex-offer-category">SOURCE #{candidate.source_index+1} · PRIVATE PREVIEW</p>
       <h2>{title}</h2>
-      <p className="apex-soldout-description">{importDefaultDescription(candidate.product_name,candidate.strength)??"Product identity pending supplier review; no verified technical description is available."}</p>
+      <details className="apex-soldout-description"><summary>Default product description</summary>
+       <p>{importDefaultDescription(candidate.product_name,candidate.strength)??"Product identity pending supplier review; no verified technical description is available."}</p>
+      </details>
       {prices?<div className="apex-soldout-prices">
        <strong>{formatPrivatePreviewUsd(prices.salePriceCents)}</strong>
        <span>Proposed compare-at: {formatPrivatePreviewUsd(prices.compareAtCents)}</span>
