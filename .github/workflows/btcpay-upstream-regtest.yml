@@ -140,7 +140,11 @@ jobs:
             test -f "${project}"
             grep -Eq '<Version>1[.]3[.]3</Version>' "${project}"
             mkdir -p "${RUNNER_TEMP}/prism-source/submodules"
+            # Git may create an empty gitlink directory before submodule init.
+            # Remove only that empty directory to make the intended symlink.
+            rmdir "${RUNNER_TEMP}/prism-source/submodules/btcpayserver"
             ln -s "${RUNNER_TEMP}/btcpayserver" "${RUNNER_TEMP}/prism-source/submodules/btcpayserver"
+            test -f "${RUNNER_TEMP}/prism-source/submodules/btcpayserver/BTCPayServer/BTCPayServer.csproj"
             mkdir -p "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism"
             dotnet publish "${project}" --configuration Release \
               --output "${RUNNER_TEMP}/apex-prism-plugins/BTCPayServer.Plugins.Prism" \
