@@ -35,7 +35,7 @@ async function endpoint(path, { method="GET", json, auth, fetchImpl=fetch }={}) 
 
 export async function runEphemeralGreenfield({
   testOnly, network, fetchImpl=fetch, random=()=>randomBytes(18).toString("hex"),
-  payInvoice, verifyWebhook=false, durableJournal,
+  payInvoice, verifyWebhook=false, durableJournal, afterSettlement,
   sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),
 }={}) {
   if(testOnly!==true||network!=="regtest") {
@@ -218,6 +218,9 @@ export async function runEphemeralGreenfield({
       crossStoreRejected:result.crossStoreRejected,
     };
   }
+  const finalProof=afterSettlement
+    ?await afterSettlement({basic,network:"regtest",testOnly:true})
+    :null;
   return Object.freeze({
     chain:"regtest",accountCreated:true,storeCreated:true,
     testWalletConfigured:true,
@@ -226,7 +229,10 @@ export async function runEphemeralGreenfield({
     paymentFunded:funded,invoiceSettledVerified:settled,
     ...webhookProof,
     ...(durableJournal ? {durableReceiptJournalVerified:true} : {}),
-    prismVerified:false,productionReady:false,
+    ...(finalProof ? {prismForwardingVerified:finalProof.prismForwardingVerified,
+      prismPayoutScenarioCount:finalProof.scenarioCount} : {}),
+    prismVerified:Boolean(finalProof?.prismForwardingVerified),
+    productionReady:false,
   });
   } finally {
     if(receiver)await receiver.close();
@@ -241,7 +247,10 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
     ?import("./btcpay-ephemeral-pg-journal.mjs").then(m=>
       m.createEphemeralPgBridge({testOnly:true,network:"regtest"}))
     :Promise.resolve(null);
-  Promise.all([pay,durable]).then(([fund,durableJournal])=>runEphemeralGreenfield({
+  const prism=process.env.APEX_BTCPAY_PRISM_FORWARDING==="true"
+    ?import("./btcpay-ephemeral-prism-forwarding.mjs").then(m=>m.runEphemeralPrismForwarding)
+    :Promise.resolve(null);
+  Promise.all([pay,durable,prism]).then(([fund,durableJournal,prismForwarding])=>runEphemeralGreenfield({
     testOnly:process.env.APEX_BTCPAY_EPHEMERAL==="true",
     network:process.env.APEX_BTCPAY_TEST_NETWORK,
     ...(fund?{payInvoice:payment=>fund({
@@ -250,6 +259,7 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
     })}:{}),
     verifyWebhook:process.env.APEX_BTCPAY_VERIFY_WEBHOOK==="true",
     durableJournal,
+    ...(prismForwarding ? {afterSettlement:prismForwarding} : {}),
   })).then(out=>process.stdout.write(JSON.stringify(out,null,2)+"\\n"))
     .catch(e=>{process.stderr.write(e.message+"\\n");process.exitCode=1;});
 }
