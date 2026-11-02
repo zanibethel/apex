@@ -9,6 +9,7 @@ const suffixByMissingField=Object.freeze({
  "Purchase price":"price",
  "Active in internal catalog":"active",
  "Confirmed stock on hand":"media",
+ "Inventory record (0 allowed · Sold Out)":"media",
 });
 export function bulkSetupTarget(label,rowKey){
  const suffix=suffixByMissingField[label];
