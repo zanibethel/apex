@@ -6,7 +6,7 @@ import {BulkCardMedia} from "./bulk-card-media";
 import {BulkInlineOffer} from "./bulk-inline-offer";
 import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
 import {useMemo,useState,useTransition} from "react";
-import {saveBulkProductDrafts,saveBulkPublicationRequests,saveBulkListingIntents} from "./bulk-actions";
+import {saveBulkProductDrafts,saveBulkPublicationRequests,saveBulkListingIntents,resubmitSupplierCorrections} from "./bulk-actions";
 import {eligiblePrivatePublishIds} from "@/lib/catalog/bulk-publish-selection.mjs";
 import {CsvProductImport} from "./csv-product-import";
 import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-products.mjs";
@@ -25,7 +25,7 @@ export type BulkEditRow={
 };
 type Category={id:string;name:string};
 type ListingReadiness={
- productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];
+ productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
 };
 type PublishOutcome={id:string;ok:boolean;message:string};
 
@@ -33,9 +33,9 @@ function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
   price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,needsSave:true};
 }
-export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing}:{
+export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false}:{
  storeId:string;editable:boolean;initialRows:BulkEditRow[];categories:Category[];
- media:BulkSavedMedia[];existingImages:BulkSavedImage[];listing:ListingReadiness[];
+ media:BulkSavedMedia[];existingImages:BulkSavedImage[];listing:ListingReadiness[];resubmissionEnabled?:boolean;
 }){
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
  const [showOfferTiles,setShowOfferTiles]=useState(true);
@@ -54,7 +54,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [listingOverrides,setListingOverrides]=useState<Record<string,boolean>>({});
  const [editOpenKeys,setEditOpenKeys]=useState<string[]>([]);
  const [publicationMessage,setPublicationMessage]=useState("");
- const busy=pending||publishPending;
+ const [correctionNotes,setCorrectionNotes]=useState<Record<string,string>>({});
+ const [correctionResults,setCorrectionResults]=useState<Record<string,{ok:boolean;message:string}>>({});
+ const [correctionConfirmed,setCorrectionConfirmed]=useState<string[]>([]);
+ const [correcting,startCorrectionTransition]=useTransition();
+ const busy=pending||publishPending||correcting;
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const effectiveListing=listing.map(item=>({...item,requested:listingOverrides[item.productId]??item.requested}));
  const newlyRequested=new Set(Object.entries(listingOverrides).filter(([,value])=>value).map(([id])=>id));
@@ -157,7 +161,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const publicationLimit=50;
  function toggleEdit(key:string){if(busy)return;setEditOpenKeys(previous=>previous.includes(key)?previous.filter(id=>id!==key):[...previous,key]);}
  function publish(ids:string[],action:"publish"|"unpublish"="publish"){
-  if(!editable||pending||publishPending||ids.length<1||ids.length>publicationLimit||
+  if(!editable||busy||ids.length<1||ids.length>publicationLimit||
    new Set(ids).size!==ids.length||ids.some(id=>action==="publish"
      ?!eligiblePublishSet.has(id):!listingByProduct.get(id)?.requested))return;
   startPublishTransition(async()=>{
@@ -178,6 +182,30 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     if(response.results.some(item=>item.ok))router.refresh();
    }catch{
     setPublicationMessage("Publication requests could not be saved. Refresh and check product status.");
+   }
+  });
+ }
+ function resubmitCorrections(productId:string,key:string){
+  const note=correctionNotes[productId]?.trim()??"";
+  const item=rows.find(row=>row.key===key);
+  const status=listingByProduct.get(productId);
+  if(!editable||!resubmissionEnabled||busy||!item?.id||item.needsSave||
+   !["hold","review"].includes(status?.kind??"")||note.length<5||note.length>500)return;
+  startCorrectionTransition(async()=>{
+   const form=new FormData();
+   form.set("storeId",storeId);
+   form.set("productId",productId);
+   form.set("note",note);
+   try{
+    const outcome=await resubmitSupplierCorrections({ok:false,message:""},form);
+    setCorrectionResults(prev=>({...prev,[productId]:outcome}));
+    if(outcome.ok){
+     setCorrectionConfirmed(prev=>[...new Set([...prev,productId])]);
+     router.refresh();
+    }
+   }catch{
+    setCorrectionResults(prev=>({...prev,[productId]:{ok:false,
+     message:"Review request failed. Keep your saved changes and retry."}}));
    }
   });
  }
@@ -241,6 +269,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const requested=Boolean(listingStatus?.requested);
     const readiness=privateBulkReadiness(r,listingStatus,requested&&Boolean(publication?.ok));
     const adminFeedback=r.id?supplierAdminFeedback(listingStatus):null;
+    const correctionsPending=Boolean(listingStatus?.correctionsPending||(r.id&&correctionConfirmed.includes(r.id)));
     const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
     return <article key={r.key} className="apex-bulk-row">
      <div className="apex-bulk-row-title">
@@ -270,7 +299,30 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         ?readiness.missing.length+" setup item"+(readiness.missing.length===1?"":"s")+" remaining"
         :"Status details"}</summary>
       <p>{readiness.description}</p>
-      {adminFeedback&&r.id&&<Link className="button secondary" href={"/supplier/catalog#details-"+r.id}>Edit and resubmit for review</Link>}
+      {adminFeedback&&r.id&&<div className="apex-bulk-admin-corrections">
+       <button type="button" className="button secondary" disabled={busy}
+        onClick={()=>setEditOpenKeys(prev=>prev.includes(r.key)?prev:[...prev,r.key])}>
+        Open product editor
+       </button>
+       {correctionsPending&&<p role="status"><strong>Corrections submitted · awaiting admin review.</strong> This listing is still held.</p>}
+       {resubmissionEnabled
+        ?<>
+         <label>What changed? (required for review)
+          <textarea maxLength={500} rows={2} value={correctionNotes[r.id]??""}
+           disabled={busy||!editable}
+           placeholder="Briefly describe the corrections you saved."
+           onChange={e=>setCorrectionNotes(prev=>({...prev,[r.id!]:e.target.value}))}/>
+         </label>
+         <button type="button" className="button secondary"
+          disabled={!editable||busy||r.needsSave||(correctionNotes[r.id]?.trim().length??0)<5}
+          onClick={()=>resubmitCorrections(r.id!,r.key)}>
+          {correcting?"Submitting…":"Resubmit saved corrections for review"}
+         </button>
+         {r.needsSave&&<p className="notice">Save your product edits first, then resubmit.</p>}
+         {correctionResults[r.id]&&<p role="status">{correctionResults[r.id].message}</p>}
+        </>
+        :<p className="notice">Save your corrections, then contact the platform administrator for review. In-app resubmission is not enabled yet.</p>}
+      </div>}
       {adminFeedback&&<p className="apex-bulk-admin-feedback">
        <strong>{adminFeedback.heading}:</strong> {adminFeedback.message}
       </p>}
