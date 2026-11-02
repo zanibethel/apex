@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {privateSourceDraftDescription} from "../src/lib/catalog/private-source-draft-description.mjs";
 const read=p=>readFileSync(p,"utf8");
 
 test("bulk workspace imports original source records directly without a review gate",()=>{
@@ -46,4 +47,15 @@ test("source mapping policy no longer equates draft existence with verified sour
  const release=read("src/lib/catalog/private-release-decision.mjs");
  assert.match(release,/product_authorization_unverified/);
  assert.match(release,/public_release_disabled/);
+});
+
+test("unknown supplier variant gets a neutral editable private description, not fabricated claims",()=>{
+ const known=privateSourceDraftDescription("BPC-157","10 MG");
+ assert.match(known,/Supplier-listed variant/);
+ const unknown=privateSourceDraftDescription("Synthetic sample name","5 MG");
+ assert.match(unknown,/not been independently verified/);
+ assert.match(unknown,/private preparation record/);
+ assert.doesNotMatch(unknown,/treats|heals|proven/i);
+ assert.equal(privateSourceDraftDescription("","5 MG"),null);
+ assert.equal(privateSourceDraftDescription("Sample",""),null);
 });
