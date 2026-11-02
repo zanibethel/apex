@@ -9,6 +9,7 @@ export type ApprovedSoldOutProduct={
 export type SoldOutCatalogResult={
  state:"disabled"|"unconfigured"|"unavailable"|"connected";
  products:ApprovedSoldOutProduct[];
+ page:number;hasNext:boolean;
 };
 
 const APEX_ORIGIN="https://fhqpkpztercadcxspdkg.supabase.co";
@@ -42,29 +43,35 @@ export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|
  return output;
 }
 
-export async function readApprovedSoldOutCatalog():Promise<SoldOutCatalogResult>{
+export async function readApprovedSoldOutCatalog(page=1):Promise<SoldOutCatalogResult>{
+ if(!Number.isSafeInteger(page)||page<1||page>417)
+  return {state:"unavailable",products:[],page:1,hasNext:false};
+ const empty=(state:SoldOutCatalogResult["state"]):SoldOutCatalogResult=>({state,products:[],page,hasNext:false});
  // A separate future migration and approval are required to turn on this
  // feed. Under the current SQL release check, the feed must return [].
  if(process.env.APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled")
-  return {state:"disabled",products:[]};
+  return empty("disabled");
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
  const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
- if(!url||!key)return {state:"unconfigured",products:[]};
+ if(!url||!key)return empty("unconfigured");
  if(url!==APEX_ORIGIN||!key.startsWith("sb_publishable_"))
-  return {state:"unavailable",products:[]};
+  return empty("unavailable");
  try{
-  const response=await fetch(new URL("/rest/v1/rpc/get_public_sold_out_catalog",url),{
+  const endpoint=new URL("/rest/v1/rpc/get_public_sold_out_catalog",url);
+  endpoint.searchParams.set("p_offset",String((page-1)*24));
+  endpoint.searchParams.set("p_limit","24");
+  const response=await fetch(endpoint,{
    method:"GET",
    headers:{apikey:key,Accept:"application/json"},
    cache:"no-store",
    signal:AbortSignal.timeout(6000),
   });
-  if(!response.ok)return {state:"unavailable",products:[]};
+  if(!response.ok)return empty("unavailable");
   const raw:unknown=await response.json();
   const products=parseApprovedSoldOutItems(raw);
-  if(!products)return {state:"unavailable",products:[]};
-  return {state:"connected",products};
+  if(!products)return empty("unavailable");
+  return {state:"connected",products,page,hasNext:products.length===24};
  }catch{
-  return {state:"unavailable",products:[]};
+  return empty("unavailable");
  }
 }
