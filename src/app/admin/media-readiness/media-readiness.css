@@ -1,0 +1,19 @@
+.apex-admin-media{min-width:0;padding-bottom:90px}
+.apex-admin-media-summary{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 22px}
+.apex-admin-media-summary span{border:1px solid #483541;background:#1b151c;padding:9px 11px;border-radius:9px;color:#cbbac5;font-size:12px}
+.apex-admin-media-summary strong{font-size:17px;color:#fff;margin-right:5px}
+.apex-admin-media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:15px}
+.apex-admin-media-card{background:#18141b;border:1px solid #483544;border-radius:13px;overflow:hidden;min-width:0}
+.apex-admin-media-image{height:194px;display:grid;place-items:center;background:#131016;color:#afa3af;position:relative;text-align:center;font-size:12px}
+.apex-admin-media-image>span:last-child{position:absolute;left:9px;top:9px;background:#5a233b;color:#fbe0ea;border-radius:7px;padding:5px 8px;font-size:10px;font-weight:800}
+.apex-admin-media-body{padding:15px}
+.apex-admin-media-body h2{font-size:19px;line-height:1.25;margin:0 0 9px;overflow-wrap:anywhere}
+.apex-admin-media-body .button{margin-top:12px;min-height:43px}
+.apex-admin-media-checklist{border:1px solid #493844;border-radius:8px;padding:9px 11px;margin:12px 0}
+.apex-admin-media-checklist summary{cursor:pointer;font-size:12px;font-weight:700;color:#edb1c9}
+.apex-admin-media-checklist ul{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:9px}
+.apex-admin-media-checklist li{display:flex;align-items:flex-start;gap:9px;color:#c3b7c4;font-size:11px;line-height:1.5}
+.apex-admin-media-checklist li>span:first-child{font-size:15px;color:#ee95b4}
+.apex-admin-media-checklist strong{color:#eab6c9}
+@media(max-width:600px){.apex-admin-media-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.apex-admin-media-image{height:150px}.apex-admin-media-body{padding:10px}.apex-admin-media-body h2{font-size:15px}.apex-admin-media-summary span{padding:7px;font-size:11px}}
+@media(max-width:350px){.apex-admin-media-grid{grid-template-columns:minmax(0,1fr)}}

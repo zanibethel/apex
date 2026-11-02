@@ -9,6 +9,7 @@ const dashboardLinks = [
   { title: "Users", description: "Review registered accounts and invitations.", href: "/admin/users", icon: "👥" },
   { title: "Allocations", description: "Review proposed payout splits and recipient setup.", href: "/admin/splits", icon: "◫" },
   { title: "Product reviews", description: "Review private supplier submissions and request changes.", href: "/admin/product-reviews", icon: "▤" },
+  { title: "Media readiness", description: "Inspect submitted images and outstanding public release evidence. No image approvals here.", href: "/admin/media-readiness", icon: "▣" },
   { title: "Listing controls", description: "Manage supplier publication requests, holds and republish approvals.", href: "/admin/listing-controls", icon: "🛡" },
   { title: "Checkout readiness", description: "Read-only private product eligibility and payment launch gates. Real checkout remains disabled.", href: "/admin/checkout-readiness", icon: "▥" },
   { title: "Supplier workspace", description: "Inspect supplier inventory and operations.", href: "/supplier", icon: "▣" },
