@@ -24,7 +24,14 @@ export function privateReleaseDisplay(data){
     typeof data.status_code!=="string")
   return {label:"Decision unavailable",description:"The release decision could not be verified. The listing remains private."};
  if(data.effective_public===true){
-  return data.status_code==="public_visible"?
+  const c=data.checks;
+  const verified=data.status_code==="public_visible"&&c&&
+   c.supplier_requested===true&&c.admin_clear===true&&
+   c.supplier_authorized===true&&c.product_authorized===true&&
+   c.public_release_enabled===true&&c.category_published===true&&
+   c.sold_out_inventory_valid===true&&c.product_setup_complete===true&&
+   c.same_supplier_identity_clear===true&&c.content_review_clear===true;
+  return verified?
    {label:"Live · Sold Out",description:"The public catalog confirms this eligible product is visible. Checkout remains unavailable."}:
    {label:"Decision mismatch",description:"Public visibility cannot be verified. Contact the administrator."};
  }
