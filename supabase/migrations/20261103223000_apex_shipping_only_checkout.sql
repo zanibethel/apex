@@ -101,6 +101,30 @@ revoke execute on function public.set_bulk_product_tax_collection(uuid,uuid[],bo
 revoke execute on function public.get_admin_private_checkout_rules_overview(uuid)
  from public,anon,authenticated;
 
+-- Allow both assigned suppliers and verified platform administrators to
+-- manage shipping promotions through the existing row-level checks.
+-- Previously authenticated had SELECT only, preventing supplier code writes.
+grant insert,update on public.supplier_discount_codes to authenticated;
+create policy apex_admin_promo_read
+ on public.supplier_discount_codes for select to authenticated
+ using((select auth.uid()) is not null
+  and ((select auth.jwt()) #>> '{app_metadata,apex_role}')='platform_admin'
+  and public.apex_can_edit_private_checkout_rules(store_id));
+create policy apex_admin_promo_insert
+ on public.supplier_discount_codes for insert to authenticated
+ with check((select auth.uid()) is not null
+  and ((select auth.jwt()) #>> '{app_metadata,apex_role}')='platform_admin'
+  and public.apex_can_edit_private_checkout_rules(store_id)
+  and created_by=(select auth.uid()) and redemption_count=0);
+create policy apex_admin_promo_update
+ on public.supplier_discount_codes for update to authenticated
+ using((select auth.uid()) is not null
+  and ((select auth.jwt()) #>> '{app_metadata,apex_role}')='platform_admin'
+  and public.apex_can_edit_private_checkout_rules(store_id))
+ with check((select auth.uid()) is not null
+  and ((select auth.jwt()) #>> '{app_metadata,apex_role}')='platform_admin'
+  and public.apex_can_edit_private_checkout_rules(store_id));
+
 do $postflight$
 begin
  if has_function_privilege('authenticated',
@@ -111,6 +135,10 @@ begin
    'public.get_admin_private_checkout_charge_source(uuid,uuid,integer,text)','EXECUTE')
   or not has_function_privilege('authenticated',
    'public.save_private_store_shipping_settings(uuid,boolean,bigint,bigint)','EXECUTE')
+  or has_table_privilege('anon','public.supplier_discount_codes','INSERT')
+  or has_table_privilege('anon','public.supplier_discount_codes','UPDATE')
+  or not has_table_privilege('authenticated','public.supplier_discount_codes','INSERT')
+  or not has_table_privilege('authenticated','public.supplier_discount_codes','UPDATE')
   or (select enabled from apex_internal.private_release_gate where singleton)
     is distinct from false
  then raise exception 'Shipping-only migration postflight denied';end if;
