@@ -12,6 +12,7 @@ const dashboardLinks = [
   { title: "Media readiness", description: "Inspect submitted images and outstanding public release evidence. No image approvals here.", href: "/admin/media-readiness", icon: "▣" },
   { title: "Listing controls", description: "Manage supplier publication requests, holds and republish approvals.", href: "/admin/listing-controls", icon: "🛡" },
   { title: "Checkout readiness", description: "Read-only private product eligibility and payment launch gates. Real checkout remains disabled.", href: "/admin/checkout-readiness", icon: "▥" },
+  { title: "Payment monitor", description: "Read-only reporting, payout states and review attention. No live payment controls.", href: "/admin/payment-monitor", icon: "₿" },
   { title: "Supplier workspace", description: "Inspect supplier inventory and operations.", href: "/supplier", icon: "▣" },
 ];
 
