@@ -64,6 +64,49 @@ begin
  if not denied then raise exception 'Legacy product tax overview still callable';end if;
 end $admin$;
 rollback;
+-- An unrelated user is denied promo code changes even with table grants.
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub"='00000000-0000-0000-0000-000000000003';
+set local "request.jwt.claims"='{"app_metadata":{"apex_role":"supplier"}}';
+do $stranger$
+declare denied boolean:=false;
+begin
+ begin
+  insert into public.supplier_discount_codes(
+   store_id,code,discount_kind,discount_value,min_subtotal_cents,created_by)
+  values('62000000-0000-0000-0000-000000000001',
+   'DENIEDSHIP','free_shipping',1,0,
+   '00000000-0000-0000-0000-000000000003');
+ exception when insufficient_privilege then denied:=true;end;
+ if not denied then raise exception 'Unauthorized discount insert allowed';end if;
+end $stranger$;
+rollback;
+
+-- A trusted platform administrator can create, activate and review a
+-- free-shipping promotion on the same private store as assigned suppliers.
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub"='00000000-0000-0000-0000-000000000002';
+set local "request.jwt.claims"='{"app_metadata":{"apex_role":"platform_admin"}}';
+do $admin_promos$
+declare v_id uuid;
+begin
+ insert into public.supplier_discount_codes(
+  store_id,code,discount_kind,discount_value,min_subtotal_cents,created_by)
+ values('62000000-0000-0000-0000-000000000001',
+  'ADMINSHIP','free_shipping',1,5000,
+  '00000000-0000-0000-0000-000000000002')
+ returning id into v_id;
+ if v_id is null then raise exception 'Admin free-shipping create denied';end if;
+ update public.supplier_discount_codes set is_active=true
+  where id=v_id;
+ if not exists(select 1 from public.supplier_discount_codes
+  where id=v_id and is_active and discount_kind='free_shipping')
+ then raise exception 'Admin free-shipping activation denied';end if;
+end $admin_promos$;
+rollback;
+
 do $post$
 begin
  if exists(select 1 from apex_internal.checkout_order_intents)
