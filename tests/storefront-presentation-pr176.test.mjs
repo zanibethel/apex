@@ -25,9 +25,10 @@ test("public storefront shows normal catalog navigation, no test-payment promoti
  assert.match(shelf,/type="button" disabled/);
  assert.match(shelf,/No products available right now/);
 });
-test("interactive test checkout is not exposed to anonymous customers",()=>{
+test("retired checkout route is admin-only and never exposes simulated payments",()=>{
  const route=read("src/app/checkout/preview/page.tsx");
- assert.match(route,/process\.env\.APEX_CHECKOUT_MODE!=="demo"\)notFound\(\)/);
+ assert.match(route,/redirect\("\/admin\/checkout-review"\)/);
+ assert.doesNotMatch(route,/CheckoutPreview|APEX_CHECKOUT_MODE/);
  assert.match(route,/createSupplierServerClient\(\)/);
  assert.match(route,/auth\.getUser\(\)/);
  assert.match(route,/isVerifiedPlatformAdmin\(data\.user\)/);
