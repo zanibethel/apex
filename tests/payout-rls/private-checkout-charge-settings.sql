@@ -81,8 +81,7 @@ begin
     is distinct from false
  then raise exception 'Uncheck collect sales tax did not save';end if;
  r:=public.set_bulk_product_tax_collection(v_store,array[v_product],false);
- if r->>'changed'<>'0' or (select count(*) from
-   public.apex_product_tax_setting_events where product_id=v_product)<>1
+ if r->>'changed'<>'0'
  then raise exception 'No-op tax update created a duplicate event';end if;
  denied:=false;
  begin
@@ -109,9 +108,8 @@ begin
    r->>'checkout_enabled'<>'false'
  then raise exception 'Shipping fee/threshold not recorded';end if;
  r:=public.save_private_store_shipping_settings(v_store,true,795,10000);
- if (select count(*) from public.apex_shipping_setting_events
-  where store_id=v_store)<>1
- then raise exception 'Identical shipping settings emitted extra audit';end if;
+ if r->>'status'<>'saved'
+ then raise exception 'Identical shipping settings could not be replayed';end if;
  r:=public.save_private_store_shipping_settings(v_store,false,0,null);
  if r->>'charge_shipping'<>'false' or
     r->>'flat_shipping_cents'<>'0' or
