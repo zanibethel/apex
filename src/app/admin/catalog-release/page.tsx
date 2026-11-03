@@ -79,6 +79,8 @@ export default async function CatalogReleaseDashboard(){
     ["Blocked by release checks",summary.review],
     ["Publish off",summary.private],
     ["Status unavailable",summary.unavailable],
+    ["Needs category",productsResult.error?"Unavailable":products.filter(p=>!p.category_id).length],
+    ["Inactive products",productsResult.error?"Unavailable":products.filter(p=>p.is_active!==true).length],
    ].map(([label,value])=><article key={label} className="feature-card">
     <p className="eyebrow">{label}</p><h2>{value}</h2>
    </article>)}
@@ -134,6 +136,8 @@ export default async function CatalogReleaseDashboard(){
     Manage admin holds</Link>
    <Link className="button secondary" href="/admin/product-reviews">
     Product reviews</Link>
+   <Link className="button secondary" href="/supplier/catalog/bulk">
+    Finish product setup in bulk</Link>
    <Link className="button secondary" href="/admin/storefront-preview">
     Review product cards</Link>
    <Link className="button secondary" href="/catalog">Public catalog</Link>
