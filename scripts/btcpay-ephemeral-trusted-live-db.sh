@@ -36,6 +36,13 @@ test -n "${APEX_BTCPAY_TEST_WORKER_PASSWORD:-}"
 psql -X -q -v ON_ERROR_STOP=1 \
   -v "worker_password=$APEX_BTCPAY_TEST_WORKER_PASSWORD" \
   -f database/sql/apex_btcpay_test_restricted_worker_role_REVIEW_ONLY.sql >/dev/null
+test -n "${APEX_BTCPAY_TEST_RECOVERY_REQUESTER_PASSWORD:-}"
+test -n "${APEX_BTCPAY_TEST_RECOVERY_REVIEWER_PASSWORD:-}"
+psql -X -q -v ON_ERROR_STOP=1 \
+  -v "requester_password=$APEX_BTCPAY_TEST_RECOVERY_REQUESTER_PASSWORD" \
+  -v "reviewer_password=$APEX_BTCPAY_TEST_RECOVERY_REVIEWER_PASSWORD" \
+  -f database/sql/apex_btcpay_test_dual_operator_recovery_REVIEW_ONLY.sql >/dev/null
+psql -X -q -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-operator-recovery-grants.sql >/dev/null
 psql -X -q -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-restricted-worker-role.sql >/dev/null
 actual="$(PGUSER=apex_test_invoice_worker PGPASSWORD="$APEX_BTCPAY_TEST_WORKER_PASSWORD" \
   psql -X -At -v ON_ERROR_STOP=1 -c 'select current_user')"
