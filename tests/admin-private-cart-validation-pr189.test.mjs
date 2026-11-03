@@ -67,7 +67,8 @@ test("admin server action uses signed-in role and a hardcoded private store",()=
  const workflow=read(".github/workflows/payout-rls.yml");
  assert.match(actions,/isVerifiedPlatformAdmin\(auth.user\)/);
  assert.match(actions,/auth.getUser\(\)/);
- assert.match(actions,/rpc\("get_admin_private_cart_validation"/);
+ assert.match(actions,/rpc\("get_admin_locked_cart_preflight"/);
+ assert.match(actions,/p_expected_subtotal_cents:expectedSubtotalCents/);
  assert.match(actions,/p_store_id:STORE_ID/);
  assert.match(actions,/p_items:\[\{product_id:productId,quantity\}\]/);
  assert.doesNotMatch(actions,/\.insert\(|\.update\(|createInvoice|service_role|process\.env/);
