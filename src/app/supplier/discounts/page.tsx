@@ -19,6 +19,7 @@ export default async function SupplierDiscounts() {
     <p className="eyebrow">APEX / SHARED STORE PROMOTIONS</p>
     <h1>Discount codes</h1>
     <p className="lead">Lily and Tierra can create and manage codes for the same storefront.</p>
+    <p className="notice"><Link href="/supplier/shipping">Configure optional shipping and automatic free-shipping threshold</Link></p>
     <p className="notice">Code management is a private preview. Live checkout is disabled; no code has redeemed an order or changed a Bitcoin settlement.</p>
     {w.stores.length===1&&<PromotionEditor storeId={w.stores[0].id} enabled={enabled&&!w.stores[0].is_public}/>}
     <section className="supplier-panel" style={{maxWidth:"none"}}>
@@ -28,7 +29,9 @@ export default async function SupplierDiscounts() {
       <div className="feature-grid" style={{gridTemplateColumns:"repeat(auto-fit,minmax(270px,1fr))"}}>
         {data.map(p=><article className="feature-card" key={p.id}>
           <h3>{p.code}</h3>
-          <p>{p.discount_kind==="percentage"?`${p.discount_value}% off`: `${(p.discount_value/100).toFixed(2)} USD off`}</p>
+          <p>{p.discount_kind==="free_shipping"?"Free shipping":
+             p.discount_kind==="percentage"?`${p.discount_value}% off`:
+              `${(p.discount_value/100).toFixed(2)} USD off`}</p>
           <p className="notice">{p.is_active?"Active in preview":"Inactive"} · Uses {p.redemption_count}{p.usage_limit?` / ${p.usage_limit}`:""}</p>
           <PromotionStatus storeId={p.store_id} promotion={p} enabled={enabled}/>
           <PromotionEditor storeId={p.store_id} existing={p} enabled={enabled}/>
