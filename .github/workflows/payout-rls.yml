@@ -90,6 +90,12 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261103170000_apex_private_cart_validation.sql
       - name: Verify live price, stock, role scope and denied checkout
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-private-cart-validation.sql
+      - name: Install admin locked cart preflight (disposable)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261103190000_apex_admin_locked_cart_preflight.sql
+      - name: Verify locked price and stock, stale displays and denied order operations
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-locked-cart-preflight.sql
+      - name: Prove concurrent inventory editor forces a locked preflight failure
+        run: bash tests/payout-rls/admin-locked-cart-concurrency.sh
       - name: Load isolated BTCPay receipt journal (no production database)
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_receipt_journal_REVIEW_ONLY.sql
       - name: Load isolated BTCPay order-status fixture
