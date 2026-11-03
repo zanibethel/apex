@@ -3,7 +3,7 @@ import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {CheckoutCatalogReview} from "./checkout-catalog-review";
-import "../checkout/preview/checkout-preview.css";
+import "../../checkout/preview/checkout-preview.css";
 import "./checkout-review.css";
 
 export const dynamic="force-dynamic";
