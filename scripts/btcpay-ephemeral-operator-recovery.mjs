@@ -51,7 +51,7 @@ export function createEphemeralOperatorRecovery({env=process.env,runPsql}={}){
      throw Error("Invalid private recovery SQL operation");
    const args=["-X","-q","-At","-v","ON_ERROR_STOP=1"];
    for(const [name,value] of Object.entries(params)){
-     if(!/^[a-z_]+$/.test(name)||typeof value!=="string"||
+     if(!/^[a-z][a-z0-9_]*$/.test(name)||typeof value!=="string"||
         !safe.test(value) && !uuid.test(value) && !digest.test(value))
        throw Error("Invalid recovery evidence SQL parameter");
      args.push("-v",name+"="+value);
