@@ -70,6 +70,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_verified_soldout_release_activation_REVIEW_ONLY.sql
       - name: Verify gated Sold Out publication, holds, approval revocation and anonymous isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/verified-soldout-release-lifecycle.sql
+      - name: Install narrow admin category publication RPC and audit
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261103044500_apex_admin_category_publication.sql
+      - name: Verify category ownership, audit, direct-write denial and release gate isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-category-publication.sql
       - name: Load isolated BTCPay receipt journal (no production database)
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_receipt_journal_REVIEW_ONLY.sql
       - name: Load isolated BTCPay order-status fixture

@@ -4,6 +4,7 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {classifyAdminRelease,summarizeAdminRelease}
  from "@/lib/catalog/admin-release-board.mjs";
+import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Catalog Release | Apex",robots:{index:false,follow:false}};
@@ -20,7 +21,7 @@ export default async function CatalogReleaseDashboard(){
 
  const [productsResult,controlsResult,categoriesResult,stockResult]=await Promise.all([
   client.from("products")
-   .select("id,store_id,category_id,sku,name,price_cents,is_active,is_published,image_path")
+   .select("id,store_id,category_id,sku,name,description,price_cents,is_active,is_published,image_path")
    .order("name",{ascending:true}).limit(PAGE_LIMIT),
   client.from("supplier_listing_controls")
    .select("store_id,product_id,supplier_wants_listing,admin_gate,republish_approval_required,republish_approved")
@@ -98,6 +99,8 @@ export default async function CatalogReleaseDashboard(){
        const p=row.product;
        const status=classifyAdminRelease(row.decision);
        const inventory=row.stock;
+       const setup=draftSetupSteps(p,inventory);
+       const missing=setup.steps.filter(step=>!step.complete).map(step=>step.label);
        return <article className="apex-product-card" key={p.id}>
         <div className="apex-product-card-head">
          <p className="eyebrow">{status.label}</p>
@@ -115,6 +118,8 @@ export default async function CatalogReleaseDashboard(){
          :"Unavailable"}</p>
         <p className="notice"><strong>Product:</strong> {p.is_active?"Active":"Inactive"}
          {" · "}{p.image_path?"Image saved":"Image missing"}</p>
+        <p className="notice"><strong>Setup:</strong> {setup.completed} of {setup.total} fields ready
+         {missing.length>0?" · Needs: "+missing.join(", "):" · Core details complete"}</p>
         <p className="notice">The label above comes from the protected database
          verdict. Changing a Publish switch does not override a hold,
          category restriction, or independent product release check.</p>
@@ -123,6 +128,8 @@ export default async function CatalogReleaseDashboard(){
      </div>}
    </>}
   <div className="actions">
+   <Link className="button secondary" href="/admin/categories">
+    Category controls</Link>
    <Link className="button primary" href="/admin/listing-controls">
     Manage admin holds</Link>
    <Link className="button secondary" href="/admin/product-reviews">
