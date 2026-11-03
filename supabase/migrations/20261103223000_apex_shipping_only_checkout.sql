@@ -104,7 +104,7 @@ revoke execute on function public.get_admin_private_checkout_rules_overview(uuid
 -- Allow both assigned suppliers and verified platform administrators to
 -- manage shipping promotions through the existing row-level checks.
 -- Previously authenticated had SELECT only, preventing supplier code writes.
-grant insert,update on public.supplier_discount_codes to authenticated;
+grant select,insert,update on public.supplier_discount_codes to authenticated;
 create policy apex_admin_promo_read
  on public.supplier_discount_codes for select to authenticated
  using((select auth.uid()) is not null
