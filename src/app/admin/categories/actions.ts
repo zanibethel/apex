@@ -110,3 +110,51 @@ export async function createReviewedTaxonomyCategories(
   created+" categories created as unpublished. Supplier can now stage the matching product categories.":
   "All reviewed categories already exist. No changes were needed."};
 }
+
+/** Rename a private, unpublished category without changing product IDs or
+ * making the category/public product catalog visible. Database logs the
+ * verified admin and invalidates stale internal review states if necessary. */
+export async function renameAdminCategory(
+ _previous:CategoryActionResult,form:FormData
+):Promise<CategoryActionResult>{
+ const storeId=form.get("storeId"),categoryId=form.get("categoryId");
+ const expectedName=form.get("expectedName"),newName=form.get("newName");
+ if(!isValidId(storeId)||!isValidId(categoryId)||
+  typeof expectedName!=="string"||expectedName.length>90||
+  typeof newName!=="string"||newName.length>90||
+  !/^[A-Za-z0-9][A-Za-z0-9 &+/_-]*$/.test(newName.trim())||
+  newName.trim().length<2||newName.trim().length>60)
+  return {ok:false,message:"Enter a valid category name (2–60 characters)."};
+ const client=await createSupplierServerClient();
+ if(!client)return {ok:false,message:"Admin sign-in required."};
+ const {data:auth,error:authError}=await client.auth.getUser();
+ if(authError||!isVerifiedPlatformAdmin(auth.user))
+  return {ok:false,message:"Verified platform admin access required."};
+ const result=await client.rpc("rename_admin_catalog_category",{
+  p_store_id:storeId,p_category_id:categoryId,
+  p_expected_name:expectedName,p_new_name:newName,
+ });
+ if(result.error){
+  if(result.error.code==="23505")
+   return {ok:false,message:"That category name is already used by this storefront."};
+  if(result.error.code==="23514")
+   return {ok:false,message:"Unpublish the category before renaming it."};
+  if(result.error.code==="22023")
+   return {ok:false,message:"Category changed or name was invalid. Refresh and retry."};
+  return {ok:false,message:"Category rename failed. No changes are assumed."};
+ }
+ if(!isValidId(result.data?.category_id)||
+  result.data.category_id!==categoryId||
+  (result.data.status!=="renamed"&&result.data.status!=="unchanged")||
+  result.data.is_published!==false||
+  typeof result.data.name!=="string")
+  return {ok:false,message:"Rename could not be confirmed. Refresh categories."};
+ revalidatePath("/admin/categories");
+ revalidatePath("/admin/catalog-release");
+ revalidatePath("/supplier/catalog/bulk");
+ revalidatePath("/admin/storefront-preview");
+ revalidatePath("/admin/checkout-review");
+ return {ok:true,message:result.data.status==="renamed"?
+  "Category renamed. Product assignments and stock were preserved.":
+  "Category name is already up to date."};
+}

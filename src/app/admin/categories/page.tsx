@@ -7,6 +7,7 @@ import {
 } from "@/lib/catalog/admin-category-publication.mjs";
 import {AdminCategoryPublicationForm} from "./form";
 import {CreateAdminCategoryForm} from "./create-category-form";
+import {RenameAdminCategoryForm} from "./rename-category-form";
 import {ReviewedTaxonomyCategoryForm} from "./reviewed-taxonomy-form";
 import {apexTaxonomyStoreId,apexTaxonomyCategoryNames} from "@/lib/catalog/apex-reviewed-taxonomy-20261102.mjs";
 
@@ -34,8 +35,8 @@ export default async function AdminCategories(){
   <Link className="back" href="/admin">← Admin dashboard</Link>
   <p className="eyebrow">APEX / ADMIN / CATALOG CATEGORIES</p>
   <h1>Category publishing</h1>
-  <p className="lead">Manage the category visibility setting for each
-   private supplier storefront.</p>
+  <p className="lead">Create, rename and manage category visibility for each
+   private supplier storefront. Category renames preserve existing product assignments.</p>
   <p className="notice"><strong>Publishing a category does not publish its
    products.</strong> Product Publish/Unpublish settings, admin holds,
    independent eligibility reviews and the site-wide release gate still
@@ -53,6 +54,7 @@ export default async function AdminCategories(){
     <CreateAdminCategoryForm stores={stores}/>}
   </section>
   {categories!==null&&stores?.some(s=>s.id===apexTaxonomyStoreId)&&
+   categories.filter(c=>c.storeId===apexTaxonomyStoreId).length<apexTaxonomyCategoryNames.length&&
    <ReviewedTaxonomyCategoryForm
     storeId={apexTaxonomyStoreId}
     names={apexTaxonomyCategoryNames}
@@ -85,6 +87,8 @@ export default async function AdminCategories(){
     <p className="notice"><strong>Store:</strong> {c.storeName}</p>
     <p className="notice"><strong>Products:</strong> {c.productCount} total
      {" · "}{c.activeCount} active</p>
+    <RenameAdminCategoryForm storeId={c.storeId} categoryId={c.categoryId}
+     currentName={c.categoryName} published={c.published}/>
     <p className="notice">This control does not approve products or enable
      Bitcoin payments. Publishing requires a brief internal audit note.</p>
     <AdminCategoryPublicationForm storeId={c.storeId}
