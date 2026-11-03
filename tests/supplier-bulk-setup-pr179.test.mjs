@@ -71,7 +71,7 @@ test("UI requires explicit selection, local staging, and existing authenticated 
  const board=readFileSync("src/app/admin/catalog-release/page.tsx","utf8");
  assert.match(editor,/stageSelectedBulkSetup\(rows,selectedRows\.map/);
  assert.match(editor,/setSelected\(staged\.changedKeys\)/);
- assert.match(editor,/setProductSearch\("﻿"\)/.source ? /stageSelectedBulkSetup/ : /stageSelectedBulkSetup/);
+ assert.match(editor,/setViewFilter\\("all"\\)/);
  assert.match(editor,/Save selected/);
  assert.match(editor,/Fill missing category/);
  assert.match(editor,/Mark selected active/);
