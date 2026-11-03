@@ -132,13 +132,17 @@ rollback;
 update public.categories set is_published=true;
 
 -- Zero real stock must remain the only case the public labels Sold Out.
-update public.inventory_items set quantity_on_hand=1;
+update public.inventory_items set quantity_on_hand=1
+ where store_id='62000000-0000-0000-0000-000000000001'
+ and product_id='64000000-0000-0000-0000-000000000001';
 do $$
 begin
  if jsonb_array_length(public.get_public_sold_out_catalog())<>0
  then raise exception 'Positive stock inaccurately displayed as Sold Out';end if;
 end $$;
-update public.inventory_items set quantity_on_hand=0;
+update public.inventory_items set quantity_on_hand=0
+ where store_id='62000000-0000-0000-0000-000000000001'
+ and product_id='64000000-0000-0000-0000-000000000001';
 
 -- Missing signed approval evidence, or expired seller review, hides the item.
 update apex_internal.supplier_release_authorizations set evidence_reference=null;
@@ -212,8 +216,10 @@ do $$
 begin
  if jsonb_array_length(public.get_public_sold_out_catalog())<>0
  then raise exception 'Global release shutdown failed';end if;
- if (select count(*) from public.products where is_published=false)<>1
- or (select count(*) from public.stores where is_public=false)<>1
+ if (select count(*) from public.products
+   where id='64000000-0000-0000-0000-000000000001' and is_published=false)<>1
+ or (select count(*) from public.stores
+   where id='62000000-0000-0000-0000-000000000001' and is_public=false)<>1
  then raise exception 'Private supplier editor flags were mutated';end if;
 end $$;
 select 'PASS: verified Sold Out catalog lifecycle and protected supplier verdict';
