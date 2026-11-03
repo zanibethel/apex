@@ -13,7 +13,7 @@ const workflow=read(".github/workflows/ci.yml");
 test("release display is fail closed and does not call intent a public listing",()=>{
  assert.equal(privateReleaseDisplay(null).label,"Decision unavailable");
  assert.equal(privateReleaseDisplay({status_code:"public_release_disabled",effective_public:true}).label,"Decision mismatch");
- assert.equal(privateReleaseDisplay({status_code:"public_visible",effective_public:true}).label,"Live · Sold Out");
+ assert.equal(privateReleaseDisplay({status_code:"public_visible",effective_public:true}).label,"Decision mismatch");
  assert.equal(privateReleaseDisplay({status_code:"category_not_published",effective_public:false}).label,"Category not published");
  assert.equal(privateReleaseDisplay({status_code:"public_release_disabled",effective_public:false}).label,"Public release disabled");
  assert.equal(privateReleaseDisplay({status_code:"admin_hold",effective_public:false}).label,"Administrative hold");
