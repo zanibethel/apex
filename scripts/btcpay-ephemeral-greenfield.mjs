@@ -233,6 +233,8 @@ export async function runEphemeralGreenfield({
       prismPayoutScenarioCount:finalProof.scenarioCount} : {}),
     ...(finalProof?.trustedRealGreenfieldVerified===true ?
       {trustedRealGreenfieldVerified:true}:{}),
+    ...(finalProof?.postCommitCrashRecoveryVerified===true ?
+      {postCommitCrashRecoveryVerified:true}:{}),
     prismVerified:Boolean(finalProof?.prismForwardingVerified),
     productionReady:false,
   });
@@ -273,7 +275,9 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
         return {
           ...(prismProof||{}),
           ...(workerProof?.trustedWorkerVerified===true?
-            {trustedRealGreenfieldVerified:true}:{})
+            {trustedRealGreenfieldVerified:true}:{}),
+          ...(workerProof?.realPostCommitCrashRecoveryVerified===true?
+            {postCommitCrashRecoveryVerified:true}:{})
         };
       },
     }:{}),
