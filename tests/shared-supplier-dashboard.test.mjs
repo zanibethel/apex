@@ -23,7 +23,7 @@ test("two supplier members share store by supplier_id, not separate user stores"
 });
 
 test("supplier workspace advertises private, read-only product/inventory view", () => {
-  assert.match(page, /Private draft/);
-  assert.match(page, /not enabled/);
+  assert.match(page, /Catalog workspace/);
+  assert.match(page, /Checkout and live payment processing are not available yet/);
   assert.match(page, /\/account\/profile/);
 });
