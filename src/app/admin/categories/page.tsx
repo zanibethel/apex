@@ -3,9 +3,10 @@ import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {
- parseAdminCategories,categoryPublicationSummary,
+ parseAdminCategories,parseAdminCategoryStores,categoryPublicationSummary,
 } from "@/lib/catalog/admin-category-publication.mjs";
 import {AdminCategoryPublicationForm} from "./form";
+import {CreateAdminCategoryForm} from "./create-category-form";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Category Controls | Apex",
@@ -19,8 +20,12 @@ export default async function AdminCategories(){
   redirect("/admin/sign-in");
  // A deliberately narrow SECURITY DEFINER readback handles global admin
  // visibility without widening category RLS or using a service-role client.
- const result=await client.rpc("get_admin_category_publication_overview");
+ const [result,storeResult]=await Promise.all([
+  client.rpc("get_admin_category_publication_overview"),
+  client.rpc("get_admin_private_category_stores"),
+ ]);
  const categories=result.error?null:parseAdminCategories(result.data);
+ const stores=storeResult.error?null:parseAdminCategoryStores(storeResult.data);
  const summary=categoryPublicationSummary(categories);
  return <main className="container supplier-shell apex-branded-dashboard"
   style={{minWidth:0,overflowWrap:"anywhere"}}>
@@ -33,6 +38,18 @@ export default async function AdminCategories(){
    products.</strong> Product Publish/Unpublish settings, admin holds,
    independent eligibility reviews and the site-wide release gate still
    determine what appears to customers. Checkout is unavailable.</p>
+  <section className="supplier-panel" style={{maxWidth:"none",marginBottom:22}}
+   aria-label="Create a new category">
+   <h2>Create category</h2>
+   <p className="notice">Categories start unpublished. Choose a meaningful
+    name for the products you plan to organize, then assign it through the
+    supplier bulk editor. Creating a category does not publish products or
+    enable ordering.</p>
+   {stores===null?<p role="status">Storefront choices are unavailable. No
+    category can be created until the private admin connection is restored.</p>:
+    !stores.length?<p>No private storefront is available for categories.</p>:
+    <CreateAdminCategoryForm stores={stores}/>}
+  </section>
   <section className="feature-grid" aria-label="Category publishing summary">
    {[
     ["Categories",summary.total],
