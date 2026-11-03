@@ -2,7 +2,7 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-02
+Last reviewed: 2026-11-03
 
 ## 1. Isolate Bitcoin signing and payment authority from web/worker compromise
 
@@ -28,9 +28,9 @@ Last reviewed: 2026-11-02
 
 ## 2. Storefront deployment versus catalog acceptance
 
-**Status:** Evaluate / supplier-data acceptance pending  
+**Status:** Implemented private catalog/held-only review; Evaluate publication and checkout acceptance  
 **Added:** 2026-10-31  
-**Last reviewed:** 2026-11-02
+**Last reviewed:** 2026-11-03
 
 **Evidence:** Vercel's latest READY production deployment is Apex main commit `7c106fcc` (mobile supplier product cards/source-cost editing); the connected Supabase `products` table currently has **0 rows**. This is a working UI/deployment milestone, not evidence that supplier inventory, image access, permissions or checkout acceptance are complete. The existing catalog-input dependency is already risk R2 in `docs/CRITICAL_PATH_RISKS.md`.
 
@@ -44,11 +44,13 @@ Last reviewed: 2026-11-02
 
 **2026-11-02 material status change:** Apex production Vercel deployment is **READY at `4f42400b`** (merged PR #151, verified-only read-only sold-out storefront projection with pagination and an independent global release gate); merged PR #150 enables private source-linked cards without a review-first UI blocker. Hosted Supabase has **63 import candidates** (62 `unverified`, 1 `approved_for_draft`), but still **only 1 saved product** (SKU 1001, active, **unpublished**), and zero payment allocations/split drafts. A private source-card path or read-only sold-out projection does **not** make unverified candidates public, publish products, create inventory, or establish checkout readiness. **Possible solution:** test import→verification→private draft→published visibility under the global gate, zero-stock projection, role isolation, truthful price and image permissions with nontransactional fixtures. **Recommendation:** acceptance review only; no public sellable inventory or live checkout activation without separate approval. References: https://github.com/zanibethel/apex/pull/150 ; https://github.com/zanibethel/apex/pull/151 .
 
+**2026-11-03 material status change:** Hosted Supabase now contains **63 saved products** (vs 1 Nov 2), **all priced with source cost, compare-at price and image paths**, spanning **9 categories**; **63 inventory rows, 0 on hand, 0 reserved, 0 published** (50 active). The 63 source-import candidates remain **62 unverified / 1 approved-for-draft**, so saved records do **not** imply source verification or public release. Latest Vercel READY production main is **`cbfbe37`** (PR #188: held-only order/BTCPay intent journal), following PRs #185 private real-catalog checkout review, #186 audited category rename and #187 read-only BTCPay Greenfield connection verification. **Possible solution:** read-only supplier/admin/public-role and zero-stock acceptance matrix, source provenance and compare-at calculations, and held-only intent audit; preserve public-release and real-money gates. **Recommendation:** do not equate 63 saved drafts with public sellable products or enabled payments. References: https://github.com/zanibethel/apex/pull/185 ; https://github.com/zanibethel/apex/pull/187 ; https://github.com/zanibethel/apex/pull/188 .
+
 ## 3. Runtime patch readiness for the deployed storefront
 
 **Status:** Evaluate / read-only version audit  
 **Added:** 2026-10-31  
-**Last reviewed:** 2026-10-31
+**Last reviewed:** 2026-11-03
 
 **Evidence:** Apex Vercel project is configured for Node **22.x**; repository `package.json` has no `engines.node` and declares Next.js `^16.0.0` (the lockfile/deployed resolved patch version was not established in this review). Vercel announced Node 26 LTS GA Oct 29, default for new projects, with conditional existing-project upgrades. Next.js plans seven medium-severity fixes Nov 3; affected versions are not yet established. Sources: https://vercel.com/changelog/node-js-26-lts-is-now-generally-available-on-vercel ; https://nextjs.org/blog/upcoming-nextjs-security-release-november-2026 .
 
@@ -56,12 +58,13 @@ Last reviewed: 2026-11-02
 
 **Recommendation:** No runtime/framework changes or deployment without regression evidence and explicit approval. Keep real checkout disabled pending existing payment and compliance gates.
 
+**2026-11-03 evidence:** Vercel announced automatic blocked-npm-package checks before/during new builds on Nov 2, including supported lockfiles and cached installs; this does not prove already-deployed functions safe. No verified Nov 3 Next.js affected-version matrix was available at the morning review. **Recommendation unchanged:** inspect exact lockfile/deployed runtime and test catalog/admin/held-checkout regressions before any approved patch. Source: https://vercel.com/changelog/blocking-malicious-npm-packages-before-and-during-installation .
 
 ## 4. BTCPay/Prism split-change approval and settlement evidence
 
-**Status:** Evaluate / nonproduction regtest tests passed; live activation remains blocked  
+**Status:** Evaluate / nonproduction split tests passed; read-only Greenfield and held-only journal deployed; live activation blocked  
 **Added:** 2026-11-01  
-**Last reviewed:** 2026-11-01
+**Last reviewed:** 2026-11-03
 
 **Finding:** Draft stacked Apex PRs #109–#119 now cover ephemeral BTCPay regtest, signed invoice webhooks, two-recipient Prism on-chain forwarding, 90/10 and 85/15 reconciliation, and admin-only split review. PR #119 reports passing exact-head disposable PostgreSQL/RLS, app quality and real Prism regtest checks, but remains **draft/unmerged**. Its review state `approved_pending_manual_sync` is **not** a live payout activation or proof of race-free settlement. Prism's store-level split is read at confirmation; concurrent new invoices and split edits require coordinated finality and locking. Hosted Supabase has **zero** allocation snapshots or split drafts.
 
@@ -70,3 +73,6 @@ Last reviewed: 2026-11-02
 **Possible solution:** After review, design a per-store transactional activation barrier coordinating *all* invoice writers and Prism sync, with immutable rule versions, independent finality evidence, rechecks under lock, idempotent ledger reconciliation, and a manual recovery/rollback procedure. Continue using disposable regtest and isolated wallets.
 
 **Recommendation:** Keep PR #119 and dependencies draft; review exact-head CI and real Prism receipts, then separately approve any production schema, live activation, hosting or wallet integration. No live coins, no mainnet, no admin activate button. Reference: https://github.com/zanibethel/apex/pull/119 .
+
+**2026-11-03 evidence:** Apex production main now includes PR #187's **read-only, store-scoped BTCPay Greenfield connection verifier** and PR #188's **private held-only order/provider-intent journal**; these are infrastructure/acceptance milestones, **not** live invoice creation, successful payout, settlement or an activated Prism split. Hosted `store_split_drafts` and allocation snapshots remain empty. **Possible solution:** review real-provider connection and held-intent audit without exposing secrets; continue per-store immutable split/finality/race tests in disposable regtest. **Recommendation:** retain explicit mainnet/live-transaction approval gate and no automatic activation. References: https://github.com/zanibethel/apex/pull/187 ; https://github.com/zanibethel/apex/pull/188 .
+
