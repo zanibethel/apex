@@ -14,7 +14,7 @@ begin
   or to_regclass('apex_internal.listing_identity_holds') is null
   or to_regprocedure('public.set_supplier_listing_intent(uuid,uuid,text)') is null
   or to_regprocedure('public.get_private_release_readiness(uuid,uuid)') is null
-  or to_regprocedure('public.get_public_sold_out_catalog(integer,integer)') is null
+  or to_regprocedure('public.get_public_sold_out_catalog()') is null
   or not exists(select 1 from apex_internal.private_release_gate
     where singleton=true and enabled=false)
   or not exists(select 1 from pg_constraint
