@@ -77,7 +77,7 @@ export async function requestPrivateTaxCloudEstimate({
  if(config.status!=="ready"||!config.connectionId||!config.key||!config.origin)
   return fail(config.status,"TaxCloud store credentials and approved origin are required.");
  const rule=canQuoteProduct(config,productId,collectSalesTax);
- if(!rule.ok)return fail("classification_pending",rule.reason);
+ if(!rule.ok)return fail("classification_pending",rule.reason??"Product classification is unverified.");
  const cart=makeTaxCloudCart({
   connectionId:config.connectionId,origin:config.origin,
   destination,productId,quantity,unitPriceCents,
