@@ -22,10 +22,36 @@ grant usage on schema apex_test_worker to apex_test_invoice_worker;
 -- Only these three fixed-purpose entry points can be executed by this role.
 -- Original privileged functions and all table writes remain unavailable.
 create function apex_test_worker.worker_reserve_btcpay_test_provider_post(
-  p_scope uuid,p_store text,p_order text,p_amount_sats bigint)
-returns uuid language sql security definer set search_path='' as $fn$
-  select apex_test_internal.reserve_btcpay_test_provider_post(
+  p_scope uuid,p_store text,p_order text,p_amount_sats bigint,
+  p_credential_sha256 text)
+returns uuid language plpgsql security definer set search_path='' as $fn$
+begin
+  if p_scope is null or p_credential_sha256 is null or
+     p_credential_sha256 !~ '^[0-9a-f]{64}$' then
+    raise exception 'Invalid supplier credential proof' using errcode='22023';
+  end if;
+  -- Serialize revocation and pre-POST authorization using the existing
+  -- storefront transaction lock. A revoked or cross-supplier key never
+  -- consumes the one-shot permit or calls Greenfield.
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended('storefront:'||p_scope::text,0));
+  if not exists (
+    select 1 from public.btcpay_test_supplier_credentials c
+    join public.stores s on s.id=c.scope_id
+      and s.supplier_id=c.supplier_id
+    join public.btcpay_test_trusted_post_store_bindings b
+      on b.scope_id=c.scope_id and b.btcpay_store_id=c.btcpay_store_id
+         and b.network='regtest'
+    where c.scope_id=p_scope and c.btcpay_store_id=p_store
+      and c.status='active'
+      and c.credential_sha256=p_credential_sha256
+  ) then
+    raise exception 'Supplier payment credential not bound or revoked'
+      using errcode='55000';
+  end if;
+  return apex_test_internal.reserve_btcpay_test_provider_post(
     p_scope,p_store,p_order,p_amount_sats);
+end;
 $fn$;
 create function apex_test_worker.worker_verify_btcpay_test_provider_post(
   p_intent uuid,p_scope uuid)
@@ -60,13 +86,13 @@ returns text language sql security definer set search_path='' as $fn$
 $fn$;
 
 revoke all on function apex_test_worker.worker_reserve_btcpay_test_provider_post(
- uuid,text,text,bigint) from public,anon,authenticated;
+ uuid,text,text,bigint,text) from public,anon,authenticated;
 revoke all on function apex_test_worker.worker_verify_btcpay_test_provider_post(
  uuid,uuid) from public,anon,authenticated;
 revoke all on function apex_test_worker.worker_observe_btcpay_test_provider_post(
  uuid,text,text) from public,anon,authenticated;
 grant execute on function apex_test_worker.worker_reserve_btcpay_test_provider_post(
- uuid,text,text,bigint) to apex_test_invoice_worker;
+ uuid,text,text,bigint,text) to apex_test_invoice_worker;
 grant execute on function apex_test_worker.worker_verify_btcpay_test_provider_post(
  uuid,uuid) to apex_test_invoice_worker;
 grant execute on function apex_test_worker.worker_observe_btcpay_test_provider_post(
