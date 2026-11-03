@@ -23,7 +23,7 @@ function requireIsolation(env){
      env?.APEX_BTCPAY_EPHEMERAL!=="true"||
      env?.APEX_BTCPAY_TEST_NETWORK!=="regtest"||
      env?.PGHOST!=="localhost"||env?.PGPORT!=="5432"||
-     env?.PGDATABASE!=="apex_test"||env?.PGUSER!=="postgres"||
+     env?.PGDATABASE!=="apex_test"||env?.PGUSER!=="apex_test_invoice_worker"||
      typeof env?.RUNNER_TEMP!=="string"||
      !env.RUNNER_TEMP.startsWith("/home/runner/work/_temp")||
      typeof env?.PGPASSWORD!=="string"||env.PGPASSWORD.length<1)

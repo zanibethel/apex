@@ -5,6 +5,8 @@
  */
 import assert from "node:assert/strict";
 import {createTrustedRegtestPgWorker} from "./btcpay-ephemeral-trusted-pg-worker.mjs";
+const workerEnv={...process.env,PGUSER:"apex_test_invoice_worker",
+ PGPASSWORD:process.env.APEX_BTCPAY_TEST_WORKER_PASSWORD};
 const key="disposable_fake_key_do_not_use";
 const okStore="trusted-synthetic-store-ok";
 const unknownStore="trusted-synthetic-store-timeout";
@@ -12,7 +14,7 @@ const okScope="39000000-0000-0000-0000-000000000001";
 const unknownScope="39000000-0000-0000-0000-000000000002";
 let calls=[];
 let capturedIntent="";
-const worker=createTrustedRegtestPgWorker({
+const worker=createTrustedRegtestPgWorker({env:workerEnv,
  fetchImpl:async(url,options)=>{
   const u=new URL(url);
   assert.equal(u.origin,"http://127.0.0.1:14142");
@@ -60,7 +62,7 @@ assert.equal(denied,true,"Second call must be denied by consumed durable permit"
 assert.deepEqual(calls,["POST","GET"],"Duplicate request must never reach provider");
 
 let timeoutCalls=0;
-const timeoutWorker=createTrustedRegtestPgWorker({
+const timeoutWorker=createTrustedRegtestPgWorker({env:workerEnv,
  fetchImpl:async()=>{
    timeoutCalls++;
    throw Error("simulated unavailable upstream / never log real secret");

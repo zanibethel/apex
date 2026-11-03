@@ -111,7 +111,9 @@ await sql("tests/payout-rls/btcpay-real-provider-worker-setup.sql",{
 });
 
 let posts=0;
-const worker=createTrustedRegtestPgWorker({env,
+const workerEnv={...env,PGUSER:"apex_test_invoice_worker",
+ PGPASSWORD:env.APEX_BTCPAY_TEST_WORKER_PASSWORD};
+const worker=createTrustedRegtestPgWorker({env:workerEnv,
  fetchImpl:async(url,opts)=>{
   if(!url.startsWith(ORIGIN+"/api/v1/stores/"+storeId+"/invoices"))
     throw Error("Worker attempted external or cross-store Greenfield request");
