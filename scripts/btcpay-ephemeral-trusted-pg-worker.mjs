@@ -52,7 +52,7 @@ export function createTrustedRegtestPgWorker({
   async function sql(operation,values){
     const args=["-X","-q","-At","-v","ON_ERROR_STOP=1"];
     for(const [name,value] of Object.entries(values)){
-      validate(name,name,/^[a-z_]+$/);
+      validate(name,name,/^[a-z][a-z0-9_]*$/);
       validate(name,value,/^[A-Za-z0-9_-]{0,100}$/);
       args.push("-v",name+"="+value);
     }
