@@ -95,6 +95,51 @@ test("reviewed categories stage precisely 49 blank categories and nothing else",
  }
  assert.equal(staged.rows.filter(x=>x.isActive).length,1);
 });
+test("new unsaved cards can coexist with an exact reviewed saved catalog",()=>{
+ const draft={
+  key:"ab000000-0000-0000-0000-000000000001",
+  name:"Another unsaved product",sku:"",categoryId:"",
+  description:"Unchanged draft",price:"",sourceCost:"",
+  comparePrice:"",isActive:false,needsSave:true,
+ };
+ const rows=[draft,...stored()];
+ const before=structuredClone(rows);
+ const summary=assessReviewedTaxonomy(
+  rows,apexTaxonomyProposal,allCategories(),
+  apexTaxonomyStoreId,apexTaxonomyStoreId);
+ assert.equal(summary.ready,true);
+ assert.equal(summary.extras,1);
+ assert.equal(summary.changes.length,49);
+ const staged=stageReviewedTaxonomy(rows,summary);
+ assert.equal(staged.ok,true);
+ assert.equal(staged.changedKeys.length,49);
+ assert.deepEqual(rows,before,"assessment and staging never mutate inputs");
+ assert.strictEqual(staged.rows[0],draft,"unsaved draft is left untouched");
+ assert.ok(!staged.changedKeys.includes(draft.key));
+});
+test("ambiguous draft keys and lost saved identity fail closed",()=>{
+ const draftKey="ab000000-0000-0000-0000-000000000002";
+ const rows=stored();
+ const draft={key:draftKey,needsSave:true};
+ const duplicate=assessReviewedTaxonomy(
+  [...rows,draft,{...draft}],apexTaxonomyProposal,allCategories(),
+  apexTaxonomyStoreId,apexTaxonomyStoreId);
+ assert.equal(duplicate.ready,false);
+ assert.match(duplicate.error,/keys/);
+ const orphan=assessReviewedTaxonomy(
+  [...rows,{key:draftKey,needsSave:false}],
+  apexTaxonomyProposal,allCategories(),
+  apexTaxonomyStoreId,apexTaxonomyStoreId);
+ assert.equal(orphan.ready,false);
+ assert.match(orphan.error,/identity/);
+ const lost=[...rows];
+ lost[0]={...lost[0],id:undefined,needsSave:true};
+ const summary=assessReviewedTaxonomy(
+  lost,apexTaxonomyProposal,allCategories(),
+  apexTaxonomyStoreId,apexTaxonomyStoreId);
+ assert.equal(summary.ready,false);
+ assert.equal(summary.unmatched.length,1);
+});
 test("stale titles, changed SKUs and existing conflicting category block entire plan",()=>{
  for(const field of ["name","sku"]){
   const rows=stored();rows[10]={...rows[10],[field]:"Changed"};
@@ -118,16 +163,18 @@ test("stale titles, changed SKUs and existing conflicting category block entire 
   "62000000-0000-0000-0000-000000000001",apexTaxonomyStoreId);
  assert.equal(other.ready,false);
 });
-test("post-review identity or category changes abort local staging",()=>{
- const rows=stored(),summary=assessReviewedTaxonomy(
-  rows,apexTaxonomyProposal,allCategories(),
-  apexTaxonomyStoreId,apexTaxonomyStoreId);
- assert.equal(summary.ready,true);
- const target=summary.changes[0];
- rows.find(x=>x.key===target.key).categoryId=GETSWOLE;
- const staged=stageReviewedTaxonomy(rows,summary);
- assert.equal(staged.ok,false);
- assert.equal(staged.changedKeys.length,0);
+test("post-review category or SKU changes abort local staging",()=>{
+ for(const field of ["categoryId","sku"]){
+  const rows=stored(),summary=assessReviewedTaxonomy(
+   rows,apexTaxonomyProposal,allCategories(),
+   apexTaxonomyStoreId,apexTaxonomyStoreId);
+  assert.equal(summary.ready,true);
+  const target=summary.changes[0];
+  rows.find(x=>x.key===target.key)[field]=field==="sku"?"NEW-SKU":GETSWOLE;
+  const staged=stageReviewedTaxonomy(rows,summary);
+  assert.equal(staged.ok,false);
+  assert.equal(staged.changedKeys.length,0);
+ }
 });
 test("admin action uses only authenticated and audited existing category RPC",()=>{
  const actions=read("src/app/admin/categories/actions.ts");
