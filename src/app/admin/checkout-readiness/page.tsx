@@ -47,7 +47,7 @@ export default async function CheckoutReadinessAdmin(){
    results.push(...reads);
   }
  }
- const checkoutMode=process.env.APEX_CHECKOUT_MODE==="demo"?"demo":"disabled";
+ const checkoutMode="disabled" as const;
  return <main className="container supplier-shell apex-branded-dashboard" style={{minWidth:0}}>
   <Link className="back" href="/admin">← Admin dashboard</Link>
   <p className="eyebrow">APEX / ADMIN ONLY / CHECKOUT PREPARATION</p>
@@ -58,7 +58,7 @@ export default async function CheckoutReadinessAdmin(){
    merchandise, create orders, or connect to Bitcoin.</p>
   <section className="supplier-panel" style={{maxWidth:"none",marginBottom:22}}>
    <h2>Payment and storefront gates</h2>
-   <p><strong>Current checkout UI:</strong> {checkoutMode==="demo"?"Fictional interactive demo only":"Disabled"}</p>
+   <p><strong>Customer checkout:</strong> Unavailable</p>
    <p><strong>Public product checkout:</strong> Blocked</p>
    <p><strong>Order creation:</strong> Blocked</p>
    <p><strong>BTCPay invoice creation:</strong> Blocked</p>
@@ -109,7 +109,7 @@ export default async function CheckoutReadinessAdmin(){
          </li>)}
         </ul>
         <p className="notice">No live checkout activation can be performed on this page.
-         Product, shipping and tax prices are not returned to customers.</p>
+         Product prices and shipping charges are not released for checkout.</p>
        </details>
        <Link className="button secondary" href="/admin/listing-controls">
         Review admin listing controls
@@ -118,7 +118,7 @@ export default async function CheckoutReadinessAdmin(){
      })}
     </div>}
   </section>
-  <p className="notice">Only the existing fictional sample catalog may enter the
-   demo shopping cart. An approval in this panel never changes that restriction.</p>
+  <p className="notice">No public checkout is available. Admin approval here does not
+   override product-release or payment authorization.</p>
  </main>;
 }
