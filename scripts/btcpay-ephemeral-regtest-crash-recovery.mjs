@@ -5,6 +5,7 @@
  * by Next.js. No automatic retry, payment link, mainnet or production key.
  */
 import assert from "node:assert/strict";
+import {writeSync} from "node:fs";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
 import {fileURLToPath} from "node:url";
@@ -90,7 +91,7 @@ async function crashChild(){
      const created=await response.json();
      if(!safeId.test(created?.id||"")||created.storeId!==storeId)
        throw Error("No confirmed provider acceptance before fault injection");
-     process.stderr.write("DISPOSABLE_POST_COMMITTED_CRASH_INJECTED\n");
+     writeSync(2,"DISPOSABLE_POST_COMMITTED_CRASH_INJECTED\n");
      process.exit(79);
    },
  });
