@@ -191,7 +191,7 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
      <div><dt>Subtotal</dt><dd>{money(subtotal)}</dd></div>
      <div><dt>Shipping</dt><dd>{!shipping?"Unavailable":
        shipping.shippingCents===0?"Free":money(shipping.shippingCents)}</dd></div>
-     <div className="apex-checkout-price-total"><dt>Estimated total</dt><dd>{shipping?
+     <div className="apex-checkout-price-total"><dt>Before discount code</dt><dd>{shipping?
        money(subtotal+shipping.shippingCents):"Unavailable"}</dd></div>
     </dl>
     {product&&<AdminDestinationChargeForm key={"charges:"+product.id+":"+quantity}
