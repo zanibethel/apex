@@ -96,6 +96,12 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-locked-cart-preflight.sql
       - name: Prove concurrent inventory editor forces a locked preflight failure
         run: bash tests/payout-rls/admin-locked-cart-concurrency.sh
+      - name: Install synthetic atomic reservation contract (disposable database only)
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_order_reservation_contract_REVIEW_ONLY.sql
+      - name: Verify server-sourced totals, quote binding, duplicate denials and atomic rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/atomic-order-reservation-contract.sql
+      - name: Prove concurrent synthetic holds cannot oversell or duplicate a request
+        run: bash tests/payout-rls/atomic-order-reservation-concurrency.sh
       - name: Load isolated BTCPay receipt journal (no production database)
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_receipt_journal_REVIEW_ONLY.sql
       - name: Load isolated BTCPay order-status fixture
