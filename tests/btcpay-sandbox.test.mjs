@@ -140,8 +140,8 @@ test("payment proof-of-concept is not imported into any live checkout route", ()
   const catalog=read("src/app/catalog/page.tsx");
   assert.doesNotMatch(home,/btcpay-sandbox|href="\/checkout(?:\/|")/);
   assert.doesNotMatch(catalog,/btcpay-sandbox/);
-  assert.match(catalog,/internalCheckoutPreview&&<section/);
-  assert.match(catalog,/isVerifiedPlatformAdmin\(identity\.user\)/);
+  assert.doesNotMatch(catalog,/internalCheckoutPreview|DemoCatalogShelf|Open checkout test/);
+  assert.doesNotMatch(catalog,/APEX_CHECKOUT_MODE/);
   assert.match(read("src/app/checkout/preview/page.tsx"),/isVerifiedPlatformAdmin\(data\.user\)/);
   assert.doesNotMatch(read("src/app/checkout/preview/checkout-preview.tsx"),/btcpay-sandbox|\/api\/v1\/stores\/|\.insert\(/);
   assert.doesNotMatch(read("src/app/supplier/operations/actions.ts"), /btcpay-sandbox/);

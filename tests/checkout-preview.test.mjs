@@ -89,7 +89,9 @@ test("preview route cannot initiate orders, requests, wallets, invoice POST, or 
  const source=readFileSync(base+"checkout-preview.tsx","utf8");
  const route=readFileSync(base+"page.tsx","utf8");
  const model=readFileSync("src/lib/checkout/preview-model.mjs","utf8");
- assert.match(route,/CheckoutPreview/);
+ assert.doesNotMatch(route,/CheckoutPreview/);
+ assert.match(route,/redirect\("\/admin\/checkout-review"\)/);
+ assert.match(route,/isVerifiedPlatformAdmin/);
  assert.match(source,/Simulate payment detected/);
  assert.match(source,/Simulate blockchain confirmation/);
  assert.match(source,/not a scannable Bitcoin QR code/);
@@ -105,11 +107,13 @@ test("preview route cannot initiate orders, requests, wallets, invoice POST, or 
  }
 });
 
-test("public demo release requires explicit server-only demo mode; live never enables payment",()=>{
+test("legacy checkout route never exposes sample payments while historical sample assets remain inert",()=>{
  const page=readFileSync("src/app/checkout/preview/page.tsx","utf8");
  const source=readFileSync("src/app/checkout/preview/checkout-preview.tsx","utf8");
  const env=readFileSync(".env.example","utf8");
- assert.match(page,/process\.env\.APEX_CHECKOUT_MODE!=="demo"\)notFound\(\)/);
+ assert.match(page,/if\(!client\)notFound\(\)/);
+ assert.match(page,/redirect\("\/admin\/checkout-review"\)/);
+ assert.doesNotMatch(page,/CheckoutPreview|APEX_CHECKOUT_MODE/);
  assert.match(page,/force-dynamic/);
  assert.doesNotMatch(page,/NEXT_PUBLIC_APEX_CHECKOUT_MODE/);
  assert.match(source,/TEST MODE — SIMULATED PAYMENTS ONLY/);

@@ -83,7 +83,7 @@ test("private checkout admin view requires verified role and signed-in user",()=
  assert.match(admin,/BATCH_SIZE=8/);
  assert.match(admin,/LIMIT=40/);
  assert.match(admin,/evaluatePrivateCheckoutReadiness/);
- assert.match(admin,/checkoutMode=process\.env\.APEX_CHECKOUT_MODE==="demo"/);
+ assert.match(admin,/checkoutMode="disabled" as const/);
  assert.match(admin,/canAddToRealCart|CHECKOUT BLOCKED/);
  assert.match(dashboard,/href: "\/admin\/checkout-readiness"/);
  assert.doesNotMatch(admin,/\bfetch\s*\(|\.insert\(|\.update\(|\.delete\(|service_role|SUPABASE_SECRET|NEXT_PUBLIC_/);

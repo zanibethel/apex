@@ -49,7 +49,7 @@ test("public sold-out SQL is structurally off, enforces seller/product releases 
  assert.doesNotMatch(sql,/\bupdate\s+public\.products|\binsert into\s+public\.products|\bcreateInvoice\b/);
 });
 
-test("only approved projection is rendered; demo is visually and commercially separate",()=>{
+test("only approved projection is rendered; demo sample catalog is absent",()=>{
  const page=read("src/app/catalog/page.tsx");
  const shelf=read("src/app/catalog/approved-sold-out-shelf.tsx");
  const css=read("src/app/catalog/sold-out-catalog.css");
@@ -57,8 +57,8 @@ test("only approved projection is rendered; demo is visually and commercially se
  assert.match(page,/<ApprovedSoldOutShelf result=\{approved\}/);
  assert.match(page,/readPublishedCatalog\(\)/);
  assert.doesNotMatch(page,/connection\.products\.map|result\.products\.map/);
- assert.match(page,/internalCheckoutPreview&&<section/);
- assert.match(page,/<DemoCatalogShelf\/>/);
+ assert.doesNotMatch(page,/internalCheckoutPreview|DemoCatalogShelf/);
+ assert.doesNotMatch(page,/Open checkout test|APEX_CHECKOUT_MODE/);
  assert.match(page,/Checkout is currently unavailable/);
  assert.match(shelf,/result\.state==="connected"&&result\.products\.length>0/);
  assert.match(shelf,/availability|SOLD OUT/);
