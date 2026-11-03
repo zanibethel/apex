@@ -20,7 +20,9 @@ test("post-commit crash injection has strict CI/regtest and localhost boundaries
 test("crash recovery requires provider readback, durable evidence and no retry",()=>{
   assert.ok(crash.includes("btcpay-real-provider-crash-intent.sql"));
   assert.ok(crash.includes("btcpay-real-provider-crash-final.sql"));
-  assert.ok(crash.includes("btcpay-worker-observe.sql"));
+  assert.ok(crash.includes("createEphemeralOperatorRecovery"));
+  assert.ok(crash.includes("const reviewerDigest=readbackEvidence(reviewedProvider)"));
+  assert.ok(crash.includes("const observation=await recovery.reconcile"));
   assert.ok(crash.includes('assert.equal(unexpectedHttpCalls,0'));
   assert.ok(crash.includes('assert.equal(finalList.length,1)'));
   assert.ok(live.includes("runEphemeralCrashRecovery"));

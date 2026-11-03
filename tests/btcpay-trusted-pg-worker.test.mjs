@@ -13,6 +13,7 @@ const safeEnv={
 const storeId="trusted_unit_store",scopeId="39000000-0000-0000-0000-000000000001";
 const orderRef="trusted_unit_order",amountSats=10000n;
 const intentId="12345678-1234-4123-8123-123456789abc";
+const observationToken="a".repeat(64);
 const apiKey="fake_key_unused_without_real_provider";
 const request={scopeId,storeId,orderRef,amountSats,apiKey};
 
@@ -44,7 +45,7 @@ test("trusted worker owns SQL reserve -> verified DB readback -> HTTP POST/GET -
    assert.ok(args.includes("store_id="+storeId));
    assert.ok(args.includes("credential_sha256="+createHash("sha256").update(apiKey,"utf8").digest("hex")));
    assert.ok(!args.some(x=>x.includes(apiKey)),"Raw BTCPay token must not reach psql");
-   return intentId;
+   return JSON.stringify({intentId,observationToken});
   }
   if(command.endsWith("btcpay-worker-verify.sql")){
    steps.push("verify");
@@ -54,6 +55,7 @@ test("trusted worker owns SQL reserve -> verified DB readback -> HTTP POST/GET -
   if(command.endsWith("btcpay-worker-observe.sql")){
    steps.push("observe");
    assert.ok(args.includes("kind=invoice_seen_by_readback"));
+   assert.ok(args.includes("observation_token="+observationToken));
    return "recorded_without_checkout_authorization";
   }
   throw Error("Unexpected untrusted SQL file");

@@ -226,6 +226,12 @@ jobs:
           worker_password="$(openssl rand -hex 32)"
           echo "::add-mask::$worker_password"
           echo "APEX_BTCPAY_TEST_WORKER_PASSWORD=$worker_password" >> "$GITHUB_ENV"
+          requester_password="$(openssl rand -hex 32)"
+          reviewer_password="$(openssl rand -hex 32)"
+          echo "::add-mask::$requester_password"
+          echo "::add-mask::$reviewer_password"
+          echo "APEX_BTCPAY_TEST_RECOVERY_REQUESTER_PASSWORD=$requester_password" >> "$GITHUB_ENV"
+          echo "APEX_BTCPAY_TEST_RECOVERY_REVIEWER_PASSWORD=$reviewer_password" >> "$GITHUB_ENV"
       - name: Build separate disposable approval/intent database for real Greenfield worker
         env:
           PGDATABASE: apex_test
