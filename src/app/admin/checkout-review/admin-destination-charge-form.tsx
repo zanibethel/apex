@@ -51,12 +51,23 @@ export function AdminDestinationChargeForm({
      <dt>Estimated total</dt><dd>{amount(state.totalCents)}</dd>
     </div>
    </dl>
+   {state.shippingCents!==undefined&&state.shippingCents>0&&
+    state.amountUntilFreeShippingCents!=null&&
+    state.amountUntilFreeShippingCents>0&&
+    <p className="notice" role="status">
+     Add {money(state.amountUntilFreeShippingCents)} more merchandise
+     for free shipping{state.freeShippingMinimumCents!=null?
+      " at "+money(state.freeShippingMinimumCents):""}.
+     Qualification uses the subtotal after merchandise discounts.
+    </p>}
    <p className="notice">
     {state.freeShippingReason==="discount_code"?
      "The discount code waived the shipping fee.":
      state.freeShippingReason==="subtotal_threshold"?
      "The discounted merchandise subtotal qualified for free shipping.":
-     "The saved shipping policy determines the fee."}
+     state.freeShippingReason==="no_charge"?
+     "Shipping is free by default under the saved store policy.":
+     "The saved flat shipping fee applies."}
    </p>
    <p className="notice">This is a pricing review, not an order.
     Stock reservation, checkout and Bitcoin invoicing remain disabled.</p>
