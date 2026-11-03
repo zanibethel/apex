@@ -9,6 +9,11 @@ begin
  then raise exception 'Trusted quote lifecycle may only load after disposable reservation fixture';end if;
 end $guard$;
 
+-- PR #191's prior concurrency fixture intentionally leaves synthetic holds.
+-- Reset ONLY disposable fixture tables before running this independent stage.
+truncate table apex_test_reservation.order_lines,apex_test_reservation.orders;
+update apex_test_reservation.inventory set reserved=0;
+
 -- An admitted provider receipt is distinct from a browser quote.
 -- In this test fixture, the evidence is synthetic and DOES NOT establish
 -- actual provider signatures or actual shipping/tax service connectivity.
