@@ -18,3 +18,11 @@
  .apex-checkout-review-handoff{grid-template-columns:38px minmax(0,1fr);gap:10px}
  .apex-checkout-review-product-picker select{font-size:16px}
 }
+.apex-private-cart-validation{margin:20px 0;padding:16px;border:1px solid #444652;border-radius:12px;background:#14151c}
+.apex-private-cart-validation h3{margin:0 0 8px;font-size:16px;color:#f0f0f4}
+.apex-private-cart-validation form{margin:14px 0}
+.apex-private-cart-validation .button{width:100%;max-width:none;text-align:center}
+.apex-cart-observation{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.apex-cart-observation p{margin:8px 0}
+.apex-cart-observation summary{cursor:pointer;font-weight:700;padding:8px 0}
+.apex-cart-observation ul{padding-left:18px;line-height:1.6}
