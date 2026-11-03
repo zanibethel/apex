@@ -20,7 +20,7 @@ export default async function AdminCheckoutReview(){
  const {data:auth,error:authError}=await client.auth.getUser();
  if(authError||!isVerifiedPlatformAdmin(auth.user))redirect("/admin/sign-in");
 
- // Use signed-in admin RLS and short-lived image URLs, not service_role or
+ // Use signed-in admin RLS and short-lived image URLs, not privileged credentials or
  // an unaudited public catalog endpoint. This route cannot create an order.
  const [{data:products,error:productError},
         {data:categories,error:categoryError},
