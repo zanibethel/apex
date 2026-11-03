@@ -16,12 +16,12 @@ test("public storefront shows normal catalog navigation, no test-payment promoti
  assert.match(home,/Browse the catalog/);
  assert.match(home,/Checkout is currently unavailable/);
  assert.match(catalog,/readApprovedSoldOutCatalog\(page\)/);
- assert.match(catalog,/internalCheckoutPreview&&<section/);
- assert.match(catalog,/<DemoCatalogShelf\/>/);
- assert.match(catalog,/isVerifiedPlatformAdmin\(identity\.user\)/);
+ assert.doesNotMatch(catalog,/internalCheckoutPreview|DemoCatalogShelf|Admin checkout testing/);
+ assert.doesNotMatch(catalog,/Open checkout test|checkout\/preview/);
+ assert.doesNotMatch(catalog,/APEX_CHECKOUT_MODE/);
  assert.doesNotMatch(home+menu,/href="\/checkout\/preview"/);
  assert.doesNotMatch(layout,/DEMO ONLY/);
- assert.match(layout,/admin&&process\.env\.APEX_CHECKOUT_MODE==="demo"/);
+ assert.doesNotMatch(layout,/DemoCartProvider|DemoCartToggle|APEX_CHECKOUT_MODE/);
  assert.match(shelf,/type="button" disabled/);
  assert.match(shelf,/No products available right now/);
 });
