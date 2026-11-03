@@ -8,9 +8,10 @@ import { quoteDiscount } from "@/lib/commerce/discount-quote.mjs";
 import {quoteOptionalShipping} from "@/lib/commerce/checkout-charge-rules.mjs";
 import {newPromotionActive} from "@/lib/commerce/promotion-management.mjs";
 
-type State={ok:boolean;message:string;subtotalCents?:number;
+export type PromotionActionState={ok:boolean;message:string;subtotalCents?:number;
  discountCents?:number;shippingCents?:number;shippingDiscountCents?:number;
  totalCents?:number;freeShippingReason?:string};
+type State=PromotionActionState;
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const disabled:State={ok:false,message:"Discount code management is currently unavailable."};
 
