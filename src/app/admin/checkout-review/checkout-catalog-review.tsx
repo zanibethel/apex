@@ -86,10 +86,10 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
     {step==="details"?<form onSubmit={proceed} noValidate>
      <div className="apex-checkout-section-top">
       <div><p className="apex-checkout-kicker">01 / CUSTOMER INFORMATION</p><h2>Guest checkout</h2></div>
-      <span className="apex-checkout-mini">Design review</span>
+      <span className="apex-checkout-mini">Checkout unavailable</span>
      </div>
-     <p className="apex-checkout-support">Review the form layout and validation.
-      Entries remain in this browser session; nothing is submitted or saved.</p>
+     <p className="apex-checkout-support">Enter your contact and delivery details.
+      Checkout is currently unavailable; this information is not submitted.</p>
      <div className="apex-checkout-fields">
       {fields.map(field=><label key={field.key}
        className={"apex-checkout-field apex-checkout-"+field.key}>
@@ -103,37 +103,33 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
      <div className="apex-checkout-shipping">
       <p className="apex-checkout-kicker">DELIVERY</p>
       <p className="apex-checkout-support">Shipping follows the saved store settings.
-       Free shipping applies automatically when eligible; payment remains disabled.</p>
+       Free shipping applies automatically when eligible.</p>
      </div>
      {message&&<p role="alert" className="apex-checkout-error">{message}</p>}
      <button type="submit" className="apex-checkout-cta" disabled={!product}>
-      Review Bitcoin handoff <span aria-hidden="true">→</span>
+      View Bitcoin payment <span aria-hidden="true">→</span>
      </button>
-     <p className="apex-checkout-privacy">Private layout review. No order, wallet address,
-      invoice, customer record, or payment is created.</p>
+     <p className="apex-checkout-privacy">Continuing does not place an order or charge a payment.</p>
     </form>:
     <div>
      <div className="apex-checkout-section-top">
-      <div><p className="apex-checkout-kicker">02 / BITCOIN</p><h2>Payment connection</h2></div>
+      <div><p className="apex-checkout-kicker">02 / BITCOIN</p><h2>Payment</h2></div>
       <span className="apex-checkout-mini">Not enabled</span>
      </div>
-     <p className="apex-checkout-support">This is the intended payment handoff
-      screen. The BTCPay connection is not enabled for customer transactions.</p>
+     <p className="apex-checkout-support">Bitcoin payments are currently unavailable.</p>
      <div className="apex-checkout-invoice">
       <div className="apex-checkout-invoice-head">
        <span className="apex-checkout-kicker">PAYMENT METHOD</span>
-       <strong className="apex-checkout-invoice-status state-expired">Awaiting setup</strong>
+       <strong className="apex-checkout-invoice-status state-expired">Unavailable</strong>
       </div>
       <div className="apex-checkout-review-handoff">
        <span className="apex-checkout-qr-icon" aria-hidden="true">₿</span>
        <div>
         <strong>Bitcoin through BTCPay Server</strong>
-        <p>After activation, the server will create a signed, store-scoped
-         invoice and return the genuine BTCPay checkout page.</p>
+        <p>Bitcoin checkout will open securely when this payment method becomes available.</p>
        </div>
       </div>
-      <p className="apex-checkout-invoice-note">No invoice, scannable QR code,
-       quoted BTC amount, or payment address is available until activation.</p>
+      <p className="apex-checkout-invoice-note">A payment request has not been created.</p>
      </div>
      <div className="apex-checkout-status-controls">
       <h3>Connection requirements</h3>
@@ -210,12 +206,8 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
     {product&&<AdminCartValidationForm key={product.id+":"+quantity}
      productId={product.id} quantity={quantity}
      expectedSubtotalCents={subtotal}/>}
-    <p className="notice">Free-shipping thresholds are evaluated on
-     merchandise after product discounts. A valid free-shipping code can
-     also waive delivery. This screen does not submit payment.</p>
-    <p className="apex-checkout-summary-foot">This review uses saved Apex pricing,
-     but stock is zero. Quantity changes affect only this screen and cannot
-     reserve inventory or submit an order.</p>
+    <p className="notice">Free shipping can apply by order minimum or an eligible code.</p>
+    <p className="apex-checkout-summary-foot">Availability: Sold Out. Checkout is currently unavailable.</p>
     <Link href="/supplier/catalog/bulk" className="apex-checkout-back-button">
      Edit product details →
     </Link>
