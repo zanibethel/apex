@@ -1,4 +1,4 @@
-import {previewCheckoutCharges} from "../commerce/checkout-charge-rules.mjs";
+import {previewCheckoutCharges,quoteOptionalShipping} from "../commerce/checkout-charge-rules.mjs";
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STATES=new Set(("AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD "+
@@ -53,6 +53,8 @@ export function parsePrivateDestinationChargeSource(
   data.can_reserve_stock!==STRICT||data.can_pay!==STRICT||
   data.checkout_enabled!==STRICT||
   !data.shipping||typeof data.shipping!=="object")return null;
+ if(!quoteOptionalShipping(data.shipping,data.observed_subtotal_cents,false))
+  return null;
  if(code===""&&(data.promotion_found||data.promotion!==null))return null;
  if(code!==""&&data.promotion_found!==Boolean(data.promotion))return null;
  if(data.promotion_found&&
