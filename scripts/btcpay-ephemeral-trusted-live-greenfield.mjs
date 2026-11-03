@@ -8,6 +8,7 @@
  * from logs. Existing on-chain Prism integration runs separately.
  */
 import assert from "node:assert/strict";
+import {createHash} from "node:crypto";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
 import {createTrustedRegtestPgWorker} from
@@ -51,7 +52,7 @@ async function request(path,{method="GET",json,auth}={}){
 async function sql(file,params={}){
   const args=["-X","-q","-At","-v","ON_ERROR_STOP=1"];
   for(const [name,value] of Object.entries(params)){
-    if(!/^[a-z_]+$/.test(name)||!safeId.test(value))
+    if(!/^[a-z][a-z0-9_]*$/.test(name)||!safeId.test(value))
       throw Error("Unsafe isolated PostgreSQL fixture parameter");
     args.push("-v",name+"="+value);
   }
@@ -108,6 +109,7 @@ if(typeof key?.apiKey!=="string"||key.apiKey.length<12||
 // This script is the only owner of BOTH the test-store key and SQL operator.
 await sql("tests/payout-rls/btcpay-real-provider-worker-setup.sql",{
  store_id:storeId,
+ credential_sha256:createHash("sha256").update(key.apiKey,"utf8").digest("hex"),
 });
 
 let posts=0;
@@ -162,7 +164,7 @@ assert.equal(dbResult,"verified","Durable provider invoice journal verification 
 // process after the provider confirms its POST but before any DB observation.
 // Only independent read-only operator reconciliation may record the result.
 const {runEphemeralCrashRecovery}=await import("./btcpay-ephemeral-regtest-crash-recovery.mjs");
-const crashProof=await runEphemeralCrashRecovery({basic,network:"regtest",testOnly:true});
+const crashProof=await runEphemeralCrashRecovery({basic,network:"regtest",testOnly:true,otherSupplierKey:key.apiKey});
 assert.equal(crashProof.regtestProcessCrashAfterPostVerified,true);
 assert.equal(crashProof.postCrashProviderReadbackVerified,true);
 assert.equal(crashProof.postCrashDurableReconciliationVerified,true);

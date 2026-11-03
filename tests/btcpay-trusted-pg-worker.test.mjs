@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {createHash} from "node:crypto";
 import {createTrustedRegtestPgWorker} from "../scripts/btcpay-ephemeral-trusted-pg-worker.mjs";
 
 const safeEnv={
@@ -41,6 +42,8 @@ test("trusted worker owns SQL reserve -> verified DB readback -> HTTP POST/GET -
    steps.push("reserve");
    assert.ok(args.includes("scope_id="+scopeId));
    assert.ok(args.includes("store_id="+storeId));
+   assert.ok(args.includes("credential_sha256="+createHash("sha256").update(apiKey,"utf8").digest("hex")));
+   assert.ok(!args.some(x=>x.includes(apiKey)),"Raw BTCPay token must not reach psql");
    return intentId;
   }
   if(command.endsWith("btcpay-worker-verify.sql")){

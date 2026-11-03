@@ -4,6 +4,7 @@
  * API route, supplied SQL callback, or hosted database connection.
  */
 import {execFile} from "node:child_process";
+import {createHash} from "node:crypto";
 import {promisify} from "node:util";
 import {fileURLToPath} from "node:url";
 import {createPreauthorizedRegtestInvoice} from
@@ -51,7 +52,7 @@ export function createTrustedRegtestPgWorker({
   async function sql(operation,values){
     const args=["-X","-q","-At","-v","ON_ERROR_STOP=1"];
     for(const [name,value] of Object.entries(values)){
-      validate(name,name,/^[a-z_]+$/);
+      validate(name,name,/^[a-z][a-z0-9_]*$/);
       validate(name,value,/^[A-Za-z0-9_-]{0,100}$/);
       args.push("-v",name+"="+value);
     }
@@ -77,6 +78,7 @@ export function createTrustedRegtestPgWorker({
       const intentId=await sql("reserve",{
         scope_id:scopeId,store_id:storeId,
         order_ref:orderRef,amount_sats:amountSats.toString(),
+        credential_sha256:createHash("sha256").update(apiKey,"utf8").digest("hex"),
       });
       if(!uuid.test(intentId))
         throw Error("Provider intent must be a committed UUID");

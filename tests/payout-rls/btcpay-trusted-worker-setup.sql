@@ -1,12 +1,14 @@
 -- PR #169: two isolated stores, fresh dual authorization and permit.
 -- Trusted worker tests only: no real BTCPay API key or network access.
 \set ON_ERROR_STOP on
+insert into public.suppliers(slug,display_name)
+values('test-supplier-two','Synthetic supplier B for credential-isolation tests');
 insert into public.stores(id,supplier_id,slug,display_name,is_public)
  select v.scope,s.id,v.slug,v.label,false from public.suppliers s
- cross join (values
-  ('39000000-0000-0000-0000-000000000001'::uuid,'trusted-worker-ok','Trusted worker success fixture'),
-  ('39000000-0000-0000-0000-000000000002'::uuid,'trusted-worker-unknown','Trusted worker timeout fixture')
- ) v(scope,slug,label) where s.slug='test-supplier';
+ join (values
+  ('39000000-0000-0000-0000-000000000001'::uuid,'trusted-worker-ok','Trusted worker success fixture','test-supplier'),
+  ('39000000-0000-0000-0000-000000000002'::uuid,'trusted-worker-unknown','Trusted worker timeout fixture','test-supplier-two')
+ ) v(scope,slug,label,supplier_slug) on s.slug=v.supplier_slug;
 
 insert into public.payout_rules(id,scope_type,scope_id,version,status,effective_from)
 values
@@ -110,6 +112,21 @@ insert into public.btcpay_test_trusted_post_store_bindings(
 values
  ('39000000-0000-0000-0000-000000000001','trusted-synthetic-store-ok','regtest'),
  ('39000000-0000-0000-0000-000000000002','trusted-synthetic-store-timeout','regtest');
+
+-- Independent supplier stores receive different synthetic API-key fingerprints.
+-- Only keyed hashes are stored; the plaintext test keys remain in CI memory.
+insert into public.btcpay_test_supplier_credentials(
+  scope_id,supplier_id,btcpay_store_id,credential_sha256)
+select s.id,s.supplier_id,b.btcpay_store_id,
+  pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(
+    case when s.id='39000000-0000-0000-0000-000000000001'
+      then 'disposable_fake_key_do_not_use'
+      else 'other_supplier_disposable_key_do_not_use' end,'UTF8')),'hex')
+from public.stores s join public.btcpay_test_trusted_post_store_bindings b
+  on b.scope_id=s.id
+where s.id in (
+  '39000000-0000-0000-0000-000000000001',
+  '39000000-0000-0000-0000-000000000002');
 
 -- Cross-store binding must reject a reservation without consuming either permit.
 do $$

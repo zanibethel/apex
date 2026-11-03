@@ -100,6 +100,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-external-prepost-intent.sql
       - name: Load immutable store-to-Greenfield bindings in disposable PostgreSQL
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_trusted_pg_worker_REVIEW_ONLY.sql
+      - name: Install supplier-scoped credential fingerprint bindings (disposable only)
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_supplier_credentials_REVIEW_ONLY.sql
       - name: Prepare two separately authorized worker fixture stores
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-trusted-worker-setup.sql
       - name: Provision least-privilege disposable payment-worker login
@@ -111,6 +113,8 @@ jobs:
           echo "APEX_BTCPAY_TEST_WORKER_PASSWORD=$worker_password" >> "$GITHUB_ENV"
       - name: Deny direct reads, writes and privilege elevation for worker login
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-restricted-worker-role.sql
+      - name: Reject cross-supplier, revoked and forged payment credentials
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-supplier-credential-denials.sql
       - name: Verify worker logs in as non-superuser over real PostgreSQL
         run: |
           set -euo pipefail

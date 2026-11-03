@@ -94,6 +94,14 @@ insert into public.btcpay_test_trusted_post_store_bindings(
  scope_id,btcpay_store_id,network) values
  ('39500000-0000-0000-0000-000000000002',:'store_id','regtest');
 
+-- Supplier identity is derived from the immutable Apex store association.
+-- Only the fingerprint of the provider-scoped ephemeral key is persisted.
+insert into public.btcpay_test_supplier_credentials(
+ scope_id,supplier_id,btcpay_store_id,credential_sha256)
+select s.id,s.supplier_id,:'store_id',:'credential_sha256'
+from public.stores s
+where s.id='39500000-0000-0000-0000-000000000002';
+
 -- Even though a one-shot external intent can be reserved, the journal hold
 -- prevents direct user-facing invoice registration without a separate permit.
 do $$
