@@ -276,7 +276,7 @@ if(process.argv[1]?.endsWith("btcpay-ephemeral-greenfield.mjs")){
             {trustedRealGreenfieldVerified:true}:{})
         };
       },
-    }:{}) ,
+    }:{}),
   })).then(out=>process.stdout.write(JSON.stringify(out,null,2)+"\\n"))
     .catch(e=>{process.stderr.write(e.message+"\\n");process.exitCode=1;});
 }
