@@ -2,7 +2,7 @@
 // change supplier permissions, admin holds or actual customer visibility.
 export const BULK_VIEW_FILTERS=Object.freeze([
  "all","unsaved","ready","requested","needs_attention","image_fixes",
- "admin_holds","review_pending","save_retries",
+ "admin_holds","review_pending","save_retries","taxonomy_held",
 ]);
 
 const imageFix=status=>status?.hasImage===false||
@@ -43,7 +43,7 @@ export function supplierBulkWorkspaceSummary(rows=[],listing=[]){
  return Object.freeze(summary);
 }
 
-export function filterSupplierBulkRows(rows,query="",filter="all",listing=[],newRequests=new Set(),saveRetryKeys=new Set()){
+export function filterSupplierBulkRows(rows,query="",filter="all",listing=[],newRequests=new Set(),saveRetryKeys=new Set(),heldTaxonomyIds=new Set()){
  const term=String(query).trim().toLocaleLowerCase();
  const controls=new Map((listing??[]).map(status=>[status.productId,status]));
  const active=BULK_VIEW_FILTERS.includes(filter)?filter:"all";
@@ -51,6 +51,9 @@ export function filterSupplierBulkRows(rows,query="",filter="all",listing=[],new
   if(term&&!String(row.name??"").toLocaleLowerCase().includes(term)&&
     !String(row.sku??"").toLocaleLowerCase().includes(term))return false;
   if(active==="save_retries")return saveRetryKeys.has(row.key);
+  // This is a private navigation filter only; holding an item never changes
+  // its saved metadata, existing release gate, or admin review state.
+  if(active==="taxonomy_held")return Boolean(row.id&&heldTaxonomyIds.has(row.id));
   const status=row.id?controls.get(row.id):undefined;
   const unsaved=!row.id||row.needsSave===true;
   const requested=Boolean(row.id&&(status?.requested===true||newRequests.has(row.id)));
