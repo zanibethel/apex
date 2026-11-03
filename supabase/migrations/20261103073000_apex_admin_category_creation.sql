@@ -51,9 +51,11 @@ begin
  v_slug:=btrim(regexp_replace(lower(v_name),'[^a-z0-9]+','-','g'),'-');
  if length(v_slug)<2 or length(v_slug)>60
  then raise exception 'Invalid category slug' using errcode='22023';end if;
- if not exists(select 1 from public.stores s
-   where s.id=p_store_id and s.is_public=false)
- then raise exception 'Private storefront unavailable'
+ -- Lock the specific private store to serialize concurrent category creates
+ -- and enforce the store's category count limit consistently.
+ perform 1 from public.stores s where s.id=p_store_id
+  and s.is_public=false for update;
+ if not found then raise exception 'Private storefront unavailable'
    using errcode='42501';end if;
 
  -- The underlying unique(store_id,slug) constraint protects concurrent
