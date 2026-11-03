@@ -58,7 +58,7 @@ begin
     or (select count(*) from jsonb_object_keys(v_row))<>2
     or jsonb_typeof(v_row->'product_id')<>'string'
     or (v_row->>'product_id') !~
-      '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
+      '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
     or jsonb_typeof(v_row->'quantity')<>'number'
     or (v_row->>'quantity') !~ '^[1-9][0-9]?$'
   then raise exception 'Invalid cart item' using errcode='22023';end if;
