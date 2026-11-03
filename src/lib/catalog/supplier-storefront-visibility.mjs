@@ -21,7 +21,7 @@ const EXPLANATIONS=Object.freeze({
  product_authorization_blocked:"Product release is explicitly blocked.",
  product_authorization_unverified:"Product-specific release eligibility is not verified.",
  public_release_disabled:"Independent public release is currently switched off.",
- supplier_not_requested:"The publication request has not yet appeared in the release check. Refresh status.",
+ supplier_not_requested:"The publishing change is still being verified. Refresh the storefront status.",
 });
 const notLive=(kind,label,description)=>Object.freeze({kind,label,description,publiclyVisible:false});
 
@@ -37,13 +37,13 @@ export function supplierStorefrontVisibility(control,releaseDecision,requestJust
   "Unable to verify the listing controls. Refresh before making changes.");
  const wants=control?.requested===true||requestJustSaved===true;
  if(!wants)return notLive("private","Not live",
-  "The supplier has not requested publication. An eligible product still needs independent release authorization.");
+  "Publishing is turned off for this product.");
 
  if(!releaseDecision||typeof releaseDecision!=="object"||
     !VALID_CODES.has(releaseDecision.status_code)||
     typeof releaseDecision.effective_public!=="boolean")
   return notLive("unavailable","Visibility unavailable",
-   "Publication was requested, but the protected release check could not be verified. Refresh this card.");
+   "Unable to confirm public visibility. Refresh to check the storefront.");
 
  // Both a positive effective-public verdict and a positive named release state
  // are necessary. No client-side inputs or provisional pricing can make "Live".
@@ -68,5 +68,5 @@ export function supplierStorefrontVisibility(control,releaseDecision,requestJust
 
  const detail=EXPLANATIONS[releaseDecision.status_code]??
   "An independent eligibility check has not authorized this product.";
- return notLive("requested","Requested · not live",detail);
+ return notLive("requested","Not visible",detail);
 }
