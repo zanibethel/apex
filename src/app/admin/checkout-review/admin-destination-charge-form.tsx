@@ -81,7 +81,7 @@ export function AdminDestinationChargeForm({
     {state.providerEstimatedTotalCents!=null&&
      <div><dt>Provider-estimated total</dt>
       <dd>{asMoney(state.providerEstimatedTotalCents)}</dd></div>}
-    <div><dt>Final payable total</dt><dd>Not yet available</dd></div>
+    <div><dt>Final total (payable)</dt><dd>Not yet available</dd></div>
    </dl>
    <p className="notice">
     {state.freeShippingReason==="discount_code"?
