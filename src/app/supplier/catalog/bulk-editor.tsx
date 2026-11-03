@@ -339,6 +339,12 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    <p className="notice">Active controls the saved product record, not whether
     customers can see or purchase it. Publish, admin holds and verified release
     eligibility remain separate.</p>
+   <form action={saveSelected}>
+    <button type="submit" className="button primary"
+     disabled={!editable||busy||!selectedValid}>
+     {pending?"Saving…":"Save selected changes ("+pendingSaveRows.length+")"}
+    </button>
+   </form>
    {setupMessage&&<p role="status" className="apex-bulk-result">{setupMessage}</p>}
   </section>
   <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch updates the supplier setting immediately. The storefront status confirms whether the product is publicly visible. Admin holds and release checks remain in effect. Zero stock may display Sold Out only after independent release approval.</p>
