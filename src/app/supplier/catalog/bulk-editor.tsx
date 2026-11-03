@@ -122,12 +122,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    const savedByKey=new Map(all.filter(o=>o.ok&&o.id).map(o=>[o.key,o]));
    setRows(prev=>prev.map(r=>reconcileSavedBulkRow(r,
     submittedByKey.get(r.key),savedByKey.get(r.key))));
-   if(progress.saved>0){
-    setSetupMessage(progress.ok
-     ?"Selected edits saved. Refresh the product cards to confirm their current readiness."
-     :"Some edits were saved, but others still need attention. Review the retry results.");
-    router.refresh();
-   }
+   if(progress.saved>0)setSetupMessage(progress.ok
+    ?"Selected edits saved. Refresh the product cards to confirm their current readiness."
+    :"Some edits were saved, but others still need attention. Review the retry results.");
+   if(progress.saved>0)router.refresh();
   });
  }
  function saveSelected(_form:FormData){
