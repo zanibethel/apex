@@ -28,6 +28,7 @@ begin
    'public.btcpay_test_sync_recovery_events',
    'public.btcpay_test_trusted_post_store_bindings',
    'public.btcpay_test_invoices',
+   'public.btcpay_test_supplier_credentials',
    'public.payout_rules',
    'public.payout_rule_allocations',
    'public.stores'
@@ -46,7 +47,7 @@ begin
    raise exception 'Worker must see only its dedicated private RPC schema';
  end if;
  if not has_function_privilege('apex_test_invoice_worker',
-     'apex_test_worker.worker_reserve_btcpay_test_provider_post(uuid,text,text,bigint)','EXECUTE') or
+     'apex_test_worker.worker_reserve_btcpay_test_provider_post(uuid,text,text,bigint,text)','EXECUTE') or
     not has_function_privilege('apex_test_invoice_worker',
      'apex_test_worker.worker_verify_btcpay_test_provider_post(uuid,uuid)','EXECUTE') or
     not has_function_privilege('apex_test_invoice_worker',
@@ -54,7 +55,7 @@ begin
     raise exception 'Worker does not have its three restricted operations';
  end if;
  if has_function_privilege('apex_test_invoice_worker',
-   'apex_test_internal.reserve_btcpay_test_provider_post(uuid,text,text,bigint)','EXECUTE') or
+   'apex_test_internal.reserve_btcpay_test_provider_post(uuid,text,text,bigint,text)','EXECUTE') or
    has_function_privilege('apex_test_invoice_worker',
    'apex_test_internal.observe_btcpay_test_provider_post(uuid,text,text)','EXECUTE') or
    has_function_privilege('apex_test_invoice_worker',
@@ -62,9 +63,9 @@ begin
     raise exception 'Worker can call unrestricted operator operation';
  end if;
  if has_function_privilege('anon',
-   'apex_test_worker.worker_reserve_btcpay_test_provider_post(uuid,text,text,bigint)','EXECUTE') or
+   'apex_test_worker.worker_reserve_btcpay_test_provider_post(uuid,text,text,bigint,text)','EXECUTE') or
    has_function_privilege('authenticated',
-   'apex_test_worker.worker_reserve_btcpay_test_provider_post(uuid,text,text,bigint)','EXECUTE') or
+   'apex_test_worker.worker_reserve_btcpay_test_provider_post(uuid,text,text,bigint,text)','EXECUTE') or
    has_function_privilege('authenticated',
    'apex_test_worker.worker_observe_btcpay_test_provider_post(uuid,text,text)','EXECUTE') then
     raise exception 'Untrusted browser role can call payment worker';
