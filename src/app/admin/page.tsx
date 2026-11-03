@@ -13,6 +13,7 @@ const dashboardLinks = [
   { title: "Listing controls", description: "Manage supplier publication requests, holds and republish approvals.", href: "/admin/listing-controls", icon: "🛡" },
   { title: "Catalog release", description: "See exactly which products are public Sold Out, held, or waiting on eligibility checks.", href: "/admin/catalog-release", icon: "▦" },
   { title: "Category controls", description: "Publish or unpublish store categories with an audit trail.", href: "/admin/categories", icon: "▥" },
+  { title: "Tax & shipping", description: "Bulk product tax checkboxes, optional shipping fees and free-shipping thresholds.", href: "/admin/checkout-rules", icon: "▧" },
   { title: "Checkout readiness", description: "Read-only private product eligibility and payment launch gates. Real checkout remains disabled.", href: "/admin/checkout-readiness", icon: "▥" },
   { title: "BTCPay connection", description: "Verify store-scoped Greenfield credentials without creating invoices.", href: "/admin/btcpay", icon: "₿" },
   { title: "Payment monitor", description: "Read-only reporting, payout states and review attention. No live payment controls.", href: "/admin/payment-monitor", icon: "₿" },
