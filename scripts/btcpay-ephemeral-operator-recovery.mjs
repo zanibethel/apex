@@ -56,7 +56,7 @@ export function createEphemeralOperatorRecovery({env=process.env,runPsql}={}){
        throw Error("Invalid recovery evidence SQL parameter");
      args.push("-v",name+"="+value);
    }
-   args.push(scripts[script]);
+   args.push("-f",scripts[script]);
    try{return String(await launch(role,script,args)).trim();}
    catch(error){
      // CI-only: expose a narrow SQL error category for debugging, never
