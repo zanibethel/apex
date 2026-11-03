@@ -10,11 +10,11 @@ test("navigation points to a real catalog route", () => {
   assert.ok(existsSync(join(root, "src/app/catalog/page.tsx")));
   assert.match(read("src/app/page.tsx"), /href="\/catalog"/);
 });
-test("preview is visibly non-transactional", () => {
+test("legacy sample checkout is retired and only non-transactional catalog is public", () => {
   assert.match(read("src/app/page.tsx"), /Checkout is currently unavailable/);
   assert.match(read("src/app/catalog/page.tsx"), /Checkout is currently unavailable/);
   assert.doesNotMatch(read("src/app/page.tsx"),/href="\/checkout/);
-  assert.match(read("src/app/catalog/page.tsx"),/internalCheckoutPreview&&<section/);
+  assert.doesNotMatch(read("src/app/catalog/page.tsx"),/internalCheckoutPreview|DemoCatalogShelf/);
   assert.match(read("src/app/checkout/preview/page.tsx"),/isVerifiedPlatformAdmin\(data\.user\)/);
   assert.ok(existsSync(join(root,"src/app/checkout/preview/page.tsx")));
   assert.match(read("src/app/layout.tsx"), /index: false/);
