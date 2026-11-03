@@ -43,6 +43,14 @@ create table public.supplier_candidate_drafts(
 insert into public.supplier_memberships(supplier_id,user_id,role)
 values('61000000-0000-0000-0000-000000000001',
  '00000000-0000-0000-0000-000000000001','owner');
+-- Existence-only signature for the legacy fixture; no public listing mutation.
+create function public.set_supplier_listing_intent(uuid,uuid,text)
+returns text language sql as $stub$
+ select 'no-op disposable test signature'::text;
+$stub$;
+revoke all on function public.set_supplier_listing_intent(uuid,uuid,text)
+ from public,anon;
+
 -- Legacy fixture did not install protected readiness; verify replacement in
 -- the staged migration without changing hosted auth or private user records.
 create function public.get_private_release_readiness(uuid,uuid)
