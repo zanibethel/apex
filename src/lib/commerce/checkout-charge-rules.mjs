@@ -1,9 +1,6 @@
 import {quoteDiscount} from "./discount-quote.mjs";
 
-// Private checkout calculation contract. Input must come from authorized,
-// server-read product and promotion records, never a customer-supplied total.
-// Taxes require independent, destination-specific evidence; we never guess a
-// rate or claim "tax exempt" based on the checkbox alone.
+// Shipping-only checkout math. Source amounts must come from the server.
 const LIMIT=999999999;
 const validCents=(value)=>Number.isSafeInteger(value)&&value>=0&&value<=LIMIT;
 
@@ -33,60 +30,51 @@ export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippin
  });
 }
 
+// Shipping-only charge calculation for the private Apex checkout preview.
+// Prices, quantities, shipping settings and promotions MUST be read from the
+// database on the server. No tax service is contacted in this flow.
 export function previewCheckoutCharges({
- lines,shippingPolicy,discountCode=null,
- // A genuine future checkout must use a verified jurisdiction + product +
- // shipping tax quote. This preview intentionally has no total tax amount.
- now=new Date(),
+ lines,shippingPolicy,discountCode=null,now=new Date(),
 }){
- const fail=(reason)=>Object.freeze({ok:false,reason,canPlaceOrder:false});
- if(!Array.isArray(lines)||lines.length<1||lines.length>50)return fail("Invalid line items");
+ const fail=(reason)=>Object.freeze({ok:false,reason,canPlaceOrder:false,
+  canCreateInvoice:false,canPay:false});
+ if(!Array.isArray(lines)||lines.length<1||lines.length>50)
+  return fail("Invalid line items");
  const seen=new Set();
- let gross=0,taxableGross=0,totalUnits=0;
- for(const l of lines){
-  if(!l||typeof l!=="object"||typeof l.productId!=="string"||
-    !/^[0-9a-f-]{36}$/i.test(l.productId)||seen.has(l.productId)||
-    !Number.isInteger(l.quantity)||l.quantity<1||l.quantity>10||
-    !validCents(l.unitPriceCents)||l.unitPriceCents===0||
-    typeof l.collectSalesTax!=="boolean")
-   return fail("Invalid product or tax collection configuration");
-  seen.add(l.productId);totalUnits+=l.quantity;
-  const amount=l.unitPriceCents*l.quantity;
-  if(!Number.isSafeInteger(amount)||amount>LIMIT||gross+amount>LIMIT)
-   return fail("Subtotal exceeds limit");
-  gross+=amount;
-  if(l.collectSalesTax)taxableGross+=amount;
+ let merchandiseSubtotalCents=0,units=0;
+ for(const line of lines){
+  if(!line||typeof line!=="object"||typeof line.productId!=="string"||
+   !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(line.productId)||
+   seen.has(line.productId)||
+   !Number.isInteger(line.quantity)||line.quantity<1||line.quantity>10||
+   !validCents(line.unitPriceCents)||line.unitPriceCents===0)
+   return fail("Invalid product or quantity");
+  seen.add(line.productId);
+  units+=line.quantity;
+  const amount=line.unitPriceCents*line.quantity;
+  if(!Number.isSafeInteger(amount)||amount>LIMIT||
+   merchandiseSubtotalCents+amount>LIMIT)
+   return fail("Merchandise subtotal exceeds limit");
+  merchandiseSubtotalCents+=amount;
  }
- if(totalUnits>50)return fail("Too many units");
- const discount=discountCode===null?null:quoteDiscount(discountCode,gross,now);
- if(discount&&!discount.eligible)return fail(discount.reason);
- const merchandiseDiscountCents=discount?.discountCents??0;
- const discountedMerchandiseCents=gross-merchandiseDiscountCents;
- // Item-order-independent proportional allocation. The remainder is
- // assigned to non-taxable lines; for real taxation a jurisdiction-specific
- // provider must determine exact line-level discount allocations.
- const preliminaryTaxableCents=taxableGross===0?0:
-  Math.max(0,taxableGross-Math.round(
-   merchandiseDiscountCents*taxableGross/gross));
- const shipping=quoteOptionalShipping(
-  shippingPolicy,discountedMerchandiseCents,
-  discount?.freeShipping===true,
- );
+ if(units>50)return fail("Too many units");
+ const promo=discountCode===null?null:quoteDiscount(
+  discountCode,merchandiseSubtotalCents,now);
+ if(promo&&!promo.eligible)return fail(promo.reason);
+ const merchandiseDiscountCents=promo?.discountCents??0;
+ const discountedMerchandiseCents=merchandiseSubtotalCents-
+  merchandiseDiscountCents;
+ const shipping=quoteOptionalShipping(shippingPolicy,
+  discountedMerchandiseCents,promo?.freeShipping===true);
  if(!shipping)return fail("Shipping configuration unavailable");
- const preTaxTotal=discountedMerchandiseCents+shipping.shippingCents;
- if(!validCents(preTaxTotal))return fail("Order amount exceeds limit");
+ const totalCents=discountedMerchandiseCents+shipping.shippingCents;
+ if(!validCents(totalCents))return fail("Total exceeds limit");
  return Object.freeze({
   ok:true,reason:"",currency:"USD",
-  merchandiseSubtotalCents:gross,
-  merchandiseDiscountCents,
-  discountedMerchandiseCents,
-  taxableMerchandiseCents:preliminaryTaxableCents,
-  untaxedMerchandiseCents:discountedMerchandiseCents-preliminaryTaxableCents,
-  ...shipping,
-  preTaxTotalCents:preTaxTotal,
-  taxCents:null,
-  totalCents:null,
-  taxVerificationRequired:true,
-  canPlaceOrder:false,canCreateInvoice:false,
+  merchandiseSubtotalCents,merchandiseDiscountCents,
+  discountedMerchandiseCents,...shipping,totalCents,
+  // This is an informational total only, not order admission.
+  canPlaceOrder:false,canCreateInvoice:false,canPay:false,
+  quoteFinalized:false,
  });
 }

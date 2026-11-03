@@ -1,142 +1,111 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {readFileSync,existsSync} from "node:fs";
 import {quoteDiscount} from "../src/lib/commerce/discount-quote.mjs";
-import {quoteOptionalShipping,previewCheckoutCharges} from "../src/lib/commerce/checkout-charge-rules.mjs";
-import {parseCheckoutRulesOverview} from "../src/lib/commerce/checkout-rule-overview.mjs";
+import {previewCheckoutCharges,quoteOptionalShipping}
+ from "../src/lib/commerce/checkout-charge-rules.mjs";
 
 const id1="64000000-0000-0000-0000-000000000001";
 const id2="64000000-0000-0000-0000-000000000002";
-const store="62000000-0000-0000-0000-000000000001";
+const lines=[
+ {productId:id1,quantity:1,unitPriceCents:6000},
+ {productId:id2,quantity:1,unitPriceCents:4000},
+];
 const shipping={charge_shipping:true,flat_shipping_cents:795,
  free_shipping_min_subtotal_cents:9000};
-const lines=[
- {productId:id1,quantity:1,unitPriceCents:6000,collectSalesTax:true},
- {productId:id2,quantity:1,unitPriceCents:4000,collectSalesTax:false},
-];
 const code=(kind,value,minimum=0)=>({
  code:"TESTCODE",is_active:true,discount_kind:kind,
  discount_value:value,min_subtotal_cents:minimum,
  starts_at:null,ends_at:null,usage_limit:null,redemption_count:0,
 });
-const read=path=>readFileSync(path,"utf8");
-test("tax checkbox excludes unchecked products from provisional taxable base",()=>{
- const result=previewCheckoutCharges({lines,shippingPolicy:shipping});
- assert.equal(result.ok,true);
- assert.equal(result.merchandiseSubtotalCents,10000);
- assert.equal(result.taxableMerchandiseCents,6000);
- assert.equal(result.untaxedMerchandiseCents,4000);
- assert.equal(result.shippingCents,0);
- assert.equal(result.freeShippingReason,"subtotal_threshold");
- assert.equal(result.taxCents,null);
- assert.equal(result.totalCents,null);
- assert.equal(result.taxVerificationRequired,true);
- assert.equal(result.canPlaceOrder,false);
- assert.equal(result.canCreateInvoice,false);
+const read=p=>readFileSync(p,"utf8");
+
+test("checkout sums merchandise and shipping without a tax field or tax provider",()=>{
+ const r=previewCheckoutCharges({lines,shippingPolicy:shipping});
+ assert.equal(r.ok,true);
+ assert.equal(r.merchandiseSubtotalCents,10000);
+ assert.equal(r.totalCents,10000);
+ assert.equal(r.shippingCents,0);
+ assert.equal(r.freeShippingReason,"subtotal_threshold");
+ assert.equal(r.canPlaceOrder,false);
+ assert.equal(r.canCreateInvoice,false);
+ assert.equal(r.canPay,false);
+ assert.equal(r.quoteFinalized,false);
+ assert.equal(Object.hasOwn(r,"taxCents"),false);
+ assert.equal(Object.hasOwn(r,"collectSalesTax"),false);
+ assert.equal(Object.hasOwn(r,"taxableMerchandiseCents"),false);
 });
-test("discounts are evaluated before the free-shipping threshold",()=>{
- const percent=previewCheckoutCharges({
+
+test("a merchandise promotion can move a cart below the free-shipping minimum",()=>{
+ const p=previewCheckoutCharges({
   lines,shippingPolicy:shipping,discountCode:code("percentage",10),
  });
- assert.equal(percent.merchandiseDiscountCents,1000);
- assert.equal(percent.discountedMerchandiseCents,9000);
- assert.equal(percent.taxableMerchandiseCents,5400);
- assert.equal(percent.shippingCents,0);
- const fixed=previewCheckoutCharges({
+ assert.equal(p.merchandiseDiscountCents,1000);
+ assert.equal(p.discountedMerchandiseCents,9000);
+ assert.equal(p.shippingCents,0);
+ assert.equal(p.totalCents,9000);
+ const r=previewCheckoutCharges({
   lines,shippingPolicy:shipping,discountCode:code("fixed",2000),
  });
- assert.equal(fixed.merchandiseDiscountCents,2000);
- assert.equal(fixed.discountedMerchandiseCents,8000);
- assert.equal(fixed.taxableMerchandiseCents,4800);
- assert.equal(fixed.shippingCents,795);
- assert.equal(fixed.preTaxTotalCents,8795);
- assert.equal(fixed.freeShippingReason,"none");
+ assert.equal(r.merchandiseDiscountCents,2000);
+ assert.equal(r.shippingCents,795);
+ assert.equal(r.totalCents,8795);
+ assert.equal(r.freeShippingReason,"none");
 });
-test("free-shipping promotion waives only shipping, not merchandise or tax",()=>{
- const free=code("free_shipping",1,5000);
- const discount=quoteDiscount(free,8000);
- assert.equal(discount.eligible,true);
- assert.equal(discount.discountCents,0);
- assert.equal(discount.totalCents,8000);
- assert.equal(discount.freeShipping,true);
- const result=previewCheckoutCharges({
-  lines,shippingPolicy:shipping,discountCode:free,
- });
- assert.equal(result.merchandiseDiscountCents,0);
- assert.equal(result.shippingDiscountCents,795);
- assert.equal(result.shippingCents,0);
- assert.equal(result.freeShippingReason,"discount_code");
- assert.equal(result.taxableMerchandiseCents,6000);
- assert.equal(result.totalCents,null);
+
+test("eligible free shipping codes waive the delivery fee without changing merchandise",()=>{
+ const promo=code("free_shipping",1,5000);
+ const q=quoteDiscount(promo,8000);
+ assert.equal(q.eligible,true);
+ assert.equal(q.discountCents,0);
+ assert.equal(q.freeShipping,true);
+ const policy={...shipping,free_shipping_min_subtotal_cents:20000};
+ const r=previewCheckoutCharges({lines,shippingPolicy:policy,discountCode:promo});
+ assert.equal(r.merchandiseDiscountCents,0);
+ assert.equal(r.shippingDiscountCents,795);
+ assert.equal(r.shippingCents,0);
+ assert.equal(r.totalCents,10000);
+ assert.equal(r.freeShippingReason,"discount_code");
  assert.equal(quoteDiscount(code("free_shipping",99),10000).eligible,false);
  assert.equal(quoteDiscount(code("free_shipping",1,12000),10000).eligible,false);
- assert.equal(quoteDiscount({...free,usage_limit:1,redemption_count:1},10000).eligible,false);
 });
-test("shipping can be turned off and rejects invalid configurations",()=>{
- const noShipping={charge_shipping:false,flat_shipping_cents:0,
+
+test("optional shipping can be disabled while invalid combinations fail closed",()=>{
+ const free={charge_shipping:false,flat_shipping_cents:0,
   free_shipping_min_subtotal_cents:null};
- assert.equal(quoteOptionalShipping(noShipping,500,false).shippingCents,0);
- assert.equal(quoteOptionalShipping(noShipping,500,true).shippingCents,0);
- assert.equal(quoteOptionalShipping({...noShipping,flat_shipping_cents:795},500),null);
- assert.equal(quoteOptionalShipping({...noShipping,
-  free_shipping_min_subtotal_cents:0},500),null);
+ assert.equal(quoteOptionalShipping(free,500).shippingCents,0);
+ assert.equal(previewCheckoutCharges({lines,shippingPolicy:free}).totalCents,10000);
+ assert.equal(quoteOptionalShipping({...free,flat_shipping_cents:795},500),null);
+ assert.equal(quoteOptionalShipping({...free,free_shipping_min_subtotal_cents:0},500),null);
  assert.equal(quoteOptionalShipping({...shipping,flat_shipping_cents:-1},500),null);
 });
-test("incomplete product tax info and malformed amounts fail closed",()=>{
- assert.equal(previewCheckoutCharges({lines:[{...lines[0],collectSalesTax:null}],
-  shippingPolicy:shipping}).ok,false);
- assert.equal(previewCheckoutCharges({lines:[lines[0],lines[0]],
-  shippingPolicy:shipping}).ok,false);
- assert.equal(previewCheckoutCharges({lines:[{...lines[0],unitPriceCents:0}],
-  shippingPolicy:shipping}).ok,false);
+
+test("invalid product, quantity, duplicate and overflow amounts fail closed",()=>{
+ const check=ls=>previewCheckoutCharges({lines:ls,shippingPolicy:shipping});
+ assert.equal(check([lines[0],lines[0]]).ok,false);
+ assert.equal(check([{...lines[0],quantity:11}]).ok,false);
+ assert.equal(check([{...lines[0],unitPriceCents:0}]).ok,false);
+ assert.equal(check([{...lines[0],unitPriceCents:999999999,quantity:2}]).ok,false);
  assert.equal(previewCheckoutCharges({lines,shippingPolicy:undefined}).ok,false);
 });
-test("admin checkout overview requires exact products and a safe shipping policy",()=>{
- const value={store_id:store,store_name:"Private store",
-  checkout_enabled:false,shipping,products:[
-   {id:id1,name:"Product A",sku:"A",collect_sales_tax:true},
-   {id:id2,name:"Product B",sku:"B",collect_sales_tax:false},
-  ]};
- const result=parseCheckoutRulesOverview(value,store);
- assert.ok(result);
- assert.deepEqual(result.products.map(x=>x.collectSalesTax),[true,false]);
- assert.equal(parseCheckoutRulesOverview({...value,checkout_enabled:true},store),null);
- assert.equal(parseCheckoutRulesOverview({...value,products:[
-  {...value.products[0],collect_sales_tax:null}]},store),null);
- assert.equal(parseCheckoutRulesOverview({...value,products:[
-  value.products[0],value.products[0]]},store),null);
-});
-test("new product checkbox and bulk admin/supplier actions remain private",()=>{
- const migration=read("supabase/migrations/20261103193000_apex_private_checkout_charge_settings.sql");
- const testSql=read("tests/payout-rls/private-checkout-charge-settings.sql");
- const workflow=read(".github/workflows/payout-rls.yml");
+
+test("product tax controls and tax API are removed while shipping forms remain",()=>{
  const bulk=read("src/app/supplier/catalog/bulk-editor.tsx");
- const actions=read("src/app/supplier/checkout-rules/actions.ts");
  const admin=read("src/app/admin/checkout-rules/page.tsx");
- const promotions=read("src/app/supplier/discounts/actions.ts");
- const form=read("src/app/supplier/discounts/forms.tsx");
- assert.match(migration,/collect_sales_tax boolean not null default true/);
- assert.match(migration,/set_bulk_product_tax_collection/);
- assert.match(migration,/apex_product_tax_setting_events/);
- assert.match(migration,/apex_shipping_setting_events/);
- assert.match(migration,/supplier_memberships/);
- assert.match(migration,/app_metadata,apex_role/);
- assert.match(migration,/check\(discount_kind in \('percentage','fixed','free_shipping'\)\)/);
- assert.match(migration,/checkout_enabled',false/);
- assert.doesNotMatch(migration,/\b(?:update|insert into)\s+apex_internal\.checkout_order_intents\b/i);
- assert.match(testSql,/Anonymous tax update allowed/);
- assert.match(testSql,/Unassigned supplier forged tax update/);
- assert.match(testSql,/Duplicate bulk product IDs accepted/);
- assert.match(testSql,/Shipping disabled but fee not zero/);
- assert.match(testSql,/Free shipping accepted a merchandise amount/);
- assert.match(workflow,/private-checkout-charge-settings\.sql/);
- assert.match(bulk,/Collect sales tax on selected/);
- assert.match(bulk,/Do not collect sales tax on selected/);
- assert.match(bulk,/Collect sales tax for /);
- assert.match(actions,/auth.getUser\(\)/);
- assert.match(actions,/set_bulk_product_tax_collection/);
- assert.match(actions,/save_private_store_shipping_settings/);
- assert.match(admin,/isVerifiedPlatformAdmin/);
- assert.match(promotions,/quoteOptionalShipping/);
- assert.match(form,/value="free_shipping"/);
+ const menu=read("src/app/admin/page.tsx");
+ const shippingForm=read("src/app/supplier/checkout-rules/shipping-form.tsx");
+ const serverAction=read("src/app/supplier/checkout-rules/actions.ts");
+ const checkout=read("src/app/admin/checkout-review/destination-charge-actions.ts");
+ const sql=read("supabase/migrations/20261103223000_apex_shipping_only_checkout.sql");
+ assert.doesNotMatch(bulk,/saveSelectedTaxCollection|collectSalesTax|Collect sales tax/);
+ assert.doesNotMatch(admin,/TaxCollectionBulkPanel|collect_sales_tax|TaxCloud/);
+ assert.doesNotMatch(checkout,/TaxCloud|requestPrivateTaxCloudEstimate|collectSalesTax/);
+ assert.doesNotMatch(menu,/TaxCloud|Sales tax provider|Tax & shipping/);
+ assert.match(shippingForm,/free-shipping code/);
+ assert.match(serverAction,/save_private_store_shipping_settings/);
+ assert.doesNotMatch(serverAction,/set_bulk_product_tax_collection/);
+ assert.match(sql,/revoke execute on function public.set_bulk_product_tax_collection/);
+ assert.match(sql,/schema_version',2/);
+ assert.equal(existsSync("src/app/admin/tax/page.tsx"),false);
+ assert.equal(existsSync("src/lib/tax/taxcloud-v3-server.ts"),false);
 });

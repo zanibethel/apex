@@ -30,30 +30,6 @@ function refreshRules(){
  revalidatePath("/admin/checkout-review");
 }
 
-export async function saveSelectedTaxCollection(
- _previous:CheckoutRulesActionResult,form:FormData
-):Promise<CheckoutRulesActionResult>{
- const storeId=form.get("storeId"),raw=form.get("productIds"),choice=form.get("collectSalesTax");
- if(!isValidId(storeId)||typeof raw!=="string"||raw.length>3000||
-  (choice!=="true"&&choice!=="false"))return fail("Invalid tax selection.");
- const ids=raw.split(",").filter(Boolean);
- if(ids.length<1||ids.length>50||
-  ids.some(id=>!isValidId(id))||new Set(ids).size!==ids.length)
-  return fail("Choose between 1 and 50 different saved products.");
- const client=await signedInClient();
- if(!client)return fail("Sign in with an authorized supplier or admin account.");
- const {data,error}=await client.rpc("set_bulk_product_tax_collection",{
-  p_store_id:storeId,p_product_ids:ids,p_collect_sales_tax:choice==="true",
- });
- if(error||!data||data.status!=="saved"||
-  data.selected!==ids.length||data.checkout_enabled!==false||
-  typeof data.changed!=="number")return fail(
-   "Tax options could not be saved. Check product ownership and refresh.");
- refreshRules();
- return {ok:true,changed:data.changed,message:
-  `Updated ${data.changed} of ${ids.length} product tax setting(s). Checkout remains disabled.`};
-}
-
 export async function saveStoreShippingConfiguration(
  _previous:CheckoutRulesActionResult,form:FormData
 ):Promise<CheckoutRulesActionResult>{

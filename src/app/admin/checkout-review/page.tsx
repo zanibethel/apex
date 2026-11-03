@@ -27,7 +27,7 @@ export default async function AdminCheckoutReview(){
         {data:inventory,error:inventoryError},
         {data:shipping,error:shippingError}]=await Promise.all([
   client.from("products")
-   .select("id,store_id,name,sku,description,price_cents,compare_at_price_cents,category_id,image_path,currency,is_active,collect_sales_tax")
+   .select("id,store_id,name,sku,description,price_cents,compare_at_price_cents,category_id,image_path,currency,is_active")
    .eq("store_id",STORE_ID).eq("is_published",false).order("name").limit(100),
   client.from("categories").select("id,name")
    .eq("store_id",STORE_ID).limit(100),
@@ -60,7 +60,6 @@ export default async function AdminCheckoutReview(){
    imageUrl:images.get(p.id)??null,
    available:inv?Math.max(0,inv.quantity_on_hand-inv.quantity_reserved):null,
    active:p.is_active===true,
-   collectSalesTax:p.collect_sales_tax===true,
   };
  });
  return <main className="container apex-checkout-preview apex-checkout-catalog-review">
@@ -82,7 +81,7 @@ export default async function AdminCheckoutReview(){
    }}/>}
   <div className="actions">
    <Link className="button secondary" href="/supplier/catalog/bulk">Edit product cards</Link>
-   <Link className="button secondary" href="/admin/checkout-rules">Configure tax and shipping</Link>
+   <Link className="button secondary" href="/admin/checkout-rules">Configure shipping</Link>
    <Link className="button secondary" href="/admin/catalog-release">Review catalog release</Link>
    <Link className="button secondary" href="/admin/btcpay">Check BTCPay connection</Link>
   </div>
