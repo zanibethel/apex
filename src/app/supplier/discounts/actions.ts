@@ -115,7 +115,7 @@ export async function previewSupplierDiscount(_prev:State,form:FormData):Promise
   const shipping=quoteOptionalShipping(policy??{
     charge_shipping:false,flat_shipping_cents:0,
     free_shipping_min_subtotal_cents:null,
-  },result.totalCents,result.freeShipping===true);
+  },result.totalCents,("freeShipping" in result&&result.freeShipping===true));
   if(!shipping)return {ok:false,message:"Shipping calculation unavailable."};
   return {ok:true,message:
     `Private preview: items ${fmt(subtotal)} − code discount ${fmt(result.discountCents)} +
