@@ -52,7 +52,7 @@ async function request(path,{method="GET",json,auth}={}){
 async function sql(file,params={}){
   const args=["-X","-q","-At","-v","ON_ERROR_STOP=1"];
   for(const [name,value] of Object.entries(params)){
-    if(!/^[a-z_]+$/.test(name)||!safeId.test(value))
+    if(!/^[a-z][a-z0-9_]*$/.test(name)||!safeId.test(value))
       throw Error("Unsafe isolated PostgreSQL fixture parameter");
     args.push("-v",name+"="+value);
   }
