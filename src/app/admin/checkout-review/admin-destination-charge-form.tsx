@@ -18,8 +18,9 @@ export function AdminDestinationChargeForm({
  return <section className="apex-private-destination-quote" aria-label="Saved destination and promotion estimate"
   style={{borderTop:"1px solid #45454d",paddingTop:16,marginTop:16}}>
   <h3>Delivery &amp; discount estimate</h3>
-  <p className="notice">Uses current saved prices and store rules. A ZIP code and
-   state help prepare tax verification but are not proof of a tax jurisdiction.</p>
+  <p className="notice">Uses current saved prices and store rules. A ZIP code
+   and state support the pre-tax estimate; a full address and a configured tax
+   provider are required for a separate tax estimate.</p>
   <form action={action} className="supplier-form" style={{gap:8,marginTop:10}}>
    <input type="hidden" name="productId" value={productId}/>
    <input type="hidden" name="quantity" value={quantity}/>
@@ -35,6 +36,19 @@ export function AdminDestinationChargeForm({
      maxLength={10} required disabled={pending}
      autoComplete="off" style={{width:"100%"}}/>
    </label>
+   <label htmlFor="dest-city">Delivery city (for tax-provider estimate)
+    <input id="dest-city" name="city" placeholder="Lubbock"
+     maxLength={80} autoComplete="off" disabled={pending}
+     style={{width:"100%"}}/>
+   </label>
+   <label htmlFor="dest-street">Delivery street (for tax-provider estimate)
+    <input id="dest-street" name="street" placeholder="Street address"
+     maxLength={140} autoComplete="off" disabled={pending}
+     style={{width:"100%"}}/>
+   </label>
+   <p className="notice">When a merchant-connected tax provider is enabled,
+    submitting a full address requests a private TaxCloud cart estimate.
+    No address is saved in Apex, but TaxCloud can retain its cart record.</p>
    <label htmlFor="dest-promotion">Discount or free-shipping code (optional)
     <input id="dest-promotion" name="code"
      placeholder="Discount code" maxLength={24}
@@ -59,11 +73,15 @@ export function AdminDestinationChargeForm({
      <div><dt>Shipping waived</dt><dd>{asMoney(state.shippingDiscountCents)}</dd></div>}
     <div><dt>Potentially taxable merchandise</dt>
      <dd>{asMoney(state.provisionalTaxableCents)}</dd></div>
-    <div><dt>Sales tax</dt><dd>Awaiting verified destination quote</dd></div>
+    <div><dt>Sales tax</dt><dd>{state.providerTaxEstimateCents!=null?
+     asMoney(state.providerTaxEstimateCents):"Awaiting verified destination quote"}</dd></div>
     <div className="apex-checkout-price-total">
      <dt>Before-tax estimate</dt><dd>{asMoney(state.preTaxTotalCents)}</dd>
     </div>
-    <div><dt>Final total</dt><dd>Not yet available</dd></div>
+    {state.providerEstimatedTotalCents!=null&&
+     <div><dt>Provider-estimated total</dt>
+      <dd>{asMoney(state.providerEstimatedTotalCents)}</dd></div>}
+    <div><dt>Final payable total</dt><dd>Not yet available</dd></div>
    </dl>
    <p className="notice">
     {state.freeShippingReason==="discount_code"?
@@ -76,8 +94,14 @@ export function AdminDestinationChargeForm({
     "Product is marked Collect sales tax.":
     "Product tax collection is unchecked; an exemption still needs verification."}
     {" "}Shipping taxability may affect the final amount.</p>
-   <p className="notice">No invoice, payment, order, promotion redemption, or
-    stock reservation has been created.</p>
+   {state.providerStatus&&<p className="notice">
+    <strong>TaxCloud:</strong> {state.providerStatus==="taxcloud_estimate"?
+     "Verified private cart estimate (not finalized)":
+     state.providerDetail??"Not connected"}.
+   </p>}
+   <p className="notice">No invoice, payment, Apex order, promotion redemption, or
+    stock reservation has been created. Any provider tax calculation is
+    informational and is not a payable total.</p>
   </div>}
  </section>;
 }
