@@ -7,7 +7,7 @@ export type TaxProductRule={
  id:string;name:string;sku:string;collectSalesTax:boolean;
 };
 export function TaxCollectionBulkPanel({storeId,products}:{
- storeId:string;products:TaxProductRule[];
+ storeId:string;products:ReadonlyArray<TaxProductRule>;
 }){
  const [rows,setRows]=useState(products);
  const [selected,setSelected]=useState<string[]>([]);
