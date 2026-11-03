@@ -57,7 +57,7 @@ test("header + catalog + checkout reuse one client-side cart context",()=>{
  const catalog=readFileSync("src/app/catalog/page.tsx","utf8");
  const shelf=readFileSync("src/app/catalog/demo-catalog-shelf.tsx","utf8");
  const checkout=readFileSync("src/app/checkout/preview/checkout-preview.tsx","utf8");
- assert.match(layout,/DemoCartProvider enabled=\{process\.env\.APEX_CHECKOUT_MODE==="demo"\}/);
+ assert.match(layout,/DemoCartProvider enabled=\{admin&&process\.env\.APEX_CHECKOUT_MODE==="demo"\}/);
  assert.match(layout,/DemoCartToggle/);
  assert.match(catalog,/DemoCatalogShelf/);
  assert.match(shelf,/Add to demo cart/);
