@@ -89,6 +89,7 @@ export default async function StorefrontPreview(){
   <div className="actions">
    <Link className="button primary" href="/supplier/catalog/bulk">Manage products</Link>
    <Link className="button secondary" href="/admin/listing-controls">Listing controls</Link>
+   <Link className="button secondary" href="/admin/checkout-review">Review real-catalog checkout</Link>
    <Link className="button secondary" href="/catalog">View public catalog</Link>
   </div>
  </main>;
