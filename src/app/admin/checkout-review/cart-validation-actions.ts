@@ -49,8 +49,8 @@ export async function validateAdminCartSelection(
  return {
   ok:true,
   message:parsed.subtotalMatchesDisplay?
-    "Locked database recheck matched the displayed subtotal. No stock reserved or order created.":
-    "The saved subtotal changed. Refresh the review before proceeding; no order created.",
+    "Locked database recheck matched the displayed subtotal. No stock reserved or order created. Checkout remains blocked.":
+    "The saved subtotal changed. Refresh the review before proceeding; no order created. Checkout remains blocked.",
   item:{
    name:parsed.name,quantity:parsed.quantity,
    availableUnits:parsed.availableUnits,priceCents:parsed.priceCents,
