@@ -8,7 +8,10 @@ begin
  if to_regclass('public.categories') is null
   or to_regclass('public.apex_category_publication_events') is null
   or to_regprocedure('public.create_admin_catalog_category(uuid,text)') is null
-  or to_regprocedure('apex_internal.invalidate_private_review(uuid,uuid,text)') is null
+  -- Disposable category-only CI fixtures omit the private review subsystem.
+  -- Any real installation with review records must have invalidation support.
+  or (to_regclass('public.private_product_review_states') is not null
+    and to_regprocedure('apex_internal.invalidate_private_review(uuid,uuid,text)') is null)
   or has_table_privilege('authenticated','public.categories','UPDATE')
   or has_table_privilege('anon','public.categories','UPDATE')
   or has_table_privilege('authenticated','public.apex_category_publication_events','INSERT')
@@ -77,12 +80,14 @@ begin
  -- A taxonomy label change can invalidate a previous internal assessment.
  -- Preserve all products/stock/publication metadata but revoke stale
  -- pending/approved internal reviews using the existing audited function.
- for v_product in select p.id from public.products p
-  where p.store_id=p_store_id and p.category_id=p_category_id
- loop
-  perform apex_internal.invalidate_private_review(
-   p_store_id,v_product.id,'product');
- end loop;
+ if to_regprocedure('apex_internal.invalidate_private_review(uuid,uuid,text)') is not null then
+  for v_product in select p.id from public.products p
+   where p.store_id=p_store_id and p.category_id=p_category_id
+  loop
+   perform apex_internal.invalidate_private_review(
+    p_store_id,v_product.id,'product');
+  end loop;
+ end if;
  return jsonb_build_object('status','renamed',
   'category_id',p_category_id,'name',v_name,'is_published',false);
 end $fn$;
