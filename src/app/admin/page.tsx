@@ -31,7 +31,7 @@ export default async function AdminDashboard() {
   return <main className="container supplier-shell apex-branded-dashboard" style={{ minWidth: 0 }}>
     <p className="eyebrow">APEX ANABOLICS / PLATFORM ADMIN</p>
     <h1 style={{ fontSize: "clamp(2rem, 7vw, 3.5rem)", lineHeight: 1.1, overflowWrap: "anywhere" }}>CONTROL ROOM</h1>
-    <p className="notice">Authorized administration preview. Payment execution remains disabled.</p>
+    <p className="notice">Manage your storefront and supplier operations. Customer checkout is currently unavailable.</p>
     <section aria-label="Admin tools" className="apex-admin-grid">
       {dashboardLinks.map(item => <Link key={item.href} href={item.href} className="apex-admin-card">
         <span className="apex-admin-icon" aria-hidden="true">{item.icon}</span>
