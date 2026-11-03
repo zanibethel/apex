@@ -97,7 +97,7 @@ begin
   v_failed:=false;
   begin
    perform apex_test_reservation.reserve_held_contract(
-    v_store,repeat('g',64),
+    v_store,repeat('1',64),
     case v_count
      when 1 then '[{"product_id":"78000000-0000-0000-0000-000000000001","quantity":0}]'::jsonb
      when 2 then '[{"product_id":"78000000-0000-0000-0000-000000000001","quantity":2,"unit_price_cents":1}]'::jsonb
@@ -114,7 +114,7 @@ begin
  v_failed:=false;
  begin
   perform apex_test_reservation.reserve_held_contract(
-   v_store,repeat('h',64),v_items,'ship-demo-1','tax-demo-1','TX',6050);
+   v_store,repeat('2',64),v_items,'ship-demo-1','tax-demo-1','TX',6050);
  exception when invalid_parameter_value then v_failed:=true;end;
  if not v_failed then raise exception 'Changed saved price was ignored';end if;
  update apex_test_reservation.inventory set price_cents=2500
@@ -122,14 +122,14 @@ begin
 
  -- Stock 5, two already held. A second two-unit hold works, third fails.
  perform apex_test_reservation.reserve_held_contract(
-  v_store,repeat('i',64),v_items,'ship-demo-1','tax-demo-1','TX',6050);
+  v_store,repeat('3',64),v_items,'ship-demo-1','tax-demo-1','TX',6050);
  if (select reserved from apex_test_reservation.inventory where
   product_id='78000000-0000-0000-0000-000000000001')<>4
  then raise exception 'Second held reservation missing';end if;
  v_failed:=false;
  begin
   perform apex_test_reservation.reserve_held_contract(
-   v_store,repeat('j',64),v_items,'ship-demo-1','tax-demo-1','TX',6050);
+   v_store,repeat('4',64),v_items,'ship-demo-1','tax-demo-1','TX',6050);
  exception when check_violation then v_failed:=true;end;
  if not v_failed then raise exception 'Insufficient-stock reservation accepted';end if;
 
