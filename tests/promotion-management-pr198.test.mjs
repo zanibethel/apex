@@ -52,7 +52,7 @@ test("actions insert active state by choice and preserve explicit activation con
  const form=read("src/app/supplier/discounts/forms.tsx");
  assert.match(actions,/newPromotionActive\(form\.get\("initialStatus"\)\)/);
  assert.match(actions,/is_active:activeOnCreate/);
- assert.match(actions,/Code created/);
+ assert.match(actions,/Discount code created/);
  assert.match(actions,/Code activated/);
  assert.match(actions,/Code deactivated/);
  assert.match(actions,/result\.totalCents\+shipping\.shippingCents/);
