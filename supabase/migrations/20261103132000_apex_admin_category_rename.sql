@@ -8,10 +8,6 @@ begin
  if to_regclass('public.categories') is null
   or to_regclass('public.apex_category_publication_events') is null
   or to_regprocedure('public.create_admin_catalog_category(uuid,text)') is null
-  -- Disposable category-only CI fixtures omit the private review subsystem.
-  -- Any real installation with review records must have invalidation support.
-  or (to_regclass('public.private_product_review_states') is not null
-    and to_regprocedure('apex_internal.invalidate_private_review(uuid,uuid,text)') is null)
   or has_table_privilege('authenticated','public.categories','UPDATE')
   or has_table_privilege('anon','public.categories','UPDATE')
   or has_table_privilege('authenticated','public.apex_category_publication_events','INSERT')
@@ -69,6 +65,14 @@ begin
  if v_category.name=v_name
  then return jsonb_build_object('status','unchanged',
   'category_id',v_category.id,'name',v_name,'is_published',false);end if;
+ -- Reject renaming a populated category if this installation cannot revoke
+ -- prior private reviews. The production project has this function; compact
+ -- disposable category CI fixtures only rename an unused category.
+ if to_regprocedure('apex_internal.invalidate_private_review(uuid,uuid,text)') is null
+  and exists(select 1 from public.products p
+    where p.store_id=p_store_id and p.category_id=p_category_id)
+ then raise exception 'Private review invalidation unavailable'
+   using errcode='42501';end if;
 
  update public.categories set name=v_name,slug=v_slug
   where id=p_category_id and store_id=p_store_id and is_published=false;
