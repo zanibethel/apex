@@ -23,7 +23,7 @@ export async function saveSupplierListingIntent(_previous:Result,form:FormData):
   p_store_id:storeId,p_product_id:productId,p_action:action,
  });
  if(result.error||!result.data)
-  return {ok:false,message:"Cannot save the listing preference. Verify setup and any admin hold, then refresh."};
+  return {ok:false,message:"Couldn't update publishing. Check required product details and any admin hold, then refresh."};
  revalidatePath("/supplier/catalog");
  revalidatePath(`/supplier/catalog/preview/${productId}`);
  revalidatePath("/admin/listing-controls");
