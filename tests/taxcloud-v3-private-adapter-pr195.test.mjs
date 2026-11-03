@@ -161,7 +161,7 @@ test("server-only gateway denies missing credentials and has no invoice/checkout
  assert.match(action,/isVerifiedPlatformAdmin/);
  assert.match(action,/requestPrivateTaxCloudEstimate/);
  assert.match(action,/subtotalMatchesDisplay/);
- assert.match(ui,/Final payable total/);
+ assert.match(ui,/Final total \\(payable\\)/);
  assert.match(ui,/TaxCloud/);
  assert.match(admin,/isVerifiedPlatformAdmin/);
  assert.doesNotMatch(server,/carts\/orders|commitTransaction|sendInvoice/i);
