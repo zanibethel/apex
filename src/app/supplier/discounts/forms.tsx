@@ -3,8 +3,9 @@
 import {useActionState,useId,useState} from "react";
 import {saveSupplierPromotion,toggleSupplierPromotion,previewSupplierDiscount}
  from "./actions";
+import type {PromotionActionState} from "./actions";
 
-const initial={ok:false,message:""};
+const initial:PromotionActionState={ok:false,message:""};
 type Discount={
  id:string;code:string;discount_kind:string;discount_value:number;
  min_subtotal_cents:number;starts_at:string|null;ends_at:string|null;
