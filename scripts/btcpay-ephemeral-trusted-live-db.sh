@@ -27,6 +27,7 @@ files=(
  database/sql/apex_btcpay_test_atomic_resume_fence_REVIEW_ONLY.sql
  database/sql/apex_btcpay_test_external_prepost_intent_REVIEW_ONLY.sql
  database/sql/apex_btcpay_test_trusted_pg_worker_REVIEW_ONLY.sql
+ database/sql/apex_btcpay_test_supplier_credentials_REVIEW_ONLY.sql
 )
 for file in "${files[@]}"; do
  psql -X -q -v ON_ERROR_STOP=1 -f "$file" >/dev/null
