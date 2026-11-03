@@ -63,7 +63,8 @@ export function createEphemeralOperatorRecovery({env=process.env,runPsql}={}){
      // the SQL args, identity tokens, connection string or full stderr.
      const raw=String(error?.stderr||"");
      const reason=/permission denied/i.test(raw)?"permission-denied":
-       /does not exist/i.test(raw)?"missing-function-or-object":
+       /does not exist/i.test(raw)?
+       ("missing-"+(raw.match(/ERROR:\\s*(function|relation|schema|column|type)\\s+([A-Za-z0-9_()., ]{1,110}?)\\s+does not exist/i)?.slice(1).join(":")||"function-or-object")):
        /authentication failed/i.test(raw)?"authentication-failed":
        /Recovery review denied/i.test(raw)?"review-precondition-denied":
        /readback evidence required/i.test(raw)?"evidence-mismatch":
