@@ -21,7 +21,7 @@ function formatPrice(cents:number,currency:string) {
 // excerpt. A complete product writeup remains in the expandable details.
 export function shortPrivateCatalogDescription(description:string|null):string{
  const raw=(description??"").trim();
- if(!raw)return "Product details are not available yet.";
+ if(!raw)return "Product description coming soon.";
  const withoutImportPrefix=raw.replace(/^Supplier-listed variant:\s*[^.]{1,120}\.\s*/i,"");
  const text=withoutImportPrefix||raw;
  if(text.length<=185)return text;
