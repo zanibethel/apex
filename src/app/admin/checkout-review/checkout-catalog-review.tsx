@@ -132,9 +132,8 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
       <p className="apex-checkout-invoice-note">A payment request has not been created.</p>
      </div>
      <div className="apex-checkout-status-controls">
-      <h3>Connection requirements</h3>
-      <p>Store-scoped BTCPay credentials, configured live wallet and webhooks,
-       reconciliation verification, and independent catalog release approval.</p>
+      <h3>Payment availability</h3>
+      <p>Checkout cannot proceed until payments and product availability are enabled.</p>
       <button type="button" className="apex-checkout-cta" disabled>
        Payment unavailable
       </button>
