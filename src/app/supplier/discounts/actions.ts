@@ -120,7 +120,7 @@ export async function previewSupplierDiscount(_prev:State,form:FormData):Promise
   return {ok:true,message:
     `Private preview: items ${fmt(subtotal)} − code discount ${fmt(result.discountCents)} +
     shipping ${fmt(shipping.shippingCents)} = ${fmt(result.totalCents+shipping.shippingCents)}
-    before any sales tax. ${shipping.freeShippingReason==="discount_code"?"Code waived shipping.":
+    for this pricing preview. ${shipping.freeShippingReason==="discount_code"?"Code waived shipping.":
      shipping.freeShippingReason==="subtotal_threshold"?"Free-shipping threshold met.":""}
     No order or redemption occurred.`};
 }
