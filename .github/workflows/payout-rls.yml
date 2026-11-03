@@ -78,6 +78,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261103073000_apex_admin_category_creation.sql
       - name: Verify private category creation, duplicates, audit and public isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-category-create.sql
+      - name: Install verified admin category rename RPC (disposable)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261103132000_apex_admin_category_rename.sql
+      - name: Verify category rename role isolation, stable IDs, audits and public gate
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-category-rename.sql
       - name: Load isolated BTCPay receipt journal (no production database)
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_receipt_journal_REVIEW_ONLY.sql
       - name: Load isolated BTCPay order-status fixture
