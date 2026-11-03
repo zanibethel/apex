@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSupplierWorkspace } from "@/lib/auth/supplier-workspace";
 import { quoteDiscount } from "@/lib/commerce/discount-quote.mjs";
+import {quoteOptionalShipping} from "@/lib/commerce/checkout-charge-rules.mjs";
 
 type State={ok:boolean;message:string};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -34,13 +35,13 @@ export async function saveSupplierPromotion(_prev:State,form:FormData):Promise<S
   const rawStart=form.get("startsAt"),rawEnd=form.get("endsAt");
   if(typeof storeId!=="string"||!uuid.test(storeId)||typeof promoId!=="string"||
     (promoId!==""&&!uuid.test(promoId))||typeof rawCode!=="string"||
-    typeof kind!=="string"||typeof rawAmount!=="string"||
+    typeof kind!=="string"||(kind!=="free_shipping"&&typeof rawAmount!=="string")||
     typeof rawLimit!=="string")return {ok:false,message:"Invalid promotion details."};
   const code=rawCode.trim().toUpperCase();
-  if(!/^[A-Z0-9_-]{3,24}$/.test(code)||!["percentage","fixed"].includes(kind))
+  if(!/^[A-Z0-9_-]{3,24}$/.test(code)||!["percentage","fixed","free_shipping"].includes(kind))
     return {ok:false,message:"Code must be 3–24 letters, digits, underscores or dashes."};
-  const value=kind==="percentage"
-    ? (/^\d{1,2}$/.test(rawAmount)?Number(rawAmount):null)
+  const value=kind==="free_shipping"?1:kind==="percentage"
+    ? (/^\d{1,2}$/.test(String(rawAmount))?Number(rawAmount):null)
     : cents(rawAmount,false);
   const minimum=cents(rawMin);
   const limit=rawLimit===""?null:(/^\d{1,7}$/.test(rawLimit)?Number(rawLimit):null);
@@ -106,5 +107,20 @@ export async function previewSupplierDiscount(_prev:State,form:FormData):Promise
   const result=quoteDiscount(data,subtotal);
   if(!result.eligible)return {ok:false,message:result.reason};
   const fmt=(n:number)=>(n/100).toLocaleString("en-US",{style:"currency",currency:"USD"});
-  return {ok:true,message:`Test quote: ${fmt(subtotal)} − ${fmt(result.discountCents)} = ${fmt(result.totalCents)}. No checkout or redemption occurred.`};
+  const {data:policy,error:policyError}=await w.client
+    .from("apex_store_shipping_settings")
+    .select("charge_shipping,flat_shipping_cents,free_shipping_min_subtotal_cents")
+    .eq("store_id",storeId).maybeSingle();
+  if(policyError)return {ok:false,message:"Shipping settings could not be verified."};
+  const shipping=quoteOptionalShipping(policy??{
+    charge_shipping:false,flat_shipping_cents:0,
+    free_shipping_min_subtotal_cents:null,
+  },result.totalCents,result.freeShipping===true);
+  if(!shipping)return {ok:false,message:"Shipping calculation unavailable."};
+  return {ok:true,message:
+    `Private preview: items ${fmt(subtotal)} − code discount ${fmt(result.discountCents)} +
+    shipping ${fmt(shipping.shippingCents)} = ${fmt(result.totalCents+shipping.shippingCents)}
+    before any sales tax. ${shipping.freeShippingReason==="discount_code"?"Code waived shipping.":
+     shipping.freeShippingReason==="subtotal_threshold"?"Free-shipping threshold met.":""}
+    No order or redemption occurred.`};
 }
