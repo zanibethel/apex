@@ -31,4 +31,12 @@ files=(
 for file in "${files[@]}"; do
  psql -X -q -v ON_ERROR_STOP=1 -f "$file" >/dev/null
 done
-echo "PASS: fresh isolated PostgreSQL schema for real-loopback BTCPay worker"
+test -n "${APEX_BTCPAY_TEST_WORKER_PASSWORD:-}"
+psql -X -q -v ON_ERROR_STOP=1 \
+  -v "worker_password=$APEX_BTCPAY_TEST_WORKER_PASSWORD" \
+  -f database/sql/apex_btcpay_test_restricted_worker_role_REVIEW_ONLY.sql >/dev/null
+psql -X -q -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-restricted-worker-role.sql >/dev/null
+actual="$(PGUSER=apex_test_invoice_worker PGPASSWORD="$APEX_BTCPAY_TEST_WORKER_PASSWORD" \
+  psql -X -At -v ON_ERROR_STOP=1 -c 'select current_user')"
+test "$actual" = "apex_test_invoice_worker"
+echo "PASS: fresh isolated PostgreSQL schema for restricted-login real-loopback BTCPay worker"
