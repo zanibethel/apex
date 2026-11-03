@@ -8,6 +8,7 @@ const VALID_CODES=new Set([
  "insufficient_available_stock","supplier_suspended",
  "supplier_authorization_unverified","product_authorization_blocked",
  "product_authorization_unverified","public_release_disabled","public_visible",
+ "category_not_published","inventory_not_sold_out","release_conditions_unverified",
 ]);
 const EXPLANATIONS=Object.freeze({
  admin_hold:"The platform administrator placed this listing on hold.",
@@ -15,6 +16,9 @@ const EXPLANATIONS=Object.freeze({
  same_supplier_identity_hold:"A product with the same identity has an active hold.",
  content_review_pending:"Product content changes require review.",
  product_setup_incomplete:"Required product details or imagery are incomplete.",
+ category_not_published:"The product category is not approved for public display.",
+ inventory_not_sold_out:"Only zero-stock products may appear in the Sold Out catalog.",
+ release_conditions_unverified:"A protected public listing check is not satisfied.",
  insufficient_available_stock:"No units are available. Sold Out display remains a separate eligibility-checked release; checkout stays disabled.",
  supplier_suspended:"Supplier authorization is suspended.",
  supplier_authorization_unverified:"Supplier eligibility has not been independently verified.",
