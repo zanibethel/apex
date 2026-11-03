@@ -7,6 +7,8 @@ import {
 } from "@/lib/catalog/admin-category-publication.mjs";
 import {AdminCategoryPublicationForm} from "./form";
 import {CreateAdminCategoryForm} from "./create-category-form";
+import {ReviewedTaxonomyCategoryForm} from "./reviewed-taxonomy-form";
+import {apexTaxonomyStoreId,apexTaxonomyCategoryNames} from "@/lib/catalog/apex-reviewed-taxonomy-20261102.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Category Controls | Apex",
@@ -50,6 +52,12 @@ export default async function AdminCategories(){
     !stores.length?<p>No private storefront is available for categories.</p>:
     <CreateAdminCategoryForm stores={stores}/>}
   </section>
+  {categories!==null&&stores?.some(s=>s.id===apexTaxonomyStoreId)&&
+   <ReviewedTaxonomyCategoryForm
+    storeId={apexTaxonomyStoreId}
+    names={apexTaxonomyCategoryNames}
+    missing={apexTaxonomyCategoryNames.filter(name=>!categories.some(c=>
+     c.storeId===apexTaxonomyStoreId&&c.categoryName===name))}/>}
   <section className="feature-grid" aria-label="Category publishing summary">
    {[
     ["Categories",summary.total],
