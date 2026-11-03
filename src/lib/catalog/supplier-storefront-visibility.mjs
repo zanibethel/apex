@@ -57,7 +57,8 @@ export function supplierStorefrontVisibility(control,releaseDecision,requestJust
   checks.supplier_requested===true&&checks.admin_clear===true&&
   checks.supplier_authorized===true&&checks.product_authorized===true&&
   checks.public_release_enabled===true&&checks.same_supplier_identity_clear===true&&
-  checks.content_review_clear===true&&checks.product_setup_complete===true;
+  checks.content_review_clear===true&&checks.product_setup_complete===true&&
+  checks.category_published===true&&checks.sold_out_inventory_valid===true;
  if(live)return Object.freeze({
   kind:"live",label:"Live · sold out",
   description:"The protected server release decision confirms this listing is public. Checkout remains disabled.",
