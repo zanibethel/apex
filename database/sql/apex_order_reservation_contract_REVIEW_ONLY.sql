@@ -241,7 +241,8 @@ values
 with quote_seed as (
  select '77000000-0000-0000-0000-000000000001'::uuid store_id,
   encode(sha256(convert_to(
-   '[{"product_id": "78000000-0000-0000-0000-000000000001", "quantity": 2}]',
+   jsonb_build_array(jsonb_build_object(
+    'product_id','78000000-0000-0000-0000-000000000001'::uuid,'quantity',2))::text,
    'UTF8')),'hex') cart_hash
 )
 insert into apex_test_reservation.shipping_quotes(
@@ -252,7 +253,8 @@ insert into apex_test_reservation.shipping_quotes(
 with quote_seed as (
  select '77000000-0000-0000-0000-000000000001'::uuid store_id,
   encode(sha256(convert_to(
-   '[{"product_id": "78000000-0000-0000-0000-000000000001", "quantity": 2}]',
+   jsonb_build_array(jsonb_build_object(
+    'product_id','78000000-0000-0000-0000-000000000001'::uuid,'quantity',2))::text,
    'UTF8')),'hex') cart_hash
 )
 insert into apex_test_reservation.tax_quotes(
@@ -263,7 +265,8 @@ insert into apex_test_reservation.tax_quotes(
 with quote_seed as (
  select '77000000-0000-0000-0000-000000000001'::uuid store_id,
   encode(sha256(convert_to(
-   '[{"product_id": "78000000-0000-0000-0000-000000000002", "quantity": 1}]',
+   jsonb_build_array(jsonb_build_object(
+    'product_id','78000000-0000-0000-0000-000000000002'::uuid,'quantity',1))::text,
    'UTF8')),'hex') cart_hash
 )
 insert into apex_test_reservation.shipping_quotes(
@@ -274,7 +277,8 @@ insert into apex_test_reservation.shipping_quotes(
 with quote_seed as (
  select '77000000-0000-0000-0000-000000000001'::uuid store_id,
   encode(sha256(convert_to(
-   '[{"product_id": "78000000-0000-0000-0000-000000000002", "quantity": 1}]',
+   jsonb_build_array(jsonb_build_object(
+    'product_id','78000000-0000-0000-0000-000000000002'::uuid,'quantity',1))::text,
    'UTF8')),'hex') cart_hash
 )
 insert into apex_test_reservation.tax_quotes(
