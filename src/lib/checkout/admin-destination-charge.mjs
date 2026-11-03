@@ -88,6 +88,8 @@ export function estimatePrivateDestinationCharges(
   originalShippingCents:estimated.originalShippingCents,
   shippingCents:estimated.shippingCents,
   shippingDiscountCents:estimated.shippingDiscountCents,
+  freeShippingMinimumCents:estimated.freeShippingMinimumCents,
+  amountUntilFreeShippingCents:estimated.amountUntilFreeShippingCents,
   freeShippingReason:estimated.freeShippingReason,
   totalCents:estimated.totalCents,
   quoteFinalized:false,canCreateOrder:false,canCreateInvoice:false,
