@@ -198,7 +198,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     setListingOverrides(previous=>({...previous,...Object.fromEntries(response.results.filter(item=>item.ok).map(item=>[item.id,action==="publish"]))}));
     if(response.results.some(item=>item.ok))router.refresh();
    }catch{
-    setPublicationMessage("Publication requests could not be saved. Refresh and check product status.");
+    setPublicationMessage("Publishing settings could not be saved. Refresh and check product status.");
    }
   });
  }
@@ -233,7 +233,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   <p className="apex-bulk-workspace-summary" role="status">
    <strong>{overview.privateSaved} saved private cards</strong>
    <span>· {overview.imagesAttached} images attached</span>
-   <span>· {overview.publishRequested} publication requests</span>
+   <span>· {overview.publishRequested} publish settings on</span>
    <span>· {overview.adminHolds} admin holds</span>
   </p>
   <div className="apex-bulk-filterbar" aria-label="Find and filter private products">
@@ -247,8 +247,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
      onChange={e=>{setViewFilter(e.target.value);setSelected([]);}}>
      <option value="all">All products</option>
      <option value="unsaved">Unsaved drafts</option>
-     <option value="ready">Ready to request</option>
-     <option value="requested">Publication requested</option>
+     <option value="ready">Ready to publish</option>
+     <option value="requested">Publish enabled</option>
      <option value="needs_attention">Needs setup / held ({overview.needsAttention})</option>
      <option value="image_fixes">Image corrections / missing ({overview.imageFixes})</option>
      <option value="admin_holds">Admin holds ({overview.adminHolds})</option>
@@ -275,7 +275,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     {showOfferTiles?"Hide previews":"Show previews"}
    </button>
   </div>
-  <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch saves a supplier request. Storefront status below each title shows the protected visibility decision; a checked switch does not mean live. Zero stock may display Sold Out only after independent release approval.</p>
+  <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch updates the supplier setting immediately. The storefront status confirms whether the product is publicly visible. Admin holds and release checks remain in effect. Zero stock may display Sold Out only after independent release approval.</p>
   {recentImportKeys.length>0&&<p className="apex-bulk-import-notice" role="status">
    {recentImportKeys.length} CSV product {recentImportKeys.length===1?"card is":"cards are"} at the top of the workspace.
    Review their live previews and choose Save selected when ready.
@@ -306,8 +306,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const visibilityKind=!r.id?"private":locallyChanged
      ?override?"requested":"private":listingStatus?.visibilityKind??"unavailable";
     const visibilityLabel=!r.id?"Draft · not live":locallyChanged
-     ?override?"Requested · not live":"Not live":listingStatus?.visibilityLabel??"Visibility unavailable";
-    const visibilityDescription=!r.id?"Save your private draft before requesting publication.":
+     ?override?"Not visible":"Not visible":listingStatus?.visibilityLabel??"Visibility unavailable";
+    const visibilityDescription=!r.id?"Save the product details before turning on Publish.":
      locallyChanged
       ?"The supplier preference changed. A fresh protected release decision is needed before customer visibility can be confirmed.":
       listingStatus?.visibilityDescription??"Refresh to check the protected release decision.";
@@ -324,7 +324,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         aria-label={"Edit "+(r.name||"new product")+" details"} aria-expanded={editOpenKeys.includes(r.key)||!r.id}
         onClick={()=>toggleEdit(r.key)} disabled={busy} title="Edit product, image and inventory">✎</button>
        <label className="apex-bulk-card-publish-switch">
-        <span>{requested?"Publish requested":"Publish"}</span>
+        <span>{requested?"Publish enabled":"Publish"}</span>
         <input type="checkbox" role="switch" aria-label={"Publish "+(r.name||"new product")}
          checked={requested} disabled={!editable||busy||!r.id||r.needsSave||(!requested&&!publishReady)}
          onChange={e=>r.id&&publish([r.id],e.target.checked?"publish":"unpublish")}/>
@@ -505,7 +505,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    </Link>
    <button type="button" className="button secondary"
     disabled={!editable||pending||publishPending||!eligibleSelectedIds.length||eligibleSelectedIds.length>publicationLimit}
-    aria-label={publishPending?"Saving selected publication requests":"Publish selected ("+eligibleSelectedIds.length+")"}
+    aria-label={publishPending?"Saving selected publish settings":"Publish selected ("+eligibleSelectedIds.length+")"}
     onClick={()=>publish(eligibleSelectedIds)}>
     {publishPending?"Saving…":<>
      <span className="apex-bulk-action-long">Publish selected ({eligibleSelectedIds.length})</span>
@@ -518,7 +518,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     onClick={()=>publish(eligibleUnpublishIds,"unpublish")}>Unpublish selected ({eligibleUnpublishIds.length})</button>
    <button type="button" className="button primary"
     disabled={!editable||pending||publishPending||!eligiblePublishIds.length||eligiblePublishIds.length>publicationLimit}
-    aria-label={publishPending?"Saving eligible publication requests":"Publish all eligible ("+eligiblePublishIds.length+")"}
+    aria-label={publishPending?"Saving eligible publish settings":"Publish all eligible ("+eligiblePublishIds.length+")"}
     onClick={()=>publish(eligiblePublishIds)}>
     {publishPending?"Saving…":<>
      <span className="apex-bulk-action-long">Publish all eligible ({eligiblePublishIds.length})</span>
