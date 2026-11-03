@@ -17,6 +17,7 @@ import {privateBulkReadiness} from "@/lib/catalog/private-bulk-readiness.mjs";
 import {supplierAdminFeedback} from "@/lib/catalog/supplier-admin-feedback.mjs";
 import {bulkSetupHref} from "@/lib/catalog/bulk-setup-targets.mjs";
 import {bulkViewAfterEdit,selectEditedBulkRow} from "@/lib/catalog/bulk-edit-visibility.mjs";
+import {stageSelectedBulkSetup} from "@/lib/catalog/bulk-setup-batch.mjs";
 import {bulkRowsRequiringSave,reconcileBulkSaveBatch,bulkSaveProgress,bulkUnfinishedSaveKeys} from "@/lib/catalog/bulk-save-retry.mjs";
 import {mergeBulkSaveRetryKeys} from "@/lib/catalog/bulk-inline-save-retry.mjs";
 
@@ -46,6 +47,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [showOfferTiles,setShowOfferTiles]=useState(true);
  const [productSearch,setProductSearch]=useState("");
  const [viewFilter,setViewFilter]=useState("all");
+ const [setupCategoryId,setSetupCategoryId]=useState("");
+ const [setupMessage,setSetupMessage]=useState("");
  const [saveRetryKeys,setSaveRetryKeys]=useState<string[]>([]);
  const router=useRouter();
  const savedMedia=new Map(media.map(m=>[m.productId,m]));
@@ -70,6 +73,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const overview=supplierBulkWorkspaceSummary(rows,effectiveListing);
  const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,effectiveListing,newlyRequested,new Set(saveRetryKeys));
  const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key));
+ const selectedMissingCategory=selectedRows.filter(row=>!row.categoryId).length;
+ const selectedInactive=selectedRows.filter(row=>row.isActive===false).length;
  const pendingSaveRows:BulkEditRow[]=bulkRowsRequiringSave(selectedRows,lastSave);
  const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
  const selectedIds=savedSelected.map(r=>r.id!);
@@ -144,6 +149,35 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  function toggle(key:string){
   if(busy)return;
   setSelected(prev=>prev.includes(key)?prev.filter(x=>x!==key):[...prev,key]);
+ }
+ function stageSetup(kind:"fill-missing-category"|"mark-active"){
+  if(!editable||busy||selectedRows.length===0)return;
+  const change=kind==="fill-missing-category"
+   ?{kind,categoryId:setupCategoryId}:{kind};
+  const staged=stageSelectedBulkSetup(rows,selectedRows.map(row=>row.key),
+    change,categories.map(category=>category.id));
+  if(!staged.ok){
+   setSetupMessage(staged.reason??"Unable to stage changes.");
+   return;
+  }
+  if(staged.changedKeys.length===0){
+   setSetupMessage("The selected products already have this setting. Nothing changed.");
+   return;
+  }
+  setRows(staged.rows as BulkEditRow[]);
+  // Keep only the changed cards selected when switching to All products.
+  // Hidden checked items must not be pulled into an unrelated save.
+  setSelected(staged.changedKeys);
+  setProductSearch("");
+  setViewFilter("all");
+  setLastSave(previous=>{
+   const copy={...previous};
+   for(const key of staged.changedKeys)delete copy[key];
+   return copy;
+  });
+  setSetupMessage(staged.changedKeys.length+" product"+
+   (staged.changedKeys.length===1?"":"s")+
+   " staged locally. Review the selected cards, then Save selected.");
  }
  function addRows(count:number){
   if(!editable||busy||rows.length+count>250)return;
@@ -275,6 +309,38 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     {showOfferTiles?"Hide previews":"Show previews"}
    </button>
   </div>
+  <section className="supplier-panel" aria-label="Bulk product setup"
+   style={{maxWidth:"none",marginBottom:18,padding:16}}>
+   <h3>Finish selected product setup</h3>
+   <p className="notice">Choose cards first, then apply a change. Changes remain
+    on this page until you select <strong>Save selected</strong>. Existing categories,
+    descriptions, costs, prices, images, stock and approval records are preserved.</p>
+   <div className="apex-bulk-toolbar">
+    <label htmlFor="apex-bulk-setup-category">Category for uncategorized products
+     <select id="apex-bulk-setup-category" value={setupCategoryId}
+      disabled={!editable||busy||categories.length===0}
+      onChange={e=>setSetupCategoryId(e.target.value)}>
+      <option value="">Choose category</option>
+      {categories.map(category=><option key={category.id} value={category.id}>
+       {category.name}</option>)}
+     </select>
+    </label>
+    <button type="button" className="button secondary"
+     disabled={!editable||busy||selectedMissingCategory===0||!setupCategoryId}
+     onClick={()=>stageSetup("fill-missing-category")}>
+     Fill missing category ({selectedMissingCategory})
+    </button>
+    <button type="button" className="button secondary"
+     disabled={!editable||busy||selectedInactive===0}
+     onClick={()=>stageSetup("mark-active")}>
+     Mark selected active ({selectedInactive})
+    </button>
+   </div>
+   <p className="notice">Active controls the saved product record, not whether
+    customers can see or purchase it. Publish, admin holds and verified release
+    eligibility remain separate.</p>
+   {setupMessage&&<p role="status" className="apex-bulk-result">{setupMessage}</p>}
+  </section>
   <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch updates the supplier setting immediately. The storefront status confirms whether the product is publicly visible. Admin holds and release checks remain in effect. Zero stock may display Sold Out only after independent release approval.</p>
   {recentImportKeys.length>0&&<p className="apex-bulk-import-notice" role="status">
    {recentImportKeys.length} CSV product {recentImportKeys.length===1?"card is":"cards are"} at the top of the workspace.
