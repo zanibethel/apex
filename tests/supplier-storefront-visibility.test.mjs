@@ -8,7 +8,8 @@ const positive=()=>({
  checks:{supplier_requested:true,admin_clear:true,
   supplier_authorized:true,product_authorized:true,
   public_release_enabled:true,same_supplier_identity_clear:true,
-  content_review_clear:true,product_setup_complete:true},
+  content_review_clear:true,product_setup_complete:true,
+  category_published:true,sold_out_inventory_valid:true},
 });
 const control={available:true,requested:true,adminGate:"clear",
  republishApprovalRequired:false,republishApproved:false};
