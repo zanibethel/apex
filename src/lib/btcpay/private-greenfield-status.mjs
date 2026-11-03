@@ -4,7 +4,6 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STORE=/^[A-Za-z0-9_-]{1,100}$/;
 const KEY_ENV=/^APEX_BTCPAY_KEY_[A-Z0-9_]{1,64}$/;
 const MAX_BINDINGS=20;
-const hidden=Object.freeze({providerName:null,defaultCurrency:null});
 
 function canonicalHttpsOrigin(input){
  if(typeof input!=="string"||input.length>250)return null;
