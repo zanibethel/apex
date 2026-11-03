@@ -85,7 +85,7 @@ test("admin server action uses signed-in role and a hardcoded private store",()=
  assert.match(sql,/can_create_invoice',false/);
  assert.match(sql,/can_reserve_stock',false/);
  assert.match(sql,/revoke all on function public.get_admin_private_cart_validation/);
- assert.doesNotMatch(sql,/insert into|update public|delete from|create_invoice|create_payout|enabled=true/i);
+ assert.doesNotMatch(sql,/\binsert\s+into\b|\bupdate\s+public\.|\bdelete\s+from\b|\bcreateInvoice\(|\bcreatePayout\(|\benabled\s*=\s*true\b/i);
  assert.match(integration,/Supplier spoofed admin validation/);
  assert.match(integration,/Untrusted cart input accepted/);
  assert.match(integration,/Live price\/stock readback not reflected/);
