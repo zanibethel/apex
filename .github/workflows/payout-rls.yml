@@ -86,6 +86,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261103150000_apex_private_checkout_order_journal.sql
       - name: Verify immutable order identities, cross-role isolation, and no provider actions
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/private-checkout-order-journal.sql
+      - name: Install strict private admin-only cart validation RPC (disposable)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261103170000_apex_private_cart_validation.sql
+      - name: Verify live price, stock, role scope and denied checkout
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-private-cart-validation.sql
       - name: Load isolated BTCPay receipt journal (no production database)
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_receipt_journal_REVIEW_ONLY.sql
       - name: Load isolated BTCPay order-status fixture
