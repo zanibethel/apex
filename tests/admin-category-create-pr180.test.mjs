@@ -40,7 +40,7 @@ test("admin category creation is a server action with verified identity",()=>{
  assert.match(form,/name="name"/);
  assert.match(form,/maxLength=\{60\}/);
  assert.match(page,/Categories start unpublished/);
- assert.doesNotMatch(actions+page+form,/service_role|createPublicUrl|\\.insert\\(|\\.upsert\\(|\\.update\\(|\\.delete\\(|createInvoice|createPayout/);
+ assert.ok(!["service_role","createPublicUrl",".insert(",".upsert(",".update(",".delete(","createInvoice","createPayout"].some(term=>(actions+page+form).includes(term)));
 });
 test("database creates unpublished category, no product edits or release bypass",()=>{
  const sql=read("supabase/migrations/20261103073000_apex_admin_category_creation.sql");
