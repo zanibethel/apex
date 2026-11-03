@@ -1,0 +1,20 @@
+.apex-checkout-catalog-review .apex-checkout-head{margin-bottom:26px}
+.apex-checkout-catalog-review .apex-checkout-head p{max-width:680px}
+.apex-checkout-review-product-picker{display:grid;gap:8px;margin:0 0 13px}
+.apex-checkout-review-product-picker>span{font-size:12px;font-weight:750;color:#dadbe2}
+.apex-checkout-review-product-picker select{max-width:100%;min-width:0;width:100%;height:47px;min-height:47px;padding:8px 12px;background:#0b0c10;color:#f4f4f6;border:1px solid #4e505c;border-radius:9px;font-size:16px}
+.apex-checkout-review-product-picker select:focus-visible{outline:2px solid #ed4b77;outline-offset:2px}
+.apex-checkout-review-soldout{font-weight:800;color:#ffc5cd!important}
+.apex-checkout-review-compare{font-size:12px;color:#bbbcc8;margin:12px 0}
+.apex-checkout-review-description{font-size:12px;line-height:1.55;color:#c6c7d1;max-height:5em;overflow:auto;margin:18px 0;padding:0}
+.apex-checkout-review-handoff{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:18px;padding:23px 0}
+.apex-checkout-review-handoff strong{font-size:17px;color:#f5f6f8}
+.apex-checkout-review-handoff p{font-size:13px;line-height:1.6;color:#b5b7c2;margin:6px 0 0}
+.apex-checkout-catalog-review .apex-checkout-cta:disabled{opacity:.56;cursor:not-allowed;filter:none}
+.apex-checkout-catalog-review .apex-checkout-item>strong{font-variant-numeric:tabular-nums}
+.apex-checkout-catalog-review .apex-checkout-back-button{display:inline-block;text-decoration:none}
+.apex-checkout-catalog-review .apex-checkout-field input{font-size:16px}
+@media(max-width:600px){
+ .apex-checkout-review-handoff{grid-template-columns:38px minmax(0,1fr);gap:10px}
+ .apex-checkout-review-product-picker select{font-size:16px}
+}
