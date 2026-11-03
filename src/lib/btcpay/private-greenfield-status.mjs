@@ -55,9 +55,13 @@ export function parsePrivateGreenfieldBindings(raw){
 function status(kind,providerName=null,defaultCurrency=null){
  return Object.freeze({status:kind,providerName,defaultCurrency});
 }
+/**
+ * @param {{apexStoreId:string,rawBindings?:string,
+ * env?:Record<string,string|undefined>,fetchImpl?:typeof fetch}} options
+ */
 export async function probePrivateGreenfieldStore({
  apexStoreId,rawBindings,env={},fetchImpl=fetch,
-}={}){
+}){
  if(typeof apexStoreId!=="string"||!UUID.test(apexStoreId))
   return status("invalid_store");
  const config=parsePrivateGreenfieldBindings(rawBindings);
