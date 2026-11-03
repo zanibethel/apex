@@ -75,7 +75,7 @@ export default async function AdminBtcpayConnection(){
    <p className="notice">Configure the server-only <code>APEX_BTCPAY_BINDINGS_JSON</code>
     mapping for each private Apex store, then set a different
     <code> APEX_BTCPAY_KEY_*</code> secret for each mapped provider store.
-    The probe key needs only BTCPay's store-scoped
+    The probe key needs only BTCPay store-scoped
     <code> btcpay.store.canviewstoresettings</code> permission.</p>
    <p className="notice">Add secrets through Vercel project environment settings,
     not inside Apex forms, GitHub code, or chat. Store-specific invoice-writer
