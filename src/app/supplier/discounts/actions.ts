@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupplierWorkspace } from "@/lib/auth/supplier-workspace";
+import {createSupplierServerClient} from "@/lib/supabase/server";
+import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import { quoteDiscount } from "@/lib/commerce/discount-quote.mjs";
 import {quoteOptionalShipping} from "@/lib/commerce/checkout-charge-rules.mjs";
 
@@ -11,9 +13,21 @@ const disabled:State={ok:false,message:"Supplier promotions are disabled in this
 
 async function permitted(storeId:string) {
   const w=await getSupplierWorkspace();
-  if(!w||!w.stores.some(s=>s.id===storeId&&!s.is_public&&
-      w.memberships.some(m=>m.supplier_id===s.supplier_id&&["owner","manager"].includes(m.role)))) return null;
-  return w;
+  if(w?.stores.some(s=>s.id===storeId&&!s.is_public&&
+   w.memberships.some(m=>m.supplier_id===s.supplier_id&&
+    ["owner","manager"].includes(m.role))))
+    return {client:w.client,user:w.user};
+  // Admin can manage the same private store, but never through a public
+  // shortcut or user-controlled role claim.
+  const client=await createSupplierServerClient();
+  if(!client)return null;
+  const {data,error}=await client.auth.getUser();
+  if(error||!isVerifiedPlatformAdmin(data.user))return null;
+  const allowed=await client.rpc("apex_can_edit_private_checkout_rules",{
+   p_store_id:storeId,
+  });
+  if(allowed.error||allowed.data!==true)return null;
+  return {client,user:data.user};
 }
 function cents(raw:FormDataEntryValue|null,allowZero=true) {
   if(typeof raw!=="string"||!/^\d{1,7}(\.\d{1,2})?$/.test(raw)) return null;
@@ -73,6 +87,7 @@ export async function saveSupplierPromotion(_prev:State,form:FormData):Promise<S
     if(result.error||!result.data)return {ok:false,message:"Code already exists or could not be saved."};
   }
   revalidatePath("/supplier/discounts");
+  revalidatePath("/admin/shipping-promotions");
   return {ok:true,message:"Discount code saved as a private promotion. No live checkout changed."};
 }
 
@@ -89,6 +104,7 @@ export async function toggleSupplierPromotion(_prev:State,form:FormData):Promise
     .eq("id",promoId).eq("store_id",storeId).select("id").maybeSingle();
   if(result.error||!result.data)return {ok:false,message:"Promotion status was not changed."};
   revalidatePath("/supplier/discounts");
+  revalidatePath("/admin/shipping-promotions");
   return {ok:true,message:"Draft promotion status updated. Live checkout remains disabled."};
 }
 
