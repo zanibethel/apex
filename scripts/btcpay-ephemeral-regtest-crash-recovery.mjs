@@ -11,6 +11,7 @@ import {execFile} from "node:child_process";
 import {promisify} from "node:util";
 import {fileURLToPath} from "node:url";
 import {createTrustedRegtestPgWorker} from "./btcpay-ephemeral-trusted-pg-worker.mjs";
+import {createEphemeralOperatorRecovery} from "./btcpay-ephemeral-operator-recovery.mjs";
 
 const execAsync=promisify(execFile);
 const ORIGIN="http://127.0.0.1:14142";
@@ -223,11 +224,33 @@ const restarted=createTrustedRegtestPgWorker({env:workerEnv,
  assert.ok(amountMatches(provider.amount,SATS),
    "Provider's post-crash amount must equal reserved integer satoshis");
  assert.ok(["New","Processing","Settled","Expired","Invalid"].includes(provider.status));
- const observation=await sql("tests/payout-rls/btcpay-worker-observe.sql",{
-   intent_id:persisted.intentId,
-   kind:"invoice_seen_by_readback",invoice_id:id,
+ // Original process exited after provider POST and lost the in-memory
+ // observation capability. Only two separately authenticated operator
+ // database roles may reconcile the independently verified provider invoice.
+ const readbackEvidence=invoice=>createHash("sha256").update(JSON.stringify({
+   testOnly:true,network:"regtest",
+   intentId:persisted.intentId,invoiceId:invoice.id,
+   storeId:invoice.storeId,orderRef:invoice.metadata?.orderId,
+   currency:invoice.currency,amountSats:SATS.toString(),status:invoice.status,
+ })).digest("hex");
+ const requesterDigest=readbackEvidence(provider);
+ const reviewedProvider=await request("/api/v1/stores/"+storeId+
+   "/invoices/"+encodeURIComponent(id),{auth:"token "+key.apiKey});
+ assert.equal(reviewedProvider.id,id);
+ assert.equal(reviewedProvider.storeId,storeId);
+ assert.equal(reviewedProvider.currency,"BTC");
+ assert.equal(reviewedProvider.metadata?.orderId,ORDER);
+ assert.equal(reviewedProvider.metadata?.apexIntentId,persisted.intentId);
+ assert.ok(amountMatches(reviewedProvider.amount,SATS));
+ const reviewerDigest=readbackEvidence(reviewedProvider);
+ const recovery=createEphemeralOperatorRecovery({env});
+ const observation=await recovery.reconcile({
+   intentId:persisted.intentId,invoiceId:id,
+   requesterDigest,reviewerDigest,
  });
- assert.equal(observation,"recorded_without_checkout_authorization");
+ assert.equal(observation.independentOperatorReview,true);
+ assert.equal(observation.checkoutReleaseAllowed,false);
+ assert.equal(observation.providerRetryAllowed,false);
  assert.equal(await sql("tests/payout-rls/btcpay-real-provider-crash-final.sql",{
    invoice_id:id,
  }),"verified");
