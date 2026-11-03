@@ -58,7 +58,20 @@ export function createEphemeralOperatorRecovery({env=process.env,runPsql}={}){
    }
    args.push(scripts[script]);
    try{return String(await launch(role,script,args)).trim();}
-   catch{throw Error("Authenticated operator recovery operation denied");}
+   catch(error){
+     // CI-only: expose a narrow SQL error category for debugging, never
+     // the SQL args, identity tokens, connection string or full stderr.
+     const raw=String(error?.stderr||"");
+     const reason=/permission denied/i.test(raw)?"permission-denied":
+       /does not exist/i.test(raw)?"missing-function-or-object":
+       /authentication failed/i.test(raw)?"authentication-failed":
+       /Recovery review denied/i.test(raw)?"review-precondition-denied":
+       /readback evidence required/i.test(raw)?"evidence-mismatch":
+       /Unknown durable provider intent/i.test(raw)?"intent-missing":
+       /syntax error|invalid input syntax/i.test(raw)?"invalid-sql":
+       "operation-rejected";
+     throw Error("Authenticated operator recovery operation denied: "+reason);
+   }
  }
  async function reconcile({intentId,invoiceId,requesterDigest,reviewerDigest}={}){
    if(!uuid.test(intentId||"")||!safe.test(invoiceId||"")||
