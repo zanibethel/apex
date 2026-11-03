@@ -40,7 +40,7 @@ do $$
 declare blocked boolean:=false;
 begin
  begin
-  perform apex_test_worker.worker_reserve_btcpay_test_provider_post(
+  perform apex_test_worker.worker_reserve_with_observation_cap(
     '39000000-0000-0000-0000-000000000001',
     'trusted-synthetic-store-ok','browser-forgery-1',10000,repeat('a',64));
  exception when insufficient_privilege then blocked:=true; end;
@@ -56,7 +56,7 @@ do $$
 declare denied boolean:=false;
 begin
  begin
-  perform apex_test_worker.worker_reserve_btcpay_test_provider_post(
+  perform apex_test_worker.worker_reserve_with_observation_cap(
     '39000000-0000-0000-0000-000000000001',
     'trusted-synthetic-store-ok','supplier-b-token',10000,
     encode(sha256(convert_to('other_supplier_disposable_key_do_not_use','UTF8')),'hex'));
@@ -64,7 +64,7 @@ begin
  if not denied then raise exception 'Supplier B credential authorized A'; end if;
  denied:=false;
  begin
-  perform apex_test_worker.worker_reserve_btcpay_test_provider_post(
+  perform apex_test_worker.worker_reserve_with_observation_cap(
     '39000000-0000-0000-0000-000000000002',
     'trusted-synthetic-store-timeout','supplier-a-token',10000,
     encode(sha256(convert_to('disposable_fake_key_do_not_use','UTF8')),'hex'));
@@ -94,7 +94,7 @@ do $$
 declare denied boolean:=false;
 begin
  begin
-  perform apex_test_worker.worker_reserve_btcpay_test_provider_post(
+  perform apex_test_worker.worker_reserve_with_observation_cap(
     '39000000-0000-0000-0000-000000000001',
     'trusted-synthetic-store-ok','revoked-key',10000,
     encode(sha256(convert_to('disposable_fake_key_do_not_use','UTF8')),'hex'));
