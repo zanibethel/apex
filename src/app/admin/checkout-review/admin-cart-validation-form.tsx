@@ -20,8 +20,8 @@ const LABELS:Record<string,string>={
  public_release_enabled:"Public release gate enabled",
 };
 
-export function AdminCartValidationForm({productId,quantity}:{
- productId:string;quantity:number;
+export function AdminCartValidationForm({productId,quantity,expectedSubtotalCents}:{
+ productId:string;quantity:number;expectedSubtotalCents:number;
 }){
  const [state,submit,pending]=useActionState(
   validateAdminCartSelection,DEFAULT,
@@ -35,12 +35,15 @@ export function AdminCartValidationForm({productId,quantity}:{
   <form action={submit}>
    <input type="hidden" name="productId" value={productId}/>
    <input type="hidden" name="quantity" value={quantity}/>
+   <input type="hidden" name="expectedSubtotalCents" value={expectedSubtotalCents}/>
    <button type="submit" className="button secondary" disabled={pending}>
     {pending?"Checking…":"Validate saved price and stock"}
    </button>
   </form>
   {state.message&&<p role="status" className="notice">{state.message}</p>}
   {state.item&&<div className="apex-cart-observation">
+   <p><strong>Displayed subtotal check:</strong>{" "}
+    {state.item.subtotalMatchesDisplay?"Matched":"Changed — refresh product data"}</p>
    <p><strong>Saved unit price:</strong>{" "}
     {state.item.priceCents===null?"Not verified":
      MONEY.format(state.item.priceCents/100)}</p>
@@ -58,6 +61,9 @@ export function AdminCartValidationForm({productId,quantity}:{
      {LABELS[check.key]??check.key}: {check.passed?"Checked":"Not satisfied"}
     </li>)}</ul>
    </details>
+   <p className="notice">The database holds stock/price row locks only during
+    this check. Locks expire before you see the result, and no inventory was
+    reserved.</p>
    <p className="notice"><strong>No commercial quote or order is authorized.</strong>{" "}
     Shipping and taxes have not been calculated.</p>
   </div>}
