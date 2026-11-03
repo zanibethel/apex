@@ -7,9 +7,11 @@ import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import { quoteDiscount } from "@/lib/commerce/discount-quote.mjs";
 import {quoteOptionalShipping} from "@/lib/commerce/checkout-charge-rules.mjs";
 
-type State={ok:boolean;message:string};
+type State={ok:boolean;message:string;subtotalCents?:number;
+ discountCents?:number;shippingCents?:number;shippingDiscountCents?:number;
+ totalCents?:number;freeShippingReason?:string};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const disabled:State={ok:false,message:"Supplier promotions are disabled in this environment."};
+const disabled:State={ok:false,message:"Discount code management is currently unavailable."};
 
 async function permitted(storeId:string) {
   const w=await getSupplierWorkspace();
@@ -47,10 +49,13 @@ export async function saveSupplierPromotion(_prev:State,form:FormData):Promise<S
   const rawCode=form.get("code"),kind=form.get("kind"),rawAmount=form.get("value");
   const rawMin=form.get("minimum"),rawLimit=form.get("usageLimit");
   const rawStart=form.get("startsAt"),rawEnd=form.get("endsAt");
+  const initialStatus=form.get("initialStatus")??"active";
   if(typeof storeId!=="string"||!uuid.test(storeId)||typeof promoId!=="string"||
     (promoId!==""&&!uuid.test(promoId))||typeof rawCode!=="string"||
     typeof kind!=="string"||(kind!=="free_shipping"&&typeof rawAmount!=="string")||
-    typeof rawLimit!=="string")return {ok:false,message:"Invalid promotion details."};
+    typeof rawLimit!=="string"||
+    !["active","inactive"].includes(String(initialStatus)))
+    return {ok:false,message:"Invalid promotion details."};
   const code=rawCode.trim().toUpperCase();
   if(!/^[A-Z0-9_-]{3,24}$/.test(code)||!["percentage","fixed","free_shipping"].includes(kind))
     return {ok:false,message:"Code must be 3–24 letters, digits, underscores or dashes."};
@@ -82,13 +87,14 @@ export async function saveSupplierPromotion(_prev:State,form:FormData):Promise<S
     if(result.error||!result.data)return {ok:false,message:"Promotion could not be updated."};
   } else {
     const result=await w.client.from("supplier_discount_codes").insert({
-      store_id:storeId,code,...fields,is_active:false,created_by:w.user.id,
+      store_id:storeId,code,...fields,
+      is_active:initialStatus==="active",created_by:w.user.id,
     }).select("id").maybeSingle();
     if(result.error||!result.data)return {ok:false,message:"Code already exists or could not be saved."};
   }
   revalidatePath("/supplier/discounts");
   revalidatePath("/admin/shipping-promotions");
-  return {ok:true,message:"Discount code saved as a private promotion. No live checkout changed."};
+  return {ok:true,message:promoId?"Changes saved.":"Discount code created."};
 }
 
 export async function toggleSupplierPromotion(_prev:State,form:FormData):Promise<State> {
@@ -105,24 +111,23 @@ export async function toggleSupplierPromotion(_prev:State,form:FormData):Promise
   if(result.error||!result.data)return {ok:false,message:"Promotion status was not changed."};
   revalidatePath("/supplier/discounts");
   revalidatePath("/admin/shipping-promotions");
-  return {ok:true,message:"Draft promotion status updated. Live checkout remains disabled."};
+  return {ok:true,message:enabled==="true"?"Code activated.":"Code deactivated."};
 }
 
 export async function previewSupplierDiscount(_prev:State,form:FormData):Promise<State> {
   const storeId=form.get("storeId"),rawCode=form.get("code");
   if(typeof storeId!=="string"||!uuid.test(storeId)||typeof rawCode!=="string")
-    return {ok:false,message:"Invalid preview."};
+    return {ok:false,message:"Enter a valid discount code."};
   const subtotal=cents(form.get("subtotal"));
-  if(subtotal===null)return {ok:false,message:"Enter a valid simulated subtotal."};
+  if(subtotal===null)return {ok:false,message:"Enter a valid order subtotal."};
   const w=await permitted(storeId);
   if(!w)return {ok:false,message:"Supplier permission required."};
   const {data,error}=await w.client.from("supplier_discount_codes")
     .select("code,is_active,discount_kind,discount_value,min_subtotal_cents,starts_at,ends_at,usage_limit,redemption_count")
     .eq("store_id",storeId).eq("code",rawCode.trim().toUpperCase()).maybeSingle();
-  if(error)return {ok:false,message:"Could not preview discount."};
+  if(error)return {ok:false,message:"Could not calculate the discount."};
   const result=quoteDiscount(data,subtotal);
   if(!result.eligible)return {ok:false,message:result.reason};
-  const fmt=(n:number)=>(n/100).toLocaleString("en-US",{style:"currency",currency:"USD"});
   const {data:policy,error:policyError}=await w.client
     .from("apex_store_shipping_settings")
     .select("charge_shipping,flat_shipping_cents,free_shipping_min_subtotal_cents")
@@ -133,10 +138,13 @@ export async function previewSupplierDiscount(_prev:State,form:FormData):Promise
     free_shipping_min_subtotal_cents:null,
   },result.totalCents,("freeShipping" in result&&result.freeShipping===true));
   if(!shipping)return {ok:false,message:"Shipping calculation unavailable."};
-  return {ok:true,message:
-    `Private preview: items ${fmt(subtotal)} − code discount ${fmt(result.discountCents)} +
-    shipping ${fmt(shipping.shippingCents)} = ${fmt(result.totalCents+shipping.shippingCents)}
-    for this pricing preview. ${shipping.freeShippingReason==="discount_code"?"Code waived shipping.":
-     shipping.freeShippingReason==="subtotal_threshold"?"Free-shipping threshold met.":""}
-    No order or redemption occurred.`};
+  return {
+    ok:true,message:"Discount calculated.",
+    subtotalCents:subtotal,discountCents:result.discountCents,
+    shippingCents:shipping.shippingCents,
+    shippingDiscountCents:shipping.shippingDiscountCents,
+    totalCents:result.totalCents+shipping.shippingCents,
+    freeShippingReason:shipping.freeShippingReason,
+  };
+
 }
