@@ -30,3 +30,13 @@ test("production promotions do not expose staging labels",()=>{
   assert.doesNotMatch(source,/Simulate checkout|Create inactive code|Test subtotal|Preview discount|Fictional interactive demo|TEST MODE/);
  }
 });
+
+test("site navigation and catalog never render the historical sample cart",()=>{
+ const layout=read("src/app/layout.tsx");
+ const catalog=read("src/app/catalog/page.tsx");
+ assert.doesNotMatch(layout,/DemoCartProvider|DemoCartToggle|APEX_CHECKOUT_MODE/);
+ assert.doesNotMatch(catalog,/DemoCatalogShelf|Admin checkout testing|Open checkout test|internalCheckoutPreview/);
+ assert.match(layout,/CHECKOUT UNAVAILABLE/);
+ assert.match(catalog,/readApprovedSoldOutCatalog\(page\)/);
+ assert.doesNotMatch(catalog,/href="\/checkout\/preview"/);
+});
