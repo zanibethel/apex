@@ -12,6 +12,7 @@ import {supplierStorefrontVisibility} from "@/lib/catalog/supplier-storefront-vi
 import {awaitingAdministratorCorrectionReview} from "@/lib/catalog/listing-resubmission.mjs";
 import {supplierImageCorrectionStatus} from "@/lib/catalog/supplier-image-correction-status.mjs";
 import {SUPPLIER_BULK_PRODUCT_CAPACITY,SUPPLIER_BULK_PRODUCT_QUERY_LIMIT,supplierBulkProductWindowStatus} from "@/lib/catalog/supplier-bulk-capacity.mjs";
+import {apexTaxonomyStoreId,apexTaxonomyProposal} from "@/lib/catalog/apex-reviewed-taxonomy-20261102.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Bulk Product Editor | Apex Supplier",robots:{index:false,follow:false}};
@@ -179,6 +180,8 @@ export default async function BulkProductWorkspace(){
    enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}/>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
    categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}
+   taxonomyProposal={store.id===apexTaxonomyStoreId?apexTaxonomyProposal:undefined}
+   taxonomyStoreId={apexTaxonomyStoreId}
    resubmissionEnabled={process.env.APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED==="true"}/>
   <p className="notice">Upload a new PNG/JPEG/WebP image or reuse an existing private product image; each reuse makes its own private copy. On-hand inventory updates use expected-count checks and are audited. Private source cost for linked variants still requires Source review. The bulk editor loads all private products in storefronts with 250 or fewer private products.</p>
  </main>;

@@ -3,6 +3,8 @@ import {revalidatePath} from "next/cache";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {isValidId} from "@/lib/catalog/private-review-utils.mjs";
+import {apexTaxonomyStoreId,apexTaxonomyCategoryNames} from "@/lib/catalog/apex-reviewed-taxonomy-20261102.mjs";
+import {parseAdminCategories} from "@/lib/catalog/admin-category-publication.mjs";
 
 export type CategoryActionResult={ok:boolean;message:string};
 export async function updateAdminCategoryPublication(
@@ -62,4 +64,49 @@ export async function createAdminCategory(
  revalidatePath("/admin/catalog-release");
  revalidatePath("/supplier/catalog/bulk");
  return {ok:true,message:"Category created as unpublished. It can now be assigned to products."};
+}
+
+/**
+ * Explicit admin action only. Reuses the installed per-category creation RPC
+ * so every category is independently authorized, audited and unpublished.
+ */
+export async function createReviewedTaxonomyCategories(
+ _previous:CategoryActionResult,form:FormData
+):Promise<CategoryActionResult>{
+ const storeId=form.get("storeId");
+ if(!isValidId(storeId)||storeId!==apexTaxonomyStoreId)
+  return {ok:false,message:"This category plan is not assigned to that storefront."};
+ const client=await createSupplierServerClient();
+ if(!client)return {ok:false,message:"Admin sign-in required."};
+ const {data:auth,error:authError}=await client.auth.getUser();
+ if(authError||!isVerifiedPlatformAdmin(auth.user))
+  return {ok:false,message:"Verified platform admin access required."};
+ const {data,error}=await client.rpc("get_admin_category_publication_overview");
+ const existing=error?null:parseAdminCategories(data);
+ if(existing===null)
+  return {ok:false,message:"Cannot confirm current categories. No new requests were submitted."};
+ const names=new Set(existing.filter(c=>c.storeId===storeId).map(c=>c.categoryName));
+ let created=0,failed=0;
+ for(const name of apexTaxonomyCategoryNames){
+  if(names.has(name))continue;
+  const result=await client.rpc("create_admin_catalog_category",{
+   p_store_id:storeId,p_name:name,
+  });
+  if(result.error||result.data?.status!=="created"||
+     result.data?.is_published!==false||!isValidId(result.data?.category_id)){
+   failed++;
+   // Stop rather than conceal unexpected partial execution.
+   break;
+  }
+  names.add(name);created++;
+ }
+ revalidatePath("/admin/categories");
+ revalidatePath("/admin/catalog-release");
+ revalidatePath("/supplier/catalog/bulk");
+ if(failed)
+  return {ok:false,message:created+
+   " categories created and audited; another could not be confirmed. Refresh and retry. Nothing was published."};
+ return {ok:true,message:created>0?
+  created+" categories created as unpublished. Supplier can now stage the matching product categories.":
+  "All reviewed categories already exist. No changes were needed."};
 }

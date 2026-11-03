@@ -18,6 +18,7 @@ import {supplierAdminFeedback} from "@/lib/catalog/supplier-admin-feedback.mjs";
 import {bulkSetupHref} from "@/lib/catalog/bulk-setup-targets.mjs";
 import {bulkViewAfterEdit,selectEditedBulkRow} from "@/lib/catalog/bulk-edit-visibility.mjs";
 import {stageSelectedBulkSetup} from "@/lib/catalog/bulk-setup-batch.mjs";
+import {assessReviewedTaxonomy,stageReviewedTaxonomy} from "@/lib/catalog/reviewed-taxonomy-staging.mjs";
 import {bulkRowsRequiringSave,reconcileBulkSaveBatch,bulkSaveProgress,bulkUnfinishedSaveKeys} from "@/lib/catalog/bulk-save-retry.mjs";
 import {mergeBulkSaveRetryKeys} from "@/lib/catalog/bulk-inline-save-retry.mjs";
 
@@ -27,6 +28,7 @@ export type BulkEditRow={
  linkedSource?:boolean;needsSave?:boolean;
 };
 type Category={id:string;name:string};
+type ReviewedCategoryProposal={id:string;sku:string;name:string;category:string|null;status:string;note:string};
 type ListingReadiness={
  productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
  visibilityKind:string;visibilityLabel:string;visibilityDescription:string;
@@ -39,9 +41,10 @@ function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
   price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,needsSave:true};
 }
-export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false}:{
+export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false,taxonomyProposal,taxonomyStoreId}:{
  storeId:string;editable:boolean;initialRows:BulkEditRow[];categories:Category[];
  media:BulkSavedMedia[];existingImages:BulkSavedImage[];listing:ListingReadiness[];resubmissionEnabled?:boolean;
+ taxonomyProposal?:ReadonlyArray<ReviewedCategoryProposal>;taxonomyStoreId?:string;
 }){
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
  const [showOfferTiles,setShowOfferTiles]=useState(true);
@@ -49,6 +52,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [viewFilter,setViewFilter]=useState("all");
  const [setupCategoryId,setSetupCategoryId]=useState("");
  const [setupMessage,setSetupMessage]=useState("");
+ const [taxonomyMessage,setTaxonomyMessage]=useState("");
  const [saveRetryKeys,setSaveRetryKeys]=useState<string[]>([]);
  const router=useRouter();
  const savedMedia=new Map(media.map(m=>[m.productId,m]));
@@ -75,6 +79,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key));
  const selectedMissingCategory=selectedRows.filter(row=>!row.categoryId).length;
  const selectedInactive=selectedRows.filter(row=>row.isActive===false).length;
+ const taxonomyReview=useMemo(()=>taxonomyProposal
+  ?assessReviewedTaxonomy(rows,taxonomyProposal,categories,storeId,taxonomyStoreId)
+  :null,[rows,taxonomyProposal,categories,storeId,taxonomyStoreId]);
  const pendingSaveRows:BulkEditRow[]=bulkRowsRequiringSave(selectedRows,lastSave);
  const savedSelected=selectedRows.filter(r=>Boolean(r.id)&&!r.needsSave);
  const selectedIds=savedSelected.map(r=>r.id!);
@@ -181,6 +188,25 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   setSetupMessage(staged.changedKeys.length+" product"+
    (staged.changedKeys.length===1?"":"s")+
    " staged locally. Review the selected cards, then Save selected.");
+ }
+ function stageSuggestedCategories(){
+  if(!editable||busy||!taxonomyReview?.ready)return;
+  const staged=stageReviewedTaxonomy(rows,taxonomyReview);
+  if(!staged.ok){
+   setTaxonomyMessage(staged.reason??"Catalog product details changed. Refresh and review.");
+   return;
+  }
+  setRows(staged.rows as BulkEditRow[]);
+  setSelected(staged.changedKeys);
+  setProductSearch("");
+  setViewFilter("all");
+  setLastSave(previous=>{
+   const next={...previous};
+   for(const key of staged.changedKeys)delete next[key];
+   return next;
+  });
+  setTaxonomyMessage(staged.changedKeys.length+
+   " proposed category assignments staged. Review the selected cards, then Save selected. No products are activated or published.");
  }
  function addRows(count:number){
   if(!editable||busy||rows.length+count>250)return;
@@ -312,6 +338,46 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     {showOfferTiles?"Hide previews":"Show previews"}
    </button>
   </div>
+  {taxonomyReview&&<section className="supplier-panel" aria-label="Reviewed catalog category mapping"
+   style={{maxWidth:"none",marginBottom:18,padding:16}}>
+   <h3>Organize saved catalog</h3>
+   <p className="notice">Use the reviewed 63-product mapping to stage category changes
+    for exact matching names, SKUs and IDs. This only updates <strong>blank categories</strong>;
+    it does not change active status, prices, inventory, publication settings, or approvals.</p>
+   <p className="notice">
+    {taxonomyReview.proposals} categorized in the plan ·
+    {" "}{taxonomyReview.alreadyAssigned} already matched ·
+    {" "}{taxonomyReview.changes.length} ready to assign ·
+    {" "}{taxonomyReview.held} flagged for separate review.
+   </p>
+   {taxonomyReview.missingCategories.length>0&&
+    <p className="notice" role="status">
+     Admin must create these categories first: {taxonomyReview.missingCategories.join(", ")}.
+    </p>}
+   {taxonomyReview.error&&<p className="notice" role="status">{taxonomyReview.error}</p>}
+   {(taxonomyReview.unmatched.length>0||taxonomyReview.conflicts.length>0)&&
+    <p className="notice">Changed or conflicting entries:
+     {" "}{[...taxonomyReview.unmatched,...taxonomyReview.conflicts].join(", ")}.
+     No automatic assignment is allowed until the mapping is reviewed.</p>}
+   <details>
+    <summary>Review proposed groups and flagged products</summary>
+    <ul className="supplier-stores">
+     {taxonomyProposal?.map(item=><li key={item.id} style={{gap:12,flexWrap:"wrap"}}>
+      <span><strong>{item.name}</strong>
+       <small style={{display:"block"}}>{item.note}</small></span>
+      <span>{item.category??"Review required · unchanged"}</span>
+     </li>)}
+    </ul>
+   </details>
+   <button type="button" className="button secondary"
+    disabled={!editable||busy||!taxonomyReview.ready}
+    onClick={stageSuggestedCategories}>
+    Stage {taxonomyReview.changes.length} matching categories
+   </button>
+   <p className="notice">Nothing is saved automatically. Existing unsaved edits on
+    the staged cards will also be included when you press Save selected.</p>
+   {taxonomyMessage&&<p role="status" className="apex-bulk-result">{taxonomyMessage}</p>}
+  </section>}
   <section className="supplier-panel" aria-label="Bulk product setup"
    style={{maxWidth:"none",marginBottom:18,padding:16}}>
    <h3>Finish selected product setup</h3>
