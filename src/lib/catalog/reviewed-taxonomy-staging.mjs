@@ -15,10 +15,20 @@ export function assessReviewedTaxonomy(rows,proposal,categories,storeId,expected
  if(!Array.isArray(rows)||rows.length>250||!Array.isArray(proposal)||
     proposal.length!==63||!Array.isArray(categories))
   return failure("The complete product or category list cannot be verified.");
- const byId=new Map();
+ // Newly added, still-unsaved cards may coexist with the reviewed catalog.
+ // Verify their unique draft keys, then exclude only those cards from the
+ // 63-saved-product match. Never silently skip a row that claims to be saved.
+ const byId=new Map(),seenKeys=new Set();
  for(const row of rows){
-  if(!row||!UUID.test(row.id||"")||!UUID.test(row.key||"")||
-   row.id!==row.key||byId.has(row.id))
+  if(!row||!UUID.test(row.key||"")||seenKeys.has(row.key))
+   return failure("Product keys are incomplete or duplicated.");
+  seenKeys.add(row.key);
+  if(row.id===undefined||row.id===null||row.id===""){
+   if(row.needsSave!==true)
+    return failure("Unsaved product identity could not be verified.");
+   continue;
+  }
+  if(!UUID.test(row.id)||row.id!==row.key||byId.has(row.id))
    return failure("Saved product identities are incomplete or duplicated.");
   byId.set(row.id,row);
  }
@@ -67,7 +77,7 @@ export function assessReviewedTaxonomy(rows,proposal,categories,storeId,expected
    conflicts.push(item.name);
    continue;
   }
-  changes.push(Object.freeze({key:row.key,id:row.id,
+  changes.push(Object.freeze({key:row.key,id:row.id,sku:row.sku,
    categoryId:targetId,categoryName:item.category,name:row.name}));
  }
  if(proposals!==50||held!==13||seen.size!==63)
@@ -80,7 +90,7 @@ export function assessReviewedTaxonomy(rows,proposal,categories,storeId,expected
    conflicts.length?"Existing category assignments differ from the reviewed plan.":
    missingCategories.length?"Create the missing categories in Admin first.":null,
   missingCategories,conflicts,unmatched,proposals,alreadyAssigned,held,
-  extras:rows.length-byId.size+rows.filter(row=>!seen.has(row.id)).length,
+  extras:rows.filter(row=>!seen.has(row.id)).length,
   changes:Object.freeze(changes),
  });
 }
@@ -94,7 +104,8 @@ export function stageReviewedTaxonomy(rows,assessment){
   return {ok:false,rows,changedKeys:[],reason:"The staged product list contains duplicate keys."};
  for(const c of assessment.changes){
   const row=rows.find(r=>r?.key===c.key);
-  if(!row||row.id!==c.id||row.categoryId!==""||row.name!==c.name)
+  if(!row||row.id!==c.id||row.sku!==c.sku||
+     row.categoryId!==""||row.name!==c.name)
    return {ok:false,rows,changedKeys:[],reason:"Product details changed; refresh the mapping."};
  }
  return {
