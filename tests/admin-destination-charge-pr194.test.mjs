@@ -124,7 +124,7 @@ test("strict RPC parser rejects privilege changes, supplied final tax, and misma
   {shipping:{...shipping,charge_shipping:"true"}},
   {promotion_found:true,promotion:null},{requested_code:"FREESHIP"},
  ])assert.equal(parse({...baseline,...modified}),null,JSON.stringify(modified));
- assert.equal(estimate(null),null);
+ assert.equal(estimatePrivateDestinationCharges(null,{destination:dest,code:"",expectedSubtotalCents:10000}),null);
 });
 test("private action, migration and CI never add a public checkout or tax-rate guess",()=>{
  const read=p=>readFileSync(p,"utf8");
