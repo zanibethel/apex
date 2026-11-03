@@ -60,6 +60,10 @@ test("admin payment monitor uses only session-bound server RLS and read-only tab
  assert.match(page,/Live BTCPay \/ Prism evidence feed/);
  assert.match(page,/not independent/);
  assert.match(index,/href: "\/admin\/payment-monitor"/);
- assert.doesNotMatch(page,/\.insert\(|\.update\(|\.delete\(|\.upsert\(|\.rpc\(|service_role|SUPABASE_SECRET|NEXT_PUBLIC_|process\.env\..*KEY|fetch\(|createInvoice\(|createPayout\(/);
+ const permittedRead='client.rpc("get_admin_checkout_journal_overview")';
+ assert.equal(page.split(permittedRead).length,2,
+  "Only the exact admin-only aggregate RPC may be added to this monitor");
+ assert.doesNotMatch(page.replace(permittedRead,""),
+  /\.insert\(|\.update\(|\.delete\(|\.upsert\(|\.rpc\(|service_role|SUPABASE_SECRET|NEXT_PUBLIC_|process\.env\..*KEY|fetch\(|createInvoice\(|createPayout\(/);
  assert.doesNotMatch(page,/api\/v1|btcpay_test_|btcpay-ephemeral|wallet\/generate|webhook|cookieStore\.get/);
 });
