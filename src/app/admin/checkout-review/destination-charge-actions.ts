@@ -14,6 +14,8 @@ export type DestinationEstimate={
  merchandiseSubtotalCents?:number;merchandiseDiscountCents?:number;
  discountedMerchandiseCents?:number;originalShippingCents?:number;
  shippingCents?:number;shippingDiscountCents?:number;
+ freeShippingMinimumCents?:number|null;
+ amountUntilFreeShippingCents?:number|null;
  freeShippingReason?:string;totalCents?:number;
  quoteFinalized?:false;canCreateOrder?:false;canCreateInvoice?:false;
  canPay?:false;

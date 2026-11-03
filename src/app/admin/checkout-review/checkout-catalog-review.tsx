@@ -102,8 +102,8 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
      </div>
      <div className="apex-checkout-shipping">
       <p className="apex-checkout-kicker">DELIVERY</p>
-      <p className="apex-checkout-support">Shipping and taxes will be calculated
-       by the production checkout service when configured.</p>
+      <p className="apex-checkout-support">Shipping follows the saved store settings.
+       Free shipping applies automatically when eligible; payment remains disabled.</p>
      </div>
      {message&&<p role="alert" className="apex-checkout-error">{message}</p>}
      <button type="submit" className="apex-checkout-cta" disabled={!product}>
@@ -194,6 +194,16 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
      <div className="apex-checkout-price-total"><dt>Before discount code</dt><dd>{shipping?
        money(subtotal+shipping.shippingCents):"Unavailable"}</dd></div>
     </dl>
+    {shipping&&<p className="notice" aria-live="polite">
+     {shipping.shippingCents===0?
+      (shipping.freeShippingReason==="subtotal_threshold"?
+       "Free shipping unlocked by the merchandise minimum.":
+       "Free shipping at this subtotal.") :
+      shipping.amountUntilFreeShippingCents!==null&&shipping.amountUntilFreeShippingCents>0?
+       "Add "+money(shipping.amountUntilFreeShippingCents)+
+       " more merchandise to qualify for free shipping at "+
+       money(shipping.freeShippingMinimumCents!)+".":"Flat shipping fee applies."}
+    </p>}
     {product&&<AdminDestinationChargeForm key={"charges:"+product.id+":"+quantity}
      productId={product.id} quantity={quantity}
      expectedSubtotalCents={subtotal}/>}

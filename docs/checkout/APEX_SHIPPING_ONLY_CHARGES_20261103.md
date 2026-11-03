@@ -39,3 +39,28 @@ This pass **does not** enable purchasing, checkout admission, payment, invoices,
 Excluding a tax-calculation line or API from Apex does **not** establish that products, merchants or transactions are exempt. The supplier/platform must separately determine and handle any tax obligations in consultation with a qualified professional. **Texas rules can require collection on taxable online sales** and may require specific documentation or invoicing if taxes are included in listed prices. Do not market prices as tax-exempt, tax-free, or already tax-inclusive without appropriate verification.
 
 Superseded historical artifacts remain in Git history for traceability. No TaxCloud subscription or credentials are needed to operate the shipping settings.
+
+## Private checkout review UX — PR #197
+
+The Admin-only review displays an unpromoted baseline and then a separately verified
+server-priced recalculation after entering a merchandise or free-shipping code.
+When a configured flat shipping fee applies and a free-shipping minimum exists,
+the interface displays the additional **post-discount merchandise** needed to
+qualify, never a made-up shipping discount. When the minimum is met, the saved
+shipping fee drops to zero. When shipping is disabled, the summary says free
+shipping is the current default; no minimum is implied.
+
+The two amounts are deliberately labeled separately:
+- **Before discount code** is calculated from the already loaded saved store policy.
+- **Estimated total** is computed from a new Admin-authenticated database read of
+  saved product price, promo record, shipping settings and quantity.
+
+Both are explicitly preview-only. Changing quantity/product remounts the promo
+form and invalidates its previous calculation. No customer payment is enabled.
+No changes are made to merchant shipping fees, thresholds or promo codes by
+this PR.
+
+Shipping progress is computed in integer cents using the same
+`quoteOptionalShipping` helper that computes the fee; it is absent when no
+free-shipping minimum is configured. The supplier/Admin shipping form no
+longer references collecting sales tax or destination tax calculations.

@@ -3,10 +3,12 @@ on:
   pull_request:
     paths:
       - 'supabase/migrations/**'
-      - 'src/lib/tax/**'
-      - 'src/app/admin/tax/**'
-      - 'src/app/admin/checkout-review/destination-charge-actions.ts'
-      - 'tests/taxcloud-v3-private-adapter-pr195.test.mjs'
+      - 'src/lib/commerce/checkout-charge-rules.mjs'
+      - 'src/lib/checkout/admin-destination-charge.mjs'
+      - 'src/app/admin/checkout-review/**'
+      - 'src/app/supplier/checkout-rules/shipping-form.tsx'
+      - 'tests/checkout-charge-rules-pr193.test.mjs'
+      - 'tests/admin-destination-charge-pr194.test.mjs'
       - 'tests/payout-rls/**'
       - 'database/sql/apex_private_checkout_product_snapshot_REVIEW_ONLY.sql'
       - 'database/sql/apex_public_sold_out_catalog_REVIEW_ONLY.sql'

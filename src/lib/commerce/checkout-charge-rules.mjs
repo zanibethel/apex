@@ -17,14 +17,18 @@ export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippin
      policy.free_shipping_min_subtotal_cents!==null)))
   return null;
  const original=policy.charge_shipping?policy.flat_shipping_cents:0;
- const thresholdMet=policy.charge_shipping&&
-   policy.free_shipping_min_subtotal_cents!==null&&
-   discountedSubtotalCents>=policy.free_shipping_min_subtotal_cents;
+ const minimum=policy.charge_shipping?
+   policy.free_shipping_min_subtotal_cents:null;
+ const amountUntilFreeShippingCents=minimum===null?null:
+   Math.max(0,minimum-discountedSubtotalCents);
+ const thresholdMet=minimum!==null&&amountUntilFreeShippingCents===0;
  const fee=(thresholdMet||freeShippingCode)?0:original;
  return Object.freeze({
   originalShippingCents:original,
   shippingCents:fee,
   shippingDiscountCents:original-fee,
+  freeShippingMinimumCents:minimum,
+  amountUntilFreeShippingCents,
   freeShippingReason:original===0?"no_charge":
     freeShippingCode?"discount_code":thresholdMet?"subtotal_threshold":"none",
  });

@@ -109,3 +109,55 @@ test("product tax controls and tax API are removed while shipping forms remain",
  assert.equal(existsSync("src/app/admin/tax/page.tsx"),false);
  assert.equal(existsSync("src/lib/tax/taxcloud-v3-server.ts"),false);
 });
+
+test("free-shipping progress uses discounted merchandise instead of gross",()=>{
+ const noPromo=previewCheckoutCharges({
+  lines:[{productId:id1,quantity:1,unitPriceCents:6000}],
+  shippingPolicy:shipping,
+ });
+ assert.equal(noPromo.shippingCents,795);
+ assert.equal(noPromo.freeShippingMinimumCents,9000);
+ assert.equal(noPromo.amountUntilFreeShippingCents,3000);
+ const promo=previewCheckoutCharges({
+  lines,shippingPolicy:shipping,discountCode:code("fixed",2000),
+ });
+ assert.equal(promo.discountedMerchandiseCents,8000);
+ assert.equal(promo.freeShippingMinimumCents,9000);
+ assert.equal(promo.amountUntilFreeShippingCents,1000);
+ assert.equal(promo.shippingCents,795);
+ const unlocked=previewCheckoutCharges({lines,shippingPolicy:shipping});
+ assert.equal(unlocked.amountUntilFreeShippingCents,0);
+ assert.equal(unlocked.shippingCents,0);
+});
+test("shipping progress stays absent when no threshold is configured",()=>{
+ const alwaysFree=quoteOptionalShipping({
+  charge_shipping:false,flat_shipping_cents:0,
+  free_shipping_min_subtotal_cents:null,
+ },1000);
+ assert.equal(alwaysFree.freeShippingMinimumCents,null);
+ assert.equal(alwaysFree.amountUntilFreeShippingCents,null);
+ assert.equal(alwaysFree.shippingCents,0);
+ const flat=quoteOptionalShipping({
+  charge_shipping:true,flat_shipping_cents:795,
+  free_shipping_min_subtotal_cents:null,
+ },1000);
+ assert.equal(flat.freeShippingMinimumCents,null);
+ assert.equal(flat.amountUntilFreeShippingCents,null);
+ assert.equal(flat.shippingCents,795);
+ const codeWaived=quoteOptionalShipping(shipping,6000,true);
+ assert.equal(codeWaived.shippingCents,0);
+ assert.equal(codeWaived.freeShippingReason,"discount_code");
+ assert.equal(codeWaived.amountUntilFreeShippingCents,3000);
+});
+test("private UI clearly labels shipping and never reintroduces tax calculation",()=>{
+ const checkout=read("src/app/admin/checkout-review/checkout-catalog-review.tsx");
+ const form=read("src/app/admin/checkout-review/admin-destination-charge-form.tsx");
+ const policy=read("src/app/supplier/checkout-rules/shipping-form.tsx");
+ assert.doesNotMatch(checkout,/Shipping and taxes will be calculated/);
+ assert.match(checkout,/amountUntilFreeShippingCents/);
+ assert.match(checkout,/Before discount code/);
+ assert.match(form,/amountUntilFreeShippingCents/);
+ assert.match(form,/Qualification uses the subtotal after merchandise discounts/);
+ assert.match(form,/Shipping is free by default/);
+ assert.doesNotMatch(policy,/before tax and shipping|tax jurisdiction/);
+});
