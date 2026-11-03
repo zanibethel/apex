@@ -98,6 +98,7 @@ const key=await request("/api/v1/api-keys",{
 });
 if(typeof key?.apiKey!=="string"||key.apiKey.length<12||
    !Array.isArray(key.permissions)||
+   key.permissions.length!==permissions.length||
    !permissions.every(p=>key.permissions.some(
       x=>x===p||x?.policy===p||x?.toString?.()===p)))
    throw Error("Store-scoped Greenfield invoice key not confirmed");
