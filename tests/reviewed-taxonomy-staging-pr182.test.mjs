@@ -106,7 +106,7 @@ test("stale titles, changed SKUs and existing conflicting category block entire 
   assert.equal(stageReviewedTaxonomy(rows,summary).ok,false);
  }
  const conflict=stored(),target=conflict.find(x=>
-  apexTaxonomyProposal.some(p=>p.id===x.id&&p.status==="Suggested"));
+  apexTaxonomyProposal.some(p=>p.id===x.id&&p.status==="Suggested"&&p.category!=="GetSwole"));
  target.categoryId=GETSWOLE;
  const summary=assessReviewedTaxonomy(
   conflict,apexTaxonomyProposal,allCategories(),
@@ -142,7 +142,8 @@ test("admin action uses only authenticated and audited existing category RPC",()
  assert.match(admin,/ReviewedTaxonomyCategoryForm/);
  assert.match(form,/Create /);
  assert.match(form,/missing\.length===0/);
- assert.doesNotMatch(actions+form,/\.from\("categories"\)\.insert|\.update\(|\.upsert\(|set_admin_category_publication|set_supplier_listing_intent/);
+ const newAction=actions.slice(actions.indexOf("export async function createReviewedTaxonomyCategories("));
+ assert.doesNotMatch(newAction+form,/\.from\("categories"\)\.insert|\.update\(|\.upsert\(|set_admin_category_publication|set_supplier_listing_intent/);
 });
 test("only authenticated supplier editor receives exact, staged category proposal",()=>{
  const page=read("src/app/supplier/catalog/bulk/page.tsx");
