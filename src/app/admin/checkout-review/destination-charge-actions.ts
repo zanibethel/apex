@@ -3,6 +3,7 @@
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {isValidId} from "@/lib/catalog/private-review-utils.mjs";
+import {requestPrivateTaxCloudEstimate} from "@/lib/tax/taxcloud-v3-server";
 import {normalizeReviewDestination,parsePrivateDestinationChargeSource,
  estimatePrivateDestinationCharges} from "@/lib/checkout/admin-destination-charge.mjs";
 
@@ -19,6 +20,8 @@ export type DestinationEstimate={
  preTaxTotalCents?:number;taxCents?:null;finalTotalCents?:null;
  taxStatus?:string;quoteFinalized?:false;canCreateOrder?:false;
  canCreateInvoice?:false;canPay?:false;
+ providerStatus?:string;providerTaxEstimateCents?:number|null;
+ providerEstimatedTotalCents?:number|null;providerDetail?:string;
 };
 const blocked=(message:string):DestinationEstimate=>({ok:false,message});
 
@@ -63,5 +66,38 @@ export async function reviewAdminDestinationCharges(
  });
  if(!result)return blocked("Checkout estimate is incomplete or untrusted.");
  if(!result.ok)return blocked(result.message);
- return result as DestinationEstimate;
+ if(!result.subtotalMatchesDisplay)return {...result,
+  providerStatus:"stale_price",providerTaxEstimateCents:null,
+  providerEstimatedTotalCents:null,
+  providerDetail:"Saved price changed; refresh the review first."};
+ const line1=form.get("street"),city=form.get("city");
+ if(typeof line1!=="string"||typeof city!=="string"||
+  line1.trim().length<1||city.trim().length<1){
+  return {...result,providerStatus:"full_address_required",
+   providerTaxEstimateCents:null,providerEstimatedTotalCents:null,
+   providerDetail:"A full street and city are required to request a tax-provider estimate."};
+ }
+ if(line1.length>140||city.length>80||
+  /[\\x00-\\x1f\\x7f]/.test(line1+city)){
+  return {...result,providerStatus:"invalid_address",
+   providerTaxEstimateCents:null,providerEstimatedTotalCents:null,
+   providerDetail:"Enter a valid full shipping address for tax verification."};
+ }
+ const tax=await requestPrivateTaxCloudEstimate({
+  storeId:STORE_ID,productId,collectSalesTax:parsed.collectSalesTax,
+  quantity:Number(rawQty),unitPriceCents:parsed.unitPriceCents,
+  discountCents:result.merchandiseDiscountCents,
+  shippingCents:result.shippingCents,
+  preTaxTotalCents:result.preTaxTotalCents,
+  destination:{countryCode:"US",line1:line1.trim(),city:city.trim(),
+   state:destination.region,zip:destination.postalCode},
+ });
+ return {...result,
+  providerStatus:tax.status,
+  providerTaxEstimateCents:tax.status==="taxcloud_estimate"?
+   tax.taxEstimateCents:null,
+  providerEstimatedTotalCents:tax.status==="taxcloud_estimate"?
+   tax.estimatedTotalCents:null,
+  providerDetail:tax.detail};
+
 }
