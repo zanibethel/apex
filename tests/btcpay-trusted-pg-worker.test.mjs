@@ -6,7 +6,7 @@ const safeEnv={
  CI:"true",GITHUB_ACTIONS:"true",
  APEX_BTCPAY_EPHEMERAL:"true",APEX_BTCPAY_TEST_NETWORK:"regtest",
  PGHOST:"localhost",PGPORT:"5432",PGDATABASE:"apex_test",
- PGUSER:"postgres",PGPASSWORD:"disposable",
+ PGUSER:"apex_test_invoice_worker",PGPASSWORD:"disposable",
  RUNNER_TEMP:"/home/runner/work/_temp/worker-tests",
 };
 const storeId="trusted_unit_store",scopeId="39000000-0000-0000-0000-000000000001";
