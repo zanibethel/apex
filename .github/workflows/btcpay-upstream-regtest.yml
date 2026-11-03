@@ -220,6 +220,12 @@ jobs:
             exit 1
           fi
           echo "Prism route registered and protected on isolated regtest runner"
+      - name: Generate one-run-only restricted payment worker credential
+        run: |
+          set -euo pipefail
+          worker_password="$(openssl rand -hex 32)"
+          echo "::add-mask::$worker_password"
+          echo "APEX_BTCPAY_TEST_WORKER_PASSWORD=$worker_password" >> "$GITHUB_ENV"
       - name: Build separate disposable approval/intent database for real Greenfield worker
         env:
           PGDATABASE: apex_test
