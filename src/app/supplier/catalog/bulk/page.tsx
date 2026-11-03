@@ -168,6 +168,7 @@ export default async function BulkProductWorkspace(){
  return <main className="container supplier-shell apex-bulk-page">
   <Link className="back" href="/supplier/catalog">← Product manager</Link>
   <Link className="button secondary" href="/supplier/catalog/media-readiness">Review image readiness</Link>
+  <Link className="button secondary" href="/supplier/shipping">Shipping rules & free-shipping minimum</Link>
   <p className="eyebrow">APEX / SUPPLIER BULK PRODUCT MANAGEMENT</p>
   <h1>Add and edit multiple products</h1>
   <p className="lead">Select products, make changes, save them, then choose Preview single or Preview all before publishing.</p>
