@@ -3,12 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import {AdminCartValidationForm} from "./admin-cart-validation-form";
+import {quoteOptionalShipping} from "@/lib/commerce/checkout-charge-rules.mjs";
+import type {ShippingRules} from "@/app/supplier/checkout-rules/shipping-form";
 import {useMemo,useState,type FormEvent} from "react";
 
 export type ReviewProduct={
  id:string;name:string;sku:string;description:string;category:string;
  priceCents:number;compareAtCents:number|null;imageUrl:string|null;
- available:number|null;active:boolean;
+ available:number|null;active:boolean;collectSalesTax:boolean;
 };
 type Details={
  firstName:string;lastName:string;email:string;phone:string;
@@ -43,7 +45,9 @@ function reviewDetails(details:Details){
  return "";
 }
 
-export function CheckoutCatalogReview({products}:{products:ReviewProduct[]}){
+export function CheckoutCatalogReview({products,shippingPolicy}:{
+ products:ReviewProduct[];shippingPolicy:ShippingRules;
+}){
  const [selectedId,setSelectedId]=useState(products[0]?.id??"");
  const [quantity,setQuantity]=useState(1);
  const [details,setDetails]=useState<Details>(BLANK);
@@ -51,6 +55,7 @@ export function CheckoutCatalogReview({products}:{products:ReviewProduct[]}){
  const [message,setMessage]=useState("");
  const product=useMemo(()=>products.find(p=>p.id===selectedId)??null,[products,selectedId]);
  const subtotal=product?product.priceCents*quantity:0;
+ const shipping=quoteOptionalShipping(shippingPolicy,subtotal,false);
  const setField=(key:keyof Details,value:string)=>{
   setDetails(prev=>({...prev,[key]:value}));
   setMessage("");
@@ -183,13 +188,19 @@ export function CheckoutCatalogReview({products}:{products:ReviewProduct[]}){
     </>}
     <dl className="apex-checkout-prices">
      <div><dt>Subtotal</dt><dd>{money(subtotal)}</dd></div>
-     <div><dt>Shipping</dt><dd>Pending configuration</dd></div>
-     <div><dt>Taxes</dt><dd>Pending configuration</dd></div>
-     <div className="apex-checkout-price-total"><dt>Displayed subtotal</dt><dd>{money(subtotal)}</dd></div>
+     <div><dt>Shipping</dt><dd>{!shipping?"Unavailable":
+       shipping.shippingCents===0?"Free":money(shipping.shippingCents)}</dd></div>
+     <div><dt>Sales tax setting</dt><dd>{product?.collectSalesTax?"Collect (rate pending)":"Unchecked (verify classification)"}</dd></div>
+     <div><dt>Taxes</dt><dd>Pending jurisdiction verification</dd></div>
+     <div className="apex-checkout-price-total"><dt>Before-tax preview</dt><dd>{shipping?
+       money(subtotal+shipping.shippingCents):"Unavailable"}</dd></div>
     </dl>
     {product&&<AdminCartValidationForm key={product.id+":"+quantity}
      productId={product.id} quantity={quantity}
      expectedSubtotalCents={subtotal}/>}
+    <p className="notice">Free-shipping thresholds are evaluated on
+     merchandise after product discounts. A valid free-shipping code can
+     also waive delivery. This screen has no real tax or payment quote.</p>
     <p className="apex-checkout-summary-foot">This review uses saved Apex pricing,
      but stock is zero. Quantity changes affect only this screen and cannot
      reserve inventory or submit an order.</p>
