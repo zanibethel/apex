@@ -79,13 +79,13 @@ export async function reviewAdminDestinationCharges(
    providerDetail:"A full street and city are required to request a tax-provider estimate."};
  }
  if(line1.length>140||city.length>80||
-  /[\\x00-\\x1f\\x7f]/.test(line1+city)){
+  /[\x00-\x1f\x7f]/.test(line1+city)){
   return {...verifiedPreview,providerStatus:"invalid_address",
    providerTaxEstimateCents:null,providerEstimatedTotalCents:null,
    providerDetail:"Enter a valid full shipping address for tax verification."};
  }
  const tax=await requestPrivateTaxCloudEstimate({
-  storeId:STORE_ID,productId,collectSalesTax:parsed.collectSalesTax,
+  storeId:STORE_ID,productId:String(productId),collectSalesTax:parsed.collectSalesTax,
   quantity:Number(rawQty),unitPriceCents:parsed.unitPriceCents,
   discountCents:result.merchandiseDiscountCents,
   shippingCents:result.shippingCents,
