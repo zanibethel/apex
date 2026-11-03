@@ -75,7 +75,9 @@ async function crashChild(){
    typeof apiKey!=="string"||apiKey.length<12)
    throw Error("Missing disposable crash fixture credentials");
  let postCount=0;
- const worker=createTrustedRegtestPgWorker({env,
+ const workerEnv={...env,PGUSER:"apex_test_invoice_worker",
+  PGPASSWORD:env.APEX_BTCPAY_TEST_WORKER_PASSWORD};
+const worker=createTrustedRegtestPgWorker({env:workerEnv,
    fetchImpl:async(url,options)=>{
      const u=new URL(url);
      if(u.origin!==ORIGIN||
@@ -162,7 +164,9 @@ export async function runEphemeralCrashRecovery({basic,network,testOnly}={}){
  assert.equal(Number(persisted.observationCount),0,
    "Crashed worker cannot forge a completed durable observation");
  let unexpectedHttpCalls=0;
- const restarted=createTrustedRegtestPgWorker({env,
+ const workerEnv={...env,PGUSER:"apex_test_invoice_worker",
+  PGPASSWORD:env.APEX_BTCPAY_TEST_WORKER_PASSWORD};
+const restarted=createTrustedRegtestPgWorker({env:workerEnv,
    fetchImpl:async()=>{
      unexpectedHttpCalls++;
      throw Error("Second worker must not reach provider");
