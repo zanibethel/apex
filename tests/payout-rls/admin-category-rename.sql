@@ -134,11 +134,16 @@ begin
  then raise exception 'Published category altered';end if;
  perform public.set_admin_category_publication(
   store,other,'unpublish','Return to private test state');
+end $;
+rollback;
+-- Inspect the private release-gate table only as the fixture's postgres
+-- operator, not as an authenticated storefront user.
+do $
+begin
  if (select enabled from apex_internal.private_release_gate where singleton=true)
     is distinct from false
  then raise exception 'Category rename enabled public gallery';end if;
  if jsonb_array_length(public.get_public_sold_out_catalog(0,24))<>0
  then raise exception 'Category rename exposed public products';end if;
-end $$;
-rollback;
+end $;
 select 'PASS: category rename identity, audit, stale/duplicate denial and publication isolation';
