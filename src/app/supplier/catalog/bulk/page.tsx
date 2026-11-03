@@ -181,6 +181,7 @@ export default async function BulkProductWorkspace(){
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
    categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}
    taxonomyProposal={store.id===apexTaxonomyStoreId?apexTaxonomyProposal:undefined}
+   taxonomyStoreId={apexTaxonomyStoreId}
    resubmissionEnabled={process.env.APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED==="true"}/>
   <p className="notice">Upload a new PNG/JPEG/WebP image or reuse an existing private product image; each reuse makes its own private copy. On-hand inventory updates use expected-count checks and are audited. Private source cost for linked variants still requires Source review. The bulk editor loads all private products in storefronts with 250 or fewer private products.</p>
  </main>;
