@@ -4,10 +4,14 @@ const messages={
  admin_hold:["Administrative hold","An administrator must lift this hold."],
  admin_review_required:["Admin review required","The listing remains blocked until an administrator releases it."],
  same_supplier_identity_hold:["Matching listing held","A listing with the same normalized product name is held for this supplier."],
- supplier_not_requested:["No supplier publication request","The supplier has not requested release of this product."],
+ supplier_not_requested:["Publish off","The supplier has turned off publishing for this product."],
  content_review_pending:["Content changes need review","A submitted content review is pending or changes were requested."],
  product_setup_incomplete:["Product details incomplete","Finish required private product fields before release."],
- insufficient_available_stock:["No available stock","Update inventory; reserved units are unavailable."],
+ insufficient_available_stock:["Sold Out","Stock is zero; a Sold Out listing is possible after the separate release checks."],
+ category_not_published:["Category not published","The product category needs an authorized public release."],
+ inventory_not_sold_out:["Inventory status prevents Sold Out","Stock must be exactly zero to display this item as Sold Out."],
+ release_conditions_unverified:["Additional release check needed","One or more protected public-listing conditions are not satisfied."],
+ public_visible:["Live · Sold Out","The protected public catalog confirms a Sold Out listing. Checkout is unavailable."],
  supplier_suspended:["Supplier authorization suspended","Platform administration must resolve the supplier restriction."],
  supplier_authorization_unverified:["Supplier authorization not verified","Supplier eligibility evidence must be reviewed independently."],
  product_authorization_blocked:["Product authorization blocked","This product is prohibited from release pending an administrative decision."],
@@ -15,9 +19,24 @@ const messages={
  public_release_disabled:["Public release disabled","All current private checks pass, but public release remains switched off."],
 };
 export function privateReleaseDisplay(data){
- if(!data||typeof data!=="object"||data.effective_public!==false||
+ if(!data||typeof data!=="object"||
+    typeof data.effective_public!=="boolean"||
     typeof data.status_code!=="string")
   return {label:"Decision unavailable",description:"The release decision could not be verified. The listing remains private."};
+ if(data.effective_public===true){
+  const c=data.checks;
+  const verified=data.status_code==="public_visible"&&c&&
+   c.supplier_requested===true&&c.admin_clear===true&&
+   c.supplier_authorized===true&&c.product_authorized===true&&
+   c.public_release_enabled===true&&c.category_published===true&&
+   c.sold_out_inventory_valid===true&&c.product_setup_complete===true&&
+   c.same_supplier_identity_clear===true&&c.content_review_clear===true;
+  return verified?
+   {label:"Live · Sold Out",description:"The public catalog confirms this eligible product is visible. Checkout remains unavailable."}:
+   {label:"Decision mismatch",description:"Public visibility cannot be verified. Contact the administrator."};
+ }
+ if(data.status_code==="public_visible")
+  return {label:"Decision mismatch",description:"Public visibility cannot be verified. Contact the administrator."};
  const details=messages[data.status_code];
  if(!details)return {label:"Unknown restriction",description:"A valid release decision is required before any public listing."};
  return {label:details[0],description:details[1]};

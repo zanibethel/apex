@@ -11,6 +11,7 @@ const dashboardLinks = [
   { title: "Product reviews", description: "Review private supplier submissions and request changes.", href: "/admin/product-reviews", icon: "▤" },
   { title: "Media readiness", description: "Inspect submitted images and outstanding public release evidence. No image approvals here.", href: "/admin/media-readiness", icon: "▣" },
   { title: "Listing controls", description: "Manage supplier publication requests, holds and republish approvals.", href: "/admin/listing-controls", icon: "🛡" },
+  { title: "Catalog release", description: "See exactly which products are public Sold Out, held, or waiting on eligibility checks.", href: "/admin/catalog-release", icon: "▦" },
   { title: "Checkout readiness", description: "Read-only private product eligibility and payment launch gates. Real checkout remains disabled.", href: "/admin/checkout-readiness", icon: "▥" },
   { title: "Payment monitor", description: "Read-only reporting, payout states and review attention. No live payment controls.", href: "/admin/payment-monitor", icon: "₿" },
   { title: "Storefront review", description: "Review actual product cards, prices and images in the customer-facing layout.", href: "/admin/storefront-preview", icon: "▧" },
