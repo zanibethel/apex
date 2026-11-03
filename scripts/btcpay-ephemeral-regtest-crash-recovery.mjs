@@ -138,6 +138,32 @@ export async function runEphemeralCrashRecovery({basic,network,testOnly,otherSup
    store_id:storeId,
  credential_sha256:createHash("sha256").update(key.apiKey,"utf8").digest("hex"),
  });
+ // Supplier A's real store-scoped key cannot authorize an invoice for
+ // supplier B. Reject at PostgreSQL before even attempting Greenfield HTTP.
+ if(typeof otherSupplierKey!=="string"||otherSupplierKey.length<12||
+    otherSupplierKey===key.apiKey)
+   throw Error("Independent supplier A credential required");
+ let crossStoreNetworkCalls=0;
+ const crossWorkerEnv={...env,PGUSER:"apex_test_invoice_worker",
+   PGPASSWORD:env.APEX_BTCPAY_TEST_WORKER_PASSWORD};
+ const crossWorker=createTrustedRegtestPgWorker({
+   env:crossWorkerEnv,
+   fetchImpl:async()=>{crossStoreNetworkCalls++;throw Error("forbidden provider request");},
+ });
+ await assert.rejects(crossWorker.createInvoice({
+   scopeId:SCOPE,storeId,orderRef:"other-supplier-token-denied",
+   amountSats:SATS,apiKey:otherSupplierKey,
+ }));
+ assert.equal(crossStoreNetworkCalls,0,
+   "Supplier A's credential attempted HTTP against supplier B");
+ const forbiddenRead=await fetch(
+   ORIGIN+"/api/v1/stores/"+storeId+"/invoices?take=1&skip=0",{
+     method:"GET",redirect:"error",cache:"no-store",
+     headers:{Authorization:"token "+otherSupplierKey,Accept:"application/json"},
+     signal:AbortSignal.timeout(10000),
+   });
+ assert.equal(forbiddenRead.ok,false,
+   "BTCPay issued supplier A a key that can view supplier B invoices");
  // A genuinely separate Node process commits the SQL intent, POSTs to the
  // actual BTCPay regtest instance, then exits(79) before GET/observation.
  let faultInjected=false;
