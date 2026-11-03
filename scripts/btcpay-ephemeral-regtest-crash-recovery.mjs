@@ -5,6 +5,7 @@
  * by Next.js. No automatic retry, payment link, mainnet or production key.
  */
 import assert from "node:assert/strict";
+import {createHash} from "node:crypto";
 import {writeSync} from "node:fs";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
@@ -101,7 +102,7 @@ const worker=createTrustedRegtestPgWorker({env:workerEnv,
    amountSats:SATS,apiKey});
  throw Error("Crash fixture exited without injecting post-commit failure");
 }
-export async function runEphemeralCrashRecovery({basic,network,testOnly}={}){
+export async function runEphemeralCrashRecovery({basic,network,testOnly,otherSupplierKey}={}){
  const env=testEnv();
  if(testOnly!==true||network!=="regtest"||
    typeof basic!=="string"||!/^Basic [A-Za-z0-9+/=]+$/.test(basic))
@@ -135,6 +136,7 @@ export async function runEphemeralCrashRecovery({basic,network,testOnly}={}){
    throw Error("Disposable crash-store scoped key missing required grants");
  await sql("tests/payout-rls/btcpay-real-provider-crash-setup.sql",{
    store_id:storeId,
+ credential_sha256:createHash("sha256").update(key.apiKey,"utf8").digest("hex"),
  });
  // A genuinely separate Node process commits the SQL intent, POSTs to the
  // actual BTCPay regtest instance, then exits(79) before GET/observation.
