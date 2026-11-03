@@ -11,7 +11,7 @@ import {useMemo,useState,type FormEvent} from "react";
 export type ReviewProduct={
  id:string;name:string;sku:string;description:string;category:string;
  priceCents:number;compareAtCents:number|null;imageUrl:string|null;
- available:number|null;active:boolean;collectSalesTax:boolean;
+ available:number|null;active:boolean;
 };
 type Details={
  firstName:string;lastName:string;email:string;phone:string;
@@ -191,9 +191,7 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
      <div><dt>Subtotal</dt><dd>{money(subtotal)}</dd></div>
      <div><dt>Shipping</dt><dd>{!shipping?"Unavailable":
        shipping.shippingCents===0?"Free":money(shipping.shippingCents)}</dd></div>
-     <div><dt>Sales tax setting</dt><dd>{product?.collectSalesTax?"Collect (rate pending)":"Unchecked (verify classification)"}</dd></div>
-     <div><dt>Taxes</dt><dd>Pending jurisdiction verification</dd></div>
-     <div className="apex-checkout-price-total"><dt>Before-tax preview</dt><dd>{shipping?
+     <div className="apex-checkout-price-total"><dt>Estimated total</dt><dd>{shipping?
        money(subtotal+shipping.shippingCents):"Unavailable"}</dd></div>
     </dl>
     {product&&<AdminDestinationChargeForm key={"charges:"+product.id+":"+quantity}
@@ -204,7 +202,7 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
      expectedSubtotalCents={subtotal}/>}
     <p className="notice">Free-shipping thresholds are evaluated on
      merchandise after product discounts. A valid free-shipping code can
-     also waive delivery. This screen has no real tax or payment quote.</p>
+     also waive delivery. This screen does not submit payment.</p>
     <p className="apex-checkout-summary-foot">This review uses saved Apex pricing,
      but stock is zero. Quantity changes affect only this screen and cannot
      reserve inventory or submit an order.</p>
