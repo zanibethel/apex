@@ -98,3 +98,16 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_external_prepost_intent_REVIEW_ONLY.sql
       - name: Verify reservation-before-POST, replay denial and append-only uncertainty audit
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-external-prepost-intent.sql
+      - name: Load immutable store-to-Greenfield bindings in disposable PostgreSQL
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_trusted_pg_worker_REVIEW_ONLY.sql
+      - name: Prepare two separately authorized worker fixture stores
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-trusted-worker-setup.sql
+      - name: Verify real PostgreSQL-backed worker with simulated provider replies
+        env:
+          CI: "true"
+          GITHUB_ACTIONS: "true"
+          APEX_BTCPAY_EPHEMERAL: "true"
+          APEX_BTCPAY_TEST_NETWORK: regtest
+        run: node scripts/btcpay-ephemeral-trusted-pg-worker-check.mjs
+      - name: Verify durable single-attempt recovery and permanent holds
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-trusted-worker-results.sql
