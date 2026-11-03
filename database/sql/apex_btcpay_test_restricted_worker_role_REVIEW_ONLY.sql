@@ -13,17 +13,21 @@ create role apex_test_invoice_worker with
   password :'worker_password';
 -- The role does not inherit from postgres, authenticated or service_role.
 grant connect on database apex_test to apex_test_invoice_worker;
-grant usage on schema apex_test_internal to apex_test_invoice_worker;
+create schema apex_test_worker;
+revoke all on schema apex_test_worker from PUBLIC,anon,authenticated;
+grant usage on schema apex_test_worker to apex_test_invoice_worker;
+-- Deliberately do NOT grant USAGE on apex_test_internal to worker.
+
 
 -- Only these three fixed-purpose entry points can be executed by this role.
 -- Original privileged functions and all table writes remain unavailable.
-create function apex_test_internal.worker_reserve_btcpay_test_provider_post(
+create function apex_test_worker.worker_reserve_btcpay_test_provider_post(
   p_scope uuid,p_store text,p_order text,p_amount_sats bigint)
 returns uuid language sql security definer set search_path='' as $fn$
   select apex_test_internal.reserve_btcpay_test_provider_post(
     p_scope,p_store,p_order,p_amount_sats);
 $fn$;
-create function apex_test_internal.worker_verify_btcpay_test_provider_post(
+create function apex_test_worker.worker_verify_btcpay_test_provider_post(
   p_intent uuid,p_scope uuid)
 returns text language sql security definer set search_path='' as $fn$
   select pg_catalog.json_build_object(
@@ -48,24 +52,24 @@ returns text language sql security definer set search_path='' as $fn$
        i.scope_id,a.rule_id,a.rule_version,
        a.allocation_snapshot,a.audit_head_id);
 $fn$;
-create function apex_test_internal.worker_observe_btcpay_test_provider_post(
+create function apex_test_worker.worker_observe_btcpay_test_provider_post(
   p_intent uuid,p_kind text,p_invoice text)
 returns text language sql security definer set search_path='' as $fn$
   select apex_test_internal.observe_btcpay_test_provider_post(
     p_intent,p_kind,p_invoice);
 $fn$;
 
-revoke all on function apex_test_internal.worker_reserve_btcpay_test_provider_post(
+revoke all on function apex_test_worker.worker_reserve_btcpay_test_provider_post(
  uuid,text,text,bigint) from public,anon,authenticated;
-revoke all on function apex_test_internal.worker_verify_btcpay_test_provider_post(
+revoke all on function apex_test_worker.worker_verify_btcpay_test_provider_post(
  uuid,uuid) from public,anon,authenticated;
-revoke all on function apex_test_internal.worker_observe_btcpay_test_provider_post(
+revoke all on function apex_test_worker.worker_observe_btcpay_test_provider_post(
  uuid,text,text) from public,anon,authenticated;
-grant execute on function apex_test_internal.worker_reserve_btcpay_test_provider_post(
+grant execute on function apex_test_worker.worker_reserve_btcpay_test_provider_post(
  uuid,text,text,bigint) to apex_test_invoice_worker;
-grant execute on function apex_test_internal.worker_verify_btcpay_test_provider_post(
+grant execute on function apex_test_worker.worker_verify_btcpay_test_provider_post(
  uuid,uuid) to apex_test_invoice_worker;
-grant execute on function apex_test_internal.worker_observe_btcpay_test_provider_post(
+grant execute on function apex_test_worker.worker_observe_btcpay_test_provider_post(
  uuid,text,text) to apex_test_invoice_worker;
 
 -- Explicitly deny direct table access, even if future fixture grants change.
