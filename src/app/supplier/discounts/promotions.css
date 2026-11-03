@@ -1,0 +1,53 @@
+/* Production-style promotion management, shared by supplier and admin. */
+.apex-promo-page{max-width:1020px;padding-block:30px 76px;overflow-x:clip}
+.apex-promo-page h1{font-size:clamp(1.9rem,5.4vw,3.1rem);line-height:1.12}
+.apex-promo-page .lead{max-width:66ch}
+.apex-promo-page .apex-promo-panel{
+ max-width:none;min-width:0;margin:22px 0;padding:clamp(18px,4vw,28px);
+ border:1px solid #343640;border-radius:16px;background:#15161b;
+}
+.apex-promo-page .apex-promo-panel h2{font-size:clamp(1.25rem,3.2vw,1.65rem);margin:0 0 12px}
+.apex-promo-page .apex-promo-form{display:grid;gap:16px;margin-top:14px}
+.apex-promo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+.apex-promo-grid label{display:grid;gap:6px;min-width:0;font-size:.9rem;color:#d3d4da}
+.apex-promo-page .apex-promo-grid input,
+.apex-promo-page .apex-promo-grid select{
+ display:block;width:100%;min-width:0;min-height:44px;padding:10px 12px;
+ border:1px solid #666b76;border-radius:8px;background:#0c0c0f;
+ color:#fff;font:inherit;
+}
+.apex-promo-page .apex-promo-grid select{appearance:auto}
+.apex-promo-page .apex-promo-form button,
+.apex-promo-status-form button{min-height:42px;width:auto;max-width:100%;padding:10px 20px;margin-top:2px}
+.apex-promo-code-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:14px}
+.apex-promo-code{
+ min-width:0;border:1px solid #333742;border-radius:12px;background:#101116;padding:18px;
+}
+.apex-promo-code-top{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.apex-promo-code h3{margin:0;font-size:1.14rem;overflow-wrap:anywhere}
+.apex-promo-code p{margin:8px 0;font-size:.92rem}
+.apex-promo-code .apex-promo-meta{color:#adb1ba;font-size:.82rem}
+.apex-promo-state{font-size:.8rem;border:1px solid #5e6270;border-radius:20px;padding:4px 10px}
+.apex-promo-status-form{display:grid;gap:8px;margin-top:12px}
+.apex-promo-edit{margin-top:14px;border-top:1px solid #35363f;padding-top:12px}
+.apex-promo-edit>summary,.apex-promo-calculator>summary{
+ cursor:pointer;font-weight:700;list-style-position:inside;
+}
+.apex-promo-edit .apex-promo-panel{
+ padding:12px 0;margin:12px 0 0;background:transparent;border:0;
+}
+.apex-promo-edit .apex-promo-panel h2{font-size:1.05rem}
+.apex-promo-calculator>summary{font-size:1.12rem}
+.apex-promo-calculation{display:grid;gap:10px;margin:18px 0 0;padding:16px;
+ border:1px solid #343640;border-radius:10px;background:#101116}
+.apex-promo-calculation div{display:flex;gap:16px;justify-content:space-between}
+.apex-promo-calculation dt{color:#c2c5ce}
+.apex-promo-calculation dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
+.apex-promo-calculation div:last-child{border-top:1px solid #3f424d;padding-top:12px;font-size:1.09rem}
+@media(max-width:640px){
+ .apex-promo-page{padding-top:18px}
+ .apex-promo-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+ .apex-promo-page .apex-promo-panel{margin:14px 0;padding:18px 16px}
+ .apex-promo-code{padding:14px}
+ .apex-promo-page .apex-promo-form button{width:100%}
+}
