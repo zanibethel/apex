@@ -48,13 +48,13 @@ export function ShippingSettingsForm({storeId,initial,enabled=true}:{
     disabled={!charge||!enabled||pending}
     placeholder="Example: 100.00"/>
    <p className="notice">The threshold uses merchandise after product discounts,
-    before tax and shipping. Leaving it blank disables automatic
+    before the shipping fee. Leaving it blank disables automatic
     free shipping. An eligible free-shipping code can still waive the fee.</p>
    <button type="submit" className="button secondary"
     disabled={!enabled||pending}>{pending?"Saving…":"Save shipping rules"}</button>
    {state.message&&<p role="status">{state.message}</p>}
   </form>
-  <p className="notice">The saved policy is private. Real delivery availability,
-   shipping costs, tax jurisdiction and order placement require separate validation.</p>
+  <p className="notice">The saved policy is private. Delivery eligibility, fulfillment costs,
+   and order placement require separate validation.</p>
  </section>;
 }
