@@ -12,9 +12,9 @@ const integration=read("database/tests/supplier_listing_admin_override_integrati
 const ci=read(".github/workflows/ci.yml");
 
 test("supplier wants listing never equals publicly available",()=>{
- assert.deepEqual(listingControlStatus(null),{label:"Not requested",kind:"private",canRequest:true});
+ assert.deepEqual(listingControlStatus(null),{label:"Publish off",kind:"private",canRequest:true});
  assert.equal(listingControlStatus({admin_gate:"clear",supplier_wants_listing:true}).kind,"requested");
- assert.match(listingControlStatus({admin_gate:"clear",supplier_wants_listing:true}).label,/not live/);
+ assert.match(listingControlStatus({admin_gate:"clear",supplier_wants_listing:true}).label,/Publish on/);
  assert.equal(listingControlStatus({admin_gate:"hold",supplier_wants_listing:true}).kind,"hold");
  assert.equal(listingControlStatus({admin_gate:"hold",supplier_wants_listing:true}).canRequest,false);
  assert.equal(listingControlStatus({admin_gate:"review_required",supplier_wants_listing:true}).canRequest,false);
