@@ -70,19 +70,27 @@ export function createTrustedRegtestPgWorker({
     if(typeof apiKey!=="string"||apiKey.length<12)
       throw Error("Missing disposable BTCPay key");
     let reservedId=null;
+    let observationToken=null;
     const reserveDurably=async({storeId:postedStore,orderRef:postedOrder,
       amountSats:postedAmount,network})=>{
       if(postedStore!==storeId||postedOrder!==orderRef||
          postedAmount!==amountSats||network!=="regtest")
         throw Error("Untrusted regtest invoice reservation request");
-      const intentId=await sql("reserve",{
+      const reservation=await sql("reserve",{
         scope_id:scopeId,store_id:storeId,
         order_ref:orderRef,amount_sats:amountSats.toString(),
         credential_sha256:createHash("sha256").update(apiKey,"utf8").digest("hex"),
       });
-      if(!uuid.test(intentId))
-        throw Error("Provider intent must be a committed UUID");
+      let issued;
+      try{issued=JSON.parse(reservation);}catch{
+        throw Error("Durable reservation and in-process receipt capability missing");
+      }
+      const intentId=issued?.intentId;
+      if(!uuid.test(intentId||"")||
+         !/^[0-9a-f]{64}$/.test(issued?.observationToken||""))
+        throw Error("Provider intent must include a one-shot receipt capability");
       reservedId=intentId;
+      observationToken=issued.observationToken;
       const text=await sql("verify",{intent_id:intentId,scope_id:scopeId});
       let verified;
       try{verified=JSON.parse(text);}catch{throw Error("Durable reservation readback missing");}
@@ -106,6 +114,7 @@ export function createTrustedRegtestPgWorker({
         throw Error("Invalid trusted worker receipt");
       return sql("observe",{
         intent_id:intentId,kind,invoice_id:invoiceId||"",
+        observation_token:observationToken,
       });
     };
     // All credentials are closed over by this isolated worker. No public
