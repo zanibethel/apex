@@ -30,7 +30,8 @@ export default async function StorefrontPreview(){
    .select("product_id,store_id,quantity_on_hand,quantity_reserved")
    .limit(LIMIT),
  ]);
- const error=productError||categoryError||inventoryError;
+ const error=productError;
+ const partialReadback=Boolean(categoryError||inventoryError);
  const imageUrls=new Map<string,string>();
  if(!error&&products?.length){
   await Promise.all(products.filter(p=>Boolean(p.image_path))
@@ -54,6 +55,7 @@ export default async function StorefrontPreview(){
   <p className="notice"><strong>Private admin view.</strong> These product records
    are not automatically public. Changes to availability or visibility require
    their existing supplier and release controls. Checkout remains unavailable.</p>
+  {partialReadback&&!error&&<p className="notice" role="status">Some category or stock details could not be confirmed. Product records are still available for layout review.</p>}
   {error?<p className="notice" role="status">The private product view is
     unavailable. No catalog information can be confirmed.</p>:
    !products?.length?<p className="notice">No product records in the current
