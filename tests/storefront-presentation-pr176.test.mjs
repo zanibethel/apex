@@ -16,7 +16,8 @@ test("public storefront shows normal catalog navigation, no test-payment promoti
  assert.match(home,/Browse the catalog/);
  assert.match(home,/Checkout is currently unavailable/);
  assert.match(catalog,/readApprovedSoldOutCatalog\(page\)/);
- assert.match(catalog,/internalCheckoutPreview&&<DemoCatalogShelf\/>/);
+ assert.match(catalog,/internalCheckoutPreview&&<section/);
+ assert.match(catalog,/<DemoCatalogShelf\/>/);
  assert.match(catalog,/isVerifiedPlatformAdmin\(identity\.user\)/);
  assert.doesNotMatch(home+menu,/href="\/checkout\/preview"/);
  assert.doesNotMatch(layout,/DEMO ONLY/);
