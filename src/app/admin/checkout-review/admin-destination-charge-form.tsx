@@ -4,104 +4,62 @@ import {reviewAdminDestinationCharges,type DestinationEstimate}
  from "./destination-charge-actions";
 
 const DEFAULT:DestinationEstimate={ok:false,message:""};
-const money=(n:number)=>new Intl.NumberFormat("en-US",{
+const money=(cents:number)=>new Intl.NumberFormat("en-US",{
  style:"currency",currency:"USD",
-}).format(n/100);
-const asMoney=(n:number|undefined)=>n===undefined?"Unavailable":money(n);
+}).format(cents/100);
+const amount=(cents:number|undefined)=>cents===undefined?"Unavailable":money(cents);
 
 export function AdminDestinationChargeForm({
  productId,quantity,expectedSubtotalCents,
-}:{
- productId:string;quantity:number;expectedSubtotalCents:number;
-}){
+}:{productId:string;quantity:number;expectedSubtotalCents:number}){
  const [state,action,pending]=useActionState(reviewAdminDestinationCharges,DEFAULT);
- return <section className="apex-private-destination-quote" aria-label="Saved destination and promotion estimate"
+ return <section className="apex-private-destination-quote"
+  aria-label="Saved merchandise, discount and shipping estimate"
   style={{borderTop:"1px solid #45454d",paddingTop:16,marginTop:16}}>
-  <h3>Delivery &amp; discount estimate</h3>
-  <p className="notice">Uses current saved prices and store rules. A ZIP code
-   and state support the pre-tax estimate; a full address and a configured tax
-   provider are required for a separate tax estimate.</p>
+  <h3>Discount &amp; shipping estimate</h3>
+  <p className="notice">This review uses saved catalog pricing and shipping
+   rules. Enter an optional promotion code to check the merchandise discount
+   or free-shipping benefit.</p>
   <form action={action} className="supplier-form" style={{gap:8,marginTop:10}}>
    <input type="hidden" name="productId" value={productId}/>
    <input type="hidden" name="quantity" value={quantity}/>
    <input type="hidden" name="expectedSubtotalCents" value={expectedSubtotalCents}/>
-   <label htmlFor="dest-state">Destination state
-    <input id="dest-state" name="state" placeholder="TX" defaultValue="TX"
-     maxLength={2} required disabled={pending}
-     autoComplete="off" style={{width:"100%"}}/>
-   </label>
-   <label htmlFor="dest-postal">Delivery ZIP code
-    <input id="dest-postal" name="postal" inputMode="numeric"
-     placeholder="79401" pattern="[0-9]{5}(-[0-9]{4})?"
-     maxLength={10} required disabled={pending}
-     autoComplete="off" style={{width:"100%"}}/>
-   </label>
-   <label htmlFor="dest-city">Delivery city (for tax-provider estimate)
-    <input id="dest-city" name="city" placeholder="Lubbock"
-     maxLength={80} autoComplete="off" disabled={pending}
-     style={{width:"100%"}}/>
-   </label>
-   <label htmlFor="dest-street">Delivery street (for tax-provider estimate)
-    <input id="dest-street" name="street" placeholder="Street address"
-     maxLength={140} autoComplete="off" disabled={pending}
-     style={{width:"100%"}}/>
-   </label>
-   <p className="notice">When a merchant-connected tax provider is enabled,
-    submitting a full address requests a private TaxCloud cart estimate.
-    No address is saved in Apex, but TaxCloud can retain its cart record.</p>
    <label htmlFor="dest-promotion">Discount or free-shipping code (optional)
-    <input id="dest-promotion" name="code"
-     placeholder="Discount code" maxLength={24}
-     autoComplete="off" disabled={pending} style={{width:"100%"}}/>
+    <input id="dest-promotion" name="code" placeholder="Discount code"
+     maxLength={24} autoComplete="off" disabled={pending}
+     style={{width:"100%"}}/>
    </label>
    <button type="submit" className="button secondary" disabled={pending}>
-    {pending?"Rechecking…":"Recalculate saved charges"}
+    {pending?"Rechecking…":"Recalculate total"}
    </button>
   </form>
-  {state.message&&<p role={state.ok?"status":"alert"} className="notice">{state.message}</p>}
+  {state.message&&<p role={state.ok?"status":"alert"} className="notice">
+   {state.message}</p>}
   {state.ok&&<div aria-live="polite">
    {!state.subtotalMatchesDisplay&&
-    <p role="alert">Saved price changed since this page loaded.
-     Refresh before reviewing the updated checkout.</p>}
-   <p className="notice">Destination: {state.destinationRegion} {state.destinationPostal}
-    {" · "}Jurisdiction verification pending</p>
+    <p role="alert">Saved product price has changed.
+     Refresh to inspect the updated checkout total.</p>}
    <dl className="apex-checkout-prices">
-    <div><dt>Saved merchandise</dt><dd>{asMoney(state.merchandiseSubtotalCents)}</dd></div>
-    <div><dt>Promotion discount</dt><dd>{asMoney(state.merchandiseDiscountCents)}</dd></div>
-    <div><dt>Shipping fee</dt><dd>{asMoney(state.shippingCents)}</dd></div>
+    <div><dt>Merchandise</dt><dd>{amount(state.merchandiseSubtotalCents)}</dd></div>
+    <div><dt>Discount</dt><dd>{amount(state.merchandiseDiscountCents)}</dd></div>
+    <div><dt>Shipping</dt><dd>{(state.shippingCents??0)===0?
+     "Free":amount(state.shippingCents)}</dd></div>
     {(state.shippingDiscountCents??0)>0&&
-     <div><dt>Shipping waived</dt><dd>{asMoney(state.shippingDiscountCents)}</dd></div>}
-    <div><dt>Potentially taxable merchandise</dt>
-     <dd>{asMoney(state.provisionalTaxableCents)}</dd></div>
-    <div><dt>Sales tax</dt><dd>{state.providerTaxEstimateCents!=null?
-     asMoney(state.providerTaxEstimateCents):"Awaiting verified destination quote"}</dd></div>
+     <div><dt>Free shipping benefit</dt>
+      <dd>{amount(state.shippingDiscountCents)}</dd></div>}
     <div className="apex-checkout-price-total">
-     <dt>Before-tax estimate</dt><dd>{asMoney(state.preTaxTotalCents)}</dd>
+     <dt>Estimated total</dt><dd>{amount(state.totalCents)}</dd>
     </div>
-    {state.providerEstimatedTotalCents!=null&&
-     <div><dt>Provider-estimated total</dt>
-      <dd>{asMoney(state.providerEstimatedTotalCents)}</dd></div>}
-    <div><dt>Final total (payable)</dt><dd>Not yet available</dd></div>
    </dl>
    <p className="notice">
     {state.freeShippingReason==="discount_code"?
-     "The eligible discount code waived shipping.":
+     "The discount code waived the shipping fee.":
      state.freeShippingReason==="subtotal_threshold"?
-     "The discounted merchandise subtotal met the free-shipping threshold.":
-     "Shipping is based on the current saved store policy."}
+     "The discounted merchandise subtotal qualified for free shipping.":
+     "The saved shipping policy determines the fee."}
    </p>
-   <p className="notice">{state.collectSalesTax?
-    "Product is marked Collect sales tax.":
-    "Product tax collection is unchecked; an exemption still needs verification."}
-    {" "}Shipping taxability may affect the final amount.</p>
-   {state.providerStatus&&<p className="notice">
-    <strong>TaxCloud:</strong> {state.providerStatus==="taxcloud_estimate"?
-     "Verified private cart estimate (not finalized)":
-     state.providerDetail??"Not connected"}.
-   </p>}
-   <p className="notice">No invoice, payment, Apex order, promotion redemption, or
-    stock reservation has been created. Any provider tax calculation is
-    informational and is not a payable total.</p>
+   <p className="notice">This is a pricing review, not an order.
+    Stock reservation, checkout and Bitcoin invoicing remain disabled.</p>
   </div>}
  </section>;
 }
