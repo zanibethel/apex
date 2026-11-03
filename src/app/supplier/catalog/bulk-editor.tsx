@@ -75,7 +75,12 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const effectiveListing=listing.map(item=>({...item,requested:listingOverrides[item.productId]??item.requested}));
  const newlyRequested=new Set(Object.entries(listingOverrides).filter(([,value])=>value).map(([id])=>id));
  const overview=supplierBulkWorkspaceSummary(rows,effectiveListing);
- const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,effectiveListing,newlyRequested,new Set(saveRetryKeys));
+ // Server-scoped taxonomy notes remain private to this authenticated editor.
+ // Immutable IDs keep corrected titles and SKUs visible for review.
+ const heldTaxonomy=useMemo(()=>new Map((taxonomyProposal??[])
+  .filter(item=>item.category===null).map(item=>[item.id,item])),[taxonomyProposal]);
+ const heldTaxonomyIds=useMemo(()=>new Set(heldTaxonomy.keys()),[heldTaxonomy]);
+ const visibleRows:BulkEditRow[]=filterSupplierBulkRows(rows,productSearch,viewFilter,effectiveListing,newlyRequested,new Set(saveRetryKeys),heldTaxonomyIds);
  const selectedRows=visibleRows.filter(r=>selectedSet.has(r.key));
  const selectedMissingCategory=selectedRows.filter(row=>!row.categoryId).length;
  const selectedInactive=selectedRows.filter(row=>row.isActive===false).length;
@@ -316,6 +321,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
      <option value="image_fixes">Image corrections / missing ({overview.imageFixes})</option>
      <option value="admin_holds">Admin holds ({overview.adminHolds})</option>
      <option value="review_pending">Awaiting review ({overview.reviewPending})</option>
+     {heldTaxonomyIds.size>0&&<option value="taxonomy_held">Identity review ({heldTaxonomyIds.size})</option>}
      {saveRetryKeys.length>0&&<option value="save_retries">Fix / retry saves ({saveRetryKeys.length})</option>}
     </select>
    </label>
@@ -369,11 +375,18 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
      </li>)}
     </ul>
    </details>
-   <button type="button" className="button secondary"
-    disabled={!editable||busy||!taxonomyReview.ready}
-    onClick={stageSuggestedCategories}>
-    Stage {taxonomyReview.changes.length} matching categories
-   </button>
+   <div className="apex-bulk-toolbar">
+    <button type="button" className="button secondary"
+     disabled={!editable||busy||!taxonomyReview.ready}
+     onClick={stageSuggestedCategories}>
+     Stage {taxonomyReview.changes.length} matching categories
+    </button>
+    {heldTaxonomyIds.size>0&&<button type="button" className="button secondary"
+     disabled={busy}
+     onClick={()=>{setProductSearch("");setViewFilter("taxonomy_held");setSelected([]);}}>
+     Review {heldTaxonomyIds.size} flagged products
+    </button>}
+   </div>
    <p className="notice">Nothing is saved automatically. Existing unsaved edits on
     the staged cards will also be included when you press Save selected.</p>
    {taxonomyMessage&&<p role="status" className="apex-bulk-result">{taxonomyMessage}</p>}
@@ -431,6 +444,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const availableStock=cardMedia?.quantityOnHand==null||cardMedia.quantityReserved==null
      ?undefined:Math.max(0,cardMedia.quantityOnHand-cardMedia.quantityReserved);
     const category=categories.find(c=>c.id===r.categoryId)?.name??"Uncategorized";
+    const taxonomyHold=r.id?heldTaxonomy.get(r.id):undefined;
     const listingStatus=r.id?listingByProduct.get(r.id):undefined;
     const publication=r.id?publicationById.get(r.id):undefined;
     const requested=Boolean(listingStatus?.requested);
@@ -482,6 +496,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
       </div>
      </div>
+     {taxonomyHold&&<p className="notice" role="note">
+      <strong>Identity review required:</strong> {taxonomyHold.note}
+      {" "}Check source documentation before assigning a category or requesting public release.
+     </p>}
      <details className="apex-bulk-readiness-details">
       <summary>{adminFeedback
        ?"Administrator feedback"+(readiness.missing.length?" · "+readiness.missing.length+" setup items":"")
