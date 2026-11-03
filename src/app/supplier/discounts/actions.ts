@@ -6,6 +6,7 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import { quoteDiscount } from "@/lib/commerce/discount-quote.mjs";
 import {quoteOptionalShipping} from "@/lib/commerce/checkout-charge-rules.mjs";
+import {newPromotionActive} from "@/lib/commerce/promotion-management.mjs";
 
 type State={ok:boolean;message:string;subtotalCents?:number;
  discountCents?:number;shippingCents?:number;shippingDiscountCents?:number;
@@ -49,12 +50,12 @@ export async function saveSupplierPromotion(_prev:State,form:FormData):Promise<S
   const rawCode=form.get("code"),kind=form.get("kind"),rawAmount=form.get("value");
   const rawMin=form.get("minimum"),rawLimit=form.get("usageLimit");
   const rawStart=form.get("startsAt"),rawEnd=form.get("endsAt");
-  const initialStatus=form.get("initialStatus")??"active";
+  const activeOnCreate=newPromotionActive(form.get("initialStatus"));
   if(typeof storeId!=="string"||!uuid.test(storeId)||typeof promoId!=="string"||
     (promoId!==""&&!uuid.test(promoId))||typeof rawCode!=="string"||
     typeof kind!=="string"||(kind!=="free_shipping"&&typeof rawAmount!=="string")||
     typeof rawLimit!=="string"||
-    !["active","inactive"].includes(String(initialStatus)))
+    activeOnCreate===null)
     return {ok:false,message:"Invalid promotion details."};
   const code=rawCode.trim().toUpperCase();
   if(!/^[A-Z0-9_-]{3,24}$/.test(code)||!["percentage","fixed","free_shipping"].includes(kind))
@@ -88,7 +89,7 @@ export async function saveSupplierPromotion(_prev:State,form:FormData):Promise<S
   } else {
     const result=await w.client.from("supplier_discount_codes").insert({
       store_id:storeId,code,...fields,
-      is_active:initialStatus==="active",created_by:w.user.id,
+      is_active:activeOnCreate,created_by:w.user.id,
     }).select("id").maybeSingle();
     if(result.error||!result.data)return {ok:false,message:"Code already exists or could not be saved."};
   }
