@@ -72,7 +72,8 @@ test("admin server action uses signed-in role and a hardcoded private store",()=
  assert.match(actions,/p_items:\[\{product_id:productId,quantity\}\]/);
  assert.doesNotMatch(actions,/\.insert\(|\.update\(|createInvoice|service_role|process\.env/);
  assert.match(component,/Validate saved price and stock/);
- assert.match(component,/Checkout remains blocked/);
+ assert.match(component,/No commercial quote or order is authorized/);
+ assert.match(actions,/Checkout remains blocked/);
  assert.match(original,/AdminCartValidationForm key=\{product.id\+":"\+quantity\}/);
  assert.match(sql,/security definer/);
  assert.match(sql,/app_metadata,apex_role/);
