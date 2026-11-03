@@ -16,7 +16,9 @@ test("real integration runner pins official Prism plugin and uses no production 
  assert.match(workflow,/BTCPAY_PLUGINDIR: \$\{\{ runner.temp \}\}\/apex-prism-plugins/);
  assert.match(workflow,/docker compose down --volumes --remove-orphans/);
  assert.doesNotMatch(workflow,/\$\{\{\s*secrets[.[]/);
- assert.match(entry,/afterSettlement:prismForwarding/);
+ assert.match(entry,/afterSettlement:async context=>/);
+ assert.ok(entry.includes("const prismProof=prismForwarding?await prismForwarding(context):null;"));
+ assert.ok(entry.includes("const workerProof=trustedWorker?await trustedWorker(context):null;"));
  assert.match(entry,/prismVerified:Boolean\(finalProof\?\.prismForwardingVerified\)/);
  assert.match(entry,/productionReady:false/);
 });
