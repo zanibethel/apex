@@ -34,7 +34,7 @@ export default async function AdminCheckoutRules(){
    <p role="alert" className="notice">Private shipping settings
     could not be loaded. No changes were made.</p>}
   <div className="actions">
-   <Link className="button secondary" href="/supplier/discounts">
+   <Link className="button secondary" href="/admin/shipping-promotions">
     Manage discount and free-shipping codes</Link>
    <Link className="button secondary" href="/admin/checkout-review">
     Review shipping in checkout</Link>
