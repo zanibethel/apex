@@ -51,15 +51,15 @@ test("only demo IDs and quantities persist, using a strictly versioned payload",
  assert.doesNotMatch(json,/email|address|phone|payment|btc|wallet/i);
 });
 
-test("header + catalog + checkout reuse one client-side cart context",()=>{
+test("historical demo cart model is no longer mounted in header or catalog",()=>{
  const layout=readFileSync("src/app/layout.tsx","utf8");
  const provider=readFileSync("src/app/demo-cart.tsx","utf8");
  const catalog=readFileSync("src/app/catalog/page.tsx","utf8");
  const shelf=readFileSync("src/app/catalog/demo-catalog-shelf.tsx","utf8");
  const checkout=readFileSync("src/app/checkout/preview/checkout-preview.tsx","utf8");
- assert.match(layout,/DemoCartProvider enabled=\{admin&&process\.env\.APEX_CHECKOUT_MODE==="demo"\}/);
- assert.match(layout,/DemoCartToggle/);
- assert.match(catalog,/DemoCatalogShelf/);
+ assert.doesNotMatch(layout,/DemoCartProvider|APEX_CHECKOUT_MODE/);
+ assert.doesNotMatch(layout,/DemoCartToggle/);
+ assert.doesNotMatch(catalog,/DemoCatalogShelf|internalCheckoutPreview/);
  assert.match(shelf,/Add to demo cart/);
  assert.match(shelf,/DEMO_ITEMS\.map/);
  assert.match(provider,/role="dialog" aria-modal="true"/);
