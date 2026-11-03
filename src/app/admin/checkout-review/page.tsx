@@ -75,6 +75,7 @@ export default async function AdminCheckoutReview(){
   <div className="actions">
    <Link className="button secondary" href="/supplier/catalog/bulk">Edit product cards</Link>
    <Link className="button secondary" href="/admin/catalog-release">Review catalog release</Link>
+   <Link className="button secondary" href="/admin/btcpay">Check BTCPay connection</Link>
   </div>
  </main>;
 }
