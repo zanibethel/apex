@@ -55,7 +55,7 @@ begin
     raise exception 'Worker does not have its three restricted operations';
  end if;
  if has_function_privilege('apex_test_invoice_worker',
-   'apex_test_internal.reserve_btcpay_test_provider_post(uuid,text,text,bigint,text)','EXECUTE') or
+   'apex_test_internal.reserve_btcpay_test_provider_post(uuid,text,text,bigint)','EXECUTE') or
    has_function_privilege('apex_test_invoice_worker',
    'apex_test_internal.observe_btcpay_test_provider_post(uuid,text,text)','EXECUTE') or
    has_function_privilege('apex_test_invoice_worker',
