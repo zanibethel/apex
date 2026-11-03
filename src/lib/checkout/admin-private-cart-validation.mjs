@@ -64,3 +64,38 @@ export function parseAdminPrivateCartValidation(raw,storeId,productId,quantity){
   canOrder:false,canPay:false,
  });
 }
+
+/**
+ * A locked recheck only protects the instant of the RPC. Locks are released
+ * before this result reaches the browser. No future order may reuse it.
+ */
+export function parseAdminLockedCartPreflight(
+ raw,storeId,productId,quantity,displayedSubtotalCents
+){
+ if(!Number.isSafeInteger(displayedSubtotalCents)||
+   displayedSubtotalCents<0||displayedSubtotalCents>999999999||
+   !raw||typeof raw!=="object"||Array.isArray(raw)||
+   raw.schema_version!==2||raw.state!=="locked_private_preflight"||
+   raw.lock_mode!=="for_share_nowait"||
+   raw.locks_persist_after_response!==false||
+   raw.admission!=="blocked"||
+   raw.expected_subtotal_cents!==String(displayedSubtotalCents)||
+   typeof raw.subtotal_matches_display!=="boolean"||
+   raw.can_quote!==false||raw.can_reserve_stock!==false||
+   raw.can_create_order!==false||raw.can_create_invoice!==false||
+   raw.can_pay!==false)return null;
+ const base=parseAdminPrivateCartValidation({
+  ...raw,schema_version:1,state:"private_cart_observation",
+ },storeId,productId,quantity);
+ if(!base||raw.subtotal_matches_display!==
+   (base.observedSubtotalCents===displayedSubtotalCents))return null;
+ return Object.freeze({
+  ...base,
+  subtotalMatchesDisplay:raw.subtotal_matches_display,
+  expectedSubtotalCents:displayedSubtotalCents,
+  admission:"blocked",
+  locksPersistAfterResponse:false,
+  canOrder:false,
+  canPay:false,
+ });
+}
