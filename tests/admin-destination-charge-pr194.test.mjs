@@ -52,6 +52,8 @@ test("valid percentage promo applies before shipping threshold",()=>{
  assert.equal(r.merchandiseDiscountCents,2000);
  assert.equal(r.discountedMerchandiseCents,8000);
  assert.equal(r.shippingCents,795);
+ assert.equal(r.freeShippingMinimumCents,10000);
+ assert.equal(r.amountUntilFreeShippingCents,2000);
  assert.equal(r.totalCents,8795);
 });
 test("valid free-shipping code waives shipping but never merchandise",()=>{
@@ -62,6 +64,8 @@ test("valid free-shipping code waives shipping but never merchandise",()=>{
  assert.equal(r.merchandiseDiscountCents,0);
  assert.equal(r.shippingDiscountCents,795);
  assert.equal(r.shippingCents,0);
+ assert.equal(r.freeShippingMinimumCents,20000);
+ assert.equal(r.amountUntilFreeShippingCents,10000);
  assert.equal(r.totalCents,10000);
  assert.equal(r.freeShippingReason,"discount_code");
 });
