@@ -37,3 +37,17 @@ export function categoryPublicationSummary(rows){
   products:rows.reduce((sum,r)=>sum+r.productCount,0),
  });
 }
+
+/** Strict readback validation for private storefront choice. No role details. */
+export function parseAdminCategoryStores(input){
+ if(!Array.isArray(input)||input.length>100)return null;
+ const rows=[],seen=new Set();
+ for(const r of input){
+  if(!r||typeof r!=="object"||Array.isArray(r)||
+    !UUID.test(r.id)||typeof r.name!=="string"||
+    !r.name.trim()||r.name.length>200||seen.has(r.id))return null;
+  seen.add(r.id);
+  rows.push(Object.freeze({id:r.id,name:r.name}));
+ }
+ return Object.freeze(rows);
+}
