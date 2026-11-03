@@ -6,14 +6,28 @@ import {
  makeTaxCloudCart,verifyTaxCloudCart,taxCloudEndpoint,
 } from "./taxcloud-v3-contract.mjs";
 
-const fail=(status,detail)=>Object.freeze({
+type TaxCloudAddress={countryCode:"US";line1:string;city:string;state:string;zip:string};
+type TaxCloudConfig={
+ status:string;reason?:string;connectionId?:string;key?:string;
+ origin?:TaxCloudAddress;
+ productRules?:Record<string,{tic:number;reviewed:true;taxFreeBasisRef:string|null}>;
+};
+type ProviderRequest={
+ connectionId:string;key:string;operation:"ping"|"carts";body?:unknown;
+};
+type QuoteRequest={
+ storeId:string;productId:string;collectSalesTax:boolean;
+ quantity:number;unitPriceCents:number;discountCents:number;
+ shippingCents:number;preTaxTotalCents:number;destination:TaxCloudAddress;
+};
+const fail=(status:string,detail:string)=>Object.freeze({
  status,detail,taxEstimateCents:null,estimatedTotalCents:null,
  quoteFinalized:false,canCreateOrder:false,canCreateInvoice:false,canPay:false,
 });
-const getBinding=(storeId)=>resolveTaxCloudBinding(
- process.env.APEX_TAXCLOUD_BINDINGS_JSON,storeId,process.env);
+const getBinding=(storeId:string):TaxCloudConfig=>resolveTaxCloudBinding(
+ process.env.APEX_TAXCLOUD_BINDINGS_JSON,storeId,process.env) as TaxCloudConfig;
 
-async function callProvider({connectionId,key,operation,body}){
+async function callProvider({connectionId,key,operation,body}:ProviderRequest){
  const url=taxCloudEndpoint(connectionId,operation);
  if(!url)return null;
  try{
@@ -34,10 +48,10 @@ async function callProvider({connectionId,key,operation,body}){
  }catch{return null;}
 }
 
-export async function probeTaxCloudForAdmin(storeId){
+export async function probeTaxCloudForAdmin(storeId:string){
  const config=getBinding(storeId);
  const publicStatus=providerStatusPublic(config);
- if(config.status!=="ready")return {
+ if(config.status!=="ready"||!config.connectionId||!config.key)return {
   ...publicStatus,detail:config.reason??"Provider is not configured."};
  const pong=await callProvider({connectionId:config.connectionId,
   key:config.key,operation:"ping"});
@@ -55,12 +69,12 @@ export async function probeTaxCloudForAdmin(storeId){
 export async function requestPrivateTaxCloudEstimate({
  storeId,productId,collectSalesTax,quantity,unitPriceCents,
  discountCents,shippingCents,preTaxTotalCents,destination,
-}){
+}:QuoteRequest){
  // No checkout release, no invoice capability, and no provider calls by default.
  if(process.env.APEX_TAXCLOUD_PRIVATE_ESTIMATES_ENABLED!=="true")
   return fail("quote_disabled","Private provider estimates are not enabled.");
  const config=getBinding(storeId);
- if(config.status!=="ready")
+ if(config.status!=="ready"||!config.connectionId||!config.key||!config.origin)
   return fail(config.status,"TaxCloud store credentials and approved origin are required.");
  const rule=canQuoteProduct(config,productId,collectSalesTax);
  if(!rule.ok)return fail("classification_pending",rule.reason);
