@@ -156,11 +156,21 @@ const dbResult=await sql(
   invoice_id:result.invoiceId,
 });
 assert.equal(dbResult,"verified","Durable provider invoice journal verification failed");
+// On a second held CI-only store, intentionally terminate a DIFFERENT worker
+// process after the provider confirms its POST but before any DB observation.
+// Only independent read-only operator reconciliation may record the result.
+const {runEphemeralCrashRecovery}=await import("./btcpay-ephemeral-regtest-crash-recovery.mjs");
+const crashProof=await runEphemeralCrashRecovery({basic,network:"regtest",testOnly:true});
+assert.equal(crashProof.regtestProcessCrashAfterPostVerified,true);
+assert.equal(crashProof.postCrashProviderReadbackVerified,true);
+assert.equal(crashProof.postCrashDurableReconciliationVerified,true);
+assert.equal(crashProof.postCrashReplayPrevented,true);
 return Object.freeze({
  trustedWorkerVerified:true,
  result:"verified",network:"regtest",realGreenfieldPostCount:posts,
  realGreenfieldInvoiceReadback:true,realProviderInventoryCount:1,
  durablePrePostReservation:true,duplicateRequestRejected:true,
+ realPostCommitCrashRecoveryVerified:true,
  independentAdminCosignFixture:true,immutableHoldStillActive:true,
  publicCheckoutEnabled:false,splitActivated:false,productionReady:false,
 });
