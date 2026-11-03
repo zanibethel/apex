@@ -1,7 +1,9 @@
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
-import {ShippingSettingsForm,NO_SHIPPING} from "@/app/supplier/checkout-rules/shipping-form";
+import {ShippingSettingsForm} from "@/app/supplier/checkout-rules/shipping-form";
+const NO_SHIPPING={charge_shipping:false,flat_shipping_cents:0,
+ free_shipping_min_subtotal_cents:null};
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Private Shipping Rules | Apex Supplier",
