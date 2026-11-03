@@ -136,11 +136,13 @@ test("payment proof-of-concept is not imported into any live checkout route", ()
   const read = path => readFileSync(path, "utf8");
   assert.match(read("src/lib/payments/btcpay-sandbox.mjs"), /testMode !== true/);
   assert.match(read("src/lib/payments/btcpay-sandbox.mjs"), /timingSafeEqual/);
-  for(const path of ["src/app/page.tsx","src/app/catalog/page.tsx"]){
-    const navigation=read(path).replaceAll('href="/checkout/preview"',"");
-    assert.doesNotMatch(navigation,/btcpay-sandbox|href="\/checkout(?:\/|")/);
-    assert.match(read(path),/href="\/checkout\/preview"/);
-  }
+  const home=read("src/app/page.tsx");
+  const catalog=read("src/app/catalog/page.tsx");
+  assert.doesNotMatch(home,/btcpay-sandbox|href="\/checkout(?:\/|")/);
+  assert.doesNotMatch(catalog,/btcpay-sandbox/);
+  assert.match(catalog,/internalCheckoutPreview&&<section/);
+  assert.match(catalog,/isVerifiedPlatformAdmin\(identity\.user\)/);
+  assert.match(read("src/app/checkout/preview/page.tsx"),/isVerifiedPlatformAdmin\(data\.user\)/);
   assert.doesNotMatch(read("src/app/checkout/preview/checkout-preview.tsx"),/btcpay-sandbox|\/api\/v1\/stores\/|\.insert\(/);
   assert.doesNotMatch(read("src/app/supplier/operations/actions.ts"), /btcpay-sandbox/);
 });
