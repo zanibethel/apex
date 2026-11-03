@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import {AdminCartValidationForm} from "./admin-cart-validation-form";
 import {useMemo,useState,type FormEvent} from "react";
 
 export type ReviewProduct={
@@ -186,6 +187,8 @@ export function CheckoutCatalogReview({products}:{products:ReviewProduct[]}){
      <div><dt>Taxes</dt><dd>Pending configuration</dd></div>
      <div className="apex-checkout-price-total"><dt>Displayed subtotal</dt><dd>{money(subtotal)}</dd></div>
     </dl>
+    {product&&<AdminCartValidationForm key={product.id+":"+quantity}
+     productId={product.id} quantity={quantity}/>}
     <p className="apex-checkout-summary-foot">This review uses saved Apex pricing,
      but stock is zero. Quantity changes affect only this screen and cannot
      reserve inventory or submit an order.</p>
