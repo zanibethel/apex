@@ -38,21 +38,25 @@ export function assessReviewedTaxonomy(rows,proposal,categories,storeId,expected
        "Review composition","Review evidence","Review strength"].includes(item.status))
    return failure("The reviewed taxonomy document is inconsistent.");
   seen.add(item.id);
+  // Count the immutable proposal independently of the mutable product row.
+  // Changed titles/SKUs must remain visible as unmatched rather than
+  // disappearing behind an unexpected-count error.
+  if(item.category===null){
+   if(!item.status.startsWith("Review"))
+    return failure("Uncategorized review requirements are not verified.");
+   held++;
+  }else{
+   if(typeof item.category!=="string"||!item.category.trim()||
+      item.status.startsWith("Review"))
+    return failure("A review-held item was unexpectedly categorized.");
+   proposals++;
+  }
   const row=byId.get(item.id);
   if(!row||row.sku!==item.sku||row.name!==item.name){
    unmatched.push(item.name);
    continue;
   }
-  if(item.category===null){
-   if(!item.status.startsWith("Review"))
-    return failure("Uncategorized review requirements are not verified.");
-   held++;
-   continue;
-  }
-  if(typeof item.category!=="string"||!item.category.trim()||
-     item.status.startsWith("Review"))
-   return failure("A review-held item was unexpectedly categorized.");
-  proposals++;
+  if(item.category===null)continue;
   const targetId=byName.get(item.category);
   if(!targetId){missing.add(item.category);continue;}
   if(row.categoryId===targetId){
