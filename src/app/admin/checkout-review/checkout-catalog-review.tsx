@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import {AdminCartValidationForm} from "./admin-cart-validation-form";
+import {AdminDestinationChargeForm} from "./admin-destination-charge-form";
 import {quoteOptionalShipping} from "@/lib/commerce/checkout-charge-rules.mjs";
 import type {ShippingRules} from "@/app/supplier/checkout-rules/shipping-form";
 import {useMemo,useState,type FormEvent} from "react";
@@ -195,6 +196,9 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
      <div className="apex-checkout-price-total"><dt>Before-tax preview</dt><dd>{shipping?
        money(subtotal+shipping.shippingCents):"Unavailable"}</dd></div>
     </dl>
+    {product&&<AdminDestinationChargeForm key={"charges:"+product.id+":"+quantity}
+     productId={product.id} quantity={quantity}
+     expectedSubtotalCents={subtotal}/>}
     {product&&<AdminCartValidationForm key={product.id+":"+quantity}
      productId={product.id} quantity={quantity}
      expectedSubtotalCents={subtotal}/>}
