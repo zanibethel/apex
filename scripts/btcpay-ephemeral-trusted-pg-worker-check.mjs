@@ -8,6 +8,7 @@ import {createTrustedRegtestPgWorker} from "./btcpay-ephemeral-trusted-pg-worker
 const workerEnv={...process.env,PGUSER:"apex_test_invoice_worker",
  PGPASSWORD:process.env.APEX_BTCPAY_TEST_WORKER_PASSWORD};
 const key="disposable_fake_key_do_not_use";
+const otherKey="other_supplier_disposable_key_do_not_use";
 const okStore="trusted-synthetic-store-ok";
 const unknownStore="trusted-synthetic-store-timeout";
 const okScope="39000000-0000-0000-0000-000000000001";
@@ -43,6 +44,14 @@ const worker=createTrustedRegtestPgWorker({env:workerEnv,
  },
 });
 
+// A key issued to supplier B must be rejected before invoice reservation,
+// provider POST, or permit consumption for supplier A.
+await assert.rejects(worker.createInvoice({
+  scopeId:okScope,storeId:okStore,orderRef:"cross-supplier-blocked",
+  amountSats:10000n,apiKey:otherKey,
+}));
+assert.deepEqual(calls,[],"Cross-supplier token must never reach Greenfield");
+
 const good=await worker.createInvoice({
  scopeId:okScope,storeId:okStore,
  orderRef:"worker-ok-order-1",amountSats:10000n,apiKey:key,
@@ -68,9 +77,15 @@ const timeoutWorker=createTrustedRegtestPgWorker({env:workerEnv,
    throw Error("simulated unavailable upstream / never log real secret");
  },
 });
+await assert.rejects(timeoutWorker.createInvoice({
+ scopeId:unknownScope,storeId:unknownStore,
+ orderRef:"cross-supplier-inverse-blocked",
+ amountSats:10000n,apiKey:key,
+}));
+assert.equal(timeoutCalls,0,"Supplier A key must not reach B's Greenfield store");
 const uncertain=await timeoutWorker.createInvoice({
  scopeId:unknownScope,storeId:unknownStore,
- orderRef:"worker-timeout-order-1",amountSats:10000n,apiKey:key,
+ orderRef:"worker-timeout-order-1",amountSats:10000n,apiKey:otherKey,
 });
 assert.equal(uncertain.status,"operator_reconciliation_required");
 assert.equal(uncertain.invoiceId,null);
@@ -80,7 +95,7 @@ denied=false;
 try{
  await timeoutWorker.createInvoice({
   scopeId:unknownScope,storeId:unknownStore,
-  orderRef:"worker-timeout-order-1",amountSats:10000n,apiKey:key,
+  orderRef:"worker-timeout-order-1",amountSats:10000n,apiKey:otherKey,
  });
 }catch{denied=true;}
 assert.equal(denied,true,"Timeout must permanently consume authorization");
