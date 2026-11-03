@@ -188,7 +188,8 @@ export function CheckoutCatalogReview({products}:{products:ReviewProduct[]}){
      <div className="apex-checkout-price-total"><dt>Displayed subtotal</dt><dd>{money(subtotal)}</dd></div>
     </dl>
     {product&&<AdminCartValidationForm key={product.id+":"+quantity}
-     productId={product.id} quantity={quantity}/>}
+     productId={product.id} quantity={quantity}
+     expectedSubtotalCents={subtotal}/>}
     <p className="apex-checkout-summary-foot">This review uses saved Apex pricing,
      but stock is zero. Quantity changes affect only this screen and cannot
      reserve inventory or submit an order.</p>
