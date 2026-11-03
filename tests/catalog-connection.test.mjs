@@ -22,7 +22,7 @@ test("health endpoint reports no writes and hides raw provider results", () => {
 test("preview stays nontransactional and environment sample has no keys", () => {
   const catalog = read("src/app/catalog/page.tsx");
   const env = read(".env.example");
-  assert.match(catalog, /No checkout, ordering or live inventory/);
+  assert.match(catalog, /Checkout is currently unavailable/);
   assert.match(env, /NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=/);
   assert.doesNotMatch(env, /sb_publishable_[A-Za-z0-9]+/);
   assert.doesNotMatch(env, /SERVICE_ROLE|SUPABASE_SECRET/);

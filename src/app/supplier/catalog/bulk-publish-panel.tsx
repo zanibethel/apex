@@ -18,10 +18,10 @@ export function BulkPublishPanel({storeId,editable,products,pageScoped=false}:{
  const chosen=selected.filter(id=>allEligible.includes(id));
  const limit=50;
  const statuses=new Map(result.results.map(r=>[r.id,r]));
- return <section className="apex-bulk-publish" aria-label="Bulk publication requests">
+ return <section className="apex-bulk-publish" aria-label="Bulk publishing controls">
   <div className="apex-bulk-publish-header">
    <h2>Publish offers</h2>
-   <p className="notice">Choose individual saved offers or submit all eligible ones{pageScoped?" on this page":""}. Each product is checked independently. An admin hold takes priority. Requests are private until the separate public release gate is enabled.</p>
+   <p className="notice">Choose individual saved offers or submit all eligible ones{pageScoped?" on this page":""}. Each product is checked independently. An admin hold takes priority. A publish setting takes effect in your workspace immediately. Customer visibility still requires the release checks to pass.</p>
   </div>
   <div className="apex-bulk-publish-list">
    {products.map(p=>{
@@ -32,7 +32,7 @@ export function BulkPublishPanel({storeId,editable,products,pageScoped=false}:{
       onChange={e=>setSelected(prev=>e.target.checked?[...prev,p.id]:prev.filter(id=>id!==p.id))}
       disabled={!editable||!eligible||pending}/>
      <span><strong>{p.name}</strong>
-      <small>{p.wantsListing?"Request already saved":!p.canRequest?"Needs details or admin release":"Ready to request"}</small>
+      <small>{p.wantsListing?"Publish enabled":!p.canRequest?"Needs details or admin release":"Ready to publish"}</small>
       {outcome&&<small role="status" className={outcome.ok?"apex-bulk-saved":"apex-bulk-error"}>{outcome.message}</small>}
      </span>
     </label>;
@@ -44,7 +44,7 @@ export function BulkPublishPanel({storeId,editable,products,pageScoped=false}:{
     <input type="hidden" name="ids" value={chosen.slice(0,limit).join(",")}/>
     <button type="submit" className="button secondary"
      disabled={!editable||pending||chosen.length<1||chosen.length>limit}>
-      {pending?"Saving requests…":"Publish selected ("+chosen.length+")"}
+      {pending?"Saving…":"Publish selected ("+chosen.length+")"}
     </button>
    </form>
    <form action={action}>
@@ -52,7 +52,7 @@ export function BulkPublishPanel({storeId,editable,products,pageScoped=false}:{
     <input type="hidden" name="ids" value={allEligible.slice(0,limit).join(",")}/>
     <button type="submit" className="button primary"
      disabled={!editable||pending||allEligible.length<1||allEligible.length>limit}>
-      {pending?"Saving requests…":pageScoped?"Publish all on this page ("+allEligible.length+")":"Publish all ("+allEligible.length+")"}
+      {pending?"Saving…":pageScoped?"Publish all on this page ("+allEligible.length+")":"Publish all ("+allEligible.length+")"}
     </button>
    </form>
   </div>

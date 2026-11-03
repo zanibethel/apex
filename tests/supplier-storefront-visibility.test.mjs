@@ -19,7 +19,7 @@ test("requesting publication never means a product is live",()=>{
   checks:{supplier_requested:true,public_release_enabled:false},
  });
  assert.equal(requested.kind,"requested");
- assert.match(requested.label,/not live/i);
+ assert.match(requested.label,/not visible/i);
  assert.equal(requested.publiclyVisible,false);
  assert.match(requested.description,/switched off/);
  assert.equal(supplierStorefrontVisibility({...control,requested:false},positive()).kind,"private");
@@ -83,7 +83,7 @@ test("main product cards fetch protected release status, and cannot mark Live lo
  assert.match(editor,/Storefront: \{visibilityLabel\}/);
  assert.match(editor,/visibilityKind/);
  assert.match(editor,/locallyChanged/);
- assert.match(editor,/Requested · not live/);
+ assert.match(editor,/Not visible/);
  assert.match(editor,/role="switch"/);
  assert.match(editor,/onChange=\{e=>r\.id&&publish\(\[r\.id\],e\.target\.checked\?"publish":"unpublish"\)\}/);
  assert.match(helper,/releaseDecision\.status_code==="public_visible"/);

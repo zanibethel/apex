@@ -100,7 +100,7 @@ export default async function BulkOfferPreview({searchParams}:{
   <p className="eyebrow">APEX / PRIVATE OFFER REVIEW</p>
   <h1>{showAll?"Preview all saved offers":"Preview selected offers"}</h1>
   <p className="lead">Review the same offer-tile layout customers will eventually see. These previews and images are accessible only to your supplier team.</p>
-  <p className="notice">Offer previews are not public listings. Publishing below records private supplier intent, subject to admin holds and authorization requirements.</p>
+  <p className="notice">Offer previews are not public listings. The Publish controls update supplier settings. Customer visibility is confirmed by the protected storefront check and any admin holds.</p>
   {showAll&&paging&&<nav className="apex-bulk-preview-pagination" aria-label="Saved offer preview pages">
    <span role="status">Showing {paging.first}–{paging.last} of {paging.total} saved offers · Page {paging.page} of {paging.pages}</span>
    <div className="apex-bulk-preview-pagination-actions">

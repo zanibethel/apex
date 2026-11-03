@@ -27,7 +27,7 @@ export function OfferTile({name,sku,description,category,priceCents,
   <div className="apex-offer-image">
    {imageUrl?<Image src={imageUrl} alt={name} width={640} height={480}
     unoptimized style={{width:"100%",height:"100%",objectFit:"contain"}}/>
-    :<div className="apex-offer-placeholder" role="img" aria-label="Product image not uploaded">Image pending</div>}
+    :<div className="apex-offer-placeholder" role="img" aria-label="Apex Anabolics product image"><Image src="/apex-logo.png" alt="" width={240} height={120} style={{maxWidth:"64%",height:"auto",objectFit:"contain",opacity:.7}}/></div>}
   </div>
   <div className="apex-offer-content">
    <p className="apex-offer-category">{category}</p>

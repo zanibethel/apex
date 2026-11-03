@@ -20,7 +20,7 @@ test("supplier process leads from edit to storefront-like tile and publish",()=>
  assert.match(page,/publishLabel="Publish"/);
  assert.match(page,/privateReleaseDisplay/);
  assert.match(form,/publishLabel\?:string/);
- assert.match(form,/wantsListing\?"Publication requested":publishLabel/);
+ assert.match(form,/wantsListing\?"Publish enabled":publishLabel/);
 });
 test("private preview is tenant-scoped and does not reveal unauthorized products",()=>{
  assert.match(page,/createSupplierServerClient\(\)/);
@@ -55,7 +55,8 @@ test("Publish keeps guarded server intent, never directly switches public flags"
  assert.match(action,/set_supplier_listing_intent/);
  assert.match(action,/revalidatePath/);
  assert.match(action,/supplier\/catalog\/preview/);
- assert.match(page,/Publishing currently saves a supplier request/);
+ assert.match(page,/Publish updates the supplier setting/);
+ assert.match(page,/storefront status above confirms visibility/);
  assert.match(page,/!decisionResult\.error&&listingStatus\.canRequest/);
  assert.doesNotMatch(page+action,/publish_storefront|is_published:true|is_public:true|\.from\("orders"\)/);
 });

@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 const values = [
-  { number: "01", title: "Explore categories", detail: "A focused, mobile-friendly catalog with clear category navigation." },
-  { number: "02", title: "Product clarity", detail: "Consistent product details and availability when approved catalog content is ready." },
-  { number: "03", title: "Private workspaces", detail: "Secure supplier and administrator tools for managing the shared storefront." },
+  { number: "01", title: "Explore the collection", detail: "Browse the catalog by category and discover the latest product details." },
+  { number: "02", title: "Clear product information", detail: "Compare product descriptions, pricing, and availability in one place." },
+  { number: "03", title: "One Apex experience", detail: "A streamlined storefront with dedicated account and supplier tools." },
 ];
 
 export default function Home() {
@@ -11,15 +11,14 @@ export default function Home() {
     <section className="apex-brand-hero">
       <div className="container apex-brand-hero-inner">
         <div className="apex-hero-copy">
-          <p className="eyebrow">APEX ANABOLICS / CONCEPT PREVIEW</p>
+          <p className="eyebrow">APEX ANABOLICS / OFFICIAL STORE</p>
           <h1>ELEVATE<br />RESEARCH.<br /><span>RAISE THE STANDARD.</span></h1>
-          <p className="lead">Precision-focused discovery. A premium experience built for clarity, performance, and control.</p>
+          <p className="lead">Precision-focused discovery. Explore the Apex catalog, find product details, and check availability in a streamlined shopping experience.</p>
           <div className="actions">
-            <Link className="button primary" href="/catalog">Explore catalog <span aria-hidden="true">→</span></Link>
-            <Link className="button secondary" href="/#approach">Explore Apex</Link>
-            <Link className="button secondary" href="/checkout/preview">Try demo checkout</Link>
+            <Link className="button primary" href="/catalog">Browse the catalog <span aria-hidden="true">→</span></Link>
+            <Link className="button secondary" href="/#approach">Why Apex</Link>
           </div>
-          <p className="notice">Private concept preview. No live products, ordering or payments.</p>
+          <p className="notice">Checkout is currently unavailable. No orders or payments can be placed.</p>
         </div>
         <div className="apex-hero-art" aria-hidden="true"><span className="apex-hero-triangle">▲</span><span className="apex-hero-ring" /></div>
       </div>
@@ -32,7 +31,7 @@ export default function Home() {
       </div>
     </section>
     <section className="container bottom-message">
-      <div><p className="eyebrow">FOUNDATION / PRIVATE PREVIEW</p><h2>One storefront. Dedicated workspaces.</h2><p>Customer discovery and role-based supplier and admin tools are being tested together before launch.</p></div>
+      <div><p className="eyebrow">THE APEX EXPERIENCE</p><h2>One storefront. Dedicated workspaces.</h2><p>Explore product information or sign in to manage your account and supplier workspace.</p></div>
       <Link href="/account/sign-in">Account sign in →</Link>
     </section>
   </main>;

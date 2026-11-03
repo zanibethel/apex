@@ -8,8 +8,8 @@ import "./demo-cart.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Apex | Concept Preview",
-  description: "Non-transactional preview of a founding-supplier storefront.",
+  title: "Apex Anabolics | Product Catalog",
+  description: "Explore the Apex Anabolics catalog and product availability.",
   robots: { index: false, follow: false },
 };
 
@@ -23,22 +23,22 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en">
       <body>
-       <DemoCartProvider enabled={process.env.APEX_CHECKOUT_MODE==="demo"}>
+       <DemoCartProvider enabled={admin&&process.env.APEX_CHECKOUT_MODE==="demo"}>
         <header className="site-header">
           <div className="container header-inner">
             <Link href="/" className="brand apex-logo-link" aria-label="Apex Anabolics home"><img src="/apex-logo.png" alt="Apex Anabolics" width="210" height="50" /></Link>
             <nav aria-label="Main navigation" className="apex-navigation">
-              {process.env.APEX_CHECKOUT_MODE==="demo"&&<DemoCartToggle/>}
+              {admin&&process.env.APEX_CHECKOUT_MODE==="demo"&&<DemoCartToggle/>}
               <AccountMenu signedIn={Boolean(user)} admin={admin} supplier={supplier} />
             </nav>
-            <span className="demo-chip">DEMO ONLY</span>
+            <span className="demo-chip">CHECKOUT UNAVAILABLE</span>
           </div>
         </header>
         {children}
         <footer className="site-footer">
           <div className="container footer-inner">
-            <span>APEX / WORKING CONCEPT</span>
-            <span>No products, orders or payments are available.</span>
+            <span>APEX ANABOLICS</span>
+            <span>Catalog browsing only · Ordering and payments are unavailable.</span>
           </div>
         </footer>
        </DemoCartProvider>
