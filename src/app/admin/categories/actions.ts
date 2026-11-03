@@ -33,3 +33,33 @@ export async function updateAdminCategoryPublication(
  revalidatePath("/catalog");
  return {ok:true,message:changed.data};
 }
+
+export async function createAdminCategory(
+ _previous:CategoryActionResult,form:FormData
+):Promise<CategoryActionResult>{
+ const storeId=form.get("storeId"),name=form.get("name");
+ if(!isValidId(storeId)||typeof name!=="string"||
+  name.length>90||!/^[A-Za-z0-9][A-Za-z0-9 &+/_-]*$/.test(name.trim())||
+  name.trim().length<2||name.trim().length>60)
+  return {ok:false,message:"Enter a valid category name (2–60 characters) and storefront."};
+ const client=await createSupplierServerClient();
+ if(!client)return {ok:false,message:"Admin sign-in required."};
+ const {data,error}=await client.auth.getUser();
+ if(error||!isVerifiedPlatformAdmin(data.user))
+  return {ok:false,message:"Verified platform admin access required."};
+ const result=await client.rpc("create_admin_catalog_category",{
+  p_store_id:storeId,p_name:name,
+ });
+ if(result.error){
+  if(result.error.code==="23505")
+   return {ok:false,message:"A category with that name already exists for this storefront."};
+  return {ok:false,message:"Category could not be created. No changes are assumed."};
+ }
+ if(result.data?.status!=="created"||result.data?.is_published!==false||
+    !isValidId(result.data.category_id))
+  return {ok:false,message:"Creation could not be confirmed. Refresh categories."};
+ revalidatePath("/admin/categories");
+ revalidatePath("/admin/catalog-release");
+ revalidatePath("/supplier/catalog/bulk");
+ return {ok:true,message:"Category created as unpublished. It can now be assigned to products."};
+}
