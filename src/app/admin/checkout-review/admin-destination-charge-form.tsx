@@ -16,10 +16,8 @@ export function AdminDestinationChargeForm({
  return <section className="apex-private-destination-quote"
   aria-label="Saved merchandise, discount and shipping estimate"
   style={{borderTop:"1px solid #45454d",paddingTop:16,marginTop:16}}>
-  <h3>Discount &amp; shipping estimate</h3>
-  <p className="notice">This review uses saved catalog pricing and shipping
-   rules. Enter an optional promotion code to check the merchandise discount
-   or free-shipping benefit.</p>
+  <h3>Discount code</h3>
+  <p className="notice">Enter an eligible code to update the merchandise discount and shipping total.</p>
   <form action={action} className="supplier-form" style={{gap:8,marginTop:10}}>
    <input type="hidden" name="productId" value={productId}/>
    <input type="hidden" name="quantity" value={quantity}/>
@@ -69,8 +67,7 @@ export function AdminDestinationChargeForm({
      "Shipping is free by default under the saved store policy.":
      "The saved flat shipping fee applies."}
    </p>
-   <p className="notice">This is a pricing review, not an order.
-    Stock reservation, checkout and Bitcoin invoicing remain disabled.</p>
+   <p className="notice">Checkout is currently unavailable. No order or payment is created.</p>
   </div>}
  </section>;
 }

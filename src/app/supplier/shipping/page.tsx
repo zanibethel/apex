@@ -29,8 +29,7 @@ export default async function SupplierShippingRules(){
   <Link className="back" href="/supplier/catalog">← Supplier products</Link>
   <p className="eyebrow">APEX / SUPPLIER / SHIPPING</p>
   <h1>Shipping rules</h1>
-  <p className="notice">Private settings for your assigned storefront.
-   Checkout, order placement and Bitcoin invoicing remain disabled.</p>
+  <p className="notice">Set delivery fees and free-shipping rules for your storefront.</p>
   {policy?<ShippingSettingsForm storeId={store.id} initial={policy}
     enabled={allowed}/>:
    <p role="alert">Shipping configuration could not be loaded safely.</p>}

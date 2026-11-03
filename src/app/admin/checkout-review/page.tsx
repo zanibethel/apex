@@ -65,13 +65,12 @@ export default async function AdminCheckoutReview(){
  return <main className="container apex-checkout-preview apex-checkout-catalog-review">
   <div className="apex-checkout-topline">
    <Link href="/admin/storefront-preview" className="apex-checkout-back">← Storefront review</Link>
-   <span className="apex-checkout-safe">PRIVATE ADMIN REVIEW · PAYMENT DISABLED</span>
+   <span className="apex-checkout-safe">ADMIN ACCESS · CHECKOUT UNAVAILABLE</span>
   </div>
   <div className="apex-checkout-head">
    <p className="eyebrow">APEX ANABOLICS / CHECKOUT</p>
    <h1>THE FINAL <span>STEP.</span></h1>
-   <p>Review the buyer experience using the real saved Apex catalog and prices.
-    Payment handoff and ordering stay disabled until release and payment authorization.</p>
+   <p>Order pricing, shipping, and payment information. Checkout is currently unavailable.</p>
   </div>
   {unavailable?<p className="notice" role="alert">Catalog, category or stock readback failed. The checkout review is not available.</p>:
    !rows.length?<p className="notice">No private products are ready for checkout layout review.</p>:
