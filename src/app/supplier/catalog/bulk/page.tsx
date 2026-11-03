@@ -40,7 +40,7 @@ export default async function BulkProductWorkspace(){
  const store=stores[0];
  const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:sources,error:sourceError,count:sourceCount},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError},{data:reviewRows,error:reviewError,count:reviewCount},{data:imageFeedback,error:feedbackError,count:feedbackCount}]=await Promise.all([
   client.from("products")
-   .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,collect_sales_tax,image_path")
+   .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
   client.from("categories").select("id,name").eq("store_id",store.id).order("name").limit(SUPPLIER_BULK_PRODUCT_CAPACITY),
   client.from("supplier_candidate_drafts").select("candidate_id,product_id").eq("store_id",store.id).limit(500),
@@ -163,7 +163,6 @@ export default async function BulkProductWorkspace(){
   comparePrice:p.compare_at_price_cents===null?"":(Number(p.compare_at_price_cents)/100).toFixed(2),
   sourceCost:p.internal_source_cost_cents==null?"":(Number(p.internal_source_cost_cents)/100).toFixed(2),
   linkedSource:linkedProducts.has(p.id),categoryId:p.category_id??"",isActive:p.is_active,
-  collectSalesTax:p.collect_sales_tax===true,
  }));
  return <main className="container supplier-shell apex-bulk-page">
   <Link className="back" href="/supplier/catalog">← Product manager</Link>
