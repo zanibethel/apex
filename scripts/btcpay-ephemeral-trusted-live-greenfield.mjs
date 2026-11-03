@@ -8,6 +8,7 @@
  * from logs. Existing on-chain Prism integration runs separately.
  */
 import assert from "node:assert/strict";
+import {createHash} from "node:crypto";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
 import {createTrustedRegtestPgWorker} from
@@ -108,6 +109,7 @@ if(typeof key?.apiKey!=="string"||key.apiKey.length<12||
 // This script is the only owner of BOTH the test-store key and SQL operator.
 await sql("tests/payout-rls/btcpay-real-provider-worker-setup.sql",{
  store_id:storeId,
+ credential_sha256:createHash("sha256").update(key.apiKey,"utf8").digest("hex"),
 });
 
 let posts=0;
@@ -162,7 +164,7 @@ assert.equal(dbResult,"verified","Durable provider invoice journal verification 
 // process after the provider confirms its POST but before any DB observation.
 // Only independent read-only operator reconciliation may record the result.
 const {runEphemeralCrashRecovery}=await import("./btcpay-ephemeral-regtest-crash-recovery.mjs");
-const crashProof=await runEphemeralCrashRecovery({basic,network:"regtest",testOnly:true});
+const crashProof=await runEphemeralCrashRecovery({basic,network:"regtest",testOnly:true,otherSupplierKey:key.apiKey});
 assert.equal(crashProof.regtestProcessCrashAfterPostVerified,true);
 assert.equal(crashProof.postCrashProviderReadbackVerified,true);
 assert.equal(crashProof.postCrashDurableReconciliationVerified,true);
