@@ -88,3 +88,9 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_dual_control_release_REVIEW_ONLY.sql
       - name: Verify independent admin cosign, audit pinning, stale evidence denial and held checkout
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-dual-control-release.sql
+      - name: Install disposable one-shot journal registration permit
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_btcpay_test_atomic_resume_fence_REVIEW_ONLY.sql
+      - name: Verify single-use, automatic revoke and role restrictions
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/btcpay-atomic-resume-fence.sql
+      - name: Prove two-session administrator and invoice-writer races
+        run: bash tests/payout-rls/btcpay-atomic-resume-concurrency.sh
