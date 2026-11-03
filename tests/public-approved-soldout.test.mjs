@@ -57,7 +57,8 @@ test("only approved projection is rendered; demo is visually and commercially se
  assert.match(page,/<ApprovedSoldOutShelf result=\{approved\}/);
  assert.match(page,/readPublishedCatalog\(\)/);
  assert.doesNotMatch(page,/connection\.products\.map|result\.products\.map/);
- assert.match(page,/internalCheckoutPreview&&<DemoCatalogShelf\/>/);
+ assert.match(page,/internalCheckoutPreview&&<section/);
+ assert.match(page,/<DemoCatalogShelf\/>/);
  assert.match(page,/Checkout is currently unavailable/);
  assert.match(shelf,/result\.state==="connected"&&result\.products\.length>0/);
  assert.match(shelf,/availability|SOLD OUT/);
