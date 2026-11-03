@@ -5,6 +5,7 @@ import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {
  summarizeAdminPaymentMonitor,recordedTransferLabel,recordedRuleLabel,
 } from "@/lib/payments/admin-payment-monitor.mjs";
+import {parseAdminCheckoutJournalSummary} from "@/lib/checkout/admin-private-order-journal.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={
@@ -54,6 +55,8 @@ export default async function AdminPaymentMonitor(){
  const transfers=transfersResult.error?null:transfersResult.data;
  const snapshots=snapshotsResult.error?null:snapshotsResult.data;
  const summary=summarizeAdminPaymentMonitor({rules,transfers,snapshots});
+ const journalRead=await client.rpc("get_admin_checkout_journal_overview");
+ const journal=journalRead.error?null:parseAdminCheckoutJournalSummary(journalRead.data);
  const storeNames=new Map((storesResult.error?[]:storesResult.data??[])
    .map(store=>[store.id,store.display_name]));
  const recordedAttention=summary.transfers.available?
@@ -80,6 +83,28 @@ export default async function AdminPaymentMonitor(){
    </ul>
    <p className="notice">Passing disposable regtest tests does not establish
     live merchant settlement, supplier payout, or release approval.</p>
+  </section>
+  <section className="supplier-panel"
+   aria-label="Private order and provider intent journal"
+   style={{maxWidth:"none",marginBottom:24}}>
+   <h2>Order and invoice safety journal</h2>
+   {journal===null?
+    <p className="notice" role="status">Private journal readback is unavailable
+     or has not been installed. Do not infer transaction readiness.</p>:
+    <ul className="supplier-stores">
+     <li><span>Held order-intent records</span>
+      <strong>{journal.heldOrderRecords}</strong></li>
+     <li><span>Held provider-intent records</span>
+      <strong>{journal.heldProviderIntents}</strong></li>
+     <li><span>Invoice submission</span><strong>Disabled</strong></li>
+     <li><span>Customer checkout</span><strong>Disabled</strong></li>
+    </ul>}
+   <p className="notice">These are private, immutable infrastructure records,
+    not successful orders or Bitcoin invoices. No client can create or submit
+    an invoice through this monitor. Product and payment release checks are
+    independent of the journal.</p>
+   <Link className="button secondary" href="/admin/btcpay">
+    Inspect BTCPay store connection</Link>
   </section>
   <section aria-label="Recorded reporting summary"
    style={{display:"grid",
