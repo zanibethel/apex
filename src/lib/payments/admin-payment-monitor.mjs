@@ -10,6 +10,7 @@ function inspect(rows,validStates){
  if(!Array.isArray(rows))return Object.freeze({
   available:false,shown:null,states:Object.freeze({}),unrecognized:0,
  });
+ /** @type {Record<string, number>} */
  const states={};
  let unrecognized=0;
  for(const row of rows){
