@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {BulkCardMedia} from "./bulk-card-media";
+import {saveSelectedTaxCollection} from "../checkout-rules/actions";
 import {SupplierReviewSubmission} from "./review-submission";
 import {BulkInlineOffer} from "./bulk-inline-offer";
 import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
@@ -25,6 +26,7 @@ import {mergeBulkSaveRetryKeys} from "@/lib/catalog/bulk-inline-save-retry.mjs";
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
  price:string;comparePrice:string;sourceCost:string;categoryId:string;isActive:boolean;
+ collectSalesTax:boolean;
  linkedSource?:boolean;needsSave?:boolean;
 };
 type Category={id:string;name:string};
@@ -39,7 +41,8 @@ type PublishOutcome={id:string;ok:boolean;message:string};
 
 function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
-  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,needsSave:true};
+  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,
+  collectSalesTax:true,needsSave:true};
 }
 export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false,taxonomyProposal,taxonomyStoreId}:{
  storeId:string;editable:boolean;initialRows:BulkEditRow[];categories:Category[];
@@ -70,7 +73,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [correctionResults,setCorrectionResults]=useState<Record<string,{ok:boolean;message:string}>>({});
  const [correctionConfirmed,setCorrectionConfirmed]=useState<string[]>([]);
  const [correcting,startCorrectionTransition]=useTransition();
- const busy=pending||publishPending||correcting;
+ const [taxPending,startTaxTransition]=useTransition();
+ const [taxMessage,setTaxMessage]=useState("");
+ const busy=pending||publishPending||correcting||taxPending;
  const selectedSet=useMemo(()=>new Set(selected),[selected]);
  const effectiveListing=listing.map(item=>({...item,requested:listingOverrides[item.productId]??item.requested}));
  const newlyRequested=new Set(Object.entries(listingOverrides).filter(([,value])=>value).map(([id])=>id));
@@ -94,6 +99,26 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   ?"/supplier/catalog/bulk/preview?ids="+encodeURIComponent(selectedIds.join(","))
   :null;
 
+ function updateTax(ids:string[],collect:boolean){
+  if(!editable||busy||ids.length<1||ids.length>50||
+   new Set(ids).size!==ids.length)return;
+  const form=new FormData();
+  form.set("storeId",storeId);
+  form.set("productIds",ids.join(","));
+  form.set("collectSalesTax",String(collect));
+  startTaxTransition(async()=>{
+   try{
+    const result=await saveSelectedTaxCollection({ok:false,message:""},form);
+    setTaxMessage(result.message);
+    if(result.ok){
+     const changed=new Set(ids);
+     setRows(current=>current.map(row=>row.id&&changed.has(row.id)
+      ?{...row,collectSalesTax:collect}:row));
+     router.refresh();
+    }
+   }catch{setTaxMessage("Tax changes were not confirmed. Refresh and retry.");}
+  });
+ }
  function saveRows(chosenRows:BulkEditRow[],mode:"selected"|"single"){
   if(!editable||busy||!chosenRows.length)return;
   // The single-card button uses the same authenticated 20-row server action
@@ -429,6 +454,31 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    </form>
    {setupMessage&&<p role="status" className="apex-bulk-result">{setupMessage}</p>}
   </section>
+  <section className="supplier-panel" aria-label="Selected product tax settings"
+   style={{maxWidth:"none",marginBottom:18,padding:16}}>
+   <h3>Collect sales tax</h3>
+   <p className="notice">Every new product defaults to Collect sales tax.
+    Select saved product cards above, then update all selected products at once.
+    Unchecking a product does not establish a legal tax exemption; final tax
+    depends on verified product and destination rules.</p>
+   <div className="apex-bulk-toolbar">
+    <button type="button" className="button secondary"
+     disabled={!editable||busy||selectedIds.length<1||
+      selectedIds.length>50||selectedIds.length!==selectedRows.length}
+     onClick={()=>updateTax(selectedIds,true)}>
+     Collect sales tax on selected ({selectedIds.length})
+    </button>
+    <button type="button" className="button secondary"
+     disabled={!editable||busy||selectedIds.length<1||
+      selectedIds.length>50||selectedIds.length!==selectedRows.length}
+     onClick={()=>updateTax(selectedIds,false)}>
+     Do not collect sales tax on selected ({selectedIds.length})
+    </button>
+   </div>
+   <p className="notice">Tax checkboxes save immediately and separately from
+    product details. Neither action publishes a product or accepts payments.</p>
+   {taxMessage&&<p role="status" className="apex-bulk-result">{taxMessage}</p>}
+  </section>
   <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch updates the supplier setting immediately. The storefront status confirms whether the product is publicly visible. Admin holds and release checks remain in effect. Zero stock may display Sold Out only after independent release approval.</p>
   {recentImportKeys.length>0&&<p className="apex-bulk-import-notice" role="status">
    {recentImportKeys.length} CSV product {recentImportKeys.length===1?"card is":"cards are"} at the top of the workspace.
@@ -483,6 +533,14 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         <input type="checkbox" role="switch" aria-label={"Publish "+(r.name||"new product")}
          checked={requested} disabled={!editable||busy||!r.id||r.needsSave||(!requested&&!publishReady)}
          onChange={e=>r.id&&publish([r.id],e.target.checked?"publish":"unpublish")}/>
+       </label>
+       <label style={{display:"inline-flex",alignItems:"center",gap:6}}
+        title="Product tax-collection setting; actual tax requires destination verification">
+        <input type="checkbox" checked={r.collectSalesTax}
+         aria-label={"Collect sales tax for "+(r.name||"new product")}
+         disabled={!editable||busy||!r.id||r.needsSave}
+         onChange={e=>r.id&&updateTax([r.id],e.target.checked)}/>
+        Collect sales tax
        </label>
       </div>
       <div className="apex-bulk-card-status-row">

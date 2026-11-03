@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId } from "react";
+import { useActionState, useId, useState } from "react";
 import { saveSupplierPromotion, toggleSupplierPromotion, previewSupplierDiscount } from "./actions";
 
 const initial={ok:false,message:""};
@@ -10,6 +10,7 @@ starts_at:string|null;ends_at:string|null;usage_limit:number|null;redemption_cou
 export function PromotionEditor({storeId,existing,enabled}:{storeId:string;existing?:Discount;enabled:boolean}) {
   const [state,action,pending]=useActionState(saveSupplierPromotion,initial);
   const id=useId();
+  const [kind,setKind]=useState(existing?.discount_kind??"percentage");
   const value=existing?.discount_kind==="fixed"?(existing.discount_value/100).toFixed(2):existing?.discount_value??"";
   return <section className="supplier-panel" style={{maxWidth:"none"}}>
     <h3>{existing ? `Edit ${existing.code}` : "Create discount code"}</h3>
@@ -21,13 +22,15 @@ export function PromotionEditor({storeId,existing,enabled}:{storeId:string;exist
         readOnly={!!existing} required minLength={3} maxLength={24}
         pattern="[A-Za-z0-9_-]{3,24}" disabled={!enabled}/>
       <label htmlFor={id+"kind"}>Discount type</label>
-      <select id={id+"kind"} name="kind" defaultValue={existing?.discount_kind??"percentage"} disabled={!enabled}>
+      <select id={id+"kind"} name="kind" value={kind} onChange={e=>setKind(e.target.value)} disabled={!enabled}>
         <option value="percentage">Percent off (1–95%)</option>
         <option value="fixed">Fixed USD amount off</option>
+        <option value="free_shipping">Free shipping (waives delivery fee)</option>
       </select>
-      <label htmlFor={id+"value"}>Value (percentage or USD, based on selected type)</label>
-      <input id={id+"value"} name="value" defaultValue={value} required disabled={!enabled} placeholder="10 or 5.00"/>
-      <label htmlFor={id+"min"}>Minimum subtotal (USD)</label>
+      <label htmlFor={id+"value"}>{kind==="free_shipping"?"No amount needed for free shipping":"Value (percentage or USD)"}</label>
+      <input id={id+"value"} name="value" defaultValue={value} required={kind!=="free_shipping"}
+        disabled={!enabled||kind==="free_shipping"} placeholder={kind==="free_shipping"?"Shipping fee waived":"10 or 5.00"}/>
+      <label htmlFor={id+"min"}>Minimum merchandise subtotal (USD; after product discounts)</label>
       <input id={id+"min"} name="minimum" type="number" min="0" max="9999999.99"
         step=".01" required defaultValue={((existing?.min_subtotal_cents??0)/100).toFixed(2)} disabled={!enabled}/>
       <label htmlFor={id+"limit"}>Maximum redemptions (optional)</label>

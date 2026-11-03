@@ -24,17 +24,21 @@ export default async function AdminCheckoutReview(){
  // an unaudited public catalog endpoint. This route cannot create an order.
  const [{data:products,error:productError},
         {data:categories,error:categoryError},
-        {data:inventory,error:inventoryError}]=await Promise.all([
+        {data:inventory,error:inventoryError},
+        {data:shipping,error:shippingError}]=await Promise.all([
   client.from("products")
-   .select("id,store_id,name,sku,description,price_cents,compare_at_price_cents,category_id,image_path,currency,is_active")
+   .select("id,store_id,name,sku,description,price_cents,compare_at_price_cents,category_id,image_path,currency,is_active,collect_sales_tax")
    .eq("store_id",STORE_ID).eq("is_published",false).order("name").limit(100),
   client.from("categories").select("id,name")
    .eq("store_id",STORE_ID).limit(100),
   client.from("inventory_items")
    .select("product_id,quantity_on_hand,quantity_reserved")
    .eq("store_id",STORE_ID).limit(100),
+  client.from("apex_store_shipping_settings")
+   .select("charge_shipping,flat_shipping_cents,free_shipping_min_subtotal_cents")
+   .eq("store_id",STORE_ID).maybeSingle(),
  ]);
- const unavailable=Boolean(productError||categoryError||inventoryError);
+ const unavailable=Boolean(productError||categoryError||inventoryError||shippingError);
  const names=new Map((categories??[]).map(c=>[c.id,c.name]));
  const quantities=new Map((inventory??[]).map(i=>[i.product_id,i]));
  const images=new Map<string,string>();
@@ -56,6 +60,7 @@ export default async function AdminCheckoutReview(){
    imageUrl:images.get(p.id)??null,
    available:inv?Math.max(0,inv.quantity_on_hand-inv.quantity_reserved):null,
    active:p.is_active===true,
+   collectSalesTax:p.collect_sales_tax===true,
   };
  });
  return <main className="container apex-checkout-preview apex-checkout-catalog-review">
@@ -71,9 +76,13 @@ export default async function AdminCheckoutReview(){
   </div>
   {unavailable?<p className="notice" role="alert">Catalog, category or stock readback failed. The checkout review is not available.</p>:
    !rows.length?<p className="notice">No private products are ready for checkout layout review.</p>:
-   <CheckoutCatalogReview products={rows}/>}
+   <CheckoutCatalogReview products={rows} shippingPolicy={shipping??{
+    charge_shipping:false,flat_shipping_cents:0,
+    free_shipping_min_subtotal_cents:null,
+   }}/>}
   <div className="actions">
    <Link className="button secondary" href="/supplier/catalog/bulk">Edit product cards</Link>
+   <Link className="button secondary" href="/admin/checkout-rules">Configure tax and shipping</Link>
    <Link className="button secondary" href="/admin/catalog-release">Review catalog release</Link>
    <Link className="button secondary" href="/admin/btcpay">Check BTCPay connection</Link>
   </div>

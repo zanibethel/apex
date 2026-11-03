@@ -30,6 +30,11 @@ export function quoteDiscount(code, subtotalCents, now = new Date()) {
       code.redemption_count >= code.usage_limit)) {
     return rejected("Code usage limit reached");
   }
+  if (code.discount_kind === "free_shipping") {
+    if (code.discount_value !== 1) return rejected("Invalid free-shipping configuration");
+    return { eligible: true, discountCents: 0, totalCents: subtotalCents,
+      freeShipping: true, reason: "" };
+  }
   let discountCents;
   if (code.discount_kind === "percentage") {
     if (code.discount_value > 95) return rejected("Invalid percentage");
