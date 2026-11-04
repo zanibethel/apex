@@ -13,6 +13,7 @@ begin;
 do $setup$
 declare
  changed integer;
+ plan uuid;
 begin
  -- Promote the synthetic reader to manager INSIDE this rollback fixture.
  -- Do not rely on the unrelated seed's default supplier membership role.
@@ -23,6 +24,11 @@ begin
  and m.user_id='00000000-0000-0000-0000-000000000002';
  get diagnostics changed=row_count;
  if changed<>1 then raise exception 'Expected one synthetic manager membership';end if;
+ select p.id into plan from apex_internal.review_shipment_plans p
+ where p.store_id='62000000-0000-0000-0000-000000000001'
+  and p.client_shipment_reference='SYNTH-215-RACE-REPLAY';
+ if plan is null then raise exception 'Expected synthetic shipment plan';end if;
+ perform set_config('apex.test.review_plan_id',plan::text,true);
 end $setup$;
 
 set local role authenticated;
@@ -32,14 +38,11 @@ select set_config('request.jwt.claims','{"is_anonymous":false}',true);
 do $member$
 declare
  s uuid:='62000000-0000-0000-0000-000000000001';
- plan uuid;
+ plan uuid:=current_setting('apex.test.review_plan_id')::uuid;
  v jsonb; denied boolean;
  expected uuid:='70000215-0000-4000-8000-000000000980';
  second uuid:='70000215-0000-4000-8000-000000000981';
 begin
- select p.id into plan from apex_internal.review_shipment_plans p
- where p.store_id=s and p.client_shipment_reference='SYNTH-215-RACE-REPLAY';
- if plan is null then raise exception 'Expected prior two-session synthetic plan';end if;
  v:=public.submit_supplier_review_tracking_draft(
  s,plan,expected,1,'USPS','94000000000000000980');
  if v->>'status'<>'draft_saved'
@@ -137,11 +140,8 @@ select set_config('request.jwt.claims','{"is_anonymous":false}',true);
 do $staff$
 declare
  denied boolean:=false;
- plan uuid;
+ plan uuid:=current_setting('apex.test.review_plan_id')::uuid;
 begin
- select p.id into plan from apex_internal.review_shipment_plans p
- where p.client_shipment_reference='SYNTH-215-RACE-REPLAY'
- and p.store_id='62000000-0000-0000-0000-000000000001';
  begin perform public.submit_supplier_review_tracking_draft(
   '62000000-0000-0000-0000-000000000001',plan,
    gen_random_uuid(),3,'USPS','94000000000000000998');
