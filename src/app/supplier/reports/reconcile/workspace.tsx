@@ -17,8 +17,8 @@ const timestamp=(date:string)=>new Date(date).toLocaleString("en-US",{
  dateStyle:"medium",timeStyle:"short",timeZone:"America/Chicago",
 });
 export default function SalesReconciliationWorkspace({
- storeId,rows,total,truncated,canEdit,
-}:{storeId:string;rows:SaleRow[];total:number;truncated:boolean;canEdit:boolean}){
+ storeId,rows,total,truncated,canEdit,referenceNow,
+}:{storeId:string;rows:SaleRow[];total:number;truncated:boolean;canEdit:boolean;referenceNow:string}){
  const [preview,setPreview]=useState<Preview|null>(null);
  const [error,setError]=useState<string|null>(null);
  const [selected,setSelected]=useState(false);
@@ -126,7 +126,7 @@ export default function SalesReconciliationWorkspace({
      <th scope="col">Gross</th>
      <th scope="col">Review</th><th scope="col">Version</th>
     </tr></thead><tbody>{rows.map(row=>{
-     const ageHours=(Date.now()-Date.parse(row.purchased_at_utc))/(3600*1000);
+     const ageHours=(Date.parse(referenceNow)-Date.parse(row.purchased_at_utc))/(3600*1000);
      return <tr key={row.order_reference}>
       <td>{timestamp(row.purchased_at_utc)}
        {ageHours>=48&&<span className="apex-sales-review-older">Older purchase</span>}</td>
