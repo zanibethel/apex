@@ -31,18 +31,23 @@ create table apex_internal.supplier_daily_report_email_outbox(
  store_id uuid not null references public.stores(id) on delete restrict,
  report_date date not null,
  user_id uuid not null references auth.users(id) on delete restrict,
- provider_request_id bigint not null check(provider_request_id>0),
- queued_at timestamptz not null default now(),
- state text not null default 'queued'
-  check (state='queued'),
- unique(store_id,report_date,user_id)
+ state text not null default 'claimed'
+  check (state in ('claimed','accepted')),
+ lease_expires_at timestamptz,
+ attempt_count integer not null default 0 check(attempt_count between 0 and 20),
+ provider_email_id text
+  check(provider_email_id is null or length(provider_email_id) between 8 and 128),
+ updated_at timestamptz not null default now(),
+ unique(store_id,report_date,user_id),
+ check((state='accepted' and provider_email_id is not null)
+  or (state='claimed' and provider_email_id is null))
 );
 alter table apex_internal.supplier_daily_report_email_outbox enable row level security;
 alter table apex_internal.supplier_daily_report_email_outbox force row level security;
 revoke all on apex_internal.supplier_daily_report_email_outbox
  from public,anon,authenticated;
 comment on table apex_internal.supplier_daily_report_email_outbox is
- 'Idempotent Resend HTTP request queue only. Queued is NOT proof of delivery.';
+ 'Idempotent Resend accepted-message journal. Accepted means provider acknowledgement, not final mailbox delivery.';
 create index apex_daily_report_email_subscription_enabled_idx
  on apex_internal.supplier_daily_report_email_subscriptions(store_id,user_id)
  where enabled=true;
