@@ -51,3 +51,32 @@ export function parseAnnotationReceipt(input,storeId,processed){
   unchanged:input.unchanged,processed,
   canChangeExternalState:false});
 }
+
+/** Overlay approved annotation values on immutable exported review rows. */
+export function mergeAnnotationSnapshot(rows,storeId,snapshot){
+ if(!Array.isArray(rows)||snapshot?.storeId!==storeId||
+  !Array.isArray(snapshot.records))return null;
+ const map=new Map(),used=new Set();
+ for(const a of snapshot.records)map.set(a.key,a);
+ const next=[];
+ for(const row of rows){
+  if(row?.store_id!==storeId||
+   !["incomplete_order","order_line","shipment_plan"].includes(row.row_kind)||
+   row.review_state!=="unreviewed"||row.review_note!==""||
+   String(row.review_version)!=="0")return null;
+  const key=row.row_kind==="order_line"?
+   row.order_id+":line:"+row.line_number:
+   row.row_kind==="shipment_plan"?
+   row.order_id+":plan:"+row.shipment_id:
+   row.order_id+":incomplete";
+  const found=map.get(key);
+  if(found){
+   if(row.row_kind==="incomplete_order"||used.has(key))return null;
+   used.add(key);
+   next.push(Object.freeze({...row,review_state:found.state,
+    review_note:found.note,review_version:String(found.version)}));
+  }else next.push(Object.freeze({...row}));
+ }
+ if(used.size!==map.size)return null;
+ return Object.freeze(next);
+}
