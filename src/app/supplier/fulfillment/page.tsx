@@ -1,4 +1,6 @@
 import Link from "next/link";
+import {randomUUID} from "node:crypto";
+import {ReviewTrackingDraftForm} from "./review-tracking-draft-form";
 import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
 import {parseSupplierReviewFulfillmentQueue}
@@ -32,7 +34,8 @@ export default async function SupplierFulfillmentQueue({
    });
   return {store,queue:error?null:parseSupplierReviewFulfillmentQueue(
    data,store.id,{limit:PAGE_SIZE,offset},
-  )};
+  ),canEdit:workspace.memberships.some(m=>m.supplier_id===store.supplier_id&&
+   (m.role==="owner"||m.role==="manager"))};
  }));
  return <main className="container supplier-shell">
   <Link className="back" href="/supplier">← Supplier workspace</Link>
@@ -41,7 +44,7 @@ export default async function SupplierFulfillmentQueue({
   <p className="lead">Review original purchased quantities, shipment plans
    and draft tracking references for your assigned storefront. Planning
    quantities do not mean items have shipped or been delivered.</p>
-  {results.map(({store,queue})=><section key={store.id}
+  {results.map(({store,queue,canEdit})=><section key={store.id}
    className="supplier-panel" style={{maxWidth:"none",marginBottom:20}}>
    <h2>{store.display_name}</h2>
    {!queue?<p role="alert">Fulfillment queue records are unavailable.
@@ -49,8 +52,9 @@ export default async function SupplierFulfillmentQueue({
     <>
      <p className="notice">{queue.total} order
       {queue.total===1?" record":" records"} available for review.
-      This queue is read-only. Delivery addresses, label purchasing,
-      tracking entry, and shipping actions are not enabled.</p>
+      Delivery addresses, label purchasing, carrier validation and
+      shipping actions remain disabled. Authorized suppliers may record
+      review-only tracking drafts when the isolated service is available.</p>
      {!queue.orders.length?<p role="status">
       No records on this page.</p>:
       <div style={{display:"grid",gap:14}}>
@@ -133,6 +137,9 @@ export default async function SupplierFulfillmentQueue({
                  </tr>)}</tbody>
                 </table>
                </div>}
+              {canEdit?<ReviewTrackingDraftForm
+               storeId={store.id} shipmentId={plan.id}
+               revision={plan.revision} requestId={randomUUID()}/>:null}
              </article>)}
             </div>}
            <p className="notice">A recorded tracking reference is a
@@ -150,9 +157,10 @@ export default async function SupplierFulfillmentQueue({
      </div>
     </>}
   </section>)}
-  <p className="notice">The fulfillment ledger is being verified separately
-   from payment records. Tracking entry, carrier verification, postage,
-   customer destination access and shipment-state changes remain gated.</p>
+  <p className="notice">The fulfillment ledger is separate from payments.
+   Draft entry is restricted to a disposable review environment. Carrier
+   verification, postage purchases, customer destination access and actual
+   shipment-state changes remain disabled.</p>
   <div className="actions">
    <Link className="button secondary"
     href="/supplier/reports/order-foundation/details">
