@@ -47,3 +47,22 @@
 @media(max-width:400px){.apex-customer-line{grid-template-columns:45px minmax(0,1fr);gap:10px}.apex-customer-symbol{width:45px;height:50px}.apex-customer-line>strong{grid-column:2}.apex-customer-items,.apex-customer-summary{padding:14px}}
 
 .site-header nav.apex-navigation{display:flex;align-items:center;gap:8px;min-width:0;margin-left:auto}
+
+.apex-delivery-panel{border-top:1px solid #463742;margin-top:24px;padding-top:25px}
+.apex-delivery-panel h2{font-size:21px;margin:4px 0 9px}
+.apex-delivery-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.apex-delivery-fields label{display:grid;align-content:start;gap:6px;min-width:0}
+.apex-delivery-fields label:nth-child(5),.apex-delivery-fields label:nth-child(6){grid-column:span 2}
+.apex-delivery-fields span{color:#e0ccd5;font-size:11px;font-weight:700}
+.apex-delivery-fields input,.apex-delivery-fields select{width:100%;min-height:41px;background:#111016;border:1px solid #55414f;color:#fff;border-radius:8px;padding:9px;font:inherit;font-size:13px}
+.apex-delivery-fields input[aria-invalid=true],.apex-delivery-fields select[aria-invalid=true]{border-color:#e5658e}
+.apex-delivery-fields small{color:#ffacbf;font-size:11px}
+.apex-delivery-review-button{width:100%;border-radius:9px;min-height:44px;background:#3c2430;border:1px solid #9d5270;color:#fff;cursor:pointer;font-weight:800;font-size:12px}
+.apex-delivery-confirmation{border:1px solid #6e4b5b;border-radius:11px;padding:15px;margin:18px 0;background:#271b26}
+.apex-delivery-confirmation h3{font-size:17px;margin:0 0 10px}
+.apex-delivery-confirmation p{color:#d9c6d1;font-size:12px;line-height:1.5;margin:7px 0;overflow-wrap:anywhere}
+.apex-readiness-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin:14px 0}
+.apex-readiness-metrics p{margin:0;padding:14px;border:1px solid #4b3945;border-radius:10px;background:#201821;display:grid;gap:6px}
+.apex-readiness-metrics strong{font-size:25px;color:#fff;font-variant-numeric:tabular-nums}
+.apex-readiness-metrics span{font-size:11px;color:#d4b9c7}
+@media(max-width:480px){.apex-delivery-fields{grid-template-columns:minmax(0,1fr)}.apex-delivery-fields label:nth-child(5),.apex-delivery-fields label:nth-child(6){grid-column:auto}}
