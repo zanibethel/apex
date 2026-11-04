@@ -9,9 +9,10 @@ export const HEADERS=Object.freeze([
  'store_id','row_kind','order_id','order_reference','purchased_at_utc',
  'line_number','sku','item_title','purchased_quantity','planned_quantity',
  'unplanned_quantity','shipment_id','shipment_reference','source_revision',
- 'carrier_draft','tracking_draft','review_state','review_note',
+ 'carrier_draft','tracking_draft','review_version','review_state','review_note',
 ]);
-const IMMUTABLE=HEADERS.filter(x=>!['review_state','review_note'].includes(x));
+const IMMUTABLE=HEADERS.filter(x=>!['review_state','review_note',
+ 'review_version'].includes(x));
 const UUID=/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const NAT=/^(?:0|[1-9]\d{0,5})$/;
 const DATE=/^\d{4}-\d{2}-\d{2}$/;
@@ -40,6 +41,7 @@ function assertRow(r,storeId){
   !UUID.test(r.order_id??'')||!txt(r.order_reference,1,200)||
   !utc(r.purchased_at_utc)||!KINDS.has(r.row_kind)||
   !STATES.has(r.review_state)||!txt(r.review_note,0,240)||
+  !NAT.test(String(r.review_version))||Number(r.review_version)>9999||
   !NAT.test(String(r.source_revision))||!txt(r.sku,0,160)||
   !txt(r.item_title,0,240)||!txt(r.shipment_reference,0,100)||
   !txt(r.carrier_draft,0,8)||!txt(r.tracking_draft,0,40)||
@@ -89,7 +91,8 @@ const row=(o,kind,vals={})=>Object.freeze({
  unplanned_quantity:String(vals.unplanned??''),
  shipment_id:vals.shipmentId??'',shipment_reference:vals.shipmentRef??'',
  source_revision:String(vals.revision??0),carrier_draft:vals.carrier??'',
- tracking_draft:vals.tracking??'',review_state:'unreviewed',review_note:'',
+ tracking_draft:vals.tracking??'',review_version:'0',
+ review_state:'unreviewed',review_note:'',
 });
 export function buildCumulativeReviewWorkbook(pages,storeId,reportDay){
  if(!UUID.test(storeId??'')||!DATE.test(reportDay??'')||
@@ -220,6 +223,14 @@ export function previewCumulativeReviewImport(csv,currentRows,storeId){
    issues.push(Object.freeze({line:i+1,code:'immutable_field_changed',key:k}));
    continue;
   }
+  if(String(r.review_version)!==String(source.review_version)){
+   if(r.review_state===source.review_state&&
+    r.review_note===source.review_note){
+    unchanged++;alreadyRecorded++;continue;
+   }
+   stale++;issues.push(Object.freeze({line:i+1,
+    code:'stale_review_version',key:k}));continue;
+  }
   if(r.review_state!==source.review_state||
    r.review_note!==source.review_note){
    changes.push(Object.freeze({key:k,orderId:source.order_id,
@@ -249,7 +260,8 @@ export function applyCumulativeReviewPreviewLocally(rows,preview){
  return Object.freeze(rows.map(r=>{
   const c=edits.get(identity(r));
   return c?Object.freeze({...r,review_state:c.to,
-   review_note:c.proposedNote}):r;
+   review_note:c.proposedNote,
+   review_version:String(Number(r.review_version)+1)}):r;
  }));
 }
 export function serializeCumulativeReviewErrorCsv(preview){
@@ -257,4 +269,50 @@ export function serializeCumulativeReviewErrorCsv(preview){
   deny('invalid_error_report');
  return ['csv_line,record_key,error_code',...preview.issues.map(i=>
   [i.line,i.key,i.code].map(csvCell).join(','))].join('\r\n')+'\r\n';
+}
+
+/**
+ * Only fields produced from a fresh, complete server-side report are sent
+ * to the narrow test-only atomic annotation RPC. The uploaded CSV itself is
+ * never treated as permission to change original purchase/shipment fields.
+ */
+export function buildReviewAnnotationUploadChanges(preview,currentRows,storeId){
+ if(preview?.status!=='preview_only'||
+  !UUID.test(storeId??'')||!Array.isArray(currentRows)||
+  !Array.isArray(preview.proposedChanges)||
+  preview.changedRows!==preview.proposedChanges.length||
+  preview.conflicts!==0)deny('unapproved_preview');
+ const current=new Map();
+ for(const r of currentRows){
+  assertRow(r,storeId);
+  const k=identity(r);
+  if(current.has(k))deny('duplicate_current_record');
+  current.set(k,r);
+ }
+ const changes=[],seen=new Set();
+ for(const proposal of preview.proposedChanges){
+  const r=current.get(proposal.key);
+  if(!r||seen.has(proposal.key)||
+   r.row_kind==='incomplete_order'||
+   proposal.orderId!==r.order_id||
+   proposal.rowKind!==r.row_kind||
+   !STATES.has(proposal.to)||!txt(proposal.proposedNote,0,240)||
+   proposal.to===r.review_state&&proposal.proposedNote===r.review_note)
+   deny('invalid_proposal');
+  seen.add(proposal.key);
+  changes.push(Object.freeze({
+   order_id:r.order_id,row_kind:r.row_kind,
+   line_number:r.row_kind==='order_line'?Number(r.line_number):null,
+   shipment_id:r.row_kind==='shipment_plan'?r.shipment_id:null,
+   source_revision:Number(r.source_revision),
+   review_version:Number(r.review_version),
+   review_state:proposal.to,review_note:proposal.proposedNote,
+  }));
+ }
+ changes.sort((a,b)=>{
+  const key=x=>x.order_id+(x.row_kind==='order_line'?
+   ':line:'+x.line_number:':plan:'+x.shipment_id);
+  return key(a).localeCompare(key(b));
+ });
+ return Object.freeze(changes);
 }
