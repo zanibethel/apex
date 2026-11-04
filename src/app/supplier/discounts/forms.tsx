@@ -119,10 +119,10 @@ export function PromotionCalculator({storeId}:{storeId:string}){
       autoCapitalize="characters" autoCorrect="off" spellCheck={false}
       placeholder="WELCOME10"/>
     </label>
-    <label htmlFor={id+"box"}>USPS Flat Rate box
-     <select id={id+"box"} name="boxSize" defaultValue="medium">
-      <option value="small">Small</option>
-      <option value="medium">Medium</option>
+    <label htmlFor={id+"box"}>USPS Priority Mail packaging
+     <select id={id+"box"} name="boxSize" defaultValue="small">
+      <option value="small">Padded Flat Rate Envelope</option>
+      <option value="medium">Medium Flat Rate Box</option>
      </select>
     </label>
     <label htmlFor={id+"total"}>Order subtotal (USD)
@@ -141,7 +141,7 @@ export function PromotionCalculator({storeId}:{storeId:string}){
    <dl className="apex-promo-calculation" aria-label="Discount calculation">
     <div><dt>Subtotal</dt><dd>{money(state.subtotalCents)}</dd></div>
     <div><dt>Discount</dt><dd>−{money(state.discountCents)}</dd></div>
-    <div><dt>USPS {state.shippingBoxSize==="medium"?"Medium":"Small"} shipping</dt><dd>{state.shippingCents===0?
+    <div><dt>USPS {state.shippingBoxSize==="medium"?"Medium Box":"Padded Envelope"} shipping</dt><dd>{state.shippingCents===0?
      "Free":money(state.shippingCents)}</dd></div>
     <div><dt>Total</dt><dd>{money(state.totalCents)}</dd></div>
    </dl>}

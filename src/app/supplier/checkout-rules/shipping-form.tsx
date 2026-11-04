@@ -23,7 +23,7 @@ export function ShippingSettingsForm({storeId,initial,enabled=true}:{
  return <section className="supplier-panel" aria-label="USPS Flat Rate shipping settings"
   style={{maxWidth:"none"}}>
   <h2>USPS Priority Mail Flat Rate</h2>
-  <p className="notice">Configure Small and Medium Flat Rate box charges.
+  <p className="notice">Configure Padded Flat Rate Envelope and Medium Flat Rate Box charges.
    Free shipping applies when merchandise after discounts exceeds $200.
    Shipping charges are waived by an eligible free-shipping code.</p>
   <form action={action} className="supplier-form">
@@ -32,15 +32,15 @@ export function ShippingSettingsForm({storeId,initial,enabled=true}:{
    <select id="charge-shipping" name="chargeShipping" value={String(charge)}
     disabled={!enabled||pending}
     onChange={e=>setCharge(e.target.value==="true")}>
-    <option value="true">Yes — USPS Flat Rate Small / Medium</option>
+    <option value="true">Yes — USPS padded envelope / Medium box</option>
     <option value="false">No — free shipping on every order</option>
    </select>
-   <label htmlFor="small-flat-shipping">Small Flat Rate box (USD)</label>
+   <label htmlFor="small-flat-shipping">Padded Flat Rate Envelope (USD)</label>
    <input id="small-flat-shipping" name="smallFlatShipping" type="number"
     min=".01" max="9999999.99" step=".01"
-    defaultValue={money(initial.charge_shipping?initial.flat_shipping_cents:1465)}
+    defaultValue={money(initial.charge_shipping?initial.flat_shipping_cents:1500)}
     disabled={!charge||!enabled||pending} required={charge}/>
-   <label htmlFor="medium-flat-shipping">Medium Flat Rate box (USD)</label>
+   <label htmlFor="medium-flat-shipping">Medium Flat Rate Box (USD)</label>
    <input id="medium-flat-shipping" name="mediumFlatShipping" type="number"
     min=".01" max="9999999.99" step=".01"
     defaultValue={money(initial.charge_shipping?initial.medium_flat_shipping_cents:2580)}
@@ -52,7 +52,8 @@ export function ShippingSettingsForm({storeId,initial,enabled=true}:{
     disabled={!charge||!enabled||pending} required={charge}/>
    <p className="notice">For orders over $200, set this amount to 200.01.
     Qualification uses merchandise after any product discount, excluding shipping.
-    The fulfillment team must confirm that the order actually fits the selected box.
+    Use the padded envelope for standard shipments and the Medium box when items do not fit.
+    The fulfillment team must confirm that each packed order fits its packaging.
     USPS prices can be changed here when carrier rates change.</p>
    <button type="submit" className="button secondary"
     disabled={!enabled||pending}>{pending?"Saving…":"Save shipping rates"}</button>

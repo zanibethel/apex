@@ -27,7 +27,7 @@ export default async function SupplierShippingRules(){
   <Link className="back" href="/supplier/catalog">← Supplier products</Link>
   <p className="eyebrow">APEX / SUPPLIER / SHIPPING</p>
   <h1>Shipping rules</h1>
-  <p className="notice">Set USPS Small/Medium Flat Rate box prices and free shipping over $200.</p>
+  <p className="notice">Set USPS Padded Flat Rate Envelope / Medium Box prices and free shipping over $200.</p>
   {policy?<ShippingSettingsForm storeId={store.id} initial={policy}
     enabled={allowed}/>:
    <p role="alert">Shipping configuration could not be loaded safely.</p>}

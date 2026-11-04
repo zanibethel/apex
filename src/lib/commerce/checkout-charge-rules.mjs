@@ -1,6 +1,8 @@
 import {quoteDiscount} from "./discount-quote.mjs";
 
 // Shipping-only checkout math. Source amounts must come from the server.
+// Legacy tier key "small" means the padded envelope; "medium" means the box.
+// Keep these stable keys to preserve existing private quote contracts.
 const LIMIT=999999999;
 const validCents=(value)=>Number.isSafeInteger(value)&&value>=0&&value<=LIMIT;
 
