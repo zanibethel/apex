@@ -79,7 +79,7 @@ test("verified records are strictly server-sourced and cannot claim shipping det
  assert.equal(parseVerifiedReviewRows(payload,store)?.total,2);
  assert.equal(parseVerifiedReviewRows({...payload,rows:[one,one]},store),null);
  assert.equal(parseVerifiedReviewRows({...payload,shipping_data_available:true},store),null);
- assert.equal(parseVerifiedReviewRows({...payload,customer_address:"unknown"},store)?.total,2);
+ assert.equal(parseVerifiedReviewRows({...payload,rows:[{...one,customer_address:"unknown"},two]},store),null);
 });
 test("supplier screen uses verified membership, server file validation, and no label purchase",()=>{
  const read=x=>readFileSync(x,"utf8");
