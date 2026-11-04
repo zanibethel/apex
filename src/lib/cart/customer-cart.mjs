@@ -75,7 +75,7 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
  const requested=normalizeCartSelections(items);
  if(!requested.length||typeof code!=="string"||
   (code!==""&&!/^[A-Z0-9_-]{3,24}$/.test(code))||
-  !["small","medium"].includes(boxSize))return {ok:false,reason:"Invalid cart selection"};
+  !["auto","small","medium"].includes(boxSize))return {ok:false,reason:"Invalid cart selection"};
  if(!source||typeof source!=="object"||Array.isArray(source)||
    source.schema_version!==1||source.can_place_order!==false||
    source.can_pay!==false)return {ok:false,reason:"Cart verification unavailable"};
@@ -90,12 +90,14 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
   source.items.length!==requested.length)return {ok:false,reason:"Cart verification unavailable"};
  const shipping=source.shipping;
  if(!exactKeys(shipping,["charge_shipping","flat_shipping_cents",
-  "medium_flat_shipping_cents","free_shipping_min_subtotal_cents"])||
+  "medium_flat_shipping_cents","free_shipping_min_subtotal_cents","envelope_max_items"])||
   shipping.charge_shipping!==true||!MONEY(shipping.flat_shipping_cents)||
   !MONEY(shipping.medium_flat_shipping_cents)||
   !MONEY(shipping.free_shipping_min_subtotal_cents)||
   shipping.flat_shipping_cents<1||shipping.medium_flat_shipping_cents<shipping.flat_shipping_cents||
-  shipping.free_shipping_min_subtotal_cents<1)
+  shipping.free_shipping_min_subtotal_cents<1||
+  !Number.isInteger(shipping.envelope_max_items)||
+  shipping.envelope_max_items<1||shipping.envelope_max_items>50)
   return {ok:false,reason:"Shipping configuration unavailable"};
  const lines=[];
  const names=[];
@@ -133,6 +135,7 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
   merchandiseDiscountCents:result.merchandiseDiscountCents,
   discountedMerchandiseCents:result.discountedMerchandiseCents,
   shippingBoxSize:result.shippingBoxSize,
+  envelopeMaxItems:result.envelopeMaxItems,
   shippingCents:result.shippingCents,
   freeShippingMinimumCents:result.freeShippingMinimumCents,
   amountUntilFreeShippingCents:result.amountUntilFreeShippingCents,
