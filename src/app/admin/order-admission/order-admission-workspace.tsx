@@ -23,7 +23,7 @@ const names:Record<string,string>={
 export function OrderAdmissionWorkspace({products}:{products:Product[]}){
  const [items,setItems]=useState<Item[]>([]);
  const [candidate,setCandidate]=useState(products[0]?.id??"");
- const [boxSize,setBoxSize]=useState<"small"|"medium">("small");
+ const [boxSize,setBoxSize]=useState<"auto"|"medium">("auto");
  const [enteredCode,setEnteredCode]=useState("");
  const [state,action,pending]=useActionState(inspectPrivateOrderAdmission,START);
  const code=enteredCode.trim().toUpperCase();
@@ -82,12 +82,12 @@ export function OrderAdmissionWorkspace({products}:{products:Product[]}){
    <input type="hidden" name="items" value={JSON.stringify(items)}/>
    <fieldset>
     <legend>USPS shipping method</legend>
-    <label><input type="radio" name="boxSize" value="small"
-     checked={boxSize==="small"} onChange={()=>setBoxSize("small")}/>
-     Padded Flat Rate Envelope</label>
+    <label><input type="radio" name="boxSize" value="auto"
+     checked={boxSize==="auto"} onChange={()=>setBoxSize("auto")}/>
+     Automatic packaging (saved envelope limit)</label>
     <label><input type="radio" name="boxSize" value="medium"
      checked={boxSize==="medium"} onChange={()=>setBoxSize("medium")}/>
-     Medium Flat Rate Box</label>
+     Medium Flat Rate Box (manual upgrade)</label>
    </fieldset>
    <label htmlFor="admission-code">Discount code (optional)
     <input id="admission-code" type="text" name="code" maxLength={24}
