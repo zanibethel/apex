@@ -30,8 +30,8 @@ export function normalizeProgress({pulls,issues,now=new Date()}){
  .slice(0,10).map(i=>Object.freeze(i));
  return Object.freeze({completed,pending,scanLimited:pulls.length===100||issues.length===100});
 }
-// Estimates are historical setup quotes, not payment records.
-// Vercel confirmed the domain was purchased; paid amount is unverified.
+// Owner-approved amounts confirmed November 3, 2026; not receipts.
+// Domain purchase is independently confirmed, but settled billed amounts are unknown.
 export const PROJECT_PROVISIONAL_COSTS=Object.freeze([
  Object.freeze({
   id:"domain_apexanabolics_co",
@@ -39,32 +39,34 @@ export const PROJECT_PROVISIONAL_COSTS=Object.freeze([
   item:"apexanabolics.co domain registration",
   category:"one_time",
   purchasedLocalDate:"2026-10-29",
-  quotedUsd:29.99,
+  ownerApprovedUsd:29.99,
+  approvalSource:"owner_confirmation_2026_11_03",
   actualPaidUsd:null,
-  basis:"Historical first-year domain quote; Vercel confirms registration but not the charge amount.",
+  basis:"Owner-approved first-year registration amount; Vercel confirms purchase, but settled invoice not verified.",
  }),
  Object.freeze({
   id:"proton_essentials_three_users",
   vendor:"Proton Mail",
-  item:"Mail Essentials, estimated three-user monthly subscription",
+  item:"Mail Essentials, three-user monthly subscription",
   category:"recurring_monthly",
-  quotedUsd:23.97,
+  ownerApprovedUsd:23.97,
+  approvalSource:"owner_confirmation_2026_11_03",
   actualPaidUsd:null,
-  basis:"Historical $7.99 per user monthly estimate for three users; active invoice and billing interval are unverified.",
+  basis:"Owner-approved monthly budget of $7.99 per user for three users; actual invoice, seat count and billed interval are not independently verified.",
  }),
 ]);
-const provisionalLines=PROJECT_PROVISIONAL_COSTS.map(x=>
- x.vendor+" — "+x.item+": $"+x.quotedUsd.toFixed(2)+
- (x.category==="one_time"?" quoted one-time, purchased "+x.purchasedLocalDate:
- " estimated per month")+
- ". ACTUAL PAID UNVERIFIED. "+x.basis);
-const provisionalHtml=PROJECT_PROVISIONAL_COSTS.map(x=>
+const approvedLines=PROJECT_PROVISIONAL_COSTS.map(x=>
+ x.vendor+" — "+x.item+": $"+x.ownerApprovedUsd.toFixed(2)+
+ (x.category==="one_time"?" owner-approved one-time, purchased "+x.purchasedLocalDate:
+ " owner-approved per month")+
+ ". RECEIPT NOT YET VERIFIED. "+x.basis);
+const approvedHtml=PROJECT_PROVISIONAL_COSTS.map(x=>
  '<tr><td style="padding:10px;border-bottom:1px solid #524450;vertical-align:top;color:#ddd3df;font-size:13px">'+
  esc(x.vendor+" — "+x.item)+
  '</td><td style="padding:10px;border-bottom:1px solid #524450;vertical-align:top;color:#ffd4e0;font-size:13px;font-weight:bold">'+
- "$"+x.quotedUsd.toFixed(2)+
- (x.category==="one_time"?" once (quoted)":" / month (estimated)")+
- '<div style="color:#c0b6be;font-weight:normal;font-size:11px;line-height:1.5;margin-top:6px">Actual paid: not verified</div></td></tr>'
+ "$"+x.ownerApprovedUsd.toFixed(2)+
+ (x.category==="one_time"?" once (owner-approved)":" / month (owner-approved)")+
+ '<div style="color:#c0b6be;font-weight:normal;font-size:11px;line-height:1.5;margin-top:6px">Invoice confirmation pending</div></td></tr>'
 ).join("");
 const itemList=(items,empty)=>items.length?items.map(i=>
  '<li style="margin-bottom:8px"><a style="color:#f6b4c4" href="'+esc(i.url)+'">#'+
@@ -73,7 +75,8 @@ export function renderProgressEmail({now=new Date(),progress}){
  if(!progress||!Array.isArray(progress.completed)||!Array.isArray(progress.pending))
   throw Error("Verified project progress unavailable");
  const day=centralDay(now);
- const moneyNote="Apex-specific billed expenses: NOT YET VERIFIED. There is no project-attributed invoice or charge feed connected to this scheduled sender. This does not mean $0 was spent. Vercel team billing is shared; Supabase, Proton, Resend and domain invoices require dated evidence and project allocation.";
+ const moneyNote="Owner-approved Apex cost baseline: $29.99 one-time domain registration plus $23.97/month Proton Mail. These are accepted project budget figures, NOT independently verified paid invoices. Other Apex-specific billed expenses remain unverified. Vercel team billing is shared and provider invoices require dated evidence.";
+ const firstMonthBudgetUsd=PROJECT_PROVISIONAL_COSTS.reduce((sum,x)=>sum+x.ownerApprovedUsd,0);
  const done=progress.completed.map(p=>"PR #"+p.number+": "+p.title+" ("+p.url+")");
  const next=progress.pending.map(i=>"Issue #"+i.number+": "+i.title+" ("+i.url+")");
  const text=[
@@ -84,7 +87,8 @@ export function renderProgressEmail({now=new Date(),progress}){
   "OPEN PRIORITIES / WHAT IS LEFT",
   ...(next.length?next:["No open priority issues returned."]),"",
   "EXPENSE REPORT — DATA COVERAGE",moneyNote,
-  "ONE-TIME AND RECURRING PROVISIONAL COSTS",...provisionalLines,
+  "OWNER-APPROVED PROJECT COST BASELINE",...approvedLines,
+  "Combined initial budget basis (domain once + one month email): $"+firstMonthBudgetUsd.toFixed(2)+". This is a budget planning figure, not a paid invoice total.",
   "Vercel team billing: Not connected to this job and not allocated to Apex.",
   "Supabase, Proton, Resend and domain invoices: Not connected to this job.",
   "Unverified or forecast amounts must not be counted as actual Apex expenses.","",
@@ -106,14 +110,25 @@ export function renderProgressEmail({now=new Date(),progress}){
  itemList(progress.pending,"No open priority issues returned.")+'</ul>'+
  '<h2 style="font-size:18px;color:#fff;margin-top:22px">Expense report</h2>'+
  '<div style="background:#2d232b;border:1px solid #65485a;border-radius:9px;padding:14px">'+
- '<strong style="color:#ffd0df">Actual Apex expenses: Unverified</strong>'+
+ '<strong style="color:#ffd0df">Owner-approved costs — invoices pending</strong>'+
  '<p style="line-height:1.65;color:#d4cbd2;font-size:13px">'+esc(moneyNote)+'</p></div>'+
 
  '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #574553;border-collapse:collapse;margin-top:13px">'+
  '<tr><th style="padding:10px;color:#edd2df;text-align:left;font-size:12px">Vendor / item</th>'+
- '<th style="padding:10px;color:#edd2df;text-align:left;font-size:12px">Provisional cost</th></tr>'+
- provisionalHtml+'</table>'+
- '<p style="font-size:12px;color:#c9b6c4;line-height:1.6">Domain was registered through Vercel; $29.99 is the earlier quote, not a paid receipt. Proton $23.97/month assumes three Mail Essentials seats at the quoted monthly rate. Neither is counted as a verified paid expense.</p>'+
+ '<th style="padding:10px;color:#edd2df;text-align:left;font-size:12px">Owner-approved cost</th></tr>'+
+ approvedHtml+'</table>'+
+ '<p style="font-size:12px;color:#c9b6c4;line-height:1.6">Owner-approved planning basis: <strong>
+ '<p style="font-size:13px;line-height:1.7;color:#c9bfc9">Billing evidence needed: project-attributed Vercel charges, Supabase invoices, Proton invoices, Resend charges and domain receipts. Shared charges and owner-approved budget amounts cannot be added as receipt-verified Apex actuals.</p>'+
+ '<a href="'+REPO_URL+'/issues/222" style="display:inline-block;background:#922a47;color:#fff;text-decoration:none;padding:12px 17px;border-radius:8px;font-size:14px;font-weight:bold">Progress &amp; Expense Tracker</a>'+
+ (progress.scanLimited?'<p style="color:#ffbfca;font-size:12px">Partial source window: results may be incomplete.</p>':"")+
+ '</td></tr><tr><td style="padding:16px;text-align:center;color:#a7a1ac;font-size:12px;border-top:1px solid #48424c">Owner-only Apex project digest · No customer records</td></tr></table></td></tr></table></body></html>';
+ return Object.freeze({
+  subject:"Apex Weekly Progress + Expense Report | "+day,
+  text,html,
+  idempotencyKey:"apex-owner-weekly-progress-"+day,
+ });
+}
++firstMonthBudgetUsd.toFixed(2)+'</strong> (one domain registration plus one month of Proton). This is not a confirmed paid expense total. Domain renewal and actual Proton invoices require reconciliation before being marked paid.</p>'+
  '<p style="font-size:13px;line-height:1.7;color:#c9bfc9">Billing evidence needed: project-attributed Vercel charges, Supabase invoices, Proton invoices, Resend charges and domain receipts. Shared charges and quotes cannot be added as Apex actuals.</p>'+
  '<a href="'+REPO_URL+'/issues/222" style="display:inline-block;background:#922a47;color:#fff;text-decoration:none;padding:12px 17px;border-radius:8px;font-size:14px;font-weight:bold">Progress &amp; Expense Tracker</a>'+
  (progress.scanLimited?'<p style="color:#ffbfca;font-size:12px">Partial source window: results may be incomplete.</p>':"")+
