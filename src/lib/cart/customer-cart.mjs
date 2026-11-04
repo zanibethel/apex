@@ -69,7 +69,7 @@ function safePromo(p){
  return p;
 }
 
-// Only recognize an explicitly nonpayable, zero-stock public release source.
+// Only recognize a nonpayable, independently released public inventory source.
 // Unknown fields, stale prices, missing items and privileges fail closed.
 export function buildCartReview(source,{items,code="",boxSize="small",now=new Date()}){
  const requested=normalizeCartSelections(items);
@@ -84,7 +84,7 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
  if(!exactKeys(source,["schema_version","state","items","shipping",
    "requested_code","promotion","can_place_order","can_create_invoice",
    "can_reserve_stock","can_pay"])||
-  source.state!=="rechecked_sold_out_cart"||
+  source.state!=="rechecked_inventory_cart"||
   source.can_create_invoice!==false||source.can_reserve_stock!==false||
   source.requested_code!==code||!Array.isArray(source.items)||
   source.items.length!==requested.length)return {ok:false,reason:"Cart verification unavailable"};
@@ -101,6 +101,7 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
   return {ok:false,reason:"Shipping configuration unavailable"};
  const lines=[];
  const names=[];
+ const stockStatuses=[];
  for(let index=0;index<requested.length;index++){
   const observed=source.items[index];
   const item=requested[index];
@@ -110,11 +111,13 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
    typeof observed.name!=="string"||!observed.name.trim()||
    observed.name.length>120||typeof observed.unit_price_cents!=="string"||
    !/^[1-9][0-9]{0,8}$/.test(observed.unit_price_cents)||
-   observed.availability!=="sold_out"||observed.can_checkout!==false)
+   !["sold_out","in_stock"].includes(observed.availability)||
+   observed.can_checkout!==false)
    return {ok:false,reason:"Product or stock verification failed"};
   lines.push({productId:item.product_id,quantity:item.quantity,
    unitPriceCents:Number(observed.unit_price_cents)});
   names.push(observed.name);
+  stockStatuses.push(observed.availability);
  }
  const promo=safePromo(source.promotion);
  if(promo===false||(code!==""&&promo?.code!==code)||
@@ -127,10 +130,11 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
   result.canCreateInvoice!==false||result.quoteFinalized!==false)
   return {ok:false,reason:"Cart verification unavailable"};
  return {
-  ok:true,status:"unavailable_stock",canPlaceOrder:false,canPay:false,
+  ok:true,status:stockStatuses.every(x=>x==="in_stock")?"stock_observed":"unavailable_stock",
+  canPlaceOrder:false,canPay:false,
   items:lines.map((line,i)=>({productId:line.productId,name:names[i],
    quantity:line.quantity,unitPriceCents:line.unitPriceCents,
-   lineTotalCents:line.unitPriceCents*line.quantity,availability:"sold_out"})),
+   lineTotalCents:line.unitPriceCents*line.quantity,availability:stockStatuses[i]})),
   merchandiseSubtotalCents:result.merchandiseSubtotalCents,
   merchandiseDiscountCents:result.merchandiseDiscountCents,
   discountedMerchandiseCents:result.discountedMerchandiseCents,
