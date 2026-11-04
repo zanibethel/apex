@@ -1,6 +1,7 @@
 // Client-side format checks for a future delivery step. This module never
 // authorizes sales, validates postal deliverability, or writes order records.
 import {US_STATE_OPTIONS} from "./us-states.mjs";
+import {normalizeCartSelections} from "../cart/customer-cart.mjs";
 
 export const EMPTY_DELIVERY_DETAILS=Object.freeze({
  firstName:"",lastName:"",email:"",phone:"",
@@ -56,11 +57,9 @@ export function validateDeliveryDetails(input){
 // in browser memory only and cannot be submitted to checkout in this pass.
 export function summarizeDeliveryPreparation(input,cart){
  const delivery=validateDeliveryDetails(input);
- const cartValid=Array.isArray(cart)&&cart.length>0&&cart.length<=20&&
-  cart.every(line=>line&&typeof line==="object"&&
-   typeof line.product_id==="string"&&
-   /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(line.product_id)&&
-   Number.isInteger(line.quantity)&&line.quantity>=1&&line.quantity<=10);
+ const normalized=normalizeCartSelections(cart);
+ const cartValid=normalized.length>0&&Array.isArray(cart)&&
+  normalized.length===cart.length;
  return Object.freeze({
   contactFormatValid:delivery.valid,
   cartStructureValid:cartValid,
