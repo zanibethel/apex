@@ -9,7 +9,7 @@ test("approved public gallery defaults OFF, only calls pinned Apex read-only RPC
  assert.match(env,/APEX_PUBLIC_SOLD_OUT_CATALOG=off/);
  assert.match(loader,/process\.env\.APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled"/);
  assert.match(loader,/fhqpkpztercadcxspdkg\.supabase\.co/);
- assert.match(loader,/\/rest\/v1\/rpc\/get_public_sold_out_catalog/);
+ assert.match(loader,/\/rest\/v1\/rpc\/get_public_inventory_catalog/);
  assert.match(loader,/method:"GET"/);
  assert.match(loader,/cache:"no-store"/);
  assert.match(loader,/AbortSignal\.timeout\(6000\)/);
@@ -22,7 +22,7 @@ test("strict product result permits ONLY approved public price, not private IDs 
  assert.match(loader,/Object\.keys\(row\)\.length!==allowedKeys\.length/);
  assert.match(loader,/item\.price_cents|row\.price_cents/);
  assert.match(loader,/row\.currency!=="USD"/);
- assert.match(loader,/row\.availability!=="sold_out"/);
+ assert.match(loader,/\["sold_out","in_stock"\].includes/);
  assert.match(loader,/row\.can_checkout!==false/);
  assert.match(loader,/Array\.isArray\(raw\)\|\|raw\.length>24/);
  assert.doesNotMatch(loader,/internal_source_cost|quantity_on_hand|inventory_items|image_path|supplier_import_candidates/);
