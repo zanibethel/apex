@@ -1,0 +1,116 @@
+/* The bulk editor is a private dashboard; do not modify public storefront styles.
+   On mobile, avoid a select's longest saved product name setting page width. */
+.apex-bulk-page{
+ min-width:0;
+ max-width:100%;
+ overflow-x:clip;
+}
+.apex-bulk-page :is(.apex-shared-image-apply,.apex-shared-image-heading,
+ .apex-shared-image-controls,.apex-csv-panel,.apex-csv-header,
+ .apex-csv-downloads,.apex-bulk-workspace,.apex-bulk-filterbar,
+ .apex-bulk-rows,.apex-bulk-footer){
+ min-width:0;
+ max-width:100%;
+}
+.apex-bulk-page :is(.apex-shared-image-controls,.apex-csv-header,
+ .apex-csv-downloads,.apex-bulk-footer) > * {
+ min-width:0;
+ max-width:100%;
+}
+.apex-bulk-page .apex-shared-image-controls label{
+ min-width:0;
+ max-width:100%;
+ flex:1 1 240px;
+}
+.apex-bulk-page .apex-shared-image-controls select{
+ display:block;
+ box-sizing:border-box;
+ width:100%;
+ min-width:0;
+ max-width:100%;
+ text-overflow:ellipsis;
+}
+.apex-bulk-page .apex-csv-panel{
+ overflow-wrap:anywhere;
+}
+.apex-bulk-page .apex-csv-upload input[type=file]{
+ min-width:0;
+ max-width:100%;
+}
+.apex-bulk-page .apex-csv-downloads .button{
+ min-width:0;
+ max-width:100%;
+ white-space:normal;
+ text-align:center;
+ overflow-wrap:anywhere;
+}
+.apex-bulk-page .apex-bulk-jump-actions{
+ display:none;
+}
+@media(max-width:700px){
+ .apex-bulk-page :is(.apex-shared-image-controls,.apex-csv-header){
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  width:100%;
+ }
+ .apex-bulk-page .apex-shared-image-controls label{
+  width:100%;
+ }
+ .apex-bulk-page .apex-shared-image-apply>.button{
+  min-width:0;
+  max-width:100%;
+  white-space:normal;
+  overflow-wrap:anywhere;
+ }
+ .apex-bulk-page .apex-csv-downloads{
+  width:100%;
+ }
+ .apex-bulk-page .apex-csv-downloads .button{
+  width:100%;
+ }
+ /* A bottom-sticky multirow action tray covered unrelated CSV and image tools
+    before the user reached the products. Keep it in normal document flow. */
+ .apex-bulk-page .apex-bulk-footer{
+  position:static;
+  bottom:auto;
+  z-index:auto;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  box-shadow:none;
+  padding:10px;
+  align-items:stretch;
+  width:100%;
+ }
+ .apex-bulk-page .apex-bulk-footer :is(form,.button){
+  margin:0;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+ }
+ .apex-bulk-page .apex-bulk-footer .button{
+  display:flex;
+  min-height:44px;
+  height:auto;
+  max-height:none;
+  padding:10px 7px;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.25;
+  font-size:12px;
+  text-align:center;
+ }
+ .apex-bulk-page .apex-bulk-jump-actions{
+  display:inline-flex;
+  width:fit-content;
+  max-width:100%;
+  min-height:44px;
+  white-space:normal;
+  border-radius:8px;
+ }
+}
+@media(max-width:350px){
+ .apex-bulk-page .apex-bulk-footer{
+  grid-template-columns:minmax(0,1fr);
+ }
+}

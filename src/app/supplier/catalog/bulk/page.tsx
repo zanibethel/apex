@@ -2,6 +2,7 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {BulkDraftEditor} from "../bulk-editor";
+import "./mobile-layout.css";
 import {SourceDraftImport} from "../source-draft-import";
 import {SharedPrivateImageBulkApply} from "../shared-private-image-bulk-apply";
 import {proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs";

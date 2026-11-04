@@ -299,6 +299,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const recentImported=new Set(recentImportKeys);
 
  return <section className="apex-bulk-workspace" aria-label="Bulk product creation and editing">
+  <a href="#apex-bulk-actions" className="button secondary apex-bulk-jump-actions">Jump to Save / Publish actions</a>
   <CsvProductImport rows={rows} categories={categories} disabled={!editable||busy} onLoad={loadFromCsv}/>
   <p className="apex-bulk-workspace-summary" role="status">
    <strong>{overview.privateSaved} saved private cards</strong>
@@ -647,7 +648,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     </article>;
    })}
   </div>
-  <div className="apex-bulk-footer" aria-label="Bulk product actions">
+  <div className="apex-bulk-footer" id="apex-bulk-actions" aria-label="Bulk product actions">
    <form action={saveSelected}>
     <button type="submit" className="button primary" disabled={!editable||busy||!selectedValid}
      aria-label={pending?"Saving selected products":"Save selected ("+pendingSaveRows.length+" pending changes)"}>
