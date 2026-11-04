@@ -8,9 +8,12 @@ begin
  or has_function_privilege('authenticated',
   'public.save_private_store_usps_shipping_settings(uuid,boolean,bigint,bigint,bigint)','EXECUTE')
  then raise exception 'Envelope capacity grants or product release gate invalid';end if;
- if (select envelope_max_items from public.apex_store_shipping_settings
-  where store_id='62000000-0000-0000-0000-000000000001') is distinct from 4
- then raise exception 'Existing store capacity default was not preserved';end if;
+ if (select pg_get_expr(d.adbin,d.adrelid)
+     from pg_attrdef d
+     join pg_attribute a on a.attrelid=d.adrelid and a.attnum=d.adnum
+     where d.adrelid='public.apex_store_shipping_settings'::regclass
+       and a.attname='envelope_max_items') is distinct from '4'
+ then raise exception 'Envelope capacity column default is not 4';end if;
 end $check$;
 
 begin;
