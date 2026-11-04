@@ -1,0 +1,37 @@
+.apex-admission-workspace{border:1px solid #473340;background:#16121a;border-radius:15px;padding:clamp(15px,3vw,25px);margin-top:20px}
+.apex-admission-workspace h2{margin:0 0 12px;font-size:23px}
+.apex-admission-workspace label{display:grid;gap:8px;font-size:12px;font-weight:750;color:#e3c8d4}
+.apex-admission-workspace select,.apex-admission-workspace input[type=text],.apex-admission-quantity input{background:#101014;color:#fff;border:1px solid #654a5b;border-radius:9px;padding:11px;min-height:42px;font:inherit;min-width:0;max-width:100%}
+.apex-admission-select{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:20px 0}
+.apex-admission-select label{flex:1;min-width:min(100%,250px)}
+.apex-admission-select .button{min-height:42px}
+.apex-admission-lines{margin:15px 0;border:1px solid #493442;border-radius:12px;padding:12px 16px}
+.apex-admission-lines h3{font-size:15px;margin:0 0 7px}
+.apex-admission-line{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;border-top:1px solid #392b37;padding:14px 0;gap:15px}
+.apex-admission-line strong{font-size:13px;flex:1;min-width:170px}
+.apex-admission-quantity{display:flex;gap:9px;align-items:center}
+.apex-admission-quantity label{font-size:11px}
+.apex-admission-quantity input{width:72px}
+.apex-admission-quantity button{background:none;border:0;color:#eea0bc;cursor:pointer;font-size:12px;text-decoration:underline}
+.apex-admission-form{display:grid;gap:18px;margin:18px 0 8px;max-width:590px}
+.apex-admission-form fieldset{display:flex;gap:12px 20px;border:0;margin:0;padding:0;flex-wrap:wrap}
+.apex-admission-form legend{font-size:13px;font-weight:750;margin-bottom:10px}
+.apex-admission-form fieldset label{display:flex;align-items:center;gap:8px}
+.apex-admission-form input[type=radio]{accent-color:#d12c5b}
+.apex-admission-form .button{justify-self:start;min-height:44px}
+.apex-admission-results{border:1px solid #78516b;background:#211824;border-radius:12px;padding:18px;margin-top:20px}
+.apex-admission-results h3{font-size:20px;margin:0 0 10px}
+.apex-admission-results>p{font-size:12px;color:#d8bfcb}
+.apex-admission-status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+.apex-admission-status-grid p{background:#171019;border:1px solid #4f3b4e;border-radius:10px;padding:13px;margin:0;display:grid;gap:6px}
+.apex-admission-status-grid strong{font-size:17px}
+.apex-admission-status-grid span{font-size:11px;color:#c9afc0}
+.apex-admission-result-line{border-top:1px solid #5a3c51;margin-top:15px;padding-top:13px}
+.apex-admission-result-line h4{font-size:15px;margin:0 0 9px}
+.apex-admission-result-line p,.apex-admission-result-line li{font-size:12px;color:#d5bed1;line-height:1.5}
+.apex-admission-result-line summary{font-size:12px;color:#ffb4d0;cursor:pointer}
+.apex-admission-totals{margin-top:20px;border-top:1px solid #6c5264;padding-top:15px}
+.apex-admission-totals>div{display:flex;justify-content:space-between;gap:15px;font-size:13px;margin:10px 0}
+.apex-admission-totals .apex-admission-total{font-weight:900;font-size:17px;border-top:1px solid #6c5264;padding-top:13px}
+.apex-admission-workspace :is(input,select,button):focus-visible{outline:2px solid #ff6d9f;outline-offset:3px}
+@media(max-width:480px){.apex-admission-select{display:grid}.apex-admission-line{align-items:flex-start}.apex-admission-form fieldset{display:grid}}

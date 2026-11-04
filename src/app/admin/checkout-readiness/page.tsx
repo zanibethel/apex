@@ -87,6 +87,11 @@ export default async function CheckoutReadinessAdmin(){
     Supplier/product authorization, public catalog release, and
     transactional inventory reservation remain separate requirements.</p>
   </section>
+  <div className="actions" style={{marginBottom:18}}>
+   <Link href="/admin/order-admission" className="button primary">
+    Review multi-product order readiness
+   </Link>
+  </div>
   <section aria-labelledby="cart-readiness-products">
    <h2 id="cart-readiness-products">Private listing candidates</h2>
    <p className="notice">Most recently updated {LIMIT} listing-control records, checked
