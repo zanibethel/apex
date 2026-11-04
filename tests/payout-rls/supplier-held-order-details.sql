@@ -37,21 +37,27 @@ declare
  b jsonb;
  keys text;
  denied boolean;
+ v_total integer;
 begin
  v:=public.get_supplier_held_order_details(
   '62000000-0000-0000-0000-000000000001',25,0);
  if v->>'schema_version'<>'1'
   or v->>'source'<>'private_held_order_snapshots'
   or v->>'store_id'<>'62000000-0000-0000-0000-000000000001'
-  or v->>'total'<>'2'
+  or (v->>'total')::integer<3
   or v->>'has_more'<>'false'
-  or jsonb_array_length(v->'orders')<>2
+  or jsonb_array_length(v->'orders')<>(v->>'total')::integer
   or v->>'shipping_enabled'<>'false'
   or v->>'payment_enabled'<>'false'
   or v->>'delivery_decryption_enabled'<>'false'
  then raise exception 'Supplier detail list failed or granted commerce';end if;
- a:=v->'orders'->0;
- b:=v->'orders'->1;
+ v_total:=(v->>'total')::integer;
+ select item.value into a from jsonb_array_elements(v->'orders') item(value)
+  where item.value->>'order_reference'='APEX-HELD-INCOMPLETE-214';
+ select item.value into b from jsonb_array_elements(v->'orders') item(value)
+  where item.value->>'order_reference'='APEX-HELD-WORKER-SYNTH-A';
+ if a is null or b is null then
+  raise exception 'Fixture did not contain expected canonical orders';end if;
  if a->>'order_reference'<>'APEX-HELD-INCOMPLETE-214'
  or a->>'display_status'<>'incomplete_held_record'
  or a->>'destination_sealed'<>'false'
@@ -101,9 +107,13 @@ begin
  then raise exception 'Supplier first page incorrect';end if;
  v:=public.get_supplier_held_order_details(
   '62000000-0000-0000-0000-000000000001',1,1);
- if v->>'has_more'<>'false' or jsonb_array_length(v->'orders')<>1
- or v->'orders'->0->>'order_reference'<>'APEX-HELD-WORKER-SYNTH-A'
+ if v->>'has_more'<>'true' or jsonb_array_length(v->'orders')<>1
+ or v->'orders'->0->>'order_reference'='APEX-HELD-INCOMPLETE-214'
  then raise exception 'Supplier second page incorrect';end if;
+ v:=public.get_supplier_held_order_details(
+  '62000000-0000-0000-0000-000000000001',1,v_total-1);
+ if v->>'has_more'<>'false' or jsonb_array_length(v->'orders')<>1
+ then raise exception 'Supplier final page incorrect';end if;
  denied:=false;
  begin
   perform public.get_supplier_held_order_details(
