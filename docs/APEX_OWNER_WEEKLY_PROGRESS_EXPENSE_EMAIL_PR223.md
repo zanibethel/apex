@@ -25,7 +25,17 @@ Two required vendor lines are present in the weekly email, even when actual paid
 | One-time domain registration | Vercel / `apexanabolics.co` | Vercel domain ownership and purchase metadata confirms purchase **October 29, 2026** in America/Chicago. Earlier first-year checkout quote was **$29.99**; no settled receipt or transaction charge returned by the available billing usage API. | **$29.99 one-time quoted price** | **Unverified** |
 | Recurring email | Proton Mail Essentials / three user mailbox plan assumption | Earlier three-user monthly planning screenshot was **$7.99 per user/month**. This does **not** verify the active billable seat count, billing interval or invoice. | **$23.97/month estimated** | **Unverified** |
 
-These quotes are **not** added together as a paid expense total: one is a one-time first-year purchase quote, while the other is a recurring monthly plan estimate. Until receipts are available, the report must show both lines and mark paid amounts as unavailable. Receipts and any future renewals must be recorded with their own dates and plan details in the private owner ledger tracked in Issue #222. Quotes are kept in code as historical references rather than fabricated invoices. Domain costs should be recorded only once per actual registration or renewal, never again every week.
+These amounts are now **owner-approved** but are **not** added together as a paid expense total: one is a one-time first-year purchase quote, while the other is a recurring monthly plan estimate. Until receipts are available, the report must show both lines and mark paid amounts as unavailable. Receipts and any future renewals must be recorded with their own dates and plan details in the private owner ledger tracked in Issue #222. Quotes are kept in code as historical references rather than fabricated invoices. Domain costs should be recorded only once per actual registration or renewal, never again every week.
+
+## Owner-approved budget baseline (PR #225)
+
+On November 3, 2026, the Apex owner explicitly accepted the **$29.99 domain registration** and **$23.97/month Proton Mail** amounts for project reporting. They are now **owner-approved budget values**, replacing the prior "provisional quote" labels in the weekly progress email. This approval does **not** attest that a matching final paid invoice has been retrieved.
+
+- **Domain** — $29.99 **once**, purchased October 29, 2026 as verified by Vercel registration metadata. Do not repeat the one-time cost each week as a new expense; track the eventual renewal as a separate period and receipt.
+- **Proton Mail** — $23.97 **per month** planning commitment for three Mail Essentials seats. Do not assume the exact billing date, paid status, additional taxes, or annual prepayment without source evidence.
+- **First-month baseline** — $53.96 = $29.99 one-time + $23.97 for one month, a **budget planning comparison**, not an invoice-paid total. Subsequent monthly baseline is $23.97 excluding other services.
+- **Invoice reconciliation** — Both `actualPaidUsd` fields remain null until a receipt or equivalent user-confirmed payment record is documented in the private owner ledger. User approval of the budget figure is distinct from verification that money has been charged.
+- **Access** — Report remains owner-only. No paid invoice data is placed in the public GitHub repository.
 
 ## Operational guardrails
 
