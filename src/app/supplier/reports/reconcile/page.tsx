@@ -53,7 +53,8 @@ export default async function SupplierReconciliationPage({
     No order records will be inferred.</p>:
     <SalesReconciliationWorkspace storeId={store.id}
      rows={review.rows} total={review.total}
-     truncated={review.truncated} canEdit={canEdit}/>}
+     truncated={review.truncated} canEdit={canEdit}
+     referenceNow={new Date().toISOString()}/>}
   </section>)}
   <p className="notice">This is a recordkeeping and duplicate-review workflow.
    Apex does not currently store validated shipping addresses or order-line
