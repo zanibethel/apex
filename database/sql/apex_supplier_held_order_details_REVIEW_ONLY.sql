@@ -78,7 +78,7 @@ begin
        and d.delivery_verified=false and d.shipping_authorized=false
    ) into v_protected;
 
-   v_complete:=v_count>0 and found and v_protected
+   v_complete:=v_count>0 and v_accounting.order_id is not null and v_protected
     and v_header.record_status='held_unverified'
     and v_header.fulfillment_authorized=false
     and v_header.payment_authorized=false
