@@ -16,8 +16,7 @@ export const metadata={
 const LIMIT=10;
 const MAX_PAGES=10;
 async function readCompleteStoreQueue(
- client:Awaited<ReturnType<typeof getSupplierWorkspace>> extends infer W
-  ?NonNullable<W>["client"]:never,
+ client:NonNullable<Awaited<ReturnType<typeof getSupplierWorkspace>>>["client"],
  storeId:string,day:string,
 ){
  const pages=[];
@@ -77,7 +76,7 @@ export default async function SupplierCumulativeFulfillmentReview(){
     unavailable for this storefront. No partial CSV will be exported.
     Original fulfillment data cannot be inferred from sales totals.</p>:
     <CumulativeReviewWorkspace
-     storeId={store.id} day={day} rows={report.rows}
+     storeId={store.id} day={day} rows={report.rows.map(r=>({...r}))}
      totalOrders={report.totalOrders} summary={report.summary}
      canPreview={canPreview}/>}
   </section>)}
