@@ -36,7 +36,7 @@ export default async function SupplierUSPS(){
    {!readiness?<p role="alert">USPS connection status unavailable.
     No label purchase is possible.</p>:<>
     <p><strong>Account:</strong> {labels[readiness.status]}</p>
-    <p><strong>Postage paid by:</strong> Supplier's own USPS payment account</p>
+    <p><strong>Postage paid by:</strong> Supplier&apos;s own USPS payment account</p>
     <p><strong>Label purchases:</strong> Not enabled</p>
     <p><strong>Automatic tracking:</strong> Not enabled</p>
    </>}
@@ -55,7 +55,7 @@ export default async function SupplierUSPS(){
   <section className="supplier-panel" style={{maxWidth:"none",minWidth:0}}>
    <h2>Shipping workflow</h2>
    <p>For paid, eligible orders, Apex will show the assigned shipment, selected
-    USPS packaging, and the customer's delivery details. The supplier will
+    USPS packaging, and the customer&apos;s delivery details. The supplier will
     review the package and explicitly approve the postage amount before
     purchasing a label.</p>
    <p className="notice">Label purchasing, order-to-tracking assignment and
