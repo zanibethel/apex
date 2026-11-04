@@ -61,7 +61,7 @@ export default async function DailySupplierReport({
     {date}</Link>)}
   </div>
   {args?.email==="enabled"&&<p role="status" className="apex-daily-email-state">
-    Daily email reporting enabled for your verified account address.
+    Daily email preference enabled for your verified account address. Delivery begins after secure sender activation.
    </p>}
   {args?.email==="disabled"&&<p role="status" className="apex-daily-email-state">
     Daily email reporting disabled for your account.
@@ -80,8 +80,9 @@ export default async function DailySupplierReport({
       <p className="notice">Destination: {w.user.email??"Unverified account email"}.
        Reports are sent only to your confirmed login email, not other supplier members.
       </p>
-      <p className="notice">Status: {emailPreference.enabled?"Enabled":"Disabled"}
-       {" · "}Schedule: before 8:00 AM Central daily.</p>
+      <p className="notice">Subscription: {emailPreference.enabled?"Enabled":"Disabled"}
+       {" · "}Target delivery: before 8:00 AM Central daily.</p>
+      <p className="notice">A subscription does not confirm that a message was sent. Secure delivery must be activated by the administrator.</p>
       <form action={updateSupplierDailyReportEmailPreference}>
        <input type="hidden" name="storeId" value={store.id}/>
        <input type="hidden" name="enabled"
@@ -120,9 +121,9 @@ export default async function DailySupplierReport({
     </>}
   </section>)}
   <p className="notice apex-daily-disclosure">
-   Reports are available in the supplier dashboard whether or not you enable
-   daily email. Resend accepts scheduled report messages, but final inbox delivery
-   may depend on the receiving mailbox. Gross sales are not supplier payouts;
+   Reports remain available in the supplier dashboard even when email delivery is
+   not activated. Email subscriptions require a verified login address; provider
+   acceptance is not proof of final inbox delivery. Gross sales are not supplier payouts;
    shipping expenses are tracked separately when label purchasing is authorized.
   </p>
   <div className="actions">
