@@ -8,6 +8,8 @@ import {createSupplierReviewEmailPreview,renderSupplierReviewEmailPreview}
  from "@/lib/supplier/review-email-report-manifest.mjs";
 import {parseSupplierReviewEmailStatus}
  from "@/lib/supplier/review-email-delivery-status.mjs";
+import {parseSupplierReportEligibilityEvidence}
+ from "@/lib/supplier/report-eligibility-evidence.mjs";
 import ReviewEmailAttachmentDownload from "./download";
 
 export const dynamic="force-dynamic";
@@ -26,8 +28,18 @@ export default async function SupplierReviewEmailPreview(){
   const workbook=await readCompleteReviewWorkbook(
    workspace.client,store.id,day,
   );
-  if(!workbook)return {store,report:null};
+  if(!workbook)return {store,report:null,evidence:null};
   try{
+   // A recorded sale or complete held snapshot must NEVER be interpreted
+   // as settlement, merchant/product eligibility, or shipping permission.
+   const {data:evidenceRaw,error:evidenceError}=await workspace.client.rpc(
+    "get_supplier_review_report_evidence_gate",{
+     p_store_id:store.id,
+    });
+   const evidence=evidenceError?null:
+    parseSupplierReportEligibilityEvidence(
+     evidenceRaw,store.id,workbook.totalOrders);
+   if(!evidence)return {store,report:null,evidence:null};
    const report=createSupplierReviewEmailPreview(
     workbook,store.id,day,
    );
@@ -39,9 +51,9 @@ export default async function SupplierReviewEmailPreview(){
    const status=error?null:parseSupplierReviewEmailStatus(
     data,store.id,day,
    );
-   return {store,report:{...report,email,status}};
+   return {store,report:{...report,email,status},evidence};
   }catch{
-   return {store,report:null};
+   return {store,report:null,evidence:null};
   }
  }));
  return <main className="container supplier-shell">
@@ -58,18 +70,36 @@ export default async function SupplierReviewEmailPreview(){
    delivery addresses, phone numbers, emails, order-line titles,
    tracking references and payment details are excluded from the
    attachment preview.</p>
-  {results.map(({store,report})=><section key={store.id}
+  {results.map(({store,report,evidence})=><section key={store.id}
    className="supplier-panel" style={{maxWidth:"none",marginBottom:18}}>
    <h2>{store.display_name}</h2>
-   {!report?<p role="alert">A complete, permission-checked
-    review snapshot is unavailable. No email or attachment will be
-    generated from incomplete records.</p>:<>
+   {!report||!evidence?<p role="alert">Independent supplier evidence
+    cannot be validated for this source. The review report and attachment
+    are withheld rather than treating sales history as an eligible order.</p>:<>
     <p className="notice">Original held orders: {report.manifest.orders}
      {" · "}New today: {report.manifest.newToday}
      {" · "}Carried forward: {report.manifest.carriedForward}
      {" · "}Partially planned: {report.manifest.partlyPlanned}
      {" · "}Fully planned (not shipped): {report.manifest.fullyPlannedReview}
      {" · "}Incomplete: {report.manifest.incomplete}</p>
+    <h3>Independent fulfillment evidence</h3>
+    <p className="notice">Currently recorded as confirmed in sales history:
+     {" "}{evidence.recordedConfirmedObservations}.
+     This does not prove independent payment finality, product eligibility,
+     delivery authorization or shipping readiness.</p>
+    <p className="notice"><strong>Independently eligible orders: 0</strong>
+     {" · "}Withheld from actionable fulfillment reports:
+     {" "}{evidence.withheldOrders}
+     {" · "}Incomplete or changed original records:
+     {" "}{evidence.incompleteOrChanged}
+     {" · "}Original item lines lacking shipping approval:
+     {" "}{evidence.unapprovedLines}.</p>
+    <p className="notice">Evidence source consistency:
+     {" "}{evidence.sourceConsistentForReview?
+      "Held source reconciles for review only":
+      "Additional original-order evidence needs review"}.
+     Real fulfillment emails, address access, labels and shipping actions
+     remain disabled.</p>
     <p className="notice">Attachment: {report.manifest.attachmentName}
      {" · "}{report.manifest.rows} metadata rows
      {" · "}{report.manifest.attachmentBytes} bytes
