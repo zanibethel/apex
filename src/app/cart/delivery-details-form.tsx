@@ -21,7 +21,7 @@ const FIELD_LIST:ReadonlyArray<{
 ];
 
 export function DeliveryDetailsForm({items,shippingMethod}:{
- items:{product_id:string;quantity:number}[];shippingMethod:"small"|"medium";
+ items:{product_id:string;quantity:number}[];shippingMethod:"small"|"medium"|null;
 }){
  const [fields,setFields]=useState<Contact>({...EMPTY_DELIVERY_DETAILS});
  const [errors,setErrors]=useState<Record<string,string>>({});
@@ -87,7 +87,8 @@ export function DeliveryDetailsForm({items,shippingMethod}:{
     {confirmed.address2?", "+confirmed.address2:""}, {confirmed.city},
     {" "}{confirmed.state} {confirmed.postalCode}</p>
    <p><strong>Packaging:</strong> {shippingMethod==="small"?
-    "USPS Padded Flat Rate Envelope":"USPS Medium Flat Rate Box"}</p>
+    shippingMethod==="medium"?"USPS Medium Flat Rate Box":
+    "Packaging not verified yet"}</p>
    <p className="apex-cart-validation">Format checked only. Address delivery, stock,
     and order eligibility have not been confirmed. No order was placed.</p>
   </div>}
