@@ -65,7 +65,7 @@ test("free shipping applies above $200 after discounts regardless of automatic b
 });
 test("strict customer cart server source chooses based on quantity",()=>{
  const makeSource=q=>({
-  schema_version:1,state:"rechecked_sold_out_cart",
+  schema_version:1,state:"rechecked_inventory_cart",
   items:[{product_id:id,quantity:q,name:"Sample catalog item",
    unit_price_cents:"1000",availability:"sold_out",can_checkout:false}],
   shipping:policy,requested_code:"",promotion:null,
