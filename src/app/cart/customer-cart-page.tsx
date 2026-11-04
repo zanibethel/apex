@@ -7,7 +7,7 @@ import {DeliveryDetailsForm} from "./delivery-details-form";
 import "./customer-cart.css";
 
 type QuoteLine={productId:string;name:string;quantity:number;
- unitPriceCents:number;lineTotalCents:number;availability:"sold_out"};
+ unitPriceCents:number;lineTotalCents:number;availability:"sold_out"|"in_stock"};
 type Review={
  ok:boolean;reason?:string;status?:string;
  items?:QuoteLine[];merchandiseSubtotalCents?:number;
@@ -79,7 +79,8 @@ export function CustomerCartPage(){
        <div className="apex-customer-symbol" aria-hidden="true">▲</div>
        <div className="apex-customer-line-info">
         <strong>{verified?.name??"Saved catalog item"}</strong>
-        <span>{verified?"Sold out — cannot be ordered":
+        <span>{verified?(verified.availability==="in_stock"?
+         "Stock recorded — checkout unavailable":"Sold out — cannot be ordered"):
          "Pending current product and inventory verification"}</span>
         <div className="apex-customer-qty">
          <button type="button" aria-label="Decrease quantity"
@@ -130,7 +131,7 @@ export function CustomerCartPage(){
        {(review.amountUntilFreeShippingCents??0)>0&&
         <p className="apex-cart-note">Add {usd(review.amountUntilFreeShippingCents??0)}
          more merchandise after discounts for free shipping.</p>}
-       <p className="apex-cart-validation">Items are sold out. No order or payment can be placed.</p>
+       <p className="apex-cart-validation">Checkout is not yet available. Inventory and prices must be rechecked before any future order.</p>
       </div>}
      <button type="button" className="apex-customer-checkout" disabled>
       Checkout unavailable
