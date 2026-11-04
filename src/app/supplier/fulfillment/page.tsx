@@ -167,6 +167,8 @@ export default async function SupplierFulfillmentQueue({
     Original order details</Link>
    <Link className="button secondary" href="/supplier/usps">
     Carrier account readiness</Link>
+   <Link className="button secondary" href="/supplier/reports/fulfillment">
+    Cumulative review CSV</Link>
    <Link className="button secondary" href="/supplier/reports">
     Sales history</Link>
   </div>
