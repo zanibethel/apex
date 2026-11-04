@@ -27,5 +27,8 @@ export async function saveSupplierListingIntent(_previous:Result,form:FormData):
  revalidatePath("/supplier/catalog");
  revalidatePath(`/supplier/catalog/preview/${productId}`);
  revalidatePath("/admin/listing-controls");
+ revalidatePath("/admin/catalog-release");
+ revalidatePath("/catalog");
+ revalidatePath("/cart");
  return {ok:true,message:result.data};
 }
