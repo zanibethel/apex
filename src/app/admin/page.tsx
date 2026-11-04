@@ -16,6 +16,7 @@ const dashboardLinks = [
   { title: "Shipping rules", description: "Optional flat fee and automatic free-shipping threshold.", href: "/admin/checkout-rules", icon: "▧" },
   { title: "Shipping & discount codes", description: "Manage free-shipping and merchandise promotion codes.", href: "/admin/shipping-promotions", icon: "▥" },
   { title: "Checkout readiness", description: "Read-only private product eligibility and payment launch gates. Real checkout remains disabled.", href: "/admin/checkout-readiness", icon: "▥" },
+  { title: "Order admission", description: "Review multiple real products, stock, eligibility, USPS shipping and discount codes before any order is authorized.", href: "/admin/order-admission", icon: "▧" },
   { title: "BTCPay connection", description: "Verify store-scoped Greenfield credentials without creating invoices.", href: "/admin/btcpay", icon: "₿" },
   { title: "Payment monitor", description: "Read-only reporting, payout states and review attention. No live payment controls.", href: "/admin/payment-monitor", icon: "₿" },
   { title: "Storefront review", description: "Review actual product cards, prices and images in the customer-facing layout.", href: "/admin/storefront-preview", icon: "▧" },
