@@ -73,7 +73,7 @@ export async function inspectPrivateOrderAdmission(
   return unavailable("Inventory changed or was unavailable during the locked recheck.");
 
  const policyRead=await client.from("apex_store_shipping_settings")
-  .select("charge_shipping,flat_shipping_cents,medium_flat_shipping_cents,free_shipping_min_subtotal_cents")
+  .select("charge_shipping,flat_shipping_cents,medium_flat_shipping_cents,free_shipping_min_subtotal_cents,envelope_max_items")
   .eq("store_id",STORE_ID).maybeSingle();
  if(policyRead.error||!policyRead.data)
   return unavailable("Current USPS shipping policy could not be verified.");
