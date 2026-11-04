@@ -88,7 +88,7 @@ test("approved catalog remains gated and source never exposes stock counts",()=>
  assert.match(client,/get_public_inventory_catalog/);
  assert.match(client,/cache:"no-store"/);
  assert.match(client,/row.availability as "sold_out"\|"in_stock"/);
- assert.doesNotMatch(client,/service_role|\\.insert\\(|\\.update\\(/);
+ assert.doesNotMatch(client,/service_role|\.insert\(|\.update\(/);
  assert.match(shelf,/p.availability==="in_stock"/);
  assert.match(shelf,/actionLabel="Add to cart"/);
  assert.match(shelf,/Checkout unavailable|checkout unavailable/);
@@ -110,6 +110,6 @@ test("authenticated supplier/admin stock and publishing actions invalidate catal
   assert.match(action,/revalidatePath\("\/catalog"\)/);
   assert.match(action,/revalidatePath\("\/cart"\)/);
  }
- assert.doesNotMatch(privateStock,/\\.update\\(\\{is_published:\s*true/);
+ assert.doesNotMatch(privateStock,/\.update\(\{is_published:\s*true/);
  assert.doesNotMatch(adminHold,/\\.update\\(\\{is_published:\s*true/);
 });
