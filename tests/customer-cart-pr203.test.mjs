@@ -94,7 +94,7 @@ test("invalid or unverified stock, pricing, privileges and codes are rejected",(
   {state:"cart_unavailable",items:[]},
   {can_pay:true},{can_place_order:true},
   {can_create_invoice:true},{can_reserve_stock:true},
-  {items:[{...source.items[0],availability:"in_stock"}]},
+  {items:[{...source.items[0],availability:"invented"}]},
   {items:[{...source.items[0],can_checkout:true}]},
   {items:[{...source.items[0],unit_price_cents:"0"}]},
   {items:[{...source.items[0],quantity:2}]},
