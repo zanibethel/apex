@@ -97,25 +97,12 @@ test("nonpayable response verifier rejects spoofed payable, missing tax and expi
  },async()=>({ok:false})));
 });
 
-test("route is demo only, origin checked, bounded, nonpayable, no DB/BTCPay writes",()=>{
+test("retired sample quote endpoint remains unavailable independent of flags",()=>{
  const route=readFileSync("src/app/api/checkout/quote-preview/route.ts","utf8");
- const checkout=readFileSync("src/app/checkout/preview/checkout-preview.tsx","utf8");
- const server=readFileSync("src/lib/checkout/server-demo-quote.mjs","utf8");
- assert.match(route,/process\.env\.APEX_CHECKOUT_MODE!=="demo"/);
- assert.match(route,/new URL\(request\.url\)\.origin/);
- assert.match(route,/fetchSite==="cross-site"/);
- assert.match(route,/MAX_BYTES=2048/);
- assert.match(route,/calculateDemoServerQuote\(JSON\.parse\(body\)\)/);
+ assert.match(route,/export async function POST\(\)/);
+ assert.match(route,/status:404/);
  assert.match(route,/Cache-Control/);
+ assert.match(route,/not_available/);
+ assert.doesNotMatch(route,/APEX_CHECKOUT_MODE|process\.env|calculateDemoServerQuote|JSON\.parse|request\.text\(/);
  assert.doesNotMatch(route,/\.from\(|\.insert\(|\.update\(|\.rpc\(|\bfetch\s*\(|Greenfield|BTCPay/i);
- assert.match(server,/payable:false/);
- assert.match(server,/canCreateOrder:false/);
- assert.match(server,/canCreatePayment:false/);
- assert.match(checkout,/requestDemoServerQuote\(\{quantities,shipping,coupon\}\)/);
- assert.match(checkout,/quoteIsCurrent&&serverQuote/);
- assert.match(checkout,/quotePending/);
- assert.match(checkout,/setQuoteExpired\(true\)/);
- assert.match(checkout,/quoteKey===currentCartKey/);
- assert.match(checkout,/Demo quote expired or cart changed/);
- assert.match(checkout,/Server-verified fictional total/);
 });
