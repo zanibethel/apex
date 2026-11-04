@@ -6,7 +6,7 @@ do $guard$
 declare r jsonb;
 begin
  if (select enabled from apex_internal.private_release_gate where singleton) is distinct from false
- or has_table_privilege('anon','public.products','SELECT')
+
  or has_table_privilege('anon','public.inventory_items','SELECT')
  or has_table_privilege('anon','apex_internal.product_release_authorizations','SELECT')
  or not has_function_privilege('anon','public.get_public_inventory_catalog(integer,integer)','EXECUTE')
