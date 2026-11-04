@@ -23,6 +23,7 @@ test("public storefront shows normal catalog navigation, no test-payment promoti
  assert.doesNotMatch(layout,/DEMO ONLY/);
  assert.doesNotMatch(layout,/DemoCartProvider|DemoCartToggle|APEX_CHECKOUT_MODE/);
  assert.match(shelf,/type="button" disabled/);
+ assert.match(shelf,/p.availability==="in_stock"/);
  assert.match(shelf,/No products available right now/);
 });
 test("retired checkout route is admin-only and never exposes simulated payments",()=>{
