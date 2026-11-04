@@ -36,6 +36,7 @@ export async function importCumulativeReviewNotes(form:FormData){
   return redirect(target+"?upload=unavailable");
 
  const today=centralDateKey(new Date());
+ if(!today)return redirect(target+"?upload=unavailable");
  const report=await readCompleteReviewWorkbook(
   workspace.client,storeId,today);
  if(!report)return redirect(target+"?upload=unavailable");
