@@ -42,7 +42,7 @@ test("private order detail readback recognizes only verified schema and no comme
  }
 });
 test("order detail tables are private, append-only and sourced from real sales",()=>{
- const sql=read("supabase/migrations/20261104140000_apex_private_order_detail_foundation.sql");
+ const sql=read("supabase/migrations/20261104235408_apex_private_order_detail_foundation.sql");
  assert.match(sql,/references public\.supplier_sales_history\(id\)/);
  assert.match(sql,/v_sale\.occurred_at is distinct from new\.original_purchased_at/);
  assert.match(sql,/v_sale\.order_reference is distinct from new\.source_order_reference/);
@@ -68,7 +68,7 @@ test("order detail tables are private, append-only and sourced from real sales",
  assert.doesNotMatch(sql,/create policy.*using\s*\(true\)/i);
 });
 test("supplier readiness RPC returns only safe aggregates and is not an order export",()=>{
- const sql=read("supabase/migrations/20261104140000_apex_private_order_detail_foundation.sql");
+ const sql=read("supabase/migrations/20261104235408_apex_private_order_detail_foundation.sql");
  const page=read("src/app/supplier/reports/order-foundation/page.tsx");
  const reports=read("src/app/supplier/reports/page.tsx");
  assert.match(sql,/public\.get_supplier_order_detail_foundation\(p_store_id uuid\)/);
