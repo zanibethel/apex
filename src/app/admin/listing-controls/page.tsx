@@ -3,6 +3,7 @@ import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {listingControlStatus,listingControlAuditAction} from "@/lib/catalog/listing-control.mjs";
+import {privateInventoryState} from "@/lib/catalog/private-inventory-state.mjs";
 import {privateReleaseDisplay} from "@/lib/catalog/private-release-decision.mjs";
 import {formatReviewTime} from "@/lib/catalog/review-time.mjs";
 import {latestPendingSupplierCorrection} from "@/lib/catalog/listing-resubmission.mjs";
@@ -18,6 +19,12 @@ export default async function ListingControlsPage(){
  const {data:controls,error}=await client.from("supplier_listing_controls")
   .select("store_id,product_id,product_name,product_sku,supplier_wants_listing,admin_gate,republish_approval_required,republish_approved,reason,changed_at")
   .order("changed_at",{ascending:false}).limit(100);
+ const {data:inventory,error:inventoryError}=await client.from("inventory_items")
+  .select("store_id,product_id,quantity_on_hand,quantity_reserved")
+  .limit(250);
+ const stockByProduct=new Map((inventoryError?[]:inventory??[]).map(row=>[
+  row.store_id+":"+row.product_id,row,
+ ]));
  // Review readiness per listed product; no public API or service-role read.
  const releaseDecisions=new Map<string,unknown>();
  await Promise.all((controls??[]).map(async item=>{
@@ -40,6 +47,7 @@ export default async function ListingControlsPage(){
    :<div className="apex-product-grid">
     {controls.map(item=>{
      const status=listingControlStatus(item);
+     const stock=privateInventoryState(stockByProduct.get(item.store_id+":"+item.product_id));
      const decision=privateReleaseDisplay(releaseDecisions.get(item.store_id+":"+item.product_id));
      const ownEvents=(events??[]).filter(e=>e.store_id===item.store_id&&e.product_id===item.product_id).slice(0,10);
      const pendingCorrection=!historyError&&["hold","review"].includes(status.kind)
@@ -56,6 +64,7 @@ export default async function ListingControlsPage(){
        {pendingCorrection.createdAt&&<p className="notice">Submitted {formatReviewTime(pendingCorrection.createdAt)}</p>}
        <p className="notice">Review the saved private product evidence before unlocking. Submission alone never authorizes publication.</p>
       </div>}
+      <p className="notice"><strong>Private inventory:</strong> {stock.label}</p>
       <p className="notice"><strong>Effective release decision:</strong> {decision.label}</p>
       <p className="notice">{decision.description}</p>
       {item.reason&&<p className="apex-review-note"><strong>Latest admin note:</strong> {item.reason}</p>}
