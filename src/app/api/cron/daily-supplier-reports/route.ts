@@ -1,5 +1,6 @@
 import {createClient} from "@supabase/supabase-js";
 import {NextResponse} from "next/server";
+import {renderSupplierDailyOrderHtml} from "@/lib/supplier/daily-order-email-html.mjs";
 
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
@@ -104,6 +105,7 @@ export async function GET(request:Request){
      to:[item.email],
      subject:"Apex daily order report — "+item.report_date,
      text:emailText(item),
+     html:renderSupplierDailyOrderHtml(item),
     }),
     signal:AbortSignal.timeout(10000),
    });
