@@ -160,7 +160,7 @@ jobs:
       - name: Verify historical identity, stale denial, reimport deduplication and role scope
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-sales-reconciliation.sql
       - name: Install private verified-source order detail snapshots (disposable only)
-        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104140000_apex_private_order_detail_foundation.sql
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104235408_apex_private_order_detail_foundation.sql
       - name: Verify order identity, immutable items, sealed destination and tenant isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/private-order-detail-foundation.sql
       - name: Install disposable atomic held-order persistence (never production)
