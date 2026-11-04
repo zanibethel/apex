@@ -92,12 +92,12 @@ reset role;
 do $record_draft$
 declare
  s uuid:='62000000-0000-0000-0000-000000000001';
- o uuid; l uuid; receipt jsonb; id uuid;
+ o uuid; l uuid; receipt jsonb; shipment_id uuid;
 begin
- select id into o from apex_internal.order_detail_snapshots
- where store_id=s and sale_id='65000614-0000-4000-8000-000000000001';
- select id into l from apex_internal.order_line_snapshots
- where store_id=s and order_id=o and line_number=2;
+ select h.id into o from apex_internal.order_detail_snapshots h
+ where h.store_id=s and h.sale_id='65000614-0000-4000-8000-000000000001';
+ select l0.id into l from apex_internal.order_line_snapshots l0
+ where l0.store_id=s and l0.order_id=o and l0.line_number=2;
  if o is null or l is null then raise exception 'Canonical synthetic lines missing';end if;
  receipt:=apex_internal.create_review_shipment_plan(s,o,
   'SYNTH-QUEUE-215-SECOND',
@@ -105,8 +105,8 @@ begin
   '70000215-0000-4000-8000-000000000950');
  if receipt->>'status'<>'plan_recorded' or receipt->>'revision'<>'1'
  then raise exception 'Additional synthetic plan failed';end if;
- id:=(receipt->>'shipment_id')::uuid;
- receipt:=apex_internal.record_review_tracking_draft(s,id,
+ shipment_id:=(receipt->>'shipment_id')::uuid;
+ receipt:=apex_internal.record_review_tracking_draft(s,shipment_id,
   '70000215-0000-4000-8000-000000000951',1,
   'USPS','94000000000000000951');
  if receipt->>'status'<>'tracking_draft_recorded'
