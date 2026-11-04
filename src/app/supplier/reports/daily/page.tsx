@@ -129,6 +129,7 @@ export default async function DailySupplierReport({
   <div className="actions">
    <Link className="button secondary" href="/supplier/usps">USPS fulfillment</Link>
    <Link className="button secondary" href="/supplier/reports">Sales history</Link>
+   <Link className="button secondary" href="/supplier/reports/fulfillment">Cumulative fulfillment review CSV</Link>
    <Link className="button secondary" href="/supplier/reports/reconcile">Download / upload sales review CSV</Link>
   </div>
  </main>;
