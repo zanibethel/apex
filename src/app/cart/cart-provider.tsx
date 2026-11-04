@@ -63,12 +63,12 @@ export function CustomerCartLink(){
    {count>0&&<span className="apex-customer-cart-count">{count}</span>}
   </Link>;
 }
-export function SaveCatalogItem({id,name}:{id:string;name:string}){
+export function SaveCatalogItem({id,name,actionLabel="Save to cart"}:{id:string;name:string;actionLabel?:string}){
  const {items,add}=useCustomerCart();
  const saved=items.some(item=>item.product_id===id);
  return <button type="button" className="apex-approved-save"
    onClick={()=>add(id)} disabled={saved&&items.find(item=>item.product_id===id)?.quantity===10}
    aria-label={`Save ${name} to cart`}>
-  {saved?"Saved — add another":"+ Save to cart"}
+  {saved?"In cart — add another":"+ "+actionLabel}
  </button>;
 }
