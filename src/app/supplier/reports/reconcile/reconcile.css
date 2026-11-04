@@ -1,0 +1,26 @@
+.apex-sales-review-page{min-width:0;overflow-wrap:anywhere}
+.apex-sales-review-page h1{font-size:clamp(32px,6vw,48px)}
+.apex-sales-review-store{margin:22px 0;min-width:0}
+.apex-sales-review-store>h2{font-size:21px}
+.apex-sales-review-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.apex-sales-review-metrics article{border:1px solid #5b4050;background:#211a22;border-radius:10px;padding:13px;min-width:0}
+.apex-sales-review-metrics span{display:block;color:#d0b5c0;font-size:12px}
+.apex-sales-review-metrics strong{display:block;margin-top:7px;font-size:25px}
+.apex-sales-review-box{border:1px solid #544054;border-radius:12px;background:#17131a;padding:clamp(14px,3vw,22px);margin:16px 0;min-width:0}
+.apex-sales-review-box h2{margin:0 0 10px;font-size:20px}
+.apex-sales-review-box p{line-height:1.6}
+.apex-sales-review-box form{display:grid;gap:10px;max-width:650px}
+.apex-sales-review-box label{font-weight:700}
+.apex-sales-review-box input[type=file]{display:block;background:#211a23;border:1px solid #74546b;border-radius:9px;padding:12px;max-width:100%;font-size:14px}
+.apex-sales-review-box button{min-height:44px;max-width:320px}
+.apex-sales-review-preview{border:1px solid #735d68;padding:10px 14px;border-radius:9px}
+.apex-sales-review-preview p{margin:0}
+.apex-sales-review-error{border:1px solid #ad4c5b;color:#ffc1cc;padding:10px;border-radius:8px}
+.apex-sales-review-success{border:1px solid #4c9475;background:#18352a;padding:12px;border-radius:9px}
+.apex-sales-review-scroll{overflow-x:auto;max-width:100%}
+.apex-sales-review-scroll table{width:100%;min-width:760px;border-collapse:collapse;font-size:13px}
+.apex-sales-review-scroll th,.apex-sales-review-scroll td{border-bottom:1px solid #4c3948;padding:13px 10px;text-align:left;vertical-align:top}
+.apex-sales-review-scroll th{color:#edbbd2;font-weight:700}
+.apex-sales-review-scroll code{font-size:12px;overflow-wrap:anywhere}
+.apex-sales-review-older{display:block;margin-top:5px;color:#ffc099;font-size:11px;font-weight:700}
+@media(max-width:700px){.apex-sales-review-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.apex-sales-review-box button{max-width:100%}}
