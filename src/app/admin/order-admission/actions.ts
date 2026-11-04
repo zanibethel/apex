@@ -35,7 +35,7 @@ export async function inspectPrivateOrderAdmission(
 ):Promise<OrderAdmissionReviewState>{
  const rawItems=form.get("items"),rawBox=form.get("boxSize"),rawCode=form.get("code");
  if(typeof rawItems!=="string"||rawItems.length>1300||
-  (rawBox!=="small"&&rawBox!=="medium")||typeof rawCode!=="string")
+  (rawBox!=="auto"&&rawBox!=="medium")||typeof rawCode!=="string")
   return unavailable("Select valid products and a USPS package.");
  const code=rawCode.trim().toUpperCase();
  if(code!==""&&!/^[A-Z0-9_-]{3,24}$/.test(code))
