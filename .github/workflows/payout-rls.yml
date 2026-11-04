@@ -159,6 +159,14 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104130000_apex_sales_review_reconciliation.sql
       - name: Verify historical identity, stale denial, reimport deduplication and role scope
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-sales-reconciliation.sql
+      - name: Install private verified-source order detail snapshots (disposable only)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104235408_apex_private_order_detail_foundation.sql
+      - name: Verify order identity, immutable items, sealed destination and tenant isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/private-order-detail-foundation.sql
+      - name: Install disposable atomic held-order persistence (never production)
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_order_atomic_intake_REVIEW_ONLY.sql
+      - name: Verify atomic order lines, sealed destination, rollback, replay and private audit
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/atomic-held-order-persistence.sql
       - name: Install synthetic atomic reservation contract (disposable database only)
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_order_reservation_contract_REVIEW_ONLY.sql
       - name: Verify server-sourced totals, quote binding, duplicate denials and atomic rollback
@@ -256,3 +264,59 @@ jobs:
           APEX_BTCPAY_EPHEMERAL: "true"
           APEX_BTCPAY_TEST_NETWORK: regtest
         run: node scripts/btcpay-ephemeral-operator-recovery-check.mjs
+
+      - name: Prove concurrent held-order attempts serialize without duplicate snapshots
+        run: bash tests/payout-rls/atomic-held-order-race.sh
+      - name: Provision isolated one-use attested-order worker login
+        run: |
+          set -euo pipefail
+          held_worker_password="$(openssl rand -hex 32)"
+          echo "::add-mask::$held_worker_password"
+          psql -X -v ON_ERROR_STOP=1 -v "worker_password=$held_worker_password" -f database/sql/apex_order_test_attested_worker_REVIEW_ONLY.sql
+          echo "APEX_HELD_ORDER_CI_WORKER_PASSWORD=$held_worker_password" >> "$GITHUB_ENV"
+      - name: Seed independently reviewed synthetic source attestations
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/atomic-held-worker-setup.sql
+      - name: Verify real restricted login, one-use permits, replay and failure audit
+        run: |
+          set -euo pipefail
+          role="$(PGUSER=apex_test_held_order_worker PGPASSWORD="$APEX_HELD_ORDER_CI_WORKER_PASSWORD" psql -X -At -v ON_ERROR_STOP=1 -c 'select current_user')"
+          test "$role" = 'apex_test_held_order_worker'
+          PGUSER=apex_test_held_order_worker PGPASSWORD="$APEX_HELD_ORDER_CI_WORKER_PASSWORD" psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/atomic-held-worker-login.sql
+      - name: Verify confidential audit, zero worker table grants and commerce gate
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/atomic-held-worker-postflight.sql
+      - name: Install disposable unverified source identity and recovery journal
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_order_source_replay_journal_REVIEW_ONLY.sql
+      - name: Verify exact-source replay, readback-first recovery and immutable no-PII audit
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/atomic-held-source-recovery-journal.sql
+      - name: Install supplier-scoped held order detail projection in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_held_order_details_REVIEW_ONLY.sql
+      - name: Verify supplier order detail line accuracy, incomplete holds, privacy and pagination
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-held-order-details.sql
+      - name: Install disposable review-only shipment allocation and tracking draft ledger
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_review_shipment_ledger_REVIEW_ONLY.sql
+      - name: Verify partial shipment plans, idempotent tracking drafts and stale-version denials
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/review-shipment-ledger-issue215.sql
+      - name: Prove two-session shipment planning race and duplicate suppression
+        run: bash tests/payout-rls/review-shipment-race.sh
+      - name: Install supplier-scoped fulfillment review queue projection in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_review_fulfillment_queue_REVIEW_ONLY.sql
+      - name: Verify fulfillment queue quantities, private draft history and membership denial
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-review-fulfillment-queue.sql
+      - name: Install supplier owner-manager tracking draft submission in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_tracking_draft_entry_REVIEW_ONLY.sql
+      - name: Verify tracking draft replay, stale version, conflict, staff and cross-store denial
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-tracking-draft-entry-issue215.sql
+      - name: Install disposable supplier review annotation ledger and atomic import RPC
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_cumulative_review_annotations_REVIEW_ONLY.sql
+      - name: Verify owner-only annotation uploads, audit, replay, rollback and tenant isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-cumulative-annotations-issue216.sql
+      - name: Prove two-session annotation upload serialization and stale conflict
+        run: bash tests/payout-rls/supplier-cumulative-annotation-race.sh
+      - name: Install disposable supplier review email manifest and simulated-delivery ledger
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_review_email_delivery_REVIEW_ONLY.sql
+      - name: Verify opted-in recipient, deduped report days, synthetic provider outcomes and isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-review-email-delivery-issue217.sql
+      - name: Install disposable supplier-only original-sale and held-order eligibility evidence gate
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_report_eligibility_evidence_REVIEW_ONLY.sql
+      - name: Verify every held order remains withheld from actionable email and shipping
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-report-eligibility-evidence-issue217.sql
