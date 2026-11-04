@@ -70,6 +70,6 @@ test("existing internal small tier stays stable for server-side pricing",()=>{
  const service=file("src/app/supplier/checkout-rules/actions.ts");
  assert.match(src,/Legacy tier key "small" means the padded envelope/);
  assert.match(src,/boxSize="small"/);
- assert.match(service,/save_private_store_usps_shipping_settings/);
+ assert.match(service,/save_private_store_usps_shipping_capacity/);
  assert.doesNotMatch(service,/APEX_CHECKOUT_MODE|checkout_enabled:true/);
 });
