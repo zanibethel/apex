@@ -59,7 +59,7 @@ export default async function DailySupplierReport({
    {error||!report?<p role="alert">Reporting permissions or saved data
     are unavailable. No figures will be estimated.</p>:
     report.status==="not_generated"?<p role="status">
-     This day's scheduled report has not been generated yet.
+     The scheduled report for this date has not been generated yet.
      Daily reports will appear here after the scheduled database job runs.
     </p>:<>
      <p className="notice">Generated {centralTime(report.generatedAt)} Central</p>
