@@ -134,6 +134,7 @@ export default async function SupplierHeldOrderDetails({
    fulfillment, tracking number entry, label purchasing, and delivery-address
    access require a separate authorization and are not enabled here.</p>
   <div className="actions">
+   <Link className="button secondary" href="/supplier/fulfillment">Fulfillment queue</Link>
    <Link className="button secondary" href="/supplier/reports">Sales history</Link>
    <Link className="button secondary" href="/supplier/reports/daily">Daily reports</Link>
   </div>
