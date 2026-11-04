@@ -1097,6 +1097,11 @@ body { background:#07080b; }
  .apex-bulk-workspace-summary{padding:8px 10px;gap:3px 8px;font-size:11px}
 }
 
+/* Authenticated, informational inventory labels; not public-release states. */
+.apex-bulk-inventory-state{font-size:11px;font-weight:700;padding:5px 9px;border:1px solid #615467;border-radius:999px;background:#211d29;color:#e1d5e7}
+.apex-bulk-inventory-available{border-color:#3b7963;color:#bfe8d5}
+.apex-bulk-inventory-sold_out{border-color:#80616b;color:#f0c3d3}
+
 /* Compact supplier workspace only. Do not change actual customer-facing
    offer tiles: this is a private product-management density adjustment. */
 .apex-bulk-workspace .apex-bulk-rows{gap:10px}
@@ -1176,7 +1181,3 @@ body { background:#07080b; }
 .apex-bulk-workspace .apex-bulk-card-pencil{min-width:40px;min-height:40px}
 .apex-bulk-workspace .apex-bulk-preview-link{min-height:44px}
 
-/* Authenticated, informational inventory labels; not public-release states. */
-.apex-bulk-inventory-state{font-size:11px;font-weight:700;padding:5px 9px;border:1px solid #615467;border-radius:999px;background:#211d29;color:#e1d5e7}
-.apex-bulk-inventory-available{border-color:#3b7963;color:#bfe8d5}
-.apex-bulk-inventory-sold_out{border-color:#80616b;color:#f0c3d3}
