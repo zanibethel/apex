@@ -2,7 +2,7 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-03
+Last reviewed: 2026-11-04
 
 ## 1. Isolate Bitcoin signing and payment authority from web/worker compromise
 
@@ -76,3 +76,6 @@ Last reviewed: 2026-11-03
 
 **2026-11-03 evidence:** Apex production main now includes PR #187's **read-only, store-scoped BTCPay Greenfield connection verifier** and PR #188's **private held-only order/provider-intent journal**; these are infrastructure/acceptance milestones, **not** live invoice creation, successful payout, settlement or an activated Prism split. Hosted `store_split_drafts` and allocation snapshots remain empty. **Possible solution:** review real-provider connection and held-intent audit without exposing secrets; continue per-store immutable split/finality/race tests in disposable regtest. **Recommendation:** retain explicit mainnet/live-transaction approval gate and no automatic activation. References: https://github.com/zanibethel/apex/pull/187 ; https://github.com/zanibethel/apex/pull/188 .
 
+
+
+**2026-11-04 catalog and payment release-gate recheck (existing items 2–4):** Hosted Apex `products` table remains **63 saved / 0 published**. This does not establish inventory, supplier verification, shipping readiness or live Bitcoin checkout. Reuters Nov 4 describes continuing cryptocurrency volatility after the Binance breach and US midterms; this is external market/security context, not evidence of Apex/BTCPay/Prism compromise. **Status:** Catalog acceptance pending; live payment activation blocked (unchanged). **Possible solution:** read-only supplier/catalog/inventory/order-detail acceptance, payout-signing isolation and immutable split-finality review, with no mainnet credentials or order execution. **Recommendation:** preserve held-only checkout and explicit release gates; no code, deployment, wallet or payment policy change. Source: https://www.reuters.com/business/finance/crypto-dips-democrat-midterm-wins-binance-hack-dent-optimism-2026-11-04/ .
