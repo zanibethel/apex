@@ -264,3 +264,6 @@ jobs:
           APEX_BTCPAY_EPHEMERAL: "true"
           APEX_BTCPAY_TEST_NETWORK: regtest
         run: node scripts/btcpay-ephemeral-operator-recovery-check.mjs
+
+      - name: Prove concurrent held-order attempts serialize without duplicate snapshots
+        run: bash tests/payout-rls/atomic-held-order-race.sh
