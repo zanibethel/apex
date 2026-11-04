@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createSupplierServerClient } from "@/lib/supabase/server";
 import { isVerifiedPlatformAdmin } from "@/lib/auth/admin-access";
 import { AccountMenu } from "./account-menu";
+import {CustomerCartProvider,CustomerCartLink} from "./cart/cart-provider";
+import "./cart/customer-cart.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,10 +23,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en">
       <body>
+        <CustomerCartProvider>
         <header className="site-header">
           <div className="container header-inner">
             <Link href="/" className="brand apex-logo-link" aria-label="Apex Anabolics home"><img src="/apex-logo.png" alt="Apex Anabolics" width="210" height="50" /></Link>
             <nav aria-label="Main navigation" className="apex-navigation">
+              <CustomerCartLink />
               <AccountMenu signedIn={Boolean(user)} admin={admin} supplier={supplier} />
             </nav>
             <span className="demo-chip">CHECKOUT UNAVAILABLE</span>
@@ -37,6 +41,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <span>Catalog browsing only · Ordering and payments are unavailable.</span>
           </div>
         </footer>
+        </CustomerCartProvider>
       </body>
     </html>
   );
