@@ -87,8 +87,8 @@ export function DeliveryDetailsForm({items,shippingMethod}:{
     {confirmed.address2?", "+confirmed.address2:""}, {confirmed.city},
     {" "}{confirmed.state} {confirmed.postalCode}</p>
    <p><strong>Packaging:</strong> {shippingMethod==="small"?
-    shippingMethod==="medium"?"USPS Medium Flat Rate Box":
-    "Packaging not verified yet"}</p>
+    "USPS Padded Flat Rate Envelope":shippingMethod==="medium"?
+    "USPS Medium Flat Rate Box":"Packaging not verified yet"}</p>
    <p className="apex-cart-validation">Format checked only. Address delivery, stock,
     and order eligibility have not been confirmed. No order was placed.</p>
   </div>}
