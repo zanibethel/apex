@@ -116,9 +116,9 @@ begin
  for v_item in select value from jsonb_array_elements(p_rows)
  loop
   if jsonb_typeof(v_item)<>'object'
-   or (select count(*) from jsonb_object_keys(v_item))<>6
+   or (select count(*) from jsonb_object_keys(v_item))<>8
    or not(v_item ?& array['store_id','order_reference','purchased_at_utc',
-    'review_state','review_note','version'])
+    'sale_state','gross_cents','review_state','review_note','version'])
   then raise exception 'Unexpected import row shape' using errcode='22023';end if;
   v_store:=v_item->>'store_id';
   v_ref:=v_item->>'order_reference';
@@ -138,13 +138,15 @@ begin
    using errcode='22023';end if;
   v_seen:=array_append(v_seen,v_ref);
   v_expected:=(v_item->>'version')::integer;
-  select h.id,h.occurred_at into v_sale
+  select h.id,h.occurred_at,h.sale_state,h.gross_cents into v_sale
   from public.supplier_sales_history h
   where h.store_id=p_store_id and h.order_reference=v_ref
   for update;
   if not found
    or to_char(v_sale.occurred_at at time zone 'UTC',
     'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')<>v_purchase
+   or v_sale.sale_state is distinct from v_item->>'sale_state'
+   or v_sale.gross_cents::text is distinct from v_item->>'gross_cents'
   then raise exception 'Order reference missing or purchase timestamp mismatch'
     using errcode='22023';end if;
   select r.review_state,r.review_note,r.version
