@@ -151,6 +151,9 @@ export async function saveBulkListingIntents(_previous:PublishResult,form:FormDa
  revalidatePath("/supplier/catalog/bulk");
  revalidatePath("/supplier/catalog/bulk/preview");
  revalidatePath("/admin/listing-controls");
+ revalidatePath("/admin/catalog-release");
+ revalidatePath("/catalog");
+ revalidatePath("/cart");
  const saved=results.filter(r=>r.ok).length;
  return {ok:saved===results.length,
   message:`${saved} of ${results.length} listing preferences updated. Public release and purchasing remain independently restricted.`,
