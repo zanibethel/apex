@@ -97,7 +97,7 @@ export default function CumulativeReviewWorkspace({
      <th scope="col">Purchased</th><th scope="col">Planned</th>
      <th scope="col">Unplanned</th><th scope="col">Revision</th>
     </tr></thead>
-    <tbody>{rows.slice(0,35).map((r,i)=><tr key={
+    <tbody>{rows.slice(0,35).map(r=><tr key={
      r.row_kind+":"+r.order_id+":"+r.line_number+":"+r.shipment_id}>
      <td>{r.order_reference}</td><td>{r.row_kind.replaceAll("_"," ")}</td>
      <td>{r.row_kind==="order_line"?r.item_title:
