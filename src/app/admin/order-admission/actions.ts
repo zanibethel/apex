@@ -97,15 +97,12 @@ export async function inspectPrivateOrderAdmission(
    status:review.status,allStockVerified:review.allStockVerified,
    allPrereqsMet:review.allPrereqsMet,
    canCreateOrder:false,canReserveStock:false,canCreateInvoice:false,canPay:false,
-   items:review.items.map((line:{
-    productId:string;name:string;sku:string;quantity:number;
-    unitPriceCents:number|null;lineTotalCents:number|null;availableUnits:number|null;
-    stockSufficient:boolean;releaseStatus:string;checks:Array<{key:string;passed:boolean}>;
-   })=>({
+   items:review.items.map(line=>({
     productId:line.productId,name:line.name,sku:line.sku,quantity:line.quantity,
     unitPriceCents:line.unitPriceCents,lineTotalCents:line.lineTotalCents,
     availableUnits:line.availableUnits,stockSufficient:line.stockSufficient,
-    releaseStatus:line.releaseStatus,checks:line.checks,
+    releaseStatus:line.releaseStatus,
+    checks:line.checks.map(check=>({key:check.key,passed:check.passed})),
    })),
    totals:review.totals,
   },
