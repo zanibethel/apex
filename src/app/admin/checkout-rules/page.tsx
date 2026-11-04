@@ -25,7 +25,7 @@ export default async function AdminCheckoutRules(){
   <Link className="back" href="/admin">← Admin dashboard</Link>
   <p className="eyebrow">APEX / ADMIN / SHIPPING</p>
   <h1>Shipping &amp; free shipping</h1>
-  <p className="lead">Set USPS Priority Mail Small/Medium Flat Rate box charges and free
+  <p className="lead">Set USPS Priority Mail Padded Envelope / Medium Box charges and free
    shipping over $200 after merchandise discounts. Suppliers can edit
    the same prices for their assigned store.</p>
   <p className="notice"><strong>Customer checkout remains disabled.</strong>
