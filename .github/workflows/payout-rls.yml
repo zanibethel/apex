@@ -306,3 +306,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_tracking_draft_entry_REVIEW_ONLY.sql
       - name: Verify tracking draft replay, stale version, conflict, staff and cross-store denial
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-tracking-draft-entry-issue215.sql
+      - name: Install disposable supplier review annotation ledger and atomic import RPC
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_cumulative_review_annotations_REVIEW_ONLY.sql
+      - name: Verify owner-only annotation uploads, audit, replay, rollback and tenant isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-cumulative-annotations-issue216.sql
