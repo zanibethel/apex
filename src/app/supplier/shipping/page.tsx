@@ -20,14 +20,14 @@ export default async function SupplierShippingRules(){
    m.supplier_id===store.supplier_id&&
    (m.role==="owner"||m.role==="manager"));
  const {data,error}=await w.client.from("apex_store_shipping_settings")
-  .select("charge_shipping,flat_shipping_cents,medium_flat_shipping_cents,free_shipping_min_subtotal_cents")
+  .select("charge_shipping,flat_shipping_cents,medium_flat_shipping_cents,free_shipping_min_subtotal_cents,envelope_max_items")
   .eq("store_id",store.id).maybeSingle();
  const policy=!error?(data??NO_SHIPPING):null;
  return <main className="container supplier-shell">
   <Link className="back" href="/supplier/catalog">← Supplier products</Link>
   <p className="eyebrow">APEX / SUPPLIER / SHIPPING</p>
   <h1>Shipping rules</h1>
-  <p className="notice">Set USPS Padded Flat Rate Envelope / Medium Box prices and free shipping over $200.</p>
+  <p className="notice">Set USPS prices, the automatic envelope item limit, and free shipping over $200.</p>
   {policy?<ShippingSettingsForm storeId={store.id} initial={policy}
     enabled={allowed}/>:
    <p role="alert">Shipping configuration could not be loaded safely.</p>}
