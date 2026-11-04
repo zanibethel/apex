@@ -7,7 +7,7 @@ import {DeliveryDetailsForm} from "./delivery-details-form";
 import "./customer-cart.css";
 
 type QuoteLine={productId:string;name:string;quantity:number;
- unitPriceCents:number;lineTotalCents:number;availability:"sold_out"|"in_stock"};
+ unitPriceCents:number;lineTotalCents:number;availability:"sold_out"|"in_stock"|"insufficient_stock"};
 type Review={
  ok:boolean;reason?:string;status?:string;
  items?:QuoteLine[];merchandiseSubtotalCents?:number;
@@ -80,7 +80,9 @@ export function CustomerCartPage(){
        <div className="apex-customer-line-info">
         <strong>{verified?.name??"Saved catalog item"}</strong>
         <span>{verified?(verified.availability==="in_stock"?
-         "Stock recorded — checkout unavailable":"Sold out — cannot be ordered"):
+         "Stock recorded — checkout unavailable":
+         verified.availability==="insufficient_stock"?
+         "Requested quantity exceeds available stock":"Sold out — cannot be ordered"):
          "Pending current product and inventory verification"}</span>
         <div className="apex-customer-qty">
          <button type="button" aria-label="Decrease quantity"
