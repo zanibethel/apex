@@ -176,13 +176,27 @@ export default async function BulkProductWorkspace(){
   <h1>Add and edit multiple products</h1>
   <p className="lead">Select products, make changes, save them, then choose Preview single or Preview all before publishing.</p>
   <p className="notice">New products begin as private drafts with zero stock. Save a draft to unlock its inline image picker and stock editor, then preview the completed offer. Nothing is made public by saving.</p>
-  {sourceListUsable?<SourceDraftImport storeId={store.id} sources={sourceOptions}
-    enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"&&process.env.APEX_PRIVATE_SOURCE_DRAFTS_ENABLED==="true"}/>
-   :<p role="status" className="notice">Source import queue unavailable or incomplete. Existing private product editing remains available.</p>}
-  <SharedPrivateImageBulkApply storeId={store.id}
-   products={(products??[]).map(p=>({productId:p.id,hasImage:Boolean(p.image_path)}))}
-   sources={imageLibrary}
-   enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}/>
+  <nav className="apex-bulk-quick-nav" aria-label="Product manager shortcuts">
+   <a className="button primary" href="#bulk-product-cards">View product cards</a>
+   <a className="button secondary" href="#apex-source-tools">Source import</a>
+   <a className="button secondary" href="#apex-image-tools">Shared images</a>
+   <a className="button secondary" href="#apex-csv-tools">CSV import / export</a>
+  </nav>
+  <div className="apex-bulk-advanced-section" aria-label="Optional bulk setup tools">
+   <details className="apex-bulk-advanced" id="apex-source-tools">
+    <summary>Source import <span>Prepare new product cards from saved source records</span></summary>
+    {sourceListUsable?<SourceDraftImport storeId={store.id} sources={sourceOptions}
+      enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"&&process.env.APEX_PRIVATE_SOURCE_DRAFTS_ENABLED==="true"}/>
+     :<p role="status" className="notice">Source import queue unavailable or incomplete. Existing private product editing remains available.</p>}
+   </details>
+   <details className="apex-bulk-advanced" id="apex-image-tools">
+    <summary>Shared product images <span>Apply one saved image to unpictured private products</span></summary>
+    <SharedPrivateImageBulkApply storeId={store.id}
+     products={(products??[]).map(p=>({productId:p.id,hasImage:Boolean(p.image_path)}))}
+     sources={imageLibrary}
+     enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}/>
+   </details>
+  </div>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
    categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}
    taxonomyProposal={store.id===apexTaxonomyStoreId?apexTaxonomyProposal:undefined}
