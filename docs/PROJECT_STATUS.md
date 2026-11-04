@@ -1,3 +1,5 @@
+> **Current checkpoint (November 3, 2026):** [Verified progress and requirement roadmap](APEX_EXECUTION_CHECKPOINT_2026-11-03.md). [November 4 supplier intake preparation](SUPPLIER_INTAKE_2026-11-04.md). The October 29 notes below are historical and should not be interpreted as current production status.
+
 # Project status — 2026-10-29
 
 ## Current position
