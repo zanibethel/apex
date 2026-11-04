@@ -117,19 +117,8 @@ export function renderProgressEmail({now=new Date(),progress}){
  '<tr><th style="padding:10px;color:#edd2df;text-align:left;font-size:12px">Vendor / item</th>'+
  '<th style="padding:10px;color:#edd2df;text-align:left;font-size:12px">Owner-approved cost</th></tr>'+
  approvedHtml+'</table>'+
- '<p style="font-size:12px;color:#c9b6c4;line-height:1.6">Owner-approved planning basis: <strong>
+ '<p style="font-size:12px;color:#c9b6c4;line-height:1.6">Owner-approved planning basis: <strong>$'+firstMonthBudgetUsd.toFixed(2)+'</strong> (one domain registration plus one month of Proton). This is not a confirmed paid expense total. Domain renewal and actual Proton invoices require reconciliation before being marked paid.</p>'+
  '<p style="font-size:13px;line-height:1.7;color:#c9bfc9">Billing evidence needed: project-attributed Vercel charges, Supabase invoices, Proton invoices, Resend charges and domain receipts. Shared charges and owner-approved budget amounts cannot be added as receipt-verified Apex actuals.</p>'+
- '<a href="'+REPO_URL+'/issues/222" style="display:inline-block;background:#922a47;color:#fff;text-decoration:none;padding:12px 17px;border-radius:8px;font-size:14px;font-weight:bold">Progress &amp; Expense Tracker</a>'+
- (progress.scanLimited?'<p style="color:#ffbfca;font-size:12px">Partial source window: results may be incomplete.</p>':"")+
- '</td></tr><tr><td style="padding:16px;text-align:center;color:#a7a1ac;font-size:12px;border-top:1px solid #48424c">Owner-only Apex project digest · No customer records</td></tr></table></td></tr></table></body></html>';
- return Object.freeze({
-  subject:"Apex Weekly Progress + Expense Report | "+day,
-  text,html,
-  idempotencyKey:"apex-owner-weekly-progress-"+day,
- });
-}
-+firstMonthBudgetUsd.toFixed(2)+'</strong> (one domain registration plus one month of Proton). This is not a confirmed paid expense total. Domain renewal and actual Proton invoices require reconciliation before being marked paid.</p>'+
- '<p style="font-size:13px;line-height:1.7;color:#c9bfc9">Billing evidence needed: project-attributed Vercel charges, Supabase invoices, Proton invoices, Resend charges and domain receipts. Shared charges and quotes cannot be added as Apex actuals.</p>'+
  '<a href="'+REPO_URL+'/issues/222" style="display:inline-block;background:#922a47;color:#fff;text-decoration:none;padding:12px 17px;border-radius:8px;font-size:14px;font-weight:bold">Progress &amp; Expense Tracker</a>'+
  (progress.scanLimited?'<p style="color:#ffbfca;font-size:12px">Partial source window: results may be incomplete.</p>':"")+
  '</td></tr><tr><td style="padding:16px;text-align:center;color:#a7a1ac;font-size:12px;border-top:1px solid #48424c">Owner-only Apex project digest · No customer records</td></tr></table></td></tr></table></body></html>';
