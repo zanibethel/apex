@@ -16,6 +16,17 @@ Send a separate weekly **owner-only** Apex progress and expense-evidence email w
 - Expense **coverage disclosure**: Apex-specific billed expense total is **NOT VERIFIED** until actual receipts, allocations or project-specific billing feed exist. Do **not** treat missing invoices or team-level Vercel usage as $0 Apex spending or label old $10/month quotes as paid invoices.
 - Roadmap link: [Apex issue #222](https://github.com/zanibethel/apex/issues/222).
 
+## Domain purchase and Proton Mail expense coverage (PR #224)
+
+Two required vendor lines are present in the weekly email, even when actual paid receipts have not yet been reconciled:
+
+| Cost type | Vendor / service | Evidence | Provisional value | Actual paid |
+|---|---|---|---|---|
+| One-time domain registration | Vercel / `apexanabolics.co` | Vercel domain ownership and purchase metadata confirms purchase **October 29, 2026** in America/Chicago. Earlier first-year checkout quote was **$29.99**; no settled receipt or transaction charge returned by the available billing usage API. | **$29.99 one-time quoted price** | **Unverified** |
+| Recurring email | Proton Mail Essentials / three user mailbox plan assumption | Earlier three-user monthly planning screenshot was **$7.99 per user/month**. This does **not** verify the active billable seat count, billing interval or invoice. | **$23.97/month estimated** | **Unverified** |
+
+These quotes are **not** added together as a paid expense total: one is a one-time first-year purchase quote, while the other is a recurring monthly plan estimate. Until receipts are available, the report must show both lines and mark paid amounts as unavailable. Receipts and any future renewals must be recorded with their own dates and plan details in the private owner ledger tracked in Issue #222. Quotes are kept in code as historical references rather than fabricated invoices. Domain costs should be recorded only once per actual registration or renewal, never again every week.
+
 ## Operational guardrails
 
 - Vercel Cron supplies `Authorization: Bearer CRON_SECRET`. No secret means HTTP 401.

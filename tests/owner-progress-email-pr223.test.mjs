@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {centralDay,normalizeProgress,renderProgressEmail}
+import {centralDay,normalizeProgress,renderProgressEmail,PROJECT_PROVISIONAL_COSTS}
  from "../src/lib/owner-progress-email.mjs";
 const date=new Date("2026-11-03T14:00:00Z");
 const pull=(n,title,merged_at)=>({number:n,title,merged_at,
@@ -58,4 +58,27 @@ test("weekly cron uses independent protected endpoint and a single owner",()=>{
  assert.match(src,/to:\[owner\]/);
  assert.match(src,/delivered:false/);
  assert.doesNotMatch(src,/cc:|bcc:|service_role|NEXT_PUBLIC_RESEND|customer_address|purchaseLabel/);
+});
+
+test("domain and Proton expenses explicitly included, but paid amounts never invented",()=>{
+ const p=normalizeProgress({now:date,pulls:[],issues:[]});
+ const mail=renderProgressEmail({now:date,progress:p});
+ assert.equal(PROJECT_PROVISIONAL_COSTS.length,2);
+ assert.deepEqual(PROJECT_PROVISIONAL_COSTS.map(x=>x.vendor),["Vercel","Proton Mail"]);
+ assert.equal(PROJECT_PROVISIONAL_COSTS[0].quotedUsd,29.99);
+ assert.equal(PROJECT_PROVISIONAL_COSTS[0].purchasedLocalDate,"2026-10-29");
+ assert.equal(PROJECT_PROVISIONAL_COSTS[1].quotedUsd,23.97);
+ assert.equal(PROJECT_PROVISIONAL_COSTS[1].category,"recurring_monthly");
+ for(const entry of PROJECT_PROVISIONAL_COSTS){
+  assert.equal(entry.actualPaidUsd,null);
+  assert.match(mail.text,new RegExp(entry.vendor));
+  assert.match(mail.html,new RegExp(entry.vendor));
+  assert.match(mail.html,new RegExp(entry.quotedUsd.toFixed(2).replace(".","\\.")));
+ }
+ assert.match(mail.text,/ACTUAL PAID UNVERIFIED/);
+ assert.match(mail.text,/NOT YET VERIFIED/);
+ assert.match(mail.html,/Actual paid: not verified/);
+ assert.match(mail.text,/29.99 quoted one-time/);
+ assert.match(mail.text,/23.97 estimated per month/);
+ assert.doesNotMatch(mail.text,/Total confirmed expenses: \$53\.96|Amount paid: \$29\.99/);
 });
