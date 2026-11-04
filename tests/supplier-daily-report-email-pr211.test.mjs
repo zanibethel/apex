@@ -81,3 +81,24 @@ test("worker only claims previous-day verified members and never activates check
  const existing=read("database/sql/apex_activate_supplier_daily_report_cron.sql");
  assert.match(existing,/'0 10 \* \* \*'/);
 });
+
+test("admin activates sender only after verified role and server-side hash",()=>{
+ const page=read("src/app/admin/email-reports/page.tsx");
+ const action=read("src/app/admin/email-reports/actions.ts");
+ const migration=read("supabase/migrations/20261104123000_apex_admin_daily_report_sender_activation.sql");
+ const home=read("src/app/admin/page.tsx");
+ assert.match(home,/href: "\/admin\/email-reports"/);
+ assert.match(page,/isVerifiedPlatformAdmin/);
+ assert.match(page,/get_admin_daily_mail_sender_readiness/);
+ assert.match(page,/Activate daily email delivery/);
+ assert.match(action,/isVerifiedPlatformAdmin/);
+ assert.match(action,/createHash\("sha256"\)\.update\(token,"utf8"\)\.digest\("hex"\)/);
+ assert.match(action,/admin_activate_daily_report_mail_sender/);
+ assert.doesNotMatch(action,/NEXT_PUBLIC_.*SECRET|console\.log|service_role/);
+ assert.match(migration,/token_fingerprint_sha256/);
+ assert.match(migration,/auth\.jwt\(\).*app_metadata,apex_role/);
+ assert.match(migration,/email_confirmed_at is not null/);
+ assert.match(migration,/force row level security/);
+ assert.match(migration,/sender_activated/);
+ assert.doesNotMatch(migration,/insert into apex_internal\.checkout_order_intents/);
+});
