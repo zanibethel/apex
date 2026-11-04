@@ -1,6 +1,7 @@
 "use client";
 
 import {useState} from "react";
+import {importCumulativeReviewNotes} from "./actions";
 import {
  serializeCumulativeReviewCsv,previewCumulativeReviewImport,
  serializeCumulativeReviewErrorCsv,
@@ -23,11 +24,11 @@ function downloadCsv(csv:string,name:string){
  setTimeout(()=>URL.revokeObjectURL(href),1000);
 }
 export default function CumulativeReviewWorkspace({
- storeId,day,rows,totalOrders,canPreview,
+ storeId,day,rows,totalOrders,canPreview,requestId,
  summary,
 }:{
  storeId:string;day:string;rows:RecordRow[];totalOrders:number;
- canPreview:boolean;
+ canPreview:boolean;requestId:string;
  summary:{newToday:number;carriedForward:number;
   partiallyPlanned:number;fullyPlannedReview:number;
   unplanned:number;incomplete:number;shipped:number;completed:number};
@@ -114,19 +115,22 @@ export default function CumulativeReviewWorkspace({
   {canPreview?<div className="supplier-panel"
    style={{maxWidth:"none",marginTop:16,padding:14}}>
    <h3>Preview an updated CSV</h3>
-   <p className="notice">Upload here for validation and a conflict report
-    only. No changes are saved to Apex. The original order and shipment
-    identities cannot be overwritten by a CSV.</p>
+   <p className="notice">Preview the revised CSV before submitting. Only review
+    notes and review states may be saved after server-side validation.
+    Order and shipment identities cannot be changed.</p>
+   <form action={importCumulativeReviewNotes}>
+   <input type="hidden" name="storeId" value={storeId}/>
+   <input type="hidden" name="requestId" value={requestId}/>
    <label htmlFor={"fulfillment-review-csv-"+shortStore}>
     Choose revised review CSV</label>
    <input id={"fulfillment-review-csv-"+shortStore}
-    type="file" accept=".csv,text/csv" disabled={reading}
+    type="file" name="file" required accept=".csv,text/csv" disabled={reading}
     onChange={event=>void inspectCsv(event.currentTarget.files?.[0])}/>
    {reading&&<p role="status">Checking proposed review annotations…</p>}
    {error&&<p role="alert">{error}</p>}
    {preview&&<div role={preview.status==="rejected"?"alert":"status"}>
     <p><strong>{preview.status==="rejected"?
-     "File rejected — nothing applied":"Preview valid — nothing applied"}</strong></p>
+     "File rejected — no changes saved":"Preview valid — eligible for review-note import"}</strong></p>
     <p>Uploaded rows: {preview.uploadedRows}
      {" · "}Unique orders: {preview.uniqueOrders}
      {" · "}Identical duplicate rows: {preview.duplicatesInFile}</p>
@@ -144,6 +148,12 @@ export default function CumulativeReviewWorkspace({
       Download conflict report</button>
     </>}
    </div>}
+   <button type="submit" className="button primary"
+    disabled={reading||!preview||preview.status!=="preview_only"||
+     preview.conflicts>0||preview.changedRows===0}>
+    Save review annotations
+   </button>
+   </form>
   </div>:<p className="notice">Offline review import preview is restricted
    to the storefront owner or manager.</p>}
  </section>;
