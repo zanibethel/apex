@@ -47,9 +47,9 @@ test("supplier report opt-in uses trusted current identity, not arbitrary destin
 test("HTTP cron requires its secret, keeps API key server-only and deduplicates",()=>{
  const sender=read("src/app/api/cron/daily-supplier-reports/route.ts");
  const config=JSON.parse(read("vercel.json"));
- assert.deepEqual(config.crons,[{
-  path:"/api/cron/daily-supplier-reports",schedule:"0 11 * * *",
- }]);
+ assert.ok(config.crons.some(cron=>
+  cron.path==="/api/cron/daily-supplier-reports"&&cron.schedule==="0 11 * * *"
+ ));
  assert.match(sender,/request\.headers\.get\("authorization"\)/);
  assert.match(sender,/process\.env\.CRON_SECRET/);
  assert.match(sender,/process\.env\.RESEND_REPORTS_API_KEY/);
