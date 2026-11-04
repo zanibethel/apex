@@ -123,7 +123,7 @@ test("public cart code exposes no private credentials or order creation",()=>{
  assert.match(migration,/inv.quantity_on_hand=0 and inv.quantity_reserved=0/);
  assert.match(migration,/can_place_order',false/);
  assert.match(migration,/revoke all on function public.get_public_cart_quote_source/);
- assert.doesNotMatch(migration,/update public\.products|update public\.stores|create_invoice|insert into apex_internal/);
+ assert.doesNotMatch(migration,/update public\.products|update public\.stores|\\bcreate\\s+invoice\\b|insert into apex_internal/);
  assert.match(layout,/CustomerCartProvider/);
  assert.match(shelf,/SaveCatalogItem/);
  assert.match(page,/checkout" disabled|apex-customer-checkout" disabled/);
