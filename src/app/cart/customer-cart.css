@@ -45,3 +45,5 @@
 .apex-customer-cart :is(button,a,input):focus-visible,.apex-customer-cart-link:focus-visible,.apex-approved-save:focus-visible{outline:2px solid #ff7ba3;outline-offset:2px}
 @media(max-width:760px){.apex-customer-cart-layout{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:400px){.apex-customer-line{grid-template-columns:45px minmax(0,1fr);gap:10px}.apex-customer-symbol{width:45px;height:50px}.apex-customer-line>strong{grid-column:2}.apex-customer-items,.apex-customer-summary{padding:14px}}
+
+.site-header nav.apex-navigation{display:flex;align-items:center;gap:8px;min-width:0;margin-left:auto}
