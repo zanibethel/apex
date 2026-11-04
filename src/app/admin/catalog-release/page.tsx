@@ -5,6 +5,7 @@ import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {classifyAdminRelease,summarizeAdminRelease}
  from "@/lib/catalog/admin-release-board.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
+import {privateInventoryState} from "@/lib/catalog/private-inventory-state.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Catalog Release | Apex",robots:{index:false,follow:false}};
@@ -101,6 +102,7 @@ export default async function CatalogReleaseDashboard(){
        const p=row.product;
        const status=classifyAdminRelease(row.decision);
        const inventory=row.stock;
+       const assessment=privateInventoryState(inventory);
        const setup=draftSetupSteps(p,inventory);
        const missing=setup.steps.filter(step=>!step.complete).map(step=>step.label);
        return <article className="apex-product-card" key={p.id}>
@@ -113,6 +115,7 @@ export default async function CatalogReleaseDashboard(){
         <p><strong>Customer visibility:</strong> {status.visible?"Visible · Sold Out":"Not visible"}</p>
         <p className="notice"><strong>Category:</strong> {row.category?.name??"Unavailable"}{" · "}
          {row.category?.is_published===true?"Published":"Not published or unavailable"}</p>
+        <p className="notice"><strong>Current availability:</strong> {assessment.label}</p>
         <p className="notice"><strong>Stock:</strong> {inventory?
          inventory.quantity_on_hand===0&&inventory.quantity_reserved===0
           ?"Sold Out (0 available)"
