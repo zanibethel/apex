@@ -8,6 +8,7 @@ import {proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs"
 import {privateSourceDraftDescription} from "@/lib/catalog/private-source-draft-description.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
+import {privateInventoryState} from "@/lib/catalog/private-inventory-state.mjs";
 import {supplierStorefrontVisibility} from "@/lib/catalog/supplier-storefront-visibility.mjs";
 import {awaitingAdministratorCorrectionReview} from "@/lib/catalog/listing-resubmission.mjs";
 import {supplierImageCorrectionStatus} from "@/lib/catalog/supplier-image-correction-status.mjs";
@@ -119,6 +120,7 @@ export default async function BulkProductWorkspace(){
   const control=listingByProduct.get(p.id);
   const status=listingControlStatus(control);
   const setup=draftSetupSteps(p,quantities.get(p.id));
+  const stock=privateInventoryState(quantities.get(p.id));
   const missing=setup.steps.filter(step=>!step.complete).map(step=>step.label);
   const mediaStatus=supplierImageCorrectionStatus(
    {id:p.id,store_id:store.id,image_path:p.image_path},
@@ -140,6 +142,7 @@ export default async function BulkProductWorkspace(){
    correctionsPending:!eventsError&&awaitingAdministratorCorrectionReview(eventsByProduct.get(p.id)),
    visibilityKind:visibility.kind,visibilityLabel:visibility.label,
    visibilityDescription:visibility.description,
+   stockKind:stock.kind,stockLabel:stock.label,
    imageStatusKind:mediaStatus.kind,imageStatusLabel:mediaStatus.label,
    imageStatusMessage:mediaStatus.message,imageNeedsAction:mediaStatus.needsAction,
    hasImage:Boolean(p.image_path),
