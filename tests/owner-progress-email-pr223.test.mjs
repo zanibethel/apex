@@ -37,8 +37,8 @@ test("report escapes untrusted PR and issue titles, but never fabricates spendin
  assert.match(mail.subject,/Nov 3, 2026|2026-11-03/);
  assert.match(mail.html,/&lt;script&gt;/);
  assert.doesNotMatch(mail.html,/<script>|<img src=x/);
- assert.match(mail.text,/NOT YET VERIFIED/);
- assert.match(mail.html,/Actual Apex expenses: Unverified/);
+ assert.match(mail.text,/NOT independently verified paid invoices/);
+ assert.match(mail.html,/Owner-approved costs — invoices pending/);
  assert.match(mail.text,/Vercel team billing.*shared/);
  assert.doesNotMatch(mail.text,/\$0\.00 actual|\$10\.00 billed|re_[A-Za-z0-9]/);
  assert.equal(mail.idempotencyKey,"apex-owner-weekly-progress-2026-11-03");
@@ -60,25 +60,27 @@ test("weekly cron uses independent protected endpoint and a single owner",()=>{
  assert.doesNotMatch(src,/cc:|bcc:|service_role|NEXT_PUBLIC_RESEND|customer_address|purchaseLabel/);
 });
 
-test("domain and Proton expenses explicitly included, but paid amounts never invented",()=>{
+test("owner-approved domain and Proton costs are in every digest but never reported as paid invoices",()=>{
  const p=normalizeProgress({now:date,pulls:[],issues:[]});
  const mail=renderProgressEmail({now:date,progress:p});
  assert.equal(PROJECT_PROVISIONAL_COSTS.length,2);
  assert.deepEqual(PROJECT_PROVISIONAL_COSTS.map(x=>x.vendor),["Vercel","Proton Mail"]);
- assert.equal(PROJECT_PROVISIONAL_COSTS[0].quotedUsd,29.99);
+ assert.equal(PROJECT_PROVISIONAL_COSTS[0].ownerApprovedUsd,29.99);
  assert.equal(PROJECT_PROVISIONAL_COSTS[0].purchasedLocalDate,"2026-10-29");
- assert.equal(PROJECT_PROVISIONAL_COSTS[1].quotedUsd,23.97);
+ assert.equal(PROJECT_PROVISIONAL_COSTS[1].ownerApprovedUsd,23.97);
  assert.equal(PROJECT_PROVISIONAL_COSTS[1].category,"recurring_monthly");
  for(const entry of PROJECT_PROVISIONAL_COSTS){
   assert.equal(entry.actualPaidUsd,null);
+  assert.equal(entry.approvalSource,"owner_confirmation_2026_11_03");
   assert.match(mail.text,new RegExp(entry.vendor));
   assert.match(mail.html,new RegExp(entry.vendor));
-  assert.match(mail.html,new RegExp(entry.quotedUsd.toFixed(2).replace(".","\\.")));
+  assert.match(mail.html,new RegExp(entry.ownerApprovedUsd.toFixed(2).replace(".","\\.")));
  }
- assert.match(mail.text,/ACTUAL PAID UNVERIFIED/);
- assert.match(mail.text,/NOT YET VERIFIED/);
- assert.match(mail.html,/Actual paid: not verified/);
- assert.match(mail.text,/29.99 quoted one-time/);
- assert.match(mail.text,/23.97 estimated per month/);
+ assert.match(mail.text,/RECEIPT NOT YET VERIFIED/);
+ assert.match(mail.text,/NOT independently verified paid invoices/);
+ assert.match(mail.html,/Invoice confirmation pending/);
+ assert.match(mail.text,/29.99 owner-approved one-time/);
+ assert.match(mail.text,/23.97 owner-approved per month/);
+ assert.match(mail.text,/Combined initial budget basis.*\$53\.96/);
  assert.doesNotMatch(mail.text,/Total confirmed expenses: \$53\.96|Amount paid: \$29\.99/);
 });
