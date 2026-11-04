@@ -158,7 +158,12 @@ export async function adjustInventory(_previous: Result, form: FormData): Promis
     .eq("quantity_on_hand",expected).select("product_id").maybeSingle();
   if(error || !data) return {ok:false,message:"Stock was not updated. Refresh in case the quantity changed."};
   revalidatePath("/supplier/catalog");revalidatePath("/supplier");
-  return {ok:true,message:"Inventory saved and recorded in audit history."};
+  revalidatePath("/supplier/catalog/bulk");
+  revalidatePath("/supplier/inventory");
+  revalidatePath("/admin/catalog-release");
+  revalidatePath("/admin/listing-controls");
+  revalidatePath("/catalog");revalidatePath("/cart");
+  return {ok:true,message:"Inventory saved and recorded in audit history. Storefront availability will reflect current verified release status."};
 }
 
 export async function requestWalletDestination(_previous: Result, form: FormData): Promise<Result> {

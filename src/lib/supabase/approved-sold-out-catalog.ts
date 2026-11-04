@@ -4,7 +4,7 @@ import "server-only";
 // private imports, inventory, supplier price costs and the demo checkout.
 export type ApprovedSoldOutProduct={
  id:string;name:string;description:string;priceCents:number;
- currency:"USD";availability:"sold_out";canCheckout:false;
+ currency:"USD";availability:"sold_out"|"in_stock";canCheckout:false;
 };
 export type SoldOutCatalogResult={
  state:"disabled"|"unconfigured"|"unavailable"|"connected";
@@ -31,13 +31,13 @@ export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|
    typeof row.description!=="string"||row.description.trim().length===0||
    row.description.length>1500||
    typeof row.price_cents!=="string"||!/^[1-9][0-9]{0,8}$/.test(row.price_cents)||
-   row.currency!=="USD"||row.availability!=="sold_out"||
+   row.currency!=="USD"||!["sold_out","in_stock"].includes(String(row.availability))||
    row.can_checkout!==false)return null;
   ids.add(row.id);
   output.push(Object.freeze({
    id:row.id,name:row.name,description:row.description,
    priceCents:Number(row.price_cents),
-   currency:"USD",availability:"sold_out",canCheckout:false,
+   currency:"USD",availability:row.availability as "sold_out"|"in_stock",canCheckout:false,
   }));
  }
  return output;
@@ -57,7 +57,7 @@ export async function readApprovedSoldOutCatalog(page=1):Promise<SoldOutCatalogR
  if(url!==APEX_ORIGIN||!key.startsWith("sb_publishable_"))
   return empty("unavailable");
  try{
-  const endpoint=new URL("/rest/v1/rpc/get_public_sold_out_catalog",url);
+  const endpoint=new URL("/rest/v1/rpc/get_public_inventory_catalog",url);
   endpoint.searchParams.set("p_offset",String((page-1)*24));
   endpoint.searchParams.set("p_limit","24");
   const response=await fetch(endpoint,{

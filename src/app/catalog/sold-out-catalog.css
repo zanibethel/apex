@@ -29,3 +29,5 @@
 
 .apex-approved-pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin:20px 0}
 .apex-approved-pagination span{font-size:12px;color:#d8c7d2}
+
+.apex-approved-badge.apex-approved-instock{background:#315a46;color:#f1fff7}

@@ -32,6 +32,7 @@ type ReviewedCategoryProposal={id:string;sku:string;name:string;category:string|
 type ListingReadiness={
  productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
  visibilityKind:string;visibilityLabel:string;visibilityDescription:string;
+ stockKind:string;stockLabel:string;
  imageStatusKind:string;imageStatusLabel:string;imageStatusMessage:string;imageNeedsAction:boolean;hasImage:boolean;
  reviewStatusAvailable:boolean;reviewStatus:string;canSubmitReview:boolean;
 };
@@ -491,6 +492,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         title={visibilityDescription} aria-label={"Customer storefront: "+visibilityLabel}>
         Storefront: {visibilityLabel}
        </span>
+       {r.id&&<span className={"apex-bulk-inventory-state apex-bulk-inventory-"+(listingStatus?.stockKind??"unverified")}>
+        {listingStatus?.stockLabel??"Inventory unavailable"}
+       </span>}
        {readiness.kind!=="requested"&&<span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>}
        <span className={"apex-bulk-image-status apex-bulk-image-"+imageKind}
         title={imageMessage} aria-label={"Product image: "+imageLabel}>{imageLabel}</span>

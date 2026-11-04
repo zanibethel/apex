@@ -14,7 +14,7 @@ const shipping={
  medium_flat_shipping_cents:2580,free_shipping_min_subtotal_cents:20001,envelope_max_items:4,
 };
 const source={
- schema_version:1,state:"rechecked_sold_out_cart",
+ schema_version:1,state:"rechecked_inventory_cart",
  items:[{product_id:p1,quantity:1,name:"Catalog item",
   unit_price_cents:"20000",availability:"sold_out",can_checkout:false}],
  shipping,requested_code:"",promotion:null,
@@ -94,7 +94,7 @@ test("invalid or unverified stock, pricing, privileges and codes are rejected",(
   {state:"cart_unavailable",items:[]},
   {can_pay:true},{can_place_order:true},
   {can_create_invoice:true},{can_reserve_stock:true},
-  {items:[{...source.items[0],availability:"in_stock"}]},
+  {items:[{...source.items[0],availability:"invented"}]},
   {items:[{...source.items[0],can_checkout:true}]},
   {items:[{...source.items[0],unit_price_cents:"0"}]},
   {items:[{...source.items[0],quantity:2}]},

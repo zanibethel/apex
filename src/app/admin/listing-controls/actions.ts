@@ -26,5 +26,8 @@ export async function saveAdminListingOverride(_previous:Result,form:FormData):P
  revalidatePath("/admin/listing-controls");
  revalidatePath("/supplier/catalog");
  revalidatePath("/supplier/catalog/bulk");
+ revalidatePath("/admin/catalog-release");
+ revalidatePath("/catalog");
+ revalidatePath("/cart");
  return {ok:true,message:result.data};
 }
