@@ -111,7 +111,7 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
    typeof observed.name!=="string"||!observed.name.trim()||
    observed.name.length>120||typeof observed.unit_price_cents!=="string"||
    !/^[1-9][0-9]{0,8}$/.test(observed.unit_price_cents)||
-   !["sold_out","in_stock"].includes(observed.availability)||
+   !["sold_out","in_stock","insufficient_stock"].includes(observed.availability)||
    observed.can_checkout!==false)
    return {ok:false,reason:"Product or stock verification failed"};
   lines.push({productId:item.product_id,quantity:item.quantity,
