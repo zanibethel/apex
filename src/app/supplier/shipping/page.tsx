@@ -34,6 +34,7 @@ export default async function SupplierShippingRules(){
   <div className="actions">
    <Link className="button secondary" href="/supplier/discounts">
     Discount codes and free shipping</Link>
+   <Link className="button secondary" href="/supplier/usps">Supplier-paid USPS account</Link>
    <Link className="button secondary" href="/supplier/catalog/bulk">
     Manage products</Link>
   </div>
