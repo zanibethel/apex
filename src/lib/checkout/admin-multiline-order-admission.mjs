@@ -114,6 +114,13 @@ export function parseAdminMultiLineLockedReadback(raw,storeId,input,expected){
  });
 }
 
+/**
+ * @param {{
+ *  readback: any, storeId: string, items: any, expectedSubtotalCents: number,
+ *  shippingPolicy: any, promotion?: any, boxSize?: string, code?: string,
+ *  now?: Date
+ * }} args
+ */
 export function prepareAdminOrderAdmission({
  readback,storeId,items,expectedSubtotalCents,shippingPolicy,
  promotion=null,boxSize="small",code="",now=new Date(),
