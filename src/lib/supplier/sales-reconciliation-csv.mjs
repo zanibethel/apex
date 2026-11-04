@@ -31,6 +31,7 @@ export function serializeSalesReviewCsv(rows,storeId){
 export function parseCsvCells(input,{maxRows=301,maxChars=250000}={}){
  if(typeof input!=="string"||input.length>maxChars)
   throw Error("CSV exceeds allowed size");
+ if(input.charCodeAt(0)===0xFEFF)input=input.slice(1);
  const rows=[];let current=[],cell="",quoted=false,afterQuote=false;
  for(let i=0;i<input.length;i++){
   const c=input[i];
