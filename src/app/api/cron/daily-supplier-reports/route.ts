@@ -111,7 +111,7 @@ export async function GET(request:Request){
    const body:unknown=await send.json();
    const providerId=body&&typeof body==="object"&&
     "id" in body&&(typeof body.id==="string")?body.id:null;
-   if(!providerId||!/** ASCII provider ID only */^[A-Za-z0-9_-]{8,128}$/.test(providerId)){
+   if(!providerId||!/^[A-Za-z0-9_-]{8,128}$/.test(providerId)){
     failed++;continue;
    }
    const ack=await db.rpc("accept_supplier_daily_report_email",{
