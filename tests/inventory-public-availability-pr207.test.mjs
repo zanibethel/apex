@@ -42,7 +42,11 @@ test("customer cart distinguishes observed in-stock and sold-out without order r
  assert.equal(sold.ok,true);
  assert.equal(sold.status,"unavailable_stock");
  assert.equal(sold.items[0].availability,"sold_out");
- for(const obj of [inStock,sold]){
+ const insufficient=buildCartReview(source("insufficient_stock"),{items,boxSize:"auto"});
+ assert.equal(insufficient.ok,true);
+ assert.equal(insufficient.status,"unavailable_stock");
+ assert.equal(insufficient.items[0].availability,"insufficient_stock");
+ for(const obj of [inStock,sold,insufficient]){
   assert.equal(obj.canPay,false);
   assert.equal(obj.canPlaceOrder,false);
   assert.equal(obj.shippingCents,1500);
