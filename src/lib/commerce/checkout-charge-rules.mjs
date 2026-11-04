@@ -5,15 +5,24 @@ import {quoteDiscount} from "./discount-quote.mjs";
 // Keep these stable keys to preserve existing private quote contracts.
 const LIMIT=999999999;
 const validCents=(value)=>Number.isSafeInteger(value)&&value>=0&&value<=LIMIT;
+export function resolveUspsPackage(policy,unitCount,requested="auto"){
+ const maximum=policy?.envelope_max_items===undefined?4:policy.envelope_max_items;
+ if(!Number.isInteger(maximum)||maximum<1||maximum>50||
+  !Number.isInteger(unitCount)||unitCount<1||unitCount>50||
+  !["auto","small","medium"].includes(requested))return null;
+ // Never downsize when a saved store limit requires Medium.
+ return requested==="medium"||unitCount>maximum?"medium":"small";
+}
 
-export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippingCode=false,boxSize="small"){
+export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippingCode=false,boxSize="small",unitCount=1){
+ const selected=resolveUspsPackage(policy,unitCount,boxSize);
  if(!validCents(discountedSubtotalCents)||typeof freeShippingCode!=="boolean"||
-   (boxSize!=="small"&&boxSize!=="medium")||
+   selected===null||
    !policy||typeof policy!=="object"||typeof policy.charge_shipping!=="boolean"||
    !validCents(policy.flat_shipping_cents)||
    (policy.medium_flat_shipping_cents!==undefined&&
     !validCents(policy.medium_flat_shipping_cents))||
-   (policy.charge_shipping&&boxSize==="medium"&&
+   (policy.charge_shipping&&selected==="medium"&&
     (!validCents(policy.medium_flat_shipping_cents)||
       policy.medium_flat_shipping_cents===0))||
    (policy.free_shipping_min_subtotal_cents!==null &&
@@ -25,7 +34,7 @@ export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippin
      (policy.medium_flat_shipping_cents??0)!==0||
      policy.free_shipping_min_subtotal_cents!==null)))
   return null;
- const original=!policy.charge_shipping?0:boxSize==="medium"?
+ const original=!policy.charge_shipping?0:selected==="medium"?
   policy.medium_flat_shipping_cents:policy.flat_shipping_cents;
  const minimum=policy.charge_shipping?
    policy.free_shipping_min_subtotal_cents:null;
@@ -34,7 +43,8 @@ export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippin
  const thresholdMet=minimum!==null&&amountUntilFreeShippingCents===0;
  const fee=(thresholdMet||freeShippingCode)?0:original;
  return Object.freeze({
-  shippingBoxSize:boxSize,
+  shippingBoxSize:selected,
+  envelopeMaxItems:policy.envelope_max_items??4,
   originalShippingCents:original,
   shippingCents:fee,
   shippingDiscountCents:original-fee,
@@ -80,7 +90,7 @@ export function previewCheckoutCharges({
  const discountedMerchandiseCents=merchandiseSubtotalCents-
   merchandiseDiscountCents;
  const shipping=quoteOptionalShipping(shippingPolicy,
-  discountedMerchandiseCents,promo?.freeShipping===true,boxSize);
+  discountedMerchandiseCents,promo?.freeShipping===true,boxSize,units);
  if(!shipping)return fail("Shipping configuration unavailable");
  const totalCents=discountedMerchandiseCents+shipping.shippingCents;
  if(!validCents(totalCents))return fail("Total exceeds limit");

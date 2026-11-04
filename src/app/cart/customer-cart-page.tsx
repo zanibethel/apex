@@ -12,7 +12,7 @@ type Review={
  ok:boolean;reason?:string;status?:string;
  items?:QuoteLine[];merchandiseSubtotalCents?:number;
  merchandiseDiscountCents?:number;discountedMerchandiseCents?:number;
- shippingBoxSize?:string;shippingCents?:number;
+ shippingBoxSize?:string;shippingCents?:number;envelopeMaxItems?:number;
  freeShippingMinimumCents?:number;
  amountUntilFreeShippingCents?:number;freeShippingReason?:string;
  totalCents?:number;canPlaceOrder?:false;canPay?:false;
@@ -23,7 +23,7 @@ const usd=(n:number)=>new Intl.NumberFormat("en-US",{
 
 export function CustomerCartPage(){
  const {items,count,ready,setQuantity,remove,clear}=useCustomerCart();
- const [boxSize,setBoxSize]=useState<"small"|"medium">("small");
+ const boxSize="auto" as const;
  const [enteredCode,setEnteredCode]=useState("");
  const [code,setCode]=useState("");
  const [response,setResponse]=useState<{key:string;review:Review}|null>(null);
@@ -53,6 +53,7 @@ export function CustomerCartPage(){
   setCode(cleaned);
  };
  const lines=review?.ok?review.items??[]:[];
+ const selectedBox=review?.ok?review.shippingBoxSize:null;
  return <main className="container apex-customer-cart">
   <Link href="/catalog" className="back">← Continue shopping</Link>
   <p className="eyebrow">APEX ANABOLICS / CART</p>
@@ -93,19 +94,20 @@ export function CustomerCartPage(){
        <strong>{verified?usd(verified.lineTotalCents):"—"}</strong>
       </article>;
      })}
-     <DeliveryDetailsForm items={items} shippingMethod={boxSize}/>
+     <DeliveryDetailsForm items={items} shippingMethod={selectedBox==="medium"?"medium":selectedBox==="small"?"small":null}/>
     </section>
     <aside className="apex-customer-summary" aria-label="Cart summary">
      <h2>Order summary</h2>
-     <fieldset className="apex-customer-shipping">
-      <legend>USPS Priority Mail shipping</legend>
-      <label><input type="radio" name="package" value="small"
-       checked={boxSize==="small"} onChange={()=>setBoxSize("small")}/>
-       <span>Padded Flat Rate Envelope <small>Standard option</small></span></label>
-      <label><input type="radio" name="package" value="medium"
-       checked={boxSize==="medium"} onChange={()=>setBoxSize("medium")}/>
-       <span>Medium Flat Rate Box <small>For larger shipments</small></span></label>
-     </fieldset>
+     <section className="apex-customer-shipping" aria-label="Automatic USPS shipping">
+      <strong>USPS Priority Mail shipping</strong>
+      <p className="apex-cart-note" aria-live="polite">
+       {selectedBox==="medium"?"Medium Flat Rate Box (automatically selected)":
+        selectedBox==="small"?"Padded Flat Rate Envelope (automatically selected)":
+        "Packaging is selected automatically after inventory and pricing verification."}
+      </p>
+      {review?.ok&&<p className="apex-cart-note">Up to {review.envelopeMaxItems} items:
+       padded envelope; above that: Medium box.</p>}
+     </section>
      <p className="apex-cart-note">Packaging is subject to fit confirmation.
       Merchandise over $200 after discounts qualifies for free shipping.</p>
      <form onSubmit={applyCode} className="apex-customer-code">

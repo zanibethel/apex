@@ -7,10 +7,11 @@ export type ShippingRules={
  flat_shipping_cents:number;
  medium_flat_shipping_cents:number;
  free_shipping_min_subtotal_cents:number|null;
+ envelope_max_items:number;
 };
 export const NO_SHIPPING:ShippingRules={
  charge_shipping:false,flat_shipping_cents:0,medium_flat_shipping_cents:0,
- free_shipping_min_subtotal_cents:null,
+ free_shipping_min_subtotal_cents:null,envelope_max_items:4,
 };
 const EMPTY={ok:false,message:""};
 const money=(cents:number)=>(cents/100).toFixed(2);
@@ -45,6 +46,15 @@ export function ShippingSettingsForm({storeId,initial,enabled=true}:{
     min=".01" max="9999999.99" step=".01"
     defaultValue={money(initial.charge_shipping?initial.medium_flat_shipping_cents:2580)}
     disabled={!charge||!enabled||pending} required={charge}/>
+   <label htmlFor="envelope-max-items">Maximum items in padded envelope</label>
+   <input id="envelope-max-items" name="envelopeMaxItems" type="number"
+    min={1} max={50} step={1}
+    defaultValue={initial.envelope_max_items}
+    disabled={!enabled||pending} required/>
+   <p className="notice">At or below this number of items, shipping defaults to the
+    padded envelope. Larger carts automatically use the Medium box. The limit
+    is a packing estimate, not a USPS quantity rule. Confirm actual fit
+    before dispatching.</p>
    <label htmlFor="free-shipping-min">Free shipping at merchandise subtotal (USD)</label>
    <input id="free-shipping-min" name="freeShippingMinimum" type="number"
     min=".01" max="9999999.99" step=".01"
@@ -56,7 +66,7 @@ export function ShippingSettingsForm({storeId,initial,enabled=true}:{
     The fulfillment team must confirm that each packed order fits its packaging.
     USPS prices can be changed here when carrier rates change.</p>
    <button type="submit" className="button secondary"
-    disabled={!enabled||pending}>{pending?"Saving…":"Save shipping rates"}</button>
+    disabled={!enabled||pending}>{pending?"Saving…":"Save shipping settings"}</button>
    {state.message&&<p role={state.ok?"status":"alert"}>{state.message}</p>}
   </form>
  </section>;

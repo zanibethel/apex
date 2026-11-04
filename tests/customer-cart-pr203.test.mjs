@@ -11,7 +11,7 @@ const p2="64000000-0000-0000-0000-000000000002";
 const selected=[{product_id:p1,quantity:1}];
 const shipping={
  charge_shipping:true,flat_shipping_cents:1500,
- medium_flat_shipping_cents:2580,free_shipping_min_subtotal_cents:20001,
+ medium_flat_shipping_cents:2580,free_shipping_min_subtotal_cents:20001,envelope_max_items:4,
 };
 const source={
  schema_version:1,state:"rechecked_sold_out_cart",

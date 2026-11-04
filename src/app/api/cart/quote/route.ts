@@ -31,7 +31,7 @@ export async function POST(request:NextRequest){
    !["items","boxSize","code"].includes(k))||
    !Array.isArray(values.items)||values.items.length<1||
    !normalizeCartSelections(values.items).length||
-   (values.boxSize!=="small"&&values.boxSize!=="medium")||
+   (values.boxSize!=="auto"&&values.boxSize!=="medium")||
    typeof values.code!=="string"||
    (values.code!==""&&!/^[A-Z0-9_-]{3,24}$/.test(values.code)))
   return fail("Invalid cart selection",400);

@@ -57,7 +57,7 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
  const [message,setMessage]=useState("");
  const product=useMemo(()=>products.find(p=>p.id===selectedId)??null,[products,selectedId]);
  const subtotal=product?product.priceCents*quantity:0;
- const shipping=quoteOptionalShipping(shippingPolicy,subtotal,false,boxSize);
+ const shipping=quoteOptionalShipping(shippingPolicy,subtotal,false,boxSize,quantity);
  const setField=(key:keyof Details,value:string)=>{
   setDetails(prev=>({...prev,[key]:value}));
   setMessage("");
