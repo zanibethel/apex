@@ -292,3 +292,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_held_order_details_REVIEW_ONLY.sql
       - name: Verify supplier order detail line accuracy, incomplete holds, privacy and pagination
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-held-order-details.sql
+      - name: Install disposable review-only shipment allocation and tracking draft ledger
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_review_shipment_ledger_REVIEW_ONLY.sql
+      - name: Verify partial shipment plans, idempotent tracking drafts and stale-version denials
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/review-shipment-ledger-issue215.sql
