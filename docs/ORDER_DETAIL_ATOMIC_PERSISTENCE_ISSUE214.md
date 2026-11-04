@@ -33,3 +33,7 @@ CI loads this after Phase 1 private-order schema and before other isolated test 
 5. Product/supplier shipping eligibility and carrier/account terms approval; then Issue #215 fulfillment state and tracking, #216–217 cumulative duplicate-safe uploads and protected daily report attachments.
 
 **Important:** Passing these database tests proves synthetic atomicity only. It does not show that any Apex catalog item may be sold or shipped, nor that any actual order source has been integrated. Keep the global release gate and all live checkout and label purchases disabled.
+
+### Concurrent duplicate submission proof
+
+At the end of the disposable PostgreSQL CI suite, `tests/payout-rls/atomic-held-order-race.sh` seeds a synthetic source sale, runs two independent `psql` sessions, observes that the second is actually blocked on a PostgreSQL lock while the first transaction is open, and then requires the results `new` and `identical_replay`. It verifies exactly one header, two lines, one sealed destination, one accounting commitment, and one audit event. The fixture is disposable and exists only inside `apex_test`; no real sale/customer data or production schema is touched. This test runs last because its two-session fixture commits synthetic data to the disposable database.
