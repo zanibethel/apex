@@ -117,7 +117,7 @@ test("UI stores two rates and propagates selected box to server pricing",()=>{
  assert.match(shipping,/smallFlatShipping/);
  assert.match(shipping,/mediumFlatShipping/);
  assert.match(shipping,/20001/);
- assert.match(action,/save_private_store_usps_shipping_settings/);
+ assert.match(action,/save_private_store_usps_shipping_capacity/);
  assert.match(admin,/boxSize/);
  assert.match(server,/boxSize/);
  assert.match(promo,/medium_flat_shipping_cents/);
