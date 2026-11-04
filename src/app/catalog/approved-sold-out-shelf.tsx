@@ -25,7 +25,7 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
     {result.products.map(p=><article className="apex-approved-item" key={p.id}>
      <div className="apex-approved-art">
       <span className="apex-approved-triangle" aria-hidden="true">▲</span>
-      <span className="apex-approved-badge">{p.availability==="in_stock"?"IN STOCK":"SOLD OUT"}</span>
+      <span className={"apex-approved-badge"+(p.availability==="in_stock"?" apex-approved-instock":"")}>{p.availability==="in_stock"?"IN STOCK":"SOLD OUT"}</span>
       <small>APEX ANABOLICS</small>
      </div>
      <div className="apex-approved-body">
