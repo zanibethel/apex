@@ -28,6 +28,8 @@ function refreshRules(){
  revalidatePath("/supplier/discounts");
  revalidatePath("/admin/checkout-rules");
  revalidatePath("/admin/checkout-review");
+ revalidatePath("/admin/order-admission");
+ revalidatePath("/cart");
 }
 
 export async function saveStoreShippingConfiguration(
@@ -39,26 +41,31 @@ export async function saveStoreShippingConfiguration(
  const isCharged=charge==="true";
  const fee=isCharged?cents(form.get("smallFlatShipping")):0;
  const mediumFee=isCharged?cents(form.get("mediumFlatShipping")):0;
+ const limitRaw=form.get("envelopeMaxItems");
+ const envelopeLimit=typeof limitRaw==="string"&&/^(?:[1-9]|[1-4][0-9]|50)$/.test(limitRaw)
+  ?Number(limitRaw):null;
  const thresholdRaw=form.get("freeShippingMinimum");
  const threshold=isCharged?cents(thresholdRaw):null;
- if(fee===null||mediumFee===null||
+ if(envelopeLimit===null||fee===null||mediumFee===null||
   (isCharged&&(fee<1||mediumFee<fee||threshold===null||threshold<1)))
-  return fail("Enter valid Padded Envelope and Medium Box rates and a positive free-shipping minimum.");
+  return fail("Enter a 1–50 item envelope limit, valid USPS rates, and a free-shipping minimum.");
  const client=await signedInClient();
  if(!client)return fail("Sign in with an authorized supplier or admin account.");
- const {data,error}=await client.rpc("save_private_store_usps_shipping_settings",{
+ const {data,error}=await client.rpc("save_private_store_usps_shipping_capacity",{
   p_store_id:storeId,p_charge_shipping:isCharged,
   p_small_flat_rate_cents:fee,
   p_medium_flat_rate_cents:mediumFee,
   p_free_shipping_min_subtotal_cents:threshold,
+  p_envelope_max_items:envelopeLimit,
  });
  if(error||!data||data.status!=="saved"||
   data.checkout_enabled!==false||
   data.charge_shipping!==isCharged||
   data.flat_shipping_cents!==fee||
   data.medium_flat_shipping_cents!==mediumFee||
-  data.free_shipping_min_subtotal_cents!==threshold)
+  data.free_shipping_min_subtotal_cents!==threshold||
+  data.envelope_max_items!==envelopeLimit)
   return fail("Shipping rules could not be saved. Refresh and retry.");
  refreshRules();
- return {ok:true,message:"USPS Padded Envelope / Medium Box shipping rates saved. No checkout or payment enabled."};
+ return {ok:true,message:"USPS rates and automatic envelope item limit saved. No checkout or payment enabled."};
 }
