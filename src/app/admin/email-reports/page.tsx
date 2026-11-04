@@ -45,7 +45,7 @@ export default async function AdminSupplierEmailReports({
     {activated?" Active and matches the protected server token":
      " Not activated"}</p>
    <p className="notice">Activation registers a one-way SHA-256 fingerprint
-    of the server's existing credential. No API keys or plaintext tokens
+    of the server&apos;s existing credential. No API keys or plaintext tokens
     are stored in the reporting database. Only verified platform admins
     can activate this sender.</p>
    {params?.result==="activated"&&<p role="status">
