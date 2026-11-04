@@ -35,7 +35,7 @@ export default async function AdminCheckoutReview(){
    .select("product_id,quantity_on_hand,quantity_reserved")
    .eq("store_id",STORE_ID).limit(100),
   client.from("apex_store_shipping_settings")
-   .select("charge_shipping,flat_shipping_cents,medium_flat_shipping_cents,free_shipping_min_subtotal_cents")
+   .select("charge_shipping,flat_shipping_cents,medium_flat_shipping_cents,free_shipping_min_subtotal_cents,envelope_max_items")
    .eq("store_id",STORE_ID).maybeSingle(),
  ]);
  const unavailable=Boolean(productError||categoryError||inventoryError||shippingError);
