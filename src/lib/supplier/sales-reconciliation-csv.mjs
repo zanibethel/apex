@@ -117,7 +117,10 @@ export function parseVerifiedReviewRows(payload,storeId){
   payload.rows.length>500||payload.rows.length>payload.total)return null;
  const seen=new Set();
  for(const row of payload.rows){
-  if(!row||typeof row!=="object"||!row.order_reference||
+  if(!row||typeof row!=="object"||Object.keys(row).sort().join(",")!==[
+   "order_reference","purchased_at_utc","sale_state",
+   "gross_cents","review_state","review_note","version",
+  ].sort().join(",")||!row.order_reference||
    seen.has(row.order_reference)||!PURCHASE.test(row.purchased_at_utc)||
    !SALE.has(row.sale_state)||!REVIEW.has(row.review_state)||
    !/^(0|[1-9]\d*)$/.test(row.gross_cents)||
