@@ -1,3 +1,5 @@
+> **Updated execution priorities — November 3, 2026:** See [verified status, review schedule, and tracked requirements](APEX_EXECUTION_CHECKPOINT_2026-11-03.md). Start with the [November 4 supplier intake checklist](SUPPLIER_INTAKE_2026-11-04.md). The six-week plan below is retained as an original baseline, not a current build-status claim.
+
 # Six-week technical MVP roadmap
 
 **Proposed earlier stretch:** [December 1 accelerated technical readiness plan](DECEMBER_1_ACCELERATED_PLAN.md), assuming 3–4 developer hours/day and immediate funded kickoff. The six-week plan below is the **contingency baseline**, not additive scope. No compromise on security, accurate reporting, or live-payment authorization.
