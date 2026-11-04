@@ -300,7 +300,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
 
  return <section className="apex-bulk-workspace" aria-label="Bulk product creation and editing">
   <a href="#apex-bulk-actions" className="button secondary apex-bulk-jump-actions">Jump to Save / Publish actions</a>
-  <CsvProductImport rows={rows} categories={categories} disabled={!editable||busy} onLoad={loadFromCsv}/>
+  <details className="apex-bulk-advanced" id="apex-csv-tools">
+   <summary>CSV import and export <span>Download templates or upload multiple product changes</span></summary>
+   <CsvProductImport rows={rows} categories={categories} disabled={!editable||busy} onLoad={loadFromCsv}/>
+  </details>
+  <h2 className="apex-bulk-products-heading" id="apex-product-workspace">Manage products</h2>
   <p className="apex-bulk-workspace-summary" role="status">
    <strong>{overview.privateSaved} saved private cards</strong>
    <span>· {overview.imagesAttached} images attached</span>
