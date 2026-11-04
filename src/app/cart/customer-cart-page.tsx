@@ -12,7 +12,7 @@ type Review={
  ok:boolean;reason?:string;status?:string;
  items?:QuoteLine[];merchandiseSubtotalCents?:number;
  merchandiseDiscountCents?:number;discountedMerchandiseCents?:number;
- shippingBoxSize?:string;shippingCents?:number;
+ shippingBoxSize?:string;shippingCents?:number;envelopeMaxItems?:number;
  freeShippingMinimumCents?:number;
  amountUntilFreeShippingCents?:number;freeShippingReason?:string;
  totalCents?:number;canPlaceOrder?:false;canPay?:false;
@@ -23,7 +23,7 @@ const usd=(n:number)=>new Intl.NumberFormat("en-US",{
 
 export function CustomerCartPage(){
  const {items,count,ready,setQuantity,remove,clear}=useCustomerCart();
- const [boxSize]=useState<"auto">("auto");
+ const boxSize="auto" as const;
  const [enteredCode,setEnteredCode]=useState("");
  const [code,setCode]=useState("");
  const [response,setResponse]=useState<{key:string;review:Review}|null>(null);
