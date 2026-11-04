@@ -155,20 +155,25 @@ test('same exact duplicate rows are suppressed, conflicting duplicate rejected',
 test('immutable source identity and supplier id cannot be rewritten by CSV',()=>{
  const w=workbook([order(1)]);
  const csv=serializeCumulativeReviewCsv(w.rows,store);
- for(const [field,value,expected] of [
-  ['order_reference','REPLACED','immutable_field_changed'],
-  ['item_title','Overwritten','immutable_field_changed'],
-  ['planned_quantity','1','immutable_field_changed'],
-  ['source_revision','999','stale_revision'],
+ for(const [field,value,expected,index] of [
+  ['order_reference','REPLACED','immutable_field_changed',1],
+  ['item_title','Overwritten','immutable_field_changed',1],
+  ['source_revision','999','stale_revision',2],
  ]) {
   const edited=change(csv,(r,i)=>{
-   if(i===1)r[idx(field)]=value;
+   if(i===index)r[idx(field)]=value;
    return r;
   });
   const result=parse(edited,w.rows);
   assert.equal(result.status,'rejected',field);
   assert.equal(result.issues[0].code,expected,field);
  }
+ const invalidQuantity=change(csv,(r,i)=>{
+  if(i===1)r[idx('planned_quantity')]='1';
+  return r;
+ });
+ assert.throws(()=>parse(invalidQuantity,w.rows),
+  e=>e.code==='invalid_line_row');
  const cross=change(csv,(r)=>{r[idx('store_id')]=foreign;return r;});
  assert.throws(()=>parse(cross,w.rows),e=>e.code==='foreign_store');
 });
