@@ -293,7 +293,10 @@ begin
   v_results:=v_results||jsonb_build_array(jsonb_build_object(
     'product_id',v_p.id,'name',v_p.name,'unit_price_cents',v_p.price_cents::text,
     'quantity', (p_items->(v_found-1)->>'quantity')::integer,
-    'availability',case when v_available>0 then 'in_stock' else 'sold_out' end,
+    'availability',case
+      when v_available>=v_quantity then 'in_stock'
+      when v_available>0 then 'insufficient_stock'
+      else 'sold_out' end,
     'can_checkout',false));
  end loop;
 
