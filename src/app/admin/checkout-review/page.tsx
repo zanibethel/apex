@@ -76,7 +76,7 @@ export default async function AdminCheckoutReview(){
    !rows.length?<p className="notice">No private products are ready for checkout layout review.</p>:
    <CheckoutCatalogReview products={rows} shippingPolicy={shipping??{
     charge_shipping:false,flat_shipping_cents:0,
-    medium_flat_shipping_cents:0,free_shipping_min_subtotal_cents:null,
+    medium_flat_shipping_cents:0,free_shipping_min_subtotal_cents:null,envelope_max_items:4,
    }}/>}
   <div className="actions">
    <Link className="button secondary" href="/supplier/catalog/bulk">Edit product cards</Link>
