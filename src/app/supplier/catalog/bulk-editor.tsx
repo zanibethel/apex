@@ -492,8 +492,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         title={visibilityDescription} aria-label={"Customer storefront: "+visibilityLabel}>
         Storefront: {visibilityLabel}
        </span>
-       {r.id&&<span className={"apex-bulk-inventory-state apex-bulk-inventory-"+(listingState?.stockKind??"unverified")}>
-        {listingState?.stockLabel??"Inventory unavailable"}
+       {r.id&&<span className={"apex-bulk-inventory-state apex-bulk-inventory-"+(listingStatus?.stockKind??"unverified")}>
+        {listingStatus?.stockLabel??"Inventory unavailable"}
        </span>}
        {readiness.kind!=="requested"&&<span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>}
        <span className={"apex-bulk-image-status apex-bulk-image-"+imageKind}
