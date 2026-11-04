@@ -6,7 +6,7 @@ import {quoteDiscount} from "./discount-quote.mjs";
 const LIMIT=999999999;
 const validCents=(value)=>Number.isSafeInteger(value)&&value>=0&&value<=LIMIT;
 export function resolveUspsPackage(policy,unitCount,requested="auto"){
- const maximum=policy?.envelope_max_items??4;
+ const maximum=policy?.envelope_max_items===undefined?4:policy.envelope_max_items;
  if(!Number.isInteger(maximum)||maximum<1||maximum>50||
   !Number.isInteger(unitCount)||unitCount<1||unitCount>50||
   !["auto","small","medium"].includes(requested))return null;
