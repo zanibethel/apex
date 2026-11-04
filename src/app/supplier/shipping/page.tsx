@@ -1,9 +1,7 @@
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
-import {ShippingSettingsForm} from "@/app/supplier/checkout-rules/shipping-form";
-const NO_SHIPPING={charge_shipping:false,flat_shipping_cents:0,
- free_shipping_min_subtotal_cents:null};
+import {ShippingSettingsForm,NO_SHIPPING} from "@/app/supplier/checkout-rules/shipping-form";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Private Shipping Rules | Apex Supplier",
@@ -22,14 +20,14 @@ export default async function SupplierShippingRules(){
    m.supplier_id===store.supplier_id&&
    (m.role==="owner"||m.role==="manager"));
  const {data,error}=await w.client.from("apex_store_shipping_settings")
-  .select("charge_shipping,flat_shipping_cents,free_shipping_min_subtotal_cents")
+  .select("charge_shipping,flat_shipping_cents,medium_flat_shipping_cents,free_shipping_min_subtotal_cents")
   .eq("store_id",store.id).maybeSingle();
  const policy=!error?(data??NO_SHIPPING):null;
  return <main className="container supplier-shell">
   <Link className="back" href="/supplier/catalog">← Supplier products</Link>
   <p className="eyebrow">APEX / SUPPLIER / SHIPPING</p>
   <h1>Shipping rules</h1>
-  <p className="notice">Set delivery fees and free-shipping rules for your storefront.</p>
+  <p className="notice">Set USPS Small/Medium Flat Rate box prices and free shipping over $200.</p>
   {policy?<ShippingSettingsForm storeId={store.id} initial={policy}
     enabled={allowed}/>:
    <p role="alert">Shipping configuration could not be loaded safely.</p>}
@@ -37,7 +35,7 @@ export default async function SupplierShippingRules(){
    <Link className="button secondary" href="/supplier/discounts">
     Discount codes and free shipping</Link>
    <Link className="button secondary" href="/supplier/catalog/bulk">
-    Bulk product tax settings</Link>
+    Manage products</Link>
   </div>
  </main>;
 }
