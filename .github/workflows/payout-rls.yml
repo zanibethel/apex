@@ -296,3 +296,5 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_review_shipment_ledger_REVIEW_ONLY.sql
       - name: Verify partial shipment plans, idempotent tracking drafts and stale-version denials
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/review-shipment-ledger-issue215.sql
+      - name: Prove two-session shipment planning race and duplicate suppression
+        run: bash tests/payout-rls/review-shipment-race.sh
