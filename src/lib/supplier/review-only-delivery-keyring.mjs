@@ -41,7 +41,7 @@ export function createReviewOnlyDeliveryKeyring({testOnly,entries}){
  const all=new Map(), activeByStore=new Map();
  for(const entry of entries){
   if(!entry||typeof entry!=='object'||
-    Object.keys(entry).sort().join('|')!=='keyReference|keyBytes|state|storeId'||
+    Object.keys(entry).sort().join('|')!=='keyBytes|keyReference|state|storeId'||
     !UUID.test(entry.storeId??'')||!KEY_REF.test(entry.keyReference??'')||
     !STATES.has(entry.state)||!Buffer.isBuffer(entry.keyBytes)||
     entry.keyBytes.length!==32)deny('invalid_key_entry');
