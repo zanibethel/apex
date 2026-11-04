@@ -109,7 +109,7 @@ test('line integrity: duplicate numbers, altered amounts, shipping/discount mism
 });
 test('canonical pagination, no duplicate IDs or fabricated missing rows',()=>{
  const one=response([complete],{limit:1,total:2,has_more:true});
- assert.equal(parse(one,{...store}[0]),null); // Invalid store argument
+ assert.equal(parse(one,'not-a-store'),null);
  const parsed=parse(one,store,{limit:1});
  assert.equal(parsed.hasMore,true);
  assert.equal(parsed.offset,0);
