@@ -102,7 +102,7 @@ test("product tax controls and tax API are removed while shipping forms remain",
  assert.doesNotMatch(checkout,/TaxCloud|requestPrivateTaxCloudEstimate|collectSalesTax/);
  assert.doesNotMatch(menu,/TaxCloud|Sales tax provider|Tax & shipping/);
  assert.match(shippingForm,/free-shipping code/);
- assert.match(serverAction,/save_private_store_shipping_settings/);
+ assert.match(serverAction,/save_private_store_usps_shipping_settings/);
  assert.doesNotMatch(serverAction,/set_bulk_product_tax_collection/);
  assert.match(sql,/revoke execute on function public.set_bulk_product_tax_collection/);
  assert.match(sql,/schema_version',2/);
