@@ -183,9 +183,9 @@ begin
  v_tag:=decode(p_delivery->>'auth_tag_base64','base64');
  if octet_length(v_nonce)<>12 or octet_length(v_ciphertext) not between 16 and 32768
     or octet_length(v_tag)<>16
-    or encode(v_nonce,'base64')<>p_delivery->>'nonce_base64'
-    or encode(v_ciphertext,'base64')<>p_delivery->>'ciphertext_base64'
-    or encode(v_tag,'base64')<>p_delivery->>'auth_tag_base64'
+    or replace(encode(v_nonce,'base64'),chr(10),'')<>p_delivery->>'nonce_base64'
+    or replace(encode(v_ciphertext,'base64'),chr(10),'')<>p_delivery->>'ciphertext_base64'
+    or replace(encode(v_tag,'base64'),chr(10),'')<>p_delivery->>'auth_tag_base64'
  then raise exception 'Invalid sealed destination envelope'
   using errcode='23514';end if;
 
