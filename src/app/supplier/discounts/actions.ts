@@ -10,7 +10,8 @@ import {newPromotionActive} from "@/lib/commerce/promotion-management.mjs";
 
 export type PromotionActionState={ok:boolean;message:string;subtotalCents?:number;
  discountCents?:number;shippingCents?:number;shippingDiscountCents?:number;
- totalCents?:number;freeShippingReason?:string};
+ totalCents?:number;freeShippingReason?:string;
+ shippingBoxSize?:string};
 type State=PromotionActionState;
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const disabled:State={ok:false,message:"Discount code management is currently unavailable."};
@@ -118,7 +119,9 @@ export async function toggleSupplierPromotion(_prev:State,form:FormData):Promise
 
 export async function previewSupplierDiscount(_prev:State,form:FormData):Promise<State> {
   const storeId=form.get("storeId"),rawCode=form.get("code");
-  if(typeof storeId!=="string"||!uuid.test(storeId)||typeof rawCode!=="string")
+  const boxSize=form.get("boxSize");
+  if(typeof storeId!=="string"||!uuid.test(storeId)||typeof rawCode!=="string"||
+   (boxSize!=="small"&&boxSize!=="medium"))
     return {ok:false,message:"Enter a valid discount code."};
   const subtotal=cents(form.get("subtotal"));
   if(subtotal===null)return {ok:false,message:"Enter a valid order subtotal."};
@@ -132,18 +135,19 @@ export async function previewSupplierDiscount(_prev:State,form:FormData):Promise
   if(!result.eligible)return {ok:false,message:result.reason};
   const {data:policy,error:policyError}=await w.client
     .from("apex_store_shipping_settings")
-    .select("charge_shipping,flat_shipping_cents,free_shipping_min_subtotal_cents")
+    .select("charge_shipping,flat_shipping_cents,medium_flat_shipping_cents,free_shipping_min_subtotal_cents")
     .eq("store_id",storeId).maybeSingle();
   if(policyError)return {ok:false,message:"Shipping settings could not be verified."};
   const shipping=quoteOptionalShipping(policy??{
     charge_shipping:false,flat_shipping_cents:0,
-    free_shipping_min_subtotal_cents:null,
-  },result.totalCents,("freeShipping" in result&&result.freeShipping===true));
+    medium_flat_shipping_cents:0,free_shipping_min_subtotal_cents:null,
+  },result.totalCents,("freeShipping" in result&&result.freeShipping===true),boxSize);
   if(!shipping)return {ok:false,message:"Shipping calculation unavailable."};
   return {
     ok:true,message:"Discount calculated.",
     subtotalCents:subtotal,discountCents:result.discountCents,
     shippingCents:shipping.shippingCents,
+    shippingBoxSize:shipping.shippingBoxSize,
     shippingDiscountCents:shipping.shippingDiscountCents,
     totalCents:result.totalCents+shipping.shippingCents,
     freeShippingReason:shipping.freeShippingReason,

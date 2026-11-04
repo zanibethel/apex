@@ -4,19 +4,27 @@ import {quoteDiscount} from "./discount-quote.mjs";
 const LIMIT=999999999;
 const validCents=(value)=>Number.isSafeInteger(value)&&value>=0&&value<=LIMIT;
 
-export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippingCode=false){
+export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippingCode=false,boxSize="small"){
  if(!validCents(discountedSubtotalCents)||typeof freeShippingCode!=="boolean"||
+   (boxSize!=="small"&&boxSize!=="medium")||
    !policy||typeof policy!=="object"||typeof policy.charge_shipping!=="boolean"||
    !validCents(policy.flat_shipping_cents)||
+   (policy.medium_flat_shipping_cents!==undefined&&
+    !validCents(policy.medium_flat_shipping_cents))||
+   (policy.charge_shipping&&boxSize==="medium"&&
+    (!validCents(policy.medium_flat_shipping_cents)||
+      policy.medium_flat_shipping_cents===0))||
    (policy.free_shipping_min_subtotal_cents!==null &&
     (policy.free_shipping_min_subtotal_cents===undefined||
      !Number.isSafeInteger(policy.free_shipping_min_subtotal_cents)||
      policy.free_shipping_min_subtotal_cents<1||
      policy.free_shipping_min_subtotal_cents>LIMIT))||
    (!policy.charge_shipping&&(policy.flat_shipping_cents!==0||
+     (policy.medium_flat_shipping_cents??0)!==0||
      policy.free_shipping_min_subtotal_cents!==null)))
   return null;
- const original=policy.charge_shipping?policy.flat_shipping_cents:0;
+ const original=!policy.charge_shipping?0:boxSize==="medium"?
+  policy.medium_flat_shipping_cents:policy.flat_shipping_cents;
  const minimum=policy.charge_shipping?
    policy.free_shipping_min_subtotal_cents:null;
  const amountUntilFreeShippingCents=minimum===null?null:
@@ -24,6 +32,7 @@ export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippin
  const thresholdMet=minimum!==null&&amountUntilFreeShippingCents===0;
  const fee=(thresholdMet||freeShippingCode)?0:original;
  return Object.freeze({
+  shippingBoxSize:boxSize,
   originalShippingCents:original,
   shippingCents:fee,
   shippingDiscountCents:original-fee,
@@ -38,7 +47,7 @@ export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippin
 // Prices, quantities, shipping settings and promotions MUST be read from the
 // database on the server. No tax service is contacted in this flow.
 export function previewCheckoutCharges({
- lines,shippingPolicy,discountCode=null,now=new Date(),
+ lines,shippingPolicy,discountCode=null,now=new Date(),boxSize="small",
 }){
  const fail=(reason)=>Object.freeze({ok:false,reason,canPlaceOrder:false,
   canCreateInvoice:false,canPay:false});
@@ -69,7 +78,7 @@ export function previewCheckoutCharges({
  const discountedMerchandiseCents=merchandiseSubtotalCents-
   merchandiseDiscountCents;
  const shipping=quoteOptionalShipping(shippingPolicy,
-  discountedMerchandiseCents,promo?.freeShipping===true);
+  discountedMerchandiseCents,promo?.freeShipping===true,boxSize);
  if(!shipping)return fail("Shipping configuration unavailable");
  const totalCents=discountedMerchandiseCents+shipping.shippingCents;
  if(!validCents(totalCents))return fail("Total exceeds limit");

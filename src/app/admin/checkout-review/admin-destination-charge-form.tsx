@@ -10,8 +10,9 @@ const money=(cents:number)=>new Intl.NumberFormat("en-US",{
 const amount=(cents:number|undefined)=>cents===undefined?"Unavailable":money(cents);
 
 export function AdminDestinationChargeForm({
- productId,quantity,expectedSubtotalCents,
-}:{productId:string;quantity:number;expectedSubtotalCents:number}){
+ productId,quantity,expectedSubtotalCents,boxSize,
+}:{productId:string;quantity:number;expectedSubtotalCents:number;
+ boxSize:"small"|"medium"}){
  const [state,action,pending]=useActionState(reviewAdminDestinationCharges,DEFAULT);
  return <section className="apex-private-destination-quote"
   aria-label="Saved merchandise, discount and shipping estimate"
@@ -21,6 +22,7 @@ export function AdminDestinationChargeForm({
   <form action={action} className="supplier-form" style={{gap:8,marginTop:10}}>
    <input type="hidden" name="productId" value={productId}/>
    <input type="hidden" name="quantity" value={quantity}/>
+   <input type="hidden" name="boxSize" value={boxSize}/>
    <input type="hidden" name="expectedSubtotalCents" value={expectedSubtotalCents}/>
    <label htmlFor="dest-promotion">Discount or free-shipping code (optional)
     <input id="dest-promotion" name="code" placeholder="Discount code"
@@ -40,7 +42,7 @@ export function AdminDestinationChargeForm({
    <dl className="apex-checkout-prices">
     <div><dt>Merchandise</dt><dd>{amount(state.merchandiseSubtotalCents)}</dd></div>
     <div><dt>Discount</dt><dd>{amount(state.merchandiseDiscountCents)}</dd></div>
-    <div><dt>Shipping</dt><dd>{(state.shippingCents??0)===0?
+    <div><dt>USPS {state.shippingBoxSize==="medium"?"Medium":"Small"} shipping</dt><dd>{(state.shippingCents??0)===0?
      "Free":amount(state.shippingCents)}</dd></div>
     {(state.shippingDiscountCents??0)>0&&
      <div><dt>Free shipping benefit</dt>
@@ -65,7 +67,7 @@ export function AdminDestinationChargeForm({
      "The discounted merchandise subtotal qualified for free shipping.":
      state.freeShippingReason==="no_charge"?
      "Shipping is free by default under the saved store policy.":
-     "The saved flat shipping fee applies."}
+     "The saved USPS Flat Rate box charge applies."}
    </p>
    <p className="notice">Checkout is currently unavailable. No order or payment is created.</p>
   </div>}

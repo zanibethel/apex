@@ -37,24 +37,28 @@ export async function saveStoreShippingConfiguration(
  if(!isValidId(storeId)||(charge!=="true"&&charge!=="false"))
   return fail("Invalid shipping selection.");
  const isCharged=charge==="true";
- const fee=isCharged?cents(form.get("flatShipping")):0;
+ const fee=isCharged?cents(form.get("smallFlatShipping")):0;
+ const mediumFee=isCharged?cents(form.get("mediumFlatShipping")):0;
  const thresholdRaw=form.get("freeShippingMinimum");
- const threshold=isCharged&&thresholdRaw!==""?
-  cents(thresholdRaw):null;
- if(fee===null||threshold===null&&isCharged&&thresholdRaw!==""||
-  threshold!==null&&threshold<1)
-  return fail("Enter a valid shipping fee and optional positive free-shipping minimum.");
+ const threshold=isCharged?cents(thresholdRaw):null;
+ if(fee===null||mediumFee===null||
+  (isCharged&&(fee<1||mediumFee<fee||threshold===null||threshold<1)))
+  return fail("Enter valid Small and Medium rates and a positive free-shipping minimum.");
  const client=await signedInClient();
  if(!client)return fail("Sign in with an authorized supplier or admin account.");
- const {data,error}=await client.rpc("save_private_store_shipping_settings",{
+ const {data,error}=await client.rpc("save_private_store_usps_shipping_settings",{
   p_store_id:storeId,p_charge_shipping:isCharged,
-  p_flat_shipping_cents:fee,
+  p_small_flat_rate_cents:fee,
+  p_medium_flat_rate_cents:mediumFee,
   p_free_shipping_min_subtotal_cents:threshold,
  });
  if(error||!data||data.status!=="saved"||
   data.checkout_enabled!==false||
-  data.charge_shipping!==isCharged)
+  data.charge_shipping!==isCharged||
+  data.flat_shipping_cents!==fee||
+  data.medium_flat_shipping_cents!==mediumFee||
+  data.free_shipping_min_subtotal_cents!==threshold)
   return fail("Shipping rules could not be saved. Refresh and retry.");
  refreshRules();
- return {ok:true,message:"Private shipping rules saved. No checkout or payment enabled."};
+ return {ok:true,message:"USPS Small/Medium shipping rates saved. No checkout or payment enabled."};
 }

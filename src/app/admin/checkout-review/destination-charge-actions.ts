@@ -16,7 +16,8 @@ export type DestinationEstimate={
  shippingCents?:number;shippingDiscountCents?:number;
  freeShippingMinimumCents?:number|null;
  amountUntilFreeShippingCents?:number|null;
- freeShippingReason?:string;totalCents?:number;
+ freeShippingReason?:string;shippingBoxSize?:"small"|"medium";
+ totalCents?:number;
  quoteFinalized?:false;canCreateOrder?:false;canCreateInvoice?:false;
  canPay?:false;
 };
@@ -27,10 +28,12 @@ export async function reviewAdminDestinationCharges(
 ):Promise<DestinationEstimate>{
  const productId=form.get("productId"),rawQty=form.get("quantity");
  const displayed=form.get("expectedSubtotalCents"),rawCode=form.get("code");
+ const boxSize=form.get("boxSize");
  if(!isValidId(productId)||typeof rawQty!=="string"||
   !/^[1-3]$/.test(rawQty)||typeof displayed!=="string"||
   !/^(?:0|[1-9][0-9]{0,8})$/.test(displayed)||
-  typeof rawCode!=="string"||rawCode.length>28)
+  typeof rawCode!=="string"||rawCode.length>28||
+  (boxSize!=="small"&&boxSize!=="medium"))
   return blocked("Choose a saved product and quantity with valid displayed pricing.");
  const code=rawCode.trim().toUpperCase();
  if(code!==""&&!/^[A-Z0-9_-]{3,24}$/.test(code))
@@ -57,7 +60,7 @@ export async function reviewAdminDestinationCharges(
  });
  if(!parsed)return blocked("Private price source failed verification.");
  const estimate=estimatePrivateDestinationCharges(parsed,{
-  code,expectedSubtotalCents,
+  code,expectedSubtotalCents,boxSize,
  });
  if(!estimate)return blocked("Shipping estimate is incomplete or untrusted.");
  if(!estimate.ok)return blocked(estimate.message);

@@ -51,12 +51,13 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
 }){
  const [selectedId,setSelectedId]=useState(products[0]?.id??"");
  const [quantity,setQuantity]=useState(1);
+ const [boxSize,setBoxSize]=useState<"small"|"medium">("medium");
  const [details,setDetails]=useState<Details>(BLANK);
  const [step,setStep]=useState<"details"|"payment">("details");
  const [message,setMessage]=useState("");
  const product=useMemo(()=>products.find(p=>p.id===selectedId)??null,[products,selectedId]);
  const subtotal=product?product.priceCents*quantity:0;
- const shipping=quoteOptionalShipping(shippingPolicy,subtotal,false);
+ const shipping=quoteOptionalShipping(shippingPolicy,subtotal,false,boxSize);
  const setField=(key:keyof Details,value:string)=>{
   setDetails(prev=>({...prev,[key]:value}));
   setMessage("");
@@ -147,6 +148,16 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
      <span className="apex-checkout-kicker">APEX CATALOG</span><span>{products.length} products</span>
     </div>
     <h2>Order summary</h2>
+    <label className="apex-checkout-review-product-picker" htmlFor="checkout-shipping-box">
+     <span>USPS Priority Mail Flat Rate box</span>
+     <select id="checkout-shipping-box" value={boxSize}
+      onChange={e=>setBoxSize(e.target.value as "small"|"medium")}>
+      <option value="small">Small Flat Rate box</option>
+      <option value="medium">Medium Flat Rate box</option>
+     </select>
+    </label>
+    <p className="notice">Box size is selected for this estimate only.
+     Confirm the packed order fits before shipping.</p>
     <label className="apex-checkout-review-product-picker" htmlFor="checkout-review-product">
      <span>Product to review</span>
      <select id="checkout-review-product" value={selectedId}
@@ -184,7 +195,7 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
     </>}
     <dl className="apex-checkout-prices">
      <div><dt>Subtotal</dt><dd>{money(subtotal)}</dd></div>
-     <div><dt>Shipping</dt><dd>{!shipping?"Unavailable":
+     <div><dt>USPS {boxSize==="small"?"Small":"Medium"} shipping</dt><dd>{!shipping?"Unavailable":
        shipping.shippingCents===0?"Free":money(shipping.shippingCents)}</dd></div>
      <div className="apex-checkout-price-total"><dt>Before discount code</dt><dd>{shipping?
        money(subtotal+shipping.shippingCents):"Unavailable"}</dd></div>
@@ -199,8 +210,8 @@ export function CheckoutCatalogReview({products,shippingPolicy}:{
        " more merchandise to qualify for free shipping at "+
        money(shipping.freeShippingMinimumCents!)+".":"Flat shipping fee applies."}
     </p>}
-    {product&&<AdminDestinationChargeForm key={"charges:"+product.id+":"+quantity}
-     productId={product.id} quantity={quantity}
+    {product&&<AdminDestinationChargeForm key={"charges:"+product.id+":"+quantity+":"+boxSize}
+     productId={product.id} quantity={quantity} boxSize={boxSize}
      expectedSubtotalCents={subtotal}/>}
     {product&&<AdminCartValidationForm key={product.id+":"+quantity}
      productId={product.id} quantity={quantity}
