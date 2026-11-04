@@ -20,7 +20,7 @@ if [[ ! "$order" =~ ^[0-9a-f-]{36}$ || ! "$line" =~ ^[0-9a-f-]{36}$ ]]; then
   echo "Missing synthetic canonical order and purchased line" >&2
   exit 1
 fi
-alloc="[{"'"order_line_id"'":"'"$line"'","'"quantity"'":2}]"
+alloc="$(printf '[{"order_line_id":"%s","quantity":2}]' "$line")"
 key="70000215-0000-4000-8000-000000000900"
 reference="SYNTH-215-RACE-REPLAY"
 dir="$(mktemp -d)"
@@ -79,25 +79,20 @@ if ! grep -q 'Shipment plans exceed immutable purchased quantity' "$dir/c"; then
   cat "$dir/c" >&2
   exit 1
 fi
-psql -X -v ON_ERROR_STOP=1 -v store="$store" -v order="$order" -v line="$line" <<'SQL'
-do $verify$
-declare
- s uuid:=:'store';
- o uuid:=:'order';
- l uuid:=:'line';
-begin
- if (select count(*) from apex_internal.review_shipment_plans
-   where store_id=s and order_id=o
-    and client_shipment_reference='SYNTH-215-RACE-REPLAY')<>1
- or (select coalesce(sum(planned_quantity),0) from apex_internal.review_shipment_allocations
-   where store_id=s and order_id=o and order_line_id=l)<>2
- or (select count(*) from apex_internal.review_shipment_events
-   where store_id=s and event_key='70000215-0000-4000-8000-000000000900')<>1
- or exists(select 1 from apex_internal.review_shipment_events
-   where store_id=s and event_key='70000215-0000-4000-8000-000000000901')
- or (select enabled from apex_internal.private_release_gate where singleton)
-    is distinct from false
- then raise exception 'Concurrent plan/dedupe or private gate invariant violated';end if;
-end $verify$;
-SQL
+counts="$(psql -X -At -v ON_ERROR_STOP=1 -c "
+ select (select count(*) from apex_internal.review_shipment_plans
+  where store_id='$store' and order_id='$order'
+   and client_shipment_reference='SYNTH-215-RACE-REPLAY')::text
+ ||'|'||(select coalesce(sum(planned_quantity),0) from apex_internal.review_shipment_allocations
+  where store_id='$store' and order_id='$order' and order_line_id='$line')::text
+ ||'|'||(select count(*) from apex_internal.review_shipment_events
+  where store_id='$store' and event_key='$key')::text
+ ||'|'||(select count(*) from apex_internal.review_shipment_events
+  where store_id='$store' and event_key='70000215-0000-4000-8000-000000000901')::text
+ ||'|'||(select enabled from apex_internal.private_release_gate where singleton)::text
+")"
+if [[ "$counts" != "1|2|1|0|false" ]]; then
+  echo "Concurrent plan/dedupe or private gate invariant violated: $counts" >&2
+  exit 1
+fi
 echo "PASS: two real sessions serialize at immutable order row; replay no-op, over-allocation denied"
