@@ -5,6 +5,7 @@ import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {privateReleaseDisplay} from "@/lib/catalog/private-release-decision.mjs";
 import {evaluatePrivateCheckoutReadiness} from "@/lib/checkout/private-cart-readiness.mjs";
 import {readPrivateCheckoutSnapshot} from "@/lib/checkout/private-product-stock-snapshot.mjs";
+import {summarizePrivateStockObservations} from "@/lib/checkout/private-stock-readiness-summary.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={
@@ -48,6 +49,9 @@ export default async function CheckoutReadinessAdmin(){
   }
  }
  const checkoutMode="disabled" as const;
+ const inventory=summarizePrivateStockObservations(results.map(({item,snapshot})=>
+  stockReadbackEnabled?readPrivateCheckoutSnapshot(snapshot,item.store_id,item.product_id):null
+ ));
  return <main className="container supplier-shell apex-branded-dashboard" style={{minWidth:0}}>
   <Link className="back" href="/admin">← Admin dashboard</Link>
   <p className="eyebrow">APEX / ADMIN ONLY / CHECKOUT PREPARATION</p>
@@ -66,6 +70,22 @@ export default async function CheckoutReadinessAdmin(){
     Seller/product authorization, admin holds, private stock, merchant approval,
     shipping and server-calculated prices must be independently verified
     before any future transactional cart release.</p>
+  </section>
+  <section className="supplier-panel" aria-labelledby="apex-inventory-readiness"
+   style={{maxWidth:"none",marginBottom:22}}>
+   <h2 id="apex-inventory-readiness">Inventory readiness</h2>
+   <p className="notice">Private stock observation, not public listing permission.
+    If the private snapshot source is disabled or unavailable, stock is
+    listed as unverified rather than presumed available.</p>
+   <div className="apex-readiness-metrics">
+    <p><strong>{inventory.itemsChecked}</strong><span>Listing candidates checked</span></p>
+    <p><strong>{inventory.inStock}</strong><span>Stock recorded (private)</span></p>
+    <p><strong>{inventory.soldOut}</strong><span>Zero available units</span></p>
+    <p><strong>{inventory.notVerified}</strong><span>Inventory not verified</span></p>
+   </div>
+   <p className="notice">Recorded stock does not enable customer purchases.
+    Supplier/product authorization, public catalog release, and
+    transactional inventory reservation remain separate requirements.</p>
   </section>
   <section aria-labelledby="cart-readiness-products">
    <h2 id="cart-readiness-products">Private listing candidates</h2>
@@ -98,6 +118,10 @@ export default async function CheckoutReadinessAdmin(){
         {" · "}<strong>Available stock:</strong>{" "}
         {stockReadbackEnabled&&stock.observed&&stock.availableUnits!==null
           ?stock.availableUnits:"Not verified"}</p>
+       <p className="notice"><strong>Private stock assessment:</strong>{" "}
+        {!stockReadbackEnabled||!stock.observed||stock.availableUnits===null?
+         "Not verified":stock.availableUnits>0?
+         "Stock recorded (not sellable)":"No available stock"}</p>
        <p className="notice">Admin inspection only. Even a verified private snapshot
         cannot generate a customer quote, reserve inventory, or permit a payment.</p>
        <details className="apex-card-editor">

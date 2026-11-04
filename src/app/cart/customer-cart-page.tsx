@@ -3,6 +3,7 @@
 import {useEffect,useMemo,useState,type FormEvent} from "react";
 import Link from "next/link";
 import {useCustomerCart} from "./cart-provider";
+import {DeliveryDetailsForm} from "./delivery-details-form";
 import "./customer-cart.css";
 
 type QuoteLine={productId:string;name:string;quantity:number;
@@ -92,6 +93,7 @@ export function CustomerCartPage(){
        <strong>{verified?usd(verified.lineTotalCents):"—"}</strong>
       </article>;
      })}
+     <DeliveryDetailsForm items={items} shippingMethod={boxSize}/>
     </section>
     <aside className="apex-customer-summary" aria-label="Cart summary">
      <h2>Order summary</h2>
