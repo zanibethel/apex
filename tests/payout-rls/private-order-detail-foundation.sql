@@ -193,7 +193,7 @@ begin
   or v->>'payment_enabled'<>'false'
   or v->>'order_ingest_enabled'<>'false'
   or v->>'delivery_decryption_enabled'<>'false'
-  or (select count(*) from jsonb_object_keys(v))<>10
+  or (select count(*) from jsonb_object_keys(v))<>11
  then raise exception 'Supplier detail readiness is missing or leaks fields';end if;
 end $member$;
 rollback;
