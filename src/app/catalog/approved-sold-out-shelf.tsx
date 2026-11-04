@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type {SoldOutCatalogResult} from "@/lib/supabase/approved-sold-out-catalog";
+import {SaveCatalogItem} from "@/app/cart/cart-provider";
 import "./sold-out-catalog.css";
 
 const money=(cents:number)=>new Intl.NumberFormat("en-US",{
@@ -41,7 +42,8 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
       <button type="button" disabled className="apex-approved-disabled">
        Sold out
       </button>
-      <p className="apex-approved-meta">Currently unavailable</p>
+      <SaveCatalogItem id={p.id} name={p.name}/>
+      <p className="apex-approved-meta">Currently unavailable to order</p>
      </div>
     </article>)}
    </div>:
