@@ -54,7 +54,7 @@ test('preview page is authenticated, no direct provider calls or token links',()
  assert.match(src,/readCompleteReviewWorkbook/);
  assert.match(src,/get_supplier_review_email_status/);
  assert.match(src,/sandbox=""/);
- assert.match(src,/No message/); // positive privacy disclosure
+ assert.match(src,/This preview has not transmitted a message/); // explicit no-send disclosure
  assert.doesNotMatch(src,/RESEND_REPORTS_API_KEY|createClient|sendEmail|purchaseLabel|decryptAddress|service_role/);
  assert.match(client,/Download metadata-only attachment preview/);
  assert.doesNotMatch(client,/fetch\(|\.rpc\(|authorization|service_role/);
