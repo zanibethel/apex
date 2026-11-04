@@ -159,6 +159,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104130000_apex_sales_review_reconciliation.sql
       - name: Verify historical identity, stale denial, reimport deduplication and role scope
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-sales-reconciliation.sql
+      - name: Install private verified-source order detail snapshots (disposable only)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104140000_apex_private_order_detail_foundation.sql
+      - name: Verify order identity, immutable items, sealed destination and tenant isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/private-order-detail-foundation.sql
       - name: Install synthetic atomic reservation contract (disposable database only)
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_order_reservation_contract_REVIEW_ONLY.sql
       - name: Verify server-sourced totals, quote binding, duplicate denials and atomic rollback
