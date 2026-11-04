@@ -93,6 +93,80 @@ revoke all on function public.get_public_inventory_catalog(integer,integer)
 grant execute on function public.get_public_inventory_catalog(integer,integer)
  to anon,authenticated;
 
+-- Preserve the older sold-out-only API as actually zero stock. A positive
+-- quantity must NEVER be presented as SOLD OUT by a legacy consumer.
+create or replace function public.get_public_sold_out_catalog(
+ p_offset integer,p_limit integer
+) returns jsonb language plpgsql stable security definer
+ set search_path=pg_catalog as $fn$
+declare v_result jsonb;
+begin
+ if p_offset is null or p_offset<0 or p_offset>10000
+   or p_limit is null or p_limit<1 or p_limit>24
+ then raise exception 'Invalid catalog page' using errcode='22023';end if;
+ if not exists(select 1 from apex_internal.private_release_gate
+  where singleton=true and enabled=true)
+ then return '[]'::jsonb;end if;
+
+ select coalesce(jsonb_agg(jsonb_build_object(
+  'id',eligible.id,'name',eligible.name,
+  'description',eligible.description,
+  'price_cents',eligible.price_cents::text,
+  'currency','USD','availability','sold_out','can_checkout',false
+ ) order by eligible.name,eligible.id),'[]'::jsonb)
+ into v_result
+ from (
+  select p.id,p.name,p.description,p.price_cents
+  from public.products p
+  join public.stores s on s.id=p.store_id and s.is_public=false
+  join public.categories cat on cat.id=p.category_id
+     and cat.store_id=p.store_id and cat.is_published=true
+  join public.supplier_listing_controls c on c.store_id=p.store_id
+     and c.product_id=p.id and c.supplier_wants_listing=true
+     and c.admin_gate='clear'
+     and (not c.republish_approval_required or c.republish_approved)
+  join public.inventory_items i on i.store_id=p.store_id and i.product_id=p.id
+  join apex_internal.supplier_release_authorizations sa
+    on sa.supplier_id=s.supplier_id and sa.status='verified'
+    and sa.valid_until>=current_date
+    and sa.reviewed_at is not null and sa.reviewed_by is not null
+    and length(btrim(coalesce(sa.evidence_reference,'')))>0
+  join apex_internal.product_release_authorizations pa
+    on pa.store_id=p.store_id and pa.product_id=p.id
+    and pa.status='verified' and pa.valid_until>=current_date
+    and pa.reviewed_at is not null and pa.reviewed_by is not null
+    and length(btrim(coalesce(pa.evidence_reference,'')))>0
+  left join public.private_product_review_states r on r.store_id=p.store_id
+    and r.product_id=p.id
+  left join public.supplier_candidate_drafts link on link.store_id=p.store_id
+    and link.product_id=p.id
+  left join public.supplier_import_candidates src on src.store_id=p.store_id
+    and src.id=link.candidate_id
+  where p.is_published=false and p.is_active=true and p.currency='USD'
+   and p.price_cents>0 and length(btrim(p.name))>0
+   and length(btrim(p.sku))>0
+   and length(btrim(coalesce(p.description,'')))>0
+   and length(coalesce(p.image_path,''))>0
+   and i.quantity_on_hand=0 and i.quantity_reserved=0
+   and coalesce(r.status,'') not in ('pending_review','changes_requested')
+   and (link.candidate_id is null or src.review_status='approved_for_draft')
+   and not exists(
+    select 1 from apex_internal.listing_identity_holds h
+    where h.supplier_id=s.supplier_id and h.active=true
+      and h.signature=apex_internal.listing_signature(p.name)
+   )
+  order by p.name,p.id
+  limit p_limit offset p_offset
+ ) eligible;
+ return v_result;
+end $fn$;
+-- Replace any legacy no-argument public feed with the same strict filter.
+-- An explicit two-argument signature avoids PostgREST overload ambiguity.
+create or replace function public.get_public_sold_out_catalog()
+ returns jsonb language sql stable security definer set search_path=pg_catalog as $legacy$
+ select public.get_public_sold_out_catalog(0,24);
+$legacy$;
+
 -- Update saved-cart readback with the same nonpayable stock interpretation.
 create or replace function public.get_public_cart_quote_source(
  p_items jsonb,p_code text
