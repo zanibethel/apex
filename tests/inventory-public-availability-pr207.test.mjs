@@ -111,5 +111,5 @@ test("authenticated supplier/admin stock and publishing actions invalidate catal
   assert.match(action,/revalidatePath\("\/cart"\)/);
  }
  assert.doesNotMatch(privateStock,/\.update\(\{is_published:\s*true/);
- assert.doesNotMatch(adminHold,/\\.update\\(\\{is_published:\s*true/);
+ assert.doesNotMatch(adminHold,/\.update\(\{is_published:\s*true/);
 });
