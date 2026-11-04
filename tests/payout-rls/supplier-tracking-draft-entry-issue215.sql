@@ -85,11 +85,17 @@ begin
  if v->>'status'<>'duplicate_conflict'
  or v->>'observed_revision'<>'2'
  then raise exception 'Duplicate draft tracking reference accepted';end if;
- if (select revision from apex_internal.review_shipment_plans
-     where id=plan)<>2
- or (select count(*) from apex_internal.review_shipment_events
-     where shipment_id=plan)<>2
- then raise exception 'Conflict attempted a revision without durable event';end if;
+ -- Assert through the same narrowly authorized supplier read RPC,
+ -- never by granting direct SELECT of private immutable audit tables.
+ select p.value into v
+ from jsonb_array_elements(
+    public.get_supplier_review_fulfillment_queue(s,10,0)->'orders'
+ ) as o(value)
+ cross join lateral jsonb_array_elements(o.value->'plans') as p(value)
+ where p.value->>'shipment_id'=plan::text;
+ if v is null or v->>'revision'<>'2'
+  or jsonb_array_length(v->'tracking_drafts')<>1
+ then raise exception 'Conflict attempted revision without an audit event';end if;
 
  -- Legitimate review-only next draft increments monotonic revision.
  v:=public.submit_supplier_review_tracking_draft(
