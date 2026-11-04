@@ -43,7 +43,7 @@ export async function saveStoreShippingConfiguration(
  const threshold=isCharged?cents(thresholdRaw):null;
  if(fee===null||mediumFee===null||
   (isCharged&&(fee<1||mediumFee<fee||threshold===null||threshold<1)))
-  return fail("Enter valid Small and Medium rates and a positive free-shipping minimum.");
+  return fail("Enter valid Padded Envelope and Medium Box rates and a positive free-shipping minimum.");
  const client=await signedInClient();
  if(!client)return fail("Sign in with an authorized supplier or admin account.");
  const {data,error}=await client.rpc("save_private_store_usps_shipping_settings",{
@@ -60,5 +60,5 @@ export async function saveStoreShippingConfiguration(
   data.free_shipping_min_subtotal_cents!==threshold)
   return fail("Shipping rules could not be saved. Refresh and retry.");
  refreshRules();
- return {ok:true,message:"USPS Small/Medium shipping rates saved. No checkout or payment enabled."};
+ return {ok:true,message:"USPS Padded Envelope / Medium Box shipping rates saved. No checkout or payment enabled."};
 }
