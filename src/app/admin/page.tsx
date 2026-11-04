@@ -14,6 +14,7 @@ const dashboardLinks = [
   { title: "Catalog release", description: "See exactly which products are public Sold Out, held, or waiting on eligibility checks.", href: "/admin/catalog-release", icon: "▦" },
   { title: "Category controls", description: "Publish or unpublish store categories with an audit trail.", href: "/admin/categories", icon: "▥" },
   { title: "Shipping rules", description: "USPS fees, free-shipping threshold and automatic padded-envelope item limit.", href: "/admin/checkout-rules", icon: "▧" },
+  { title: "Supplier email reports", description: "Activate secure Resend delivery and review the daily 8 AM schedule.", href: "/admin/email-reports", icon: "✉" },
   { title: "Shipping & discount codes", description: "Manage free-shipping and merchandise promotion codes.", href: "/admin/shipping-promotions", icon: "▥" },
   { title: "Checkout readiness", description: "Read-only private product eligibility and payment launch gates. Real checkout remains disabled.", href: "/admin/checkout-readiness", icon: "▥" },
   { title: "Order admission", description: "Review multiple real products, stock, eligibility, USPS shipping and discount codes before any order is authorized.", href: "/admin/order-admission", icon: "▧" },

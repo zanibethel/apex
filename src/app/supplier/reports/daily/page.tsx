@@ -1,9 +1,10 @@
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
-import {previousCentralDate,validReportDate,parseSupplierDailyReport}
+import {previousCentralDate,validReportDate,parseSupplierDailyReport,parseSupplierDailyReportEmailPreference}
  from "@/lib/supplier/daily-order-report.mjs";
 import "./daily.css";
+import {updateSupplierDailyReportEmailPreference} from "./email-actions";
 
 export const dynamic="force-dynamic";
 export const metadata={
@@ -18,7 +19,7 @@ const centralTime=(date:string)=>new Date(date).toLocaleString("en-US",{
 
 export default async function DailySupplierReport({
  searchParams,
-}:{searchParams:Promise<{date?:string}>}){
+}:{searchParams:Promise<{date?:string;email?:string}>}){
  const w=await getSupplierWorkspace();
  if(!w)redirect("/supplier/sign-in");
  const args=await searchParams;
@@ -33,11 +34,18 @@ export default async function DailySupplierReport({
   return d.toISOString().slice(0,10);
  });
  const results=await Promise.all(w.stores.map(async store=>{
-  const r=await w.client.rpc("get_supplier_daily_order_report",{
-   p_store_id:store.id,p_report_date:day,
-  });
+  const [r,pref]=await Promise.all([
+   w.client.rpc("get_supplier_daily_order_report",{
+    p_store_id:store.id,p_report_date:day,
+   }),
+   w.client.rpc("get_supplier_daily_report_email_preference",{
+    p_store_id:store.id,
+   }),
+  ]);
   return {store,error:r.error,report:r.error?null:
-   parseSupplierDailyReport(r.data,store.id,day)};
+   parseSupplierDailyReport(r.data,store.id,day),
+   emailPreference:pref.error?null:
+    parseSupplierDailyReportEmailPreference(pref.data,store.id)};
  }));
  return <main className="container supplier-shell apex-supplier-daily">
   <Link className="back" href="/supplier/reports">← Sales history</Link>
@@ -52,10 +60,42 @@ export default async function DailySupplierReport({
     className={date===day?"apex-daily-date active":"apex-daily-date"}>
     {date}</Link>)}
   </div>
-  {results.map(({store,error,report})=><section className="apex-daily-panel"
+  {args?.email==="enabled"&&<p role="status" className="apex-daily-email-state">
+    Daily email preference enabled for your verified account address. Delivery begins after secure sender activation.
+   </p>}
+  {args?.email==="disabled"&&<p role="status" className="apex-daily-email-state">
+    Daily email reporting disabled for your account.
+   </p>}
+  {args?.email==="error"&&<p role="alert" className="apex-daily-email-error">
+    Could not change your report email setting. Confirm your login email and try again.
+   </p>}
+  {results.map(({store,error,report,emailPreference})=><section className="apex-daily-panel"
    key={store.id} aria-label={"Report for "+store.display_name}>
    <h2>{store.display_name}</h2>
    <p className="apex-daily-period">{day} · America/Chicago</p>
+   <div className="apex-daily-email-preferences">
+    <h3>Email me this daily report</h3>
+    {!emailPreference?<p role="alert">Email preferences are temporarily unavailable.</p>:
+     <>
+      <p className="notice">Destination: {w.user.email??"Unverified account email"}.
+       Reports are sent only to your confirmed login email, not other supplier members.
+      </p>
+      <p className="notice">Subscription: {emailPreference.enabled?"Enabled":"Disabled"}
+       {" · "}Target delivery: before 8:00 AM Central daily.</p>
+      <p className="notice">A subscription does not confirm that a message was sent. Secure delivery must be activated by the administrator.</p>
+      <form action={updateSupplierDailyReportEmailPreference}>
+       <input type="hidden" name="storeId" value={store.id}/>
+       <input type="hidden" name="enabled"
+        value={emailPreference.enabled?"false":"true"}/>
+       <button className={emailPreference.enabled?"button secondary":"button primary"}
+        type="submit" disabled={!emailPreference.verified&&!emailPreference.enabled}>
+        {emailPreference.enabled?"Disable daily emails":"Enable daily emails"}
+       </button>
+      </form>
+      {!emailPreference.verified&&<p className="notice">
+       Confirm the email on your Apex login before enabling email reports.</p>}
+     </>}
+   </div>
    {error||!report?<p role="alert">Reporting permissions or saved data
     are unavailable. No figures will be estimated.</p>:
     report.status==="not_generated"?<p role="status">
@@ -81,10 +121,10 @@ export default async function DailySupplierReport({
     </>}
   </section>)}
   <p className="notice apex-daily-disclosure">
-   Reports are available in the supplier dashboard. Email delivery is not
-   active until a verified transactional email sender and recipient preferences
-   are configured. Gross sales are not supplier payouts; shipment expenses are
-   tracked separately once label purchasing is authorized.
+   Reports remain available in the supplier dashboard even when email delivery is
+   not activated. Email subscriptions require a verified login address; provider
+   acceptance is not proof of final inbox delivery. Gross sales are not supplier payouts;
+   shipping expenses are tracked separately when label purchasing is authorized.
   </p>
   <div className="actions">
    <Link className="button secondary" href="/supplier/usps">USPS fulfillment</Link>

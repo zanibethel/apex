@@ -97,7 +97,8 @@ test("supplier dashboard includes reports and USPS; no live label purchase",()=>
  assert.match(report,/getSupplierWorkspace/);
  assert.match(report,/get_supplier_daily_order_report/);
  assert.match(report,/previousCentralDate/);
- assert.match(report,/Email delivery is not/);
+ assert.match(report,/Email me this daily report/);
+ assert.match(report,/Enable daily emails/);
  assert.match(usps,/getSupplierWorkspace/);
  assert.match(usps,/get_supplier_usps_readiness/);
  assert.match(usps,/USPS Ship enrollment/);
@@ -108,7 +109,7 @@ test("supplier dashboard includes reports and USPS; no live label purchase",()=>
  assert.match(migration,/auth.uid\(\)/);
  assert.match(migration,/connection_status.*pending_authorization/);
  assert.doesNotMatch(migration,/create_label|create_invoice|insert into apex_internal\.checkout_order_intents/);
- assert.match(cron,/0 12 \* \* \*/);
+ assert.match(cron,/0 10 \* \* \*/);
  assert.match(cron,/cron.schedule/);
  assert.match(workflow,/supplier-usps-daily-reporting.sql/);
 });

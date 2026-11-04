@@ -15,3 +15,14 @@
 .apex-daily-totals dd{font-weight:800;margin:0;white-space:nowrap;font-variant-numeric:tabular-nums}
 .apex-daily-disclosure{max-width:820px;line-height:1.65;margin-top:22px}
 @media(max-width:480px){.apex-daily-date{font-size:11px}.apex-daily-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.apex-daily-email-preferences{margin:17px 0 22px;padding:14px;
+ background:#251c27;border:1px solid #705166;border-radius:11px;min-width:0}
+.apex-daily-email-preferences h3{font-size:17px;margin:0 0 8px}
+.apex-daily-email-preferences .notice{margin:6px 0 12px;overflow-wrap:anywhere}
+.apex-daily-email-preferences form{display:flex;flex-wrap:wrap;margin:10px 0}
+.apex-daily-email-preferences .button{max-width:100%;min-height:44px}
+.apex-daily-email-state{color:#bfe6cf;background:#163529;
+ border:1px solid #4c8b69;border-radius:10px;padding:10px 14px}
+.apex-daily-email-error{color:#f7c8cb;background:#42252b;
+ border:1px solid #96525e;border-radius:10px;padding:10px 14px}

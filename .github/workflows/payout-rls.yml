@@ -143,6 +143,18 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104110000_supplier_usps_daily_reporting_foundation.sql
       - name: Verify supplier-only reports, snapshots, and unavailable USPS purchase
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-usps-daily-reporting.sql
+      - name: Extend isolated auth with confirmed supplier report recipients
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-report-email-auth-fixture.sql
+      - name: Install private supplier email preference and outbox
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104120000_apex_supplier_daily_report_email_preferences.sql
+      - name: Install bounded token-guarded email worker
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104121500_apex_supplier_daily_report_worker.sql
+      - name: Verify opt-ins, other-supplier denial and idempotent report email claims
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-daily-report-email.sql
+      - name: Install admin-only sender activation and audit
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104123000_apex_admin_daily_report_sender_activation.sql
+      - name: Verify only platform admins can register matching server fingerprints
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-daily-report-sender.sql
       - name: Install synthetic atomic reservation contract (disposable database only)
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_order_reservation_contract_REVIEW_ONLY.sql
       - name: Verify server-sourced totals, quote binding, duplicate denials and atomic rollback

@@ -89,3 +89,18 @@ export function parseSupplierUspsReadiness(input,storeId){
  return Object.freeze({status:input.connection_status,postagePayer:"supplier",
   canPurchaseLabel:false,trackingSync:false});
 }
+
+export function parseSupplierDailyReportEmailPreference(input,storeId){
+ if(!input||typeof input!=="object"||Array.isArray(input)||
+  !UUID.test(storeId)||!sameKeys(input,[
+   "schema_version","store_id","enabled","recipient_verified",
+   "recipient_source","schedule","report_type",
+  ])||input.schema_version!==1||input.store_id!==storeId||
+  typeof input.enabled!=="boolean"||typeof input.recipient_verified!=="boolean"||
+  input.recipient_source!=="verified_account_email"||
+  input.schedule!=="before_08_00_America_Chicago"||
+  input.report_type!=="previous_central_calendar_day"||
+  (input.enabled&&!input.recipient_verified))return null;
+ return Object.freeze({enabled:input.enabled,
+  verified:input.recipient_verified,storeId});
+}
