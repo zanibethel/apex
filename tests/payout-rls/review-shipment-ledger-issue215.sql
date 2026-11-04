@@ -194,7 +194,7 @@ begin
  begin
   update apex_internal.review_shipment_plans
   set plan_status='shipped' where id=first_plan;
- exception when check_violation then denied:=true;end;
+ exception when check_violation or sqlstate '55000' then denied:=true;end;
  if not denied then raise exception 'Review-only plan became a real shipment';end if;
  if exists(select 1 from apex_internal.review_shipment_plans
     where plan_status<>'review_only' or fulfillment_authorized=true
