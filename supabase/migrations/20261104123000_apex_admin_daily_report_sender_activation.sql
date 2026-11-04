@@ -24,7 +24,7 @@ alter table apex_internal.supplier_report_mail_activation_audit force row level 
 revoke all on apex_internal.supplier_report_mail_activation_audit
  from public,anon,authenticated;
 
-create function public.get_admin_daily_mail_sender_readiness()
+create function public.get_admin_daily_mail_sender_readiness(p_expected_sha256 text)
  returns jsonb language plpgsql stable security definer
  set search_path=pg_catalog as $fn$
 declare v_uid uuid:=(select auth.uid());
@@ -39,13 +39,13 @@ begin
   'schema_version',1,
   'sender_activated',exists(
     select 1 from apex_internal.supplier_report_mail_worker_tokens
-    where name='daily_report_sender'),
+    where name='daily_report_sender' and token_sha256=p_expected_sha256),
   'recipient_mode','verified_supplier_member_opt_in',
   'purchasing_enabled',false);
 end $fn$;
-revoke all on function public.get_admin_daily_mail_sender_readiness()
+revoke all on function public.get_admin_daily_mail_sender_readiness(text)
  from public,anon,authenticated;
-grant execute on function public.get_admin_daily_mail_sender_readiness()
+grant execute on function public.get_admin_daily_mail_sender_readiness(text)
  to authenticated;
 
 create function public.admin_activate_daily_report_mail_sender(p_token_sha256 text)
