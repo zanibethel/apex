@@ -316,3 +316,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_review_email_delivery_REVIEW_ONLY.sql
       - name: Verify opted-in recipient, deduped report days, synthetic provider outcomes and isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-review-email-delivery-issue217.sql
+      - name: Install disposable supplier-only original-sale and held-order eligibility evidence gate
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_report_eligibility_evidence_REVIEW_ONLY.sql
+      - name: Verify every held order remains withheld from actionable email and shipping
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-report-eligibility-evidence-issue217.sql
