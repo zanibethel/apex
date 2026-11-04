@@ -88,6 +88,9 @@ export default async function SupplierCumulativeFulfillmentReview({
   <div className="actions">
    <Link className="button secondary" href="/supplier/fulfillment">
     Fulfillment queue</Link>
+   <Link className="button secondary"
+    href="/supplier/reports/fulfillment/email-preview">
+    Daily email & attachment preview</Link>
    <Link className="button secondary" href="/supplier/reports/reconcile">
     Sales review CSV</Link>
   </div>
