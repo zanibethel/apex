@@ -14,7 +14,22 @@ export const metadata={
  title:"Cumulative Fulfillment Review | Apex Supplier",
  robots:{index:false,follow:false},
 };
-export default async function SupplierCumulativeFulfillmentReview(){
+export default async function SupplierCumulativeFulfillmentReview({
+ searchParams,
+}:{
+ searchParams:Promise<{upload?:string}>,
+}){
+ const query=await searchParams;
+ const messages:Record<string,string>={
+  saved:"Review annotations saved. Original orders and shipment plans were unchanged.",
+  replayed:"This import was already applied. No duplicate records were created.",
+  unchanged:"All uploaded review annotations already match the current records.",
+  conflict:"The file contains stale or conflicting data. Refresh and download a current CSV.",
+  invalid:"The CSV failed validation. Review the file and try a fresh export.",
+  unavailable:"The review import service is unavailable. No changes were saved.",
+ };
+ const upload=typeof query?.upload==="string"?query.upload:"";
+ const message=Object.hasOwn(messages,upload)?messages[upload]:null;
  const workspace=await getSupplierWorkspace();
  if(!workspace)redirect("/supplier/sign-in");
  const day=centralDateKey(new Date());
@@ -45,6 +60,8 @@ export default async function SupplierCumulativeFulfillmentReview(){
    ← Daily sales reports</Link>
   <p className="eyebrow">APEX / SUPPLIER / REPORT REVIEW</p>
   <h1>Cumulative fulfillment review</h1>
+  {message&&<p role={["conflict","invalid","unavailable"].includes(upload)?
+   "alert":"status"} className="notice">{message}</p>}
   <p className="lead">A store-specific snapshot of original held order
    references, purchased items, planned quantities and tracking drafts
    carried forward across report days. This view does not assert that
