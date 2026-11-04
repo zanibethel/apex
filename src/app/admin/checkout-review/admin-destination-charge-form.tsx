@@ -42,7 +42,7 @@ export function AdminDestinationChargeForm({
    <dl className="apex-checkout-prices">
     <div><dt>Merchandise</dt><dd>{amount(state.merchandiseSubtotalCents)}</dd></div>
     <div><dt>Discount</dt><dd>{amount(state.merchandiseDiscountCents)}</dd></div>
-    <div><dt>USPS {state.shippingBoxSize==="medium"?"Medium":"Small"} shipping</dt><dd>{(state.shippingCents??0)===0?
+    <div><dt>USPS {state.shippingBoxSize==="medium"?"Medium Box":"Padded Envelope"} shipping</dt><dd>{(state.shippingCents??0)===0?
      "Free":amount(state.shippingCents)}</dd></div>
     {(state.shippingDiscountCents??0)>0&&
      <div><dt>Free shipping benefit</dt>
