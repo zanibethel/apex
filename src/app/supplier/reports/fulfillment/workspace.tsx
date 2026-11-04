@@ -11,7 +11,7 @@ type ReviewPreview={
  status:string;uploadedRows:number;uniqueRows:number;uniqueOrders:number;
  duplicatesInFile:number;staleRows:number;changedRows:number;
  unchangedRows:number;alreadyRecordedRows:number;conflicts:number;
- databaseUpdated:boolean;issues:Array<{line:number;key:string;code:string}>;
+ databaseUpdated:boolean;issues:readonly Readonly<{line:number;key:string;code:string}>[];
 };
 function downloadCsv(csv:string,name:string){
  const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"});
