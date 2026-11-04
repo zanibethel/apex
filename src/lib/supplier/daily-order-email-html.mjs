@@ -8,7 +8,7 @@ const USD=v=>new Intl.NumberFormat("en-US",{
 const esc=v=>String(v).replaceAll("&","&amp;").replaceAll("<","&lt;")
  .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
 const card=(label,value)=>
- '<td width="50%" valign="top" style="width:50%;vertical-align:top;background:#27272d;border:1px solid #383740;border-radius:10px;padding:15px 12px;">'+
+ '<td width="48%" valign="top" style="width:48%;vertical-align:top;background:#27272d;border:1px solid #383740;border-radius:10px;padding:15px 12px;">'+
  '<div style="font-size:12px;line-height:1.5;color:#c6c4cd;">'+esc(label)+'</div>'+
  '<div style="font-size:26px;line-height:1.2;font-weight:700;color:#ffffff;margin-top:9px;overflow-wrap:anywhere;">'+esc(value)+'</div></td>';
 const detail=(label,value)=>
@@ -24,7 +24,7 @@ export function renderSupplierDailyOrderHtml(v){
    v.cancelled_order_count!==v.recorded_order_count)
   throw Error("Invalid supplier daily report");
  const day=esc(v.report_date);
- const spacer='<td width="10" style="width:10px;min-width:10px;font-size:1px;">&nbsp;</td>';
+ const spacer='<td width="4%" style="width:4%;font-size:1px;">&nbsp;</td>';
  const metrics='<tr>'+card("Recorded orders",v.recorded_order_count)+spacer+
   card("Confirmed orders",v.confirmed_order_count)+'</tr>'+
   '<tr><td colspan="3" height="10" style="height:10px;font-size:1px;line-height:1px;">&nbsp;</td></tr>'+
