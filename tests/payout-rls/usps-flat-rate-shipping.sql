@@ -42,13 +42,7 @@ begin
   or r->>'free_shipping_min_subtotal_cents'<>'20001'
   or r->>'checkout_enabled'<>'false'
  then raise exception 'USPS Small/Medium save failed';end if;
- if (select count(*) from public.apex_shipping_setting_events
-     where store_id=s and new_settings->>'medium_flat_shipping_cents'='2580')<>1
- then raise exception 'USPS edit audit missing';end if;
  r:=public.save_private_store_usps_shipping_settings(s,true,1465,2580,20001);
- if (select count(*) from public.apex_shipping_setting_events
-     where store_id=s and new_settings->>'medium_flat_shipping_cents'='2580')<>1
- then raise exception 'No-op USPS save made duplicate audit';end if;
  begin
   perform public.save_private_store_usps_shipping_settings(s,true,1465,1400,20001);
  exception when invalid_parameter_value then denied:=true;end;
@@ -64,6 +58,16 @@ begin
  exception when invalid_parameter_value then denied:=true;end;
  if not denied then raise exception 'Disabled shipping with nonzero charge accepted';end if;
 end $owner$;
+-- Audit rows are intentionally unreadable to suppliers. Inspect them only
+-- as the disposable test runner's privileged role in the same transaction.
+reset role;
+do $audit$
+begin
+ if (select count(*) from public.apex_shipping_setting_events
+     where store_id='62000000-0000-0000-0000-000000000001'
+      and new_settings->>'medium_flat_shipping_cents'='2580')<>1
+ then raise exception 'USPS audit missing or replay created duplicate event';end if;
+end $audit$;
 rollback;
 
 begin;
