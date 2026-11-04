@@ -61,7 +61,7 @@ export function parsePrivateDestinationChargeSource(
  };
 }
 export function estimatePrivateDestinationCharges(
- parsed,{code,expectedSubtotalCents,now=new Date()}
+ parsed,{code,expectedSubtotalCents,boxSize="small",now=new Date()}
 ){
  if(!parsed||!MONEY(expectedSubtotalCents)||
   typeof code!=="string")return null;
@@ -71,7 +71,7 @@ export function estimatePrivateDestinationCharges(
   lines:[{productId:parsed.productId,quantity:parsed.quantity,
    unitPriceCents:parsed.unitPriceCents}],
   shippingPolicy:parsed.shippingPolicy,
-  discountCode:parsed.promotion,now,
+  discountCode:parsed.promotion,boxSize,now,
  });
  if(!estimated.ok)return {ok:false,message:estimated.reason};
  if(estimated.canPlaceOrder!==false||estimated.canCreateInvoice!==false||
@@ -87,6 +87,7 @@ export function estimatePrivateDestinationCharges(
   discountedMerchandiseCents:estimated.discountedMerchandiseCents,
   originalShippingCents:estimated.originalShippingCents,
   shippingCents:estimated.shippingCents,
+  shippingBoxSize:estimated.shippingBoxSize,
   shippingDiscountCents:estimated.shippingDiscountCents,
   freeShippingMinimumCents:estimated.freeShippingMinimumCents,
   amountUntilFreeShippingCents:estimated.amountUntilFreeShippingCents,
