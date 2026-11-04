@@ -94,7 +94,7 @@ export function CustomerCartPage(){
        <strong>{verified?usd(verified.lineTotalCents):"—"}</strong>
       </article>;
      })}
-     <DeliveryDetailsForm items={items} shippingMethod={selectedBox==="medium"?"medium":"small"}/>
+     <DeliveryDetailsForm items={items} shippingMethod={selectedBox==="medium"?"medium":selectedBox==="small"?"small":null}/>
     </section>
     <aside className="apex-customer-summary" aria-label="Cart summary">
      <h2>Order summary</h2>
