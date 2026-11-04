@@ -284,3 +284,7 @@ jobs:
           PGUSER=apex_test_held_order_worker PGPASSWORD="$APEX_HELD_ORDER_CI_WORKER_PASSWORD" psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/atomic-held-worker-login.sql
       - name: Verify confidential audit, zero worker table grants and commerce gate
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/atomic-held-worker-postflight.sql
+      - name: Install disposable unverified source identity and recovery journal
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_order_source_replay_journal_REVIEW_ONLY.sql
+      - name: Verify exact-source replay, readback-first recovery and immutable no-PII audit
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/atomic-held-source-recovery-journal.sql
