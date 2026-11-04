@@ -31,7 +31,7 @@ const request={
  products:[{id:product,store_id:store}],
 };
 const keys=(states)=>createReviewOnlyDeliveryKeyring({testOnly:true,entries:states.map(
- ([keyReference,status,keyBytes])=>({storeId:store,keyReference,status,keyBytes})
+ ([keyReference,state,keyBytes])=>({storeId:store,keyReference,state,keyBytes})
 )});
 const identity={store_id:store,sale_id:sale,
  source_order_reference:'SYNTHETIC-KEY-214',
