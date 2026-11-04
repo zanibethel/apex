@@ -137,6 +137,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104103000_apex_inventory_aware_catalog.sql
       - name: Verify public inventory projection and nonpayable access
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/inventory-public-availability.sql
+      - name: Seed isolated sales history reporting source (disposable only)
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-daily-report-source-fixture.sql
       - name: Install supplier USPS readiness and daily order snapshots (disposable)
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104110000_supplier_usps_daily_reporting_foundation.sql
       - name: Verify supplier-only reports, snapshots, and unavailable USPS purchase
