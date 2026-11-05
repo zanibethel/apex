@@ -167,6 +167,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104123000_apex_admin_daily_report_sender_activation.sql
       - name: Verify only platform admins can register matching server fingerprints
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-daily-report-sender.sql
+      - name: Install admin-only supplier email health aggregation
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261105145750_apex_admin_supplier_mail_delivery_health.sql
+      - name: Verify bounce alerts, owner JWT, privacy, and read-only mail health
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-supplier-mail-health.sql
       - name: Install verified sales review / CSV reconciliation ledger
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104130000_apex_sales_review_reconciliation.sql
       - name: Verify historical identity, stale denial, reimport deduplication and role scope
