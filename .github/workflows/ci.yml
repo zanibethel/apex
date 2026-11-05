@@ -22,6 +22,12 @@ jobs:
         run: npm run typecheck
       - name: Guardrails
         run: npm run test
+      - name: Typecheck privileged Supabase Edge image worker
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Validate Edge worker
+        run: deno check supabase/functions/apex-media-v1/index.ts
       - name: Build
         run: npm run build
 
@@ -72,6 +78,7 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f database/tests/private_media_evidence_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/public_media_versions_v1_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/public_media_auto_revocation_v1_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/media_issue_and_resolve_v1_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/media_issue_and_resolve_v1_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_media_correction_feedback_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_hold_correction_roundtrip_integration.sql
