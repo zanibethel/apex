@@ -1,4 +1,4 @@
-> **Current source of truth — November 5, 2026:** [November 5–8 verified checkpoint](APEX_WEEKEND_CLOSEOUT_2026-11-05.md). Production is READY on merged PR #248; private commerce gate remains OFF, 63 products saved but none published, and there are no source sales or held orders. The October 29 notes below are historical. See also the [November 3 checkpoint](APEX_EXECUTION_CHECKPOINT_2026-11-03.md) and [supplier intake checklist](SUPPLIER_INTAKE_2026-11-04.md).
+> **Current continuation — November 5, 2026:** [Cross-chat development and supplier variant handoff](APEX_CROSS_CHAT_HANDOFF_2026-11-05.md) is the latest GitHub/development checkpoint, including merged #279–#283 and the pending private supplier workbook/retail-price/variant mapping. The [November 5–8 verified weekend snapshot](APEX_WEEKEND_CLOSEOUT_2026-11-05.md) remains the last recorded hosted-data inventory baseline, **not a live recheck**. Commerce and shipment release are not authorized.
 
 # Project status — 2026-10-29
 
