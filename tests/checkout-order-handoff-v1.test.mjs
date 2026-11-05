@@ -114,6 +114,6 @@ test("held-order identity and purchase timestamp must come from a matching trust
 test("no public payment route or invoice-writer is introduced by the handoff module",async()=>{
  const {readFileSync}=await import("node:fs");
  const content=readFileSync(new URL("../src/lib/payments/checkout-order-handoff-v1.mjs",import.meta.url),"utf8");
- assert.doesNotMatch(content,/\.insert\(|\.update\(|\.delete\(|fetch\(|service_role|process\\.env\\.NEXT_PUBLIC_/);
+ assert.doesNotMatch(content,/\.insert\(|\.delete\(|\.rpc\(|fetch\(|service_role|process\\.env\\.NEXT_PUBLIC_/);\n // HMAC itself legitimately calls .update(); forbid database query updates, not hash updates.\n assert.doesNotMatch(content,/\.from\([^)]*\)\s*\.update\(/);
  assert.match(content,/canCreateInvoice:false,canPay:false/);
 });
