@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
+import HeldCsvPreview from "./preview";
 
 export const dynamic="force-dynamic";
 export const metadata={
@@ -31,6 +32,7 @@ export default async function CumulativeHeldCsvPage(){
      Download cumulative CSV
     </a>
    </div>
+   <HeldCsvPreview storeId={store.id}/>
   </section>)}
   <p className="notice">The CSV includes original order IDs, original
    purchase dates, recorded historical status, export timestamp and
@@ -41,6 +43,7 @@ export default async function CumulativeHeldCsvPage(){
   <p className="notice">The current read-only source supports at most
    1,025 records per storefront. If an export cannot be verified as
    complete and duplicate-free, no CSV is downloaded. No report
-   archive or CSV re-upload is enabled in this release.</p>
+   archive or persistent CSV re-upload is enabled. The comparison below
+   is a browser-only dry run, never a shipment update.</p>
  </main>;
 }
