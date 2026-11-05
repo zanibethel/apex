@@ -68,7 +68,7 @@ test("count, sorting, duplicate IDs and pagination must match canonical state",(
  assert.equal(parseSupplierHeldOrderHeaders({...a,offset:-1},store,{offset:-1}),null);
 });
 test("SQL is read-only, membership gated, grants no raw table access",()=>{
- const sql=readFileSync("database/sql/apex_supplier_held_order_headers_PRODUCTION_REVIEW.sql","utf8");
+ const sql=readFileSync("supabase/migrations/20261105021347_apex_supplier_held_order_headers_readonly.sql","utf8");
  assert.match(sql,/security definer/);
  assert.match(sql,/set search_path=pg_catalog/);
  assert.match(sql,/auth\.uid\(\)/);
