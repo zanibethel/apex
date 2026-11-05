@@ -1,5 +1,7 @@
 # Apex — November 5–8, 2026 execution and closeout checkpoint
 
+> **Later development update:** [November 5 cross-chat handoff](APEX_CROSS_CHAT_HANDOFF_2026-11-05.md) records merged PRs #279–#283 and the supplier variant-mapping decision. The production/database measurements below remain a historical point-in-time snapshot, not a fresh check of the newer main commit.
+
 **Recorded:** November 5, 2026 (America/Chicago). **Scope:** verified technical state, end-of-week action plan and unmerged-PR triage. This document supersedes the November 3 checkpoint for current operational status; older plans remain historical. **Nothing here authorizes a live sale, Bitcoin charge, label purchase or shipment.**
 
 ## Verified production snapshot (November 5)
