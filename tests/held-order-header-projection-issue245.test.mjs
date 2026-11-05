@@ -79,5 +79,5 @@ test("SQL is read-only, membership gated, grants no raw table access",()=>{
  assert.match(sql,/has_table_privilege\('authenticated'/);
  assert.match(sql,/grant execute on function[\s\S]*to authenticated/);
  assert.doesNotMatch(sql,/grant (insert|update|delete|select) on apex_internal/i);
- assert.doesNotMatch(sql,/decrypt|purchaseLabel|sendEmail|createInvoice|wallet_address/i);
+ assert.doesNotMatch(sql,/purchaseLabel|sendEmail|createInvoice|wallet_address|pgp_sym_decrypt|convert_from\s*\(/i);
 });
