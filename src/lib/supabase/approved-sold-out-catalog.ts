@@ -4,6 +4,7 @@ import "server-only";
 // private imports, inventory, supplier price costs and the demo checkout.
 export type ApprovedSoldOutProduct={
  id:string;name:string;description:string;priceCents:number;
+ categoryId:string|null;categoryName:string|null;
  currency:"USD";availability:"sold_out"|"in_stock";canCheckout:false;
 };
 export type SoldOutCatalogResult={
@@ -15,6 +16,7 @@ export type SoldOutCatalogResult={
 const APEX_ORIGIN="https://fhqpkpztercadcxspdkg.supabase.co";
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const allowedKeys=["id","name","description","price_cents","currency","availability","can_checkout"];
+const categoryKeys=["category_id","category_name"];
 
 export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|null{
  if(!Array.isArray(raw)||raw.length>24)return null;
@@ -23,8 +25,19 @@ export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|
  for(const item of raw){
   if(!item||typeof item!=="object"||Array.isArray(item))return null;
   const row=item as Record<string,unknown>;
-  if(Object.keys(row).length!==allowedKeys.length||
-   Object.keys(row).some(key=>!allowedKeys.includes(key))||
+  // Accept the prior seven-field projection during rollout, or the exact
+  // nine-field projection with an independently published category.
+  const hasCategory=Object.hasOwn(row,"category_id")||Object.hasOwn(row,"category_name");
+  const expected=hasCategory?[...allowedKeys,...categoryKeys]:allowedKeys;
+  if((Object.keys(row).length!==allowedKeys.length&&
+      Object.keys(row).length!==expected.length)||
+   Object.keys(row).some(key=>!expected.includes(key))||
+   (hasCategory&&(
+     typeof row.category_id!=="string"||!UUID.test(row.category_id)||
+     typeof row.category_name!=="string"||
+     row.category_name.trim().length<1||row.category_name.length>80||
+     /[\\u0000-\\u001f\\u007f]/u.test(row.category_name)
+   ))||
    typeof row.id!=="string"||!UUID.test(row.id)||ids.has(row.id)||
    typeof row.name!=="string"||row.name.trim().length===0||
    row.name.length>120||
@@ -36,6 +49,8 @@ export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|
   ids.add(row.id);
   output.push(Object.freeze({
    id:row.id,name:row.name,description:row.description,
+   categoryId:hasCategory?row.category_id as string:null,
+   categoryName:hasCategory?row.category_name as string:null,
    priceCents:Number(row.price_cents),
    currency:"USD",availability:row.availability as "sold_out"|"in_stock",canCheckout:false,
   }));
