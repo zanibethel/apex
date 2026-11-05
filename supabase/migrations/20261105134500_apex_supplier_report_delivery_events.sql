@@ -39,7 +39,7 @@ alter table apex_internal.supplier_report_delivery_events
 alter table apex_internal.supplier_report_delivery_events
  force row level security;
 revoke all on apex_internal.supplier_report_delivery_events
- from public,anon,authenticated,service_role;
+ from public,anon,authenticated;
 comment on table apex_internal.supplier_report_delivery_events is
  'Provider-signed Resend receipt metadata after server verification. No email addresses, customer data or order/shipping authority.';
 
