@@ -82,7 +82,9 @@ test("admin image queue signs ONLY filtered and authorized private review snapsh
  assert.match(page,/assessAdminMediaRelease\(review,Boolean\(preview\)\)/);
  assert.match(page,/privateMediaEvidenceStatus\(review,event\)/);
  assert.match(page,/No submissions in this queue/);
- assert.match(page,/This page cannot change records, publish assets, or enable checkout/);
+ assert.match(page,/This page cannot change supplier publication, release switches, or checkout/);
+ assert.match(page,/IssueApprovedMediaVersion/);
+ assert.match(page,/RevokeMediaVersion/);
  assert.match(css,/\.apex-admin-media-filters/);
  assert.doesNotMatch(page,/createPublicUrl|SUPABASE_SECRET|service_role|\.insert\(|\.update\(|\.delete\(/);
 });

@@ -146,10 +146,13 @@ test("product changes, publication status, review staleness or evidence mismatch
  }
 });
 
-test("reserved public endpoint never returns private bytes, redirects or signed preview URLs",()=>{
+test("gated public image proxy never discloses private paths or keys",()=>{
  const route=readFileSync("src/app/api/catalog/media/v1/[productId]/route.ts","utf8");
  assert.match(route,/status:404/);
  assert.match(route,/Cache-Control.*no-store/);
  assert.match(route,/state:"unavailable"/);
- assert.doesNotMatch(route,/supabase|storage\.|createSignedUrl|createPublicUrl|redirect\(|fetch\(|sourceImagePath|assetKey|setCookie/);
+ assert.match(route,/redirect:"manual"/);
+ assert.match(route,/cache:"no-store"/);
+ assert.ok(route.includes('"/functions/v1/apex-media-v1/asset/"'));
+ assert.doesNotMatch(route,/SUPABASE_SERVICE_ROLE_KEY|createSignedUrl|createPublicUrl|sourceImagePath|assetKey|setCookie/);
 });
