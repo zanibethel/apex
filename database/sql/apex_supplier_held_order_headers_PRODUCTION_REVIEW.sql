@@ -83,6 +83,7 @@ begin
  )
  select coalesce(jsonb_agg(jsonb_build_object(
   'order_id',id,
+  'store_id',p_store_id,
   'original_reference',source_order_reference,
   'purchased_at_utc',to_char(original_purchased_at at time zone 'UTC',
    'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
