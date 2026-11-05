@@ -112,7 +112,7 @@ export default async function AdminPaymentMonitor(){
    </ul>
    {audit.reasons.length>0?<div className="notice">
     <strong>Audit observations (no automated action)</strong>
-    <ul>{audit.reasons.map(reason=><li key={reason}>{reason}</li>)}</ul>
+    <ul>{audit.reasons.map((reason:string)=><li key={reason}>{reason}</li>)}</ul>
    </div>:<p className="notice">No malformed or duplicate entries detected
     within this sample. Settlement and record completeness remain unverified.</p>}
   </section>
