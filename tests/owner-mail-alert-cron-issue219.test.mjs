@@ -85,7 +85,7 @@ test("cron endpoint is protected, single-owner, gated on incident and explicit p
 });
 
 test("private outbox persists a frozen summary and serializes retries against one report date",()=>{
- const sql=readFileSync("supabase/migrations/20261105190000_apex_owner_mail_health_alert_dispatch.sql","utf8");
+ const sql=readFileSync("supabase/migrations/20261105155928_apex_owner_mail_health_alert_dispatch.sql","utf8");
  const workflow=readFileSync(".github/workflows/payout-rls.yml","utf8");
  for(const needle of [
   /force row level security/,
