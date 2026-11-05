@@ -66,3 +66,8 @@
 .apex-readiness-metrics strong{font-size:25px;color:#fff;font-variant-numeric:tabular-nums}
 .apex-readiness-metrics span{font-size:11px;color:#d4b9c7}
 @media(max-width:480px){.apex-delivery-fields{grid-template-columns:minmax(0,1fr)}.apex-delivery-fields label:nth-child(5),.apex-delivery-fields label:nth-child(6){grid-column:auto}}
+
+.apex-customer-summary-head{display:flex;align-items:start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.apex-customer-recheck{font:inherit;font-size:11px;min-height:34px;padding:6px 9px;border-radius:8px;color:#ffd0df;background:#36212d;border:1px solid #995a70;cursor:pointer}
+.apex-customer-recheck:disabled{opacity:.55;cursor:wait}
+.apex-customer-recheck:focus-visible{outline:2px solid #ff7ba3;outline-offset:2px}
