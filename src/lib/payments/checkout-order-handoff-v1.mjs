@@ -112,7 +112,7 @@ export function verifyHeldOrderReadbackV1(handoff,raw){
   !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(raw.original_purchased_at)||
   !Number.isFinite(Date.parse(raw.original_purchased_at))||
   new Date(raw.original_purchased_at).toISOString()!==
-   new Date(Date.parse(raw.original_purchased_at)).toISOString()||
+   (raw.original_purchased_at.length===20?raw.original_purchased_at.replace("Z",".000Z"):raw.original_purchased_at)||
   raw.idempotency_hash!==handoff.idempotencyHash||
   raw.request_fingerprint!==handoff.requestFingerprint||
   raw.cart_fingerprint!==handoff.cartFingerprint||
