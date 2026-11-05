@@ -1,3 +1,4 @@
+import {readBoundedProviderJsonText} from "./bounded-json-read-v1.mjs";
 // Private, read-only BTCPay Greenfield connection checks.
 // Never import this module into a client component or create invoices here.
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -88,8 +89,8 @@ export async function probePrivateGreenfieldStore({
  if(!response.ok)return status("provider_error");
  let json;
  try{
-  const raw=await response.text();
-  if(raw.length>16000)return status("invalid_response");
+  const raw=await readBoundedProviderJsonText(response);
+  if(raw===null)return status("invalid_response");
   json=JSON.parse(raw);
  }catch{return status("invalid_response");}
  if(!json||typeof json!=="object"||Array.isArray(json)||
