@@ -54,3 +54,9 @@
 /* Category selection is intentionally page-local; no private categories feed. */
 .apex-approved-filters{grid-template-columns:minmax(0,2fr) repeat(2,minmax(140px,1fr))}
 @media(max-width:640px){.apex-approved-filters{grid-template-columns:minmax(0,1fr)}}
+
+/* Revocable approved photos use one protected no-cache product URL.
+   The original artwork remains behind the image for denied requests. */
+.apex-approved-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1}
+.apex-approved-badge{z-index:2}
+.apex-approved-art small{z-index:2;text-shadow:0 1px 4px #120f12}
