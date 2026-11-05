@@ -256,3 +256,8 @@ jobs:
           APEX_BTCPAY_EPHEMERAL: "true"
           APEX_BTCPAY_TEST_NETWORK: regtest
         run: node scripts/btcpay-ephemeral-operator-recovery-check.mjs
+
+      - name: Install gated private order-detail foundation in disposable PostgreSQL
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104235408_apex_private_order_detail_foundation.sql
+      - name: Verify original sale identity, frozen line items, and supplier privacy
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/private-order-detail-foundation.sql
