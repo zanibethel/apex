@@ -6,7 +6,7 @@ import {NextResponse} from "next/server";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
 const SUPABASE_ORIGIN="https://fhqpkpztercadcxspdkg.supabase.co";
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[0-9a-f]{12}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const allowed=new Set(["image/png","image/jpeg","image/webp"]);
 const MAX=3145728;
 const notFound=()=>NextResponse.json({state:"unavailable"},{
