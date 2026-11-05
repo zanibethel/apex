@@ -73,7 +73,7 @@ begin
   or p_occurred_at < now()-interval '90 days'
  then raise exception 'Invalid provider receipt' using errcode='22023';
  end if;
- select count(*),min(o.id) into v_matches,v_dispatch
+ select count(*),min(o.id::text)::uuid into v_matches,v_dispatch
  from apex_internal.supplier_daily_report_email_outbox o
  where o.provider_email_id=p_provider_email_id and o.state='accepted';
  if v_matches<>1 then
