@@ -54,6 +54,9 @@ export default async function OrderDetailFoundationPage(){
    Shipment management and tracking are planned as a later, independently
    authorized feature.</p>
   <div className="actions">
+   <Link className="button secondary"
+    href="/supplier/reports/order-foundation/headers">
+    View original held-order records</Link>
    <Link className="button secondary" href="/supplier/reports/daily">
     Daily order reports</Link>
    <Link className="button secondary" href="/supplier/reports/reconcile">
