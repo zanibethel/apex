@@ -4,6 +4,29 @@
 **Purpose:** distinguish working technical foundations from activation of real order fulfillment.
 **Live release rule:** no payments, shipping, carrier postage, destination decryption, or customer shipment notification unless separate verified source/merchant permissions are approved. A supplier sales-history record or accepted email is never equivalent to a paid eligible order.
 
+## One-click three-track sample purchase (recommended first test)
+
+Open **https://apexanabolics.co/admin/fulfillment-qa**, sign in as
+platform admin, and click **Run sample purchase** at the top.
+
+Expected result: six stages appear in order:
+
+1. Customer cart: 2 sample items / 3 units, $55 items + $8 optional shipping.
+2. Checkout handoff: Track 1 selections pass the actual Track 2 v1 validator.
+3. Order identity: a synthetic held-order readback preserves immutable purchase time and rejects a mismatched request.
+4. Bitcoin payment: **a signed mock notification is verified**, but no real invoice, settlement or payout happened.
+5. Supplier fulfillment: an allocation of one unit leaves two unplanned; real shipping and postage are blocked.
+6. Supplier report: metadata-only review manifest for one original order, no real email or delivery data.
+
+All six checks must pass; expect **"Sample workflow checks passed —
+no real purchase was made."** The test does not submit personal details
+to an API, use a live Bitcoin store, purchase labels, create orders in
+Supabase, or send emails. It is intended to verify compatibility of the
+three contracts, not claim production payment or fulfillment readiness.
+
+Follow the more detailed exercises below only if you wish to investigate
+CSV overlap, email transport, or USPS provider enrollment.
+
 ## Fastest interactive acceptance walkthrough (admin-only)
 
 Open **https://apexanabolics.co/admin/fulfillment-qa** using a verified platform admin login.
