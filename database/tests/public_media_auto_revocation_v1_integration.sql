@@ -19,14 +19,14 @@ begin
    is distinct from false
  then raise exception 'Automatic revocation test not isolated';end if;
 
- select p.id,p.store_id,s.supplier_id into p
- from public.products p
- join public.stores s on s.id=p.store_id
+ select pr.id,pr.store_id,s.supplier_id into p
+ from public.products pr
+ join public.stores s on s.id=pr.store_id
  join apex_internal.product_release_authorizations pa
-  on pa.store_id=p.store_id and pa.product_id=p.id
+  on pa.store_id=pr.store_id and pa.product_id=pr.id
  join apex_internal.supplier_release_authorizations sa
   on sa.supplier_id=s.supplier_id
- order by p.id limit 1;
+ order by pr.id limit 1;
  select id into actor from auth.users order by id limit 1;
  if p.id is null or actor is null
  then raise exception 'Missing synthetic media approval fixture';end if;
