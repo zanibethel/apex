@@ -261,3 +261,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104235408_apex_private_order_detail_foundation.sql
       - name: Verify original sale identity, frozen line items, and supplier privacy
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/private-order-detail-foundation.sql
+
+      - name: Install supplier scoped held-order header read in disposable PostgreSQL
+        run: psql -X -v ON_ERROR_STOP=1 -f database/sql/apex_supplier_held_order_headers_PRODUCTION_REVIEW.sql
+      - name: Verify bounded header read, tenancy, and private source exclusion
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-held-order-headers-issue245.sql
