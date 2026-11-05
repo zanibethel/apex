@@ -2,7 +2,7 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-04
+Last reviewed: 2026-11-05
 
 ## 1. Isolate Bitcoin signing and payment authority from web/worker compromise
 
@@ -79,3 +79,6 @@ Last reviewed: 2026-11-04
 
 
 **2026-11-04 catalog and payment release-gate recheck (existing items 2–4):** Hosted Apex `products` table remains **63 saved / 0 published**. This does not establish inventory, supplier verification, shipping readiness or live Bitcoin checkout. Reuters Nov 4 describes continuing cryptocurrency volatility after the Binance breach and US midterms; this is external market/security context, not evidence of Apex/BTCPay/Prism compromise. **Status:** Catalog acceptance pending; live payment activation blocked (unchanged). **Possible solution:** read-only supplier/catalog/inventory/order-detail acceptance, payout-signing isolation and immutable split-finality review, with no mainnet credentials or order execution. **Recommendation:** preserve held-only checkout and explicit release gates; no code, deployment, wallet or payment policy change. Source: https://www.reuters.com/business/finance/crypto-dips-democrat-midterm-wins-binance-hack-dent-optimism-2026-11-04/ .
+
+
+**2026-11-05 catalog/payment-gate review (existing catalog and signing entries):** Connected hosted database confirms **63 products / 0 published / 50 active**, unchanged from Nov 4. Public catalog readiness, independently eligible order fulfillment, BTCPay settlement and live payout authorization are not established by saved product counts. Reuters Nov 5 reports ongoing post-election AI infrastructure volatility; cryptocurrency market recovery is not evidence of safer wallet operations. **Status:** Catalog acceptance pending; live payment and shipment release gates unchanged. **Possible solution:** read-only supplier-scoped order-detail, inventory/publish, CSV fulfillment, signing-isolation and settlement-finality acceptance evidence before any activation. **Recommendation:** no mainnet signing, live checkout, shipping or policy changes. Sources: https://www.reuters.com/business/energy/global-markets-global-markets-2026-11-05/ ; connected Apex Supabase read-only snapshot.
