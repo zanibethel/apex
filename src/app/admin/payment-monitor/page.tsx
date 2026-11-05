@@ -6,6 +6,8 @@ import {
  summarizeAdminPaymentMonitor,recordedTransferLabel,recordedRuleLabel,
 } from "@/lib/payments/admin-payment-monitor.mjs";
 import {parseAdminCheckoutJournalSummary} from "@/lib/checkout/admin-private-order-journal.mjs";
+import {assessAdminPaymentAuditSample}
+ from "@/lib/payments/admin-payment-audit-quality-v1.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={
@@ -55,6 +57,7 @@ export default async function AdminPaymentMonitor(){
  const transfers=transfersResult.error?null:transfersResult.data;
  const snapshots=snapshotsResult.error?null:snapshotsResult.data;
  const summary=summarizeAdminPaymentMonitor({rules,transfers,snapshots});
+ const audit=assessAdminPaymentAuditSample({rules,transfers,snapshots},{maxRows:LIMIT});
  const journalRead=await client.rpc("get_admin_checkout_journal_overview");
  const journal=journalRead.error?null:parseAdminCheckoutJournalSummary(journalRead.data);
  const storeNames=new Map((storesResult.error?[]:storesResult.data??[])
@@ -83,6 +86,35 @@ export default async function AdminPaymentMonitor(){
    </ul>
    <p className="notice">Passing disposable regtest tests does not establish
     live merchant settlement, supplier payout, or release approval.</p>
+  </section>
+  <section className="supplier-panel" aria-label="Read-only payment audit quality"
+   style={{maxWidth:"none",marginBottom:22}}>
+   <h2>Payment record audit quality</h2>
+   <p className="notice">This checks only the most recent {LIMIT} records
+    returned by existing admin-scoped reporting reads. It detects duplicate
+    identities, malformed entries and unknown states; it cannot verify
+    blockchain settlement, provider completeness or wallet receipts.</p>
+   <p role="status"><strong>{audit.status==="unavailable"
+    ?"Some reporting reads unavailable"
+    :audit.status==="review_required"
+     ?"Recorded anomalies require manual review"
+     :audit.status==="bounded_sample"
+      ?"Sample limit reached — full coverage unknown"
+      :"No structural issues found in sampled records — not payment proof"}
+   </strong></p>
+   <ul className="supplier-stores">
+    <li><span>Rules inspected</span>
+     <strong>{audit.inspected.rules??"Unavailable"}</strong></li>
+    <li><span>Transfers inspected</span>
+     <strong>{audit.inspected.transfers??"Unavailable"}</strong></li>
+    <li><span>Allocation snapshots inspected</span>
+     <strong>{audit.inspected.snapshots??"Unavailable"}</strong></li>
+   </ul>
+   {audit.reasons.length>0?<div className="notice">
+    <strong>Audit observations (no automated action)</strong>
+    <ul>{audit.reasons.map((reason:string)=><li key={reason}>{reason}</li>)}</ul>
+   </div>:<p className="notice">No malformed or duplicate entries detected
+    within this sample. Settlement and record completeness remain unverified.</p>}
   </section>
   <section className="supplier-panel"
    aria-label="Private order and provider intent journal"
