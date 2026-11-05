@@ -39,3 +39,14 @@
 .apex-approved-filters p,.apex-approved-page-note{grid-column:1/-1;color:#c7b6c5;font-size:11px;line-height:1.5;margin:0}
 .apex-approved-page-note{text-align:center;margin:18px 0 0}
 @media(max-width:520px){.apex-approved-filters{grid-template-columns:minmax(0,1fr)}}
+
+.apex-approved-details-link{display:inline-block;margin:0 0 14px;color:#ffbad2;font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.apex-approved-details-link:focus-visible{outline:2px solid #ff8db3;outline-offset:2px}
+.apex-product-detail-view{padding-block:28px 70px;max-width:1020px}
+.apex-product-detail-card{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);background:#17131a;border:1px solid #493340;border-radius:15px;overflow:hidden;margin-top:20px}
+.apex-product-detail-card .apex-approved-art{aspect-ratio:auto;min-height:340px}
+.apex-product-detail-card .apex-approved-body{padding:clamp(20px,4vw,42px)}
+.apex-product-detail-card h1{font-size:clamp(25px,4vw,42px);line-height:1.17;margin:0 0 18px;overflow-wrap:anywhere}
+.apex-product-detail-card .apex-approved-body>p:not(.apex-approved-meta){font-size:14px;line-height:1.75;color:#d8c8d3;white-space:pre-line;overflow-wrap:anywhere}
+.apex-product-detail-card .apex-approved-meta{text-align:left;margin:16px 0}
+@media(max-width:720px){.apex-product-detail-card{grid-template-columns:minmax(0,1fr)}.apex-product-detail-card .apex-approved-art{min-height:210px;aspect-ratio:4/3}}
