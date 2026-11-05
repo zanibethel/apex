@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {parseSupplierReportDeliveryStatus,describeSupplierMailStatus}
+import {parseSupplierReportDeliveryStatus,describeSupplierMailStatus,isSupplierDailyReportPayload}
  from "../src/lib/supplier/supplier-report-delivery-status.mjs";
 
 const store="62000000-0000-0000-0000-000000000001";
@@ -107,4 +107,22 @@ test("database journal is private, atomically idempotent and never changes settl
  assert.match(migration,/grant execute on function public\.get_supplier_daily_report_delivery_status/);
  assert.match(workflow,/supplier-report-delivery-events\.sql/);
  assert.doesNotMatch(migration,/insert into (?:public\.)?orders|update (?:public\.)?supplier_sales_history|mark_shipped|purchase_label/i);
+});
+
+
+test("shared Resend account ignores owner and other-project mail without storing recipient data",()=>{
+ const mk=subject=>JSON.stringify({type:"email.delivered",
+  data:{subject,to:["verified@example.org"]}});
+ assert.equal(isSupplierDailyReportPayload(
+  mk("Apex daily order report — 2026-11-05")),true);
+ assert.equal(isSupplierDailyReportPayload(
+  mk("Apex Weekly Progress + Expense Report | 2026-11-05")),false);
+ assert.equal(isSupplierDailyReportPayload(mk("Other project message")),false);
+ assert.equal(isSupplierDailyReportPayload("{bad-json}"),false);
+ const route=readFileSync("src/app/api/webhooks/resend-supplier-reports/route.ts","utf8");
+ assert.match(route,/ReportEventError/);
+ assert.match(route,/isSupplierDailyReportPayload/);
+ assert.match(route,/ignored:true/);
+ assert.ok(route.indexOf("verifyResendReportEvent(")<
+  route.indexOf("isSupplierDailyReportPayload(payload)"));
 });
