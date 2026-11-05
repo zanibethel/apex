@@ -236,7 +236,8 @@ export default async function SharedCatalog() {
       {!product.is_published && canWrite && <details id={`image-${product.id}`} className="apex-card-editor">
         <summary>Manage product image</summary>
         <ProductImageUploader storeId={product.store_id} productId={product.id}
-          enabled={canWrite} existingImages={reusableImages}/>
+          enabled={canWrite} hasImage={Boolean(product.image_path)}
+          existingImages={reusableImages}/>
       </details>}
       {!product.is_published && <details id={`details-${product.id}`} className="apex-card-editor">
         <summary>{canWrite?"Edit details, SKU and price":"View product details (read-only)"}</summary>

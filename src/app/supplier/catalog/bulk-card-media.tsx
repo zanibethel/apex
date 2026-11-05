@@ -55,7 +55,7 @@ export function BulkCardMedia({storeId,productId,enabled,imageUrl,existingImages
     aria-expanded={imageOpen} aria-controls={"image-controls-"+productId}
     onClick={()=>setImageOpen(open=>!open)}
     disabled={!enabled}>
-    {imageOpen?"Close image picker":"Upload image / Choose existing"}
+    {imageOpen?"Close image editor":imageUrl?"Change image":"Add image"}
    </button>
    <div className="apex-bulk-stock-editor">
     <label htmlFor={"bulk-stock-"+productId}>On-hand stock</label>
@@ -72,7 +72,8 @@ export function BulkCardMedia({storeId,productId,enabled,imageUrl,existingImages
   </div>
   {imageOpen&&<div id={"image-controls-"+productId} className="apex-bulk-image-controls">
    <ProductImageUploader storeId={storeId} productId={productId}
-    enabled={enabled} existingImages={existingImages.filter(image=>image.productId!==productId)}/>
+    enabled={enabled} hasImage={Boolean(imageUrl)}
+    existingImages={existingImages.filter(image=>image.productId!==productId)}/>
   </div>}
  </section>;
 }

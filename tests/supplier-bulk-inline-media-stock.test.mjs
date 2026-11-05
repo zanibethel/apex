@@ -36,7 +36,7 @@ test("a saved card has inline image and audited stock actions, unsaved CSV cards
 });
 test("image picker reuses the existing private upload and same-store copy safeguards",()=>{
  assert.match(card,/ProductImageUploader/);
- assert.match(card,/Upload image \/ Choose existing/);
+ assert.match(card,/imageUrl\?"Change image":"Add image"/);
  assert.match(card,/existingImages\.filter\(image=>image\.productId!==productId\)/);
  assert.match(image,/requestProductImageUpload/);
  assert.match(image,/requestProductImageReuse/);

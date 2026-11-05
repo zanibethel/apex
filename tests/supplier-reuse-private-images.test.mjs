@@ -32,10 +32,10 @@ test("picker uses authenticated private read and destination signed upload",()=>
  assert.match(picker,/source\.size>3145728/);
  assert.match(picker,/upsert:false/);
  assert.match(picker,/existingImages\.some\(image=>image\.productId===sourceProductId\)/);
- assert.match(picker,/Upload new image/);
- assert.match(picker,/Choose existing image/);
+ assert.match(picker,/Replace photo/);
+ assert.match(picker,/Reuse an existing photo/);
  assert.match(picker,/No reusable images yet/);
- assert.match(picker,/separate private copy/);
+ assert.match(picker,/copies it to this product and saves it automatically/);
  assert.match(picker,/aria-pressed=\{sourceProductId===image\.productId\}/);
  assert.doesNotMatch(picker,/deleteUser|service_role|\.remove\(|getPublicUrl/);
 });
