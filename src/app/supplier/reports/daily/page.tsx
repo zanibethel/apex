@@ -5,6 +5,8 @@ import {previousCentralDate,validReportDate,parseSupplierDailyReport,parseSuppli
  from "@/lib/supplier/daily-order-report.mjs";
 import "./daily.css";
 import {updateSupplierDailyReportEmailPreference} from "./email-actions";
+import {parseSupplierReportDeliveryStatus,describeSupplierMailStatus}
+ from "@/lib/supplier/supplier-report-delivery-status.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={
@@ -34,18 +36,23 @@ export default async function DailySupplierReport({
   return d.toISOString().slice(0,10);
  });
  const results=await Promise.all(w.stores.map(async store=>{
-  const [r,pref]=await Promise.all([
+  const [r,pref,mail]=await Promise.all([
    w.client.rpc("get_supplier_daily_order_report",{
     p_store_id:store.id,p_report_date:day,
    }),
    w.client.rpc("get_supplier_daily_report_email_preference",{
     p_store_id:store.id,
    }),
+   w.client.rpc("get_supplier_daily_report_delivery_status",{
+    p_store_id:store.id,p_report_date:day,
+   }),
   ]);
   return {store,error:r.error,report:r.error?null:
    parseSupplierDailyReport(r.data,store.id,day),
    emailPreference:pref.error?null:
-    parseSupplierDailyReportEmailPreference(pref.data,store.id)};
+    parseSupplierDailyReportEmailPreference(pref.data,store.id),
+   mailStatus:mail.error?null:
+    parseSupplierReportDeliveryStatus(mail.data,store.id,day)};
  }));
  return <main className="container supplier-shell apex-supplier-daily">
   <Link className="back" href="/supplier/reports">← Sales history</Link>
@@ -69,7 +76,7 @@ export default async function DailySupplierReport({
   {args?.email==="error"&&<p role="alert" className="apex-daily-email-error">
     Could not change your report email setting. Confirm your login email and try again.
    </p>}
-  {results.map(({store,error,report,emailPreference})=><section className="apex-daily-panel"
+  {results.map(({store,error,report,emailPreference,mailStatus})=><section className="apex-daily-panel"
    key={store.id} aria-label={"Report for "+store.display_name}>
    <h2>{store.display_name}</h2>
    <p className="apex-daily-period">{day} · America/Chicago</p>
@@ -95,6 +102,17 @@ export default async function DailySupplierReport({
       {!emailPreference.verified&&<p className="notice">
        Confirm the email on your Apex login before enabling email reports.</p>}
      </>}
+   </div>
+   <div className="apex-daily-email-preferences" aria-live="polite">
+    <h3>Email delivery evidence</h3>
+    <p role={mailStatus&&["provider_bounced","provider_complained",
+     "provider_failed","provider_suppressed"].includes(mailStatus.state)?"alert":"status"}>
+     {describeSupplierMailStatus(mailStatus)}
+    </p>
+    {mailStatus?.eventAt&&<p className="notice">
+     Latest signed provider event: {centralTime(mailStatus.eventAt)} Central.</p>}
+    <p className="notice">Provider delivery is not proof that the message
+     appeared in your inbox. No customer or shipping details are in this view.</p>
    </div>
    {error||!report?<p role="alert">Reporting permissions or saved data
     are unavailable. No figures will be estimated.</p>:
