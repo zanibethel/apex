@@ -79,7 +79,6 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f database/tests/public_media_versions_v1_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/public_media_auto_revocation_v1_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/media_issue_and_resolve_v1_integration.sql
-          psql -X -v ON_ERROR_STOP=1 -f database/tests/media_issue_and_resolve_v1_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_media_correction_feedback_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f database/tests/supplier_hold_correction_roundtrip_integration.sql
           # Each command starts a fresh psql connection; verifies readback after commit.
