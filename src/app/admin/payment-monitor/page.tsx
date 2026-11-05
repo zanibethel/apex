@@ -90,6 +90,15 @@ export default async function AdminPaymentMonitor(){
    <p className="notice">Passing disposable regtest tests does not establish
     live merchant settlement, supplier payout, or release approval.</p>
   </section>
+  <section className="supplier-panel" style={{maxWidth:"none",marginBottom:22}}
+   aria-label="Historical read-only payment review">
+   <h2>Historical reporting review</h2>
+   <p className="notice">Review multiple pages of existing allocation and
+    transfer history for missing in-sample references and inconsistent
+    records. Reporting is bounded and is not proof of payment settlement.</p>
+   <Link className="button secondary" href="/admin/payment-monitor/history">
+    Review historical payment records</Link>
+  </section>
   <section className="supplier-panel" aria-label="Read-only payment audit quality"
    style={{maxWidth:"none",marginBottom:22}}>
    <h2>Payment record audit quality</h2>
