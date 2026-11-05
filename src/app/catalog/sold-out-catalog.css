@@ -50,3 +50,7 @@
 .apex-product-detail-card .apex-approved-body>p:not(.apex-approved-meta){font-size:14px;line-height:1.75;color:#d8c8d3;white-space:pre-line;overflow-wrap:anywhere}
 .apex-product-detail-card .apex-approved-meta{text-align:left;margin:16px 0}
 @media(max-width:720px){.apex-product-detail-card{grid-template-columns:minmax(0,1fr)}.apex-product-detail-card .apex-approved-art{min-height:210px;aspect-ratio:4/3}}
+
+/* Category selection is intentionally page-local; no private categories feed. */
+.apex-approved-filters{grid-template-columns:minmax(0,2fr) repeat(2,minmax(140px,1fr))}
+@media(max-width:640px){.apex-approved-filters{grid-template-columns:minmax(0,1fr)}}
