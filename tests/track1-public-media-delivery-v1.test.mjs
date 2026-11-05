@@ -153,6 +153,6 @@ test("gated public image proxy never discloses private paths or keys",()=>{
  assert.match(route,/state:"unavailable"/);
  assert.match(route,/redirect:"manual"/);
  assert.match(route,/cache:"no-store"/);
- assert.match(route,/\\/functions\\/v1\\/apex-media-v1\\/asset\\//);
+ assert.ok(route.includes('"/functions/v1/apex-media-v1/asset/"'));
  assert.doesNotMatch(route,/SUPABASE_SERVICE_ROLE_KEY|createSignedUrl|createPublicUrl|sourceImagePath|assetKey|setCookie/);
 });
