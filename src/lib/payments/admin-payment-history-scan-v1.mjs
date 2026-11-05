@@ -99,6 +99,9 @@ async function collectKind(kind,readPage,asOf,pageSize,maxRows){
  *
  * readPage({kind,offset,limit,asOf}) -> {data,count,error}
  */
+/**
+ * @param {{readPage: Function, asOf: string, pageSize?: number, maxRows?: number}} options
+ */
 export async function scanAdminPaymentHistoryV1({
  readPage,asOf,pageSize=250,maxRows=MAX_ALLOWED,
 }={}){
