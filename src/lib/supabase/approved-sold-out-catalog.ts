@@ -36,7 +36,7 @@ export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|
      typeof row.category_id!=="string"||!UUID.test(row.category_id)||
      typeof row.category_name!=="string"||
      row.category_name.trim().length<1||row.category_name.length>80||
-     /[\\u0000-\\u001f\\u007f]/u.test(row.category_name)
+     Array.from(row.category_name).some(ch=>ch.charCodeAt(0)<32||ch.charCodeAt(0)===127)
    ))||
    typeof row.id!=="string"||!UUID.test(row.id)||ids.has(row.id)||
    typeof row.name!=="string"||row.name.trim().length===0||
