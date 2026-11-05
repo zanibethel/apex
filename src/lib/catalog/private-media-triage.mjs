@@ -22,8 +22,8 @@ const valid=product=>Boolean(product)&&typeof product.id==="string"&&
  typeof product.name==="string"&&typeof product.sku==="string";
 
 /**
- * @param {unknown} product
- * @param {unknown} readiness
+ * @param {{id:string,sku:string,name:string,category_id?:string|null}|null|undefined} product
+ * @param {{privateImagePresent?:boolean,internalContentReviewCurrent?:boolean}|null|undefined} readiness
  * @param {string|null|undefined} reviewStatus
  * @param {{id:string,sku:string,name:string,category:string|null,status:string}|null|undefined} taxonomyProposal
  * @param {boolean} setupComplete
