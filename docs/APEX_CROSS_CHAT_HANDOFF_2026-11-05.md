@@ -36,7 +36,7 @@ Agreed mapping for the supplier-provided workbook:
 6. Supplier-reported availability is not proof of **on-hand stock**. Until quantities are evidenced, preserve 0 available / sold-out behavior; do not flip publishing, stock, release gate or shipping permissions from the workbook.
 7. Keep raw supplier prices, workbook cells and other supplier-only materials in an authorized **private** channel or storage, never committed to this public repo.
 
-**Current state of this decision:** design requirements recorded; no workbook rows processed, no variant implementation verified, no stock/pricing/catalog migration or publish action made by this handoff. Track the intake under [Issue #213](https://github.com/zanibethel/apex/issues/213).
+**Current state of this decision:** the actual workbook has now been parsed privately into a review-only mapping, with counts and manual exceptions recorded below. No variant implementation, hosted catalog migration, published product, stock or checkout change has occurred. Track source reconciliation under [Issue #213](https://github.com/zanibethel/apex/issues/213) and the parent/variant implementation under [Issue #286](https://github.com/zanibethel/apex/issues/286).
 
 ## November 5 supplier workbook inspection — file received privately
 
