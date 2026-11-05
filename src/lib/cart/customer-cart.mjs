@@ -91,11 +91,18 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
  const shipping=source.shipping;
  if(!exactKeys(shipping,["charge_shipping","flat_shipping_cents",
   "medium_flat_shipping_cents","free_shipping_min_subtotal_cents","envelope_max_items"])||
-  shipping.charge_shipping!==true||!MONEY(shipping.flat_shipping_cents)||
+  typeof shipping.charge_shipping!=="boolean"||
+  !MONEY(shipping.flat_shipping_cents)||
   !MONEY(shipping.medium_flat_shipping_cents)||
-  !MONEY(shipping.free_shipping_min_subtotal_cents)||
-  shipping.flat_shipping_cents<1||shipping.medium_flat_shipping_cents<shipping.flat_shipping_cents||
-  shipping.free_shipping_min_subtotal_cents<1||
+  (shipping.free_shipping_min_subtotal_cents!==null&&
+   (!MONEY(shipping.free_shipping_min_subtotal_cents)||
+    shipping.free_shipping_min_subtotal_cents<1))||
+  (shipping.charge_shipping?
+   (shipping.flat_shipping_cents<1||
+    shipping.medium_flat_shipping_cents<shipping.flat_shipping_cents):
+   (shipping.flat_shipping_cents!==0||
+    shipping.medium_flat_shipping_cents!==0||
+    shipping.free_shipping_min_subtotal_cents!==null))||
   !Number.isInteger(shipping.envelope_max_items)||
   shipping.envelope_max_items<1||shipping.envelope_max_items>50)
   return {ok:false,reason:"Shipping configuration unavailable"};
