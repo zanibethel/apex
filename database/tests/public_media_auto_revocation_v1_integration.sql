@@ -10,7 +10,7 @@ declare
  ev1 uuid='82222222-2222-4222-8222-222222222221';
  ev2 uuid='82222222-2222-4222-8222-222222222222';
  submission uuid='82222222-2222-4222-8222-222222222223';
- version_id uuid;source text;key_path text;
+ v_version uuid;source text;key_path text;
  digest text=repeat('b',64);
  n integer;
 begin
@@ -45,14 +45,14 @@ begin
 
  -- Helper: insert an isolated version with a new immutable revision UUID.
  for n in 1..4 loop
-  version_id=(
+  v_version=(
    '82222222-2222-4222-8222-' || lpad(n::text,12,'0'))::uuid;
   key_path='media/v1/'||p.store_id::text||'/'||p.id::text||
-   '/'||version_id::text||'/'||digest||'.png';
+   '/'||v_version::text||'/'||digest||'.png';
   insert into apex_internal.public_media_asset_versions_v1(
    version_id,store_id,product_id,submission_id,evidence_event_id,
    source_image_path,asset_sha256,asset_key,recorded_by)
-  values(version_id,p.store_id,p.id,submission,ev1,source,digest,key_path,actor);
+  values(v_version,p.store_id,p.id,submission,ev1,source,digest,key_path,actor);
 
   if n=1 then
    update public.products set image_path=p.store_id::text||'/'||p.id::text||
@@ -67,14 +67,14 @@ begin
     'Second evidence event must invalidate earlier version',actor);
   elsif n=3 then
    update apex_internal.product_release_authorizations
-    set valid_until=current_date-2 where store_id=p.store_id and product_id=p.id;
+    set valid_until=coalesce(valid_until,current_date)-1 where store_id=p.store_id and product_id=p.id;
   elsif n=4 then
    update apex_internal.supplier_release_authorizations
-    set valid_until=current_date-2 where supplier_id=p.supplier_id;
+    set valid_until=coalesce(valid_until,current_date)-1 where supplier_id=p.supplier_id;
   end if;
   if (select count(*) from apex_internal.public_media_asset_revocations_v1
-      where version_id=version_id)<>1
-   then raise exception 'Version % was not automatically revoked',version_id;end if;
+      where version_id=v_version)<>1
+   then raise exception 'Version % was not automatically revoked',v_version;end if;
  end loop;
 
  if (select count(*) from apex_internal.public_media_asset_revocations_v1
