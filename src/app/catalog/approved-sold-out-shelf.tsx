@@ -62,6 +62,7 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
      <div className="apex-approved-body">
       <p className="eyebrow">APEX COLLECTION</p>
       <h3>{p.name}</h3>
+      <Link className="apex-approved-details-link" href={`/catalog/product/${p.id}?page=${result.page}`}>View full details</Link>
       <details className="apex-approved-description">
        <summary>Product details</summary>
        <p>{p.description}</p>
