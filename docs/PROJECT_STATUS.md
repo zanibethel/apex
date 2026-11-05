@@ -1,4 +1,4 @@
-> **Current checkpoint (November 3, 2026):** [Verified progress and requirement roadmap](APEX_EXECUTION_CHECKPOINT_2026-11-03.md). [November 4 supplier intake preparation](SUPPLIER_INTAKE_2026-11-04.md). The October 29 notes below are historical and should not be interpreted as current production status.
+> **Current source of truth — November 5, 2026:** [November 5–8 verified checkpoint](APEX_WEEKEND_CLOSEOUT_2026-11-05.md). Production is READY on merged PR #248; private commerce gate remains OFF, 63 products saved but none published, and there are no source sales or held orders. The October 29 notes below are historical. See also the [November 3 checkpoint](APEX_EXECUTION_CHECKPOINT_2026-11-03.md) and [supplier intake checklist](SUPPLIER_INTAKE_2026-11-04.md).
 
 # Project status — 2026-10-29
 
