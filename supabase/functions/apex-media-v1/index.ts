@@ -153,7 +153,7 @@ async function issue(req:Request){
 }
 async function revoke(req:Request){
  if(!service||req.method!=="POST")return denied(404);
- const token=(req.headers.get("authorization")??"").match(/^Bearer (\\S{24,})$/i)?.[1];
+ const token=(req.headers.get("authorization")??"").match(/^Bearer (\S{24,})$/i)?.[1];
  if(!token)return denied(403);
  const auth=await service.auth.getUser(token);
  const user=auth.data?.user;
