@@ -80,7 +80,7 @@ test("empty accessible reporting history is not a payment or sale claim",async()
 test("existing provider-agnostic database conflicts require manual review",async()=>{
  const d=valid();
  d.snapshots[0].rule_version=2;
- d.transfers[0].created_at=at(3);
+ d.snapshots[0].created_at=at(9);
  d.transfers[1].amount_sats="10000";
  const r=await scan(d);
  assert.equal(r.status,"review_required");
