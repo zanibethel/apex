@@ -89,7 +89,11 @@ test("events from another product or with multiple recipients are never treated 
 test("unknown event category, invalid JSON, malformed time or oversized raw payload fail closed",()=>{
  rejects(signed({...original,type:"email.received"}),"schema");
  rejects(signed({...original,created_at:"no date"}),"schema");
- rejects(signed(original,{payload:"{"}),"signature");
+ rejects(signed(original,{payload:"{"}),"payload");
+ const malformed="{invalid-json}";
+ const signature=createHmac("sha256",rawKey)
+  .update(eventId+"."+String(now)+"."+malformed).digest("base64");
+ rejects(signed(original,{payload:malformed,svixSignature:"v1,"+signature}),"json");
  rejects(signed(original,{payload:"x".repeat(65537)}),"payload");
  rejects(signed(original,{signingSecret:"bad"}),"configuration");
 });
