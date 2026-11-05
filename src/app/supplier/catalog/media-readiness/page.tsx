@@ -4,6 +4,11 @@ import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
 import {assessPrivateMediaReadiness,privateProductMediaPath}
  from "@/lib/catalog/private-media-readiness.mjs";
+import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
+import {apexTaxonomyStoreId,apexTaxonomyProposal} from "@/lib/catalog/apex-reviewed-taxonomy-20261102.mjs";
+import {PRIVATE_MEDIA_QUEUE_FILTERS,classifyPrivateMediaQueue,
+ privateMediaQueueFilter,privateMediaQueueSummary} from "@/lib/catalog/private-media-triage.mjs";
+import {SupplierReviewSubmission} from "../review-submission";
 import "./media-readiness.css";
 
 export const dynamic="force-dynamic";
@@ -11,8 +16,14 @@ export const metadata={title:"Private Product Image Readiness | Apex",
  robots:{index:false,follow:false}};
 
 const MAX_PRODUCTS=100;
+const SIGN_BATCH=8;
 
-export default async function SupplierMediaReadiness(){
+export default async function SupplierMediaReadiness({searchParams}:{
+ searchParams:Promise<{queue?:string}>;
+}){
+ const {queue:rawQueue}=await searchParams;
+ const queue=typeof rawQueue==="string"&&PRIVATE_MEDIA_QUEUE_FILTERS.includes(rawQueue)
+  ?rawQueue:"action";
  const workspace=await getSupplierWorkspace();
  if(!workspace)redirect("/supplier/sign-in");
  const stores=workspace.stores.filter(s=>!s.is_public&&
@@ -24,27 +35,46 @@ export default async function SupplierMediaReadiness(){
   <Link href="/supplier/catalog">Back to product editor</Link>
  </main>;
  const store=stores[0];
- const [items,reviews,imports]=await Promise.all([
+ const [items,reviews,imports,inventory]=await Promise.all([
   workspace.client.from("products")
-   .select("id,store_id,sku,name,image_path,is_published",{count:"exact"})
+   .select("id,store_id,sku,name,description,category_id,price_cents,is_active,image_path,is_published",{count:"exact"})
    .eq("store_id",store.id).eq("is_published",false)
    .order("name",{ascending:true}).limit(MAX_PRODUCTS),
   workspace.client.from("private_product_review_states")
-   .select("product_id,status,snapshot").eq("store_id",store.id).limit(MAX_PRODUCTS),
+   .select("product_id,status,snapshot",{count:"exact"})
+   .eq("store_id",store.id).limit(MAX_PRODUCTS),
   workspace.client.from("supplier_import_candidates")
    .select("id",{count:"exact",head:true}).eq("store_id",store.id)
    .neq("review_status","approved_for_draft"),
+  workspace.client.from("inventory_items")
+   .select("product_id,quantity_on_hand,quantity_reserved",{count:"exact"})
+   .eq("store_id",store.id).limit(MAX_PRODUCTS),
  ]);
- if(items.error||reviews.error||imports.error||
+ if(items.error||reviews.error||imports.error||inventory.error||
   items.count===null||items.count!==items.data?.length||
-  items.count>MAX_PRODUCTS)
+  reviews.count===null||reviews.count!==reviews.data?.length||
+  inventory.count===null||inventory.count!==inventory.data?.length||
+  items.count>MAX_PRODUCTS||reviews.count>MAX_PRODUCTS||
+  inventory.count>MAX_PRODUCTS)
   return <main className="container supplier-shell">
    <Link href="/supplier/catalog" className="back">← Product editor</Link>
    <h1>Image readiness unavailable</h1>
    <p className="notice">The complete private product/image review state could not be verified. Nothing has been changed.</p>
   </main>;
  const reviewMap=new Map((reviews.data??[]).map(item=>[item.product_id,item]));
- const results=await Promise.all((items.data??[]).map(async product=>{
+ const inventoryMap=new Map((inventory.data??[]).map(row=>[row.product_id,row]));
+ const taxonomyMap=new Map((store.id===apexTaxonomyStoreId?apexTaxonomyProposal:[])
+  .map(entry=>[entry.id,entry]));
+ // Bound signed-url reads. A large private queue must not burst storage with
+ // many simultaneous list/sign requests; each product remains independently
+ // scoped to the verified folder and current product image path.
+ const results:Array<{
+  product:NonNullable<typeof items.data>[number];
+  previewUrl:string|undefined;
+  readiness:ReturnType<typeof assessPrivateMediaReadiness>;
+ }>=[];
+ for(let start=0;start<(items.data??[]).length;start+=SIGN_BATCH){
+  const batch=await Promise.all((items.data??[]).slice(start,start+SIGN_BATCH).map(async product=>{
   const validated=privateProductMediaPath(store.id,product.id,product.image_path);
   if(!validated){
    return {product,previewUrl:undefined as string|undefined,
@@ -73,7 +103,24 @@ export default async function SupplierMediaReadiness(){
     pathValid:true,objectFound:found,signedPreview:Boolean(previewUrl),
     reviewStatus:review?.status,snapshotImagePath,currentImagePath:product.image_path,
    })};
- }));
+  }));
+  results.push(...batch);
+ }
+ const triaged=results.map(row=>{
+  const reviewStatus=reviewMap.get(row.product.id)?.status??"draft";
+  const inventoryForProduct=inventoryMap.get(row.product.id);
+  const setup=draftSetupSteps({
+   ...row.product,price_cents:Number(row.product.price_cents),
+  },inventoryForProduct);
+  const triage=classifyPrivateMediaQueue(
+   row.product,row.readiness,reviewStatus,taxonomyMap.get(row.product.id),
+   setup.setupComplete,
+  );
+  return {...row,reviewStatus,triage,
+   setupMissing:setup.steps.filter(step=>!step.complete).map(step=>step.label)};
+ });
+ const summary=privateMediaQueueSummary(triaged);
+ const visible=privateMediaQueueFilter(triaged,queue);
  const ready=results.filter(r=>r.readiness.privateImagePresent).length;
  const missing=results.length-ready;
  const current=results.filter(r=>r.readiness.internalContentReviewCurrent).length;
@@ -93,14 +140,39 @@ export default async function SupplierMediaReadiness(){
    <span><strong>{missing}</strong> image work needed</span>
    <span><strong>{current}</strong> unchanged internal content approvals</span>
    <span><strong>{imports.count??"—"}</strong> source variants awaiting review</span>
+   <span><strong>{summary.identityHolds}</strong> exact identity/composition holds</span>
+   <span><strong>{summary.readyToRequest}</strong> ready to request internal review</span>
+   <span><strong>{summary.underReview}</strong> awaiting internal decision</span>
   </div>
+  {results.length>0&&<nav className="apex-media-filters" aria-label="Private image work queue">
+   {[
+    {id:"action",label:"Needs action",count:summary.action},
+    {id:"all",label:"All products",count:summary.total},
+    {id:"held",label:"Identity holds",count:summary.identityHolds},
+    {id:"image",label:"Image issues",count:summary.imageWork},
+    {id:"review",label:"Review queue",count:triaged.filter(r=>[
+     "corrections","ready_to_request","stale_review","under_review",
+    ].includes(r.triage.kind)).length},
+    {id:"complete",label:"Content reviewed",count:summary.reviewed},
+   ].map(filter=><Link key={filter.id}
+    href={filter.id==="action"?"/supplier/catalog/media-readiness":
+      "/supplier/catalog/media-readiness?queue="+filter.id}
+    aria-current={queue===filter.id?"page":undefined}
+    className={"apex-media-filter"+(queue===filter.id?" is-active":"")}>
+    {filter.label} <span>{filter.count}</span>
+   </Link>)}
+  </nav>}
   {results.length===0?<section className="supplier-panel">
    <h2>No saved private products yet</h2>
    <p>Start with the supplier source review and draft creation workflows.</p>
    <Link href="/supplier/imports/bulk-review" className="button secondary">Review source variants</Link>
   </section>
+  :visible.length===0?<section className="supplier-panel" role="status">
+   <h2>No products in this queue</h2>
+   <p className="notice">Try All products or another private status filter.</p>
+  </section>
   :<div className="apex-media-grid">
-   {results.map(({product,previewUrl,readiness})=>{
+   {visible.map(({product,previewUrl,readiness,triage,setupMissing})=>{
     const label=readiness.status==="stored_privately"?"Private image accessible":
      readiness.status==="file_missing"?"Linked file not found":
      readiness.status==="invalid_path"?"Image path does not match this product":
@@ -117,6 +189,14 @@ export default async function SupplierMediaReadiness(){
       <h2>{product.name}</h2>
       <p className="notice">SKU: {product.sku}</p>
       <strong className="apex-media-status">{label}</strong>
+      <p className="apex-media-next-step"><strong>Next:</strong> {triage.nextAction}</p>
+      {setupMissing.length>0&&<p className="notice">
+       Private setup remaining: {setupMissing.join(", ")}.
+      </p>}
+      {triage.kind==="identity_hold"&&<p className="notice">
+       This saved record exactly matches a previously held product identity,
+       composition or strength review. No category or image approval is inferred.
+      </p>}
       <p className="notice">Internal content review:{" "}
        {readiness.internalContentReviewCurrent?"Approved for unchanged submitted details":
         "Not currently approved for this image"}</p>
@@ -128,9 +208,19 @@ export default async function SupplierMediaReadiness(){
         Upload or choose image</Link>
        <Link href={"/supplier/catalog/preview/"+product.id} className="button secondary">
         Preview private offer</Link>
-       <Link href="/supplier/catalog" className="button secondary">
-        Submit for internal review</Link>
+       {triage.kind==="category_work"&&<Link href="/supplier/catalog/bulk"
+        className="button secondary">Assign reviewed category</Link>}
+       {triage.kind==="identity_hold"&&<Link
+        href={"/supplier/catalog#details-"+product.id} className="button secondary">
+        Correct held product details</Link>}
       </div>
+      {triage.canRequestInternalReview&&<div className="apex-media-review-action">
+       <SupplierReviewSubmission storeId={store.id} productId={product.id}
+        enabled={true}/>
+      </div>}
+      {triage.kind==="under_review"&&<p className="notice">
+       This submission is already in the private review queue. Do not resubmit.
+      </p>}
      </div>
     </article>;
    })}
