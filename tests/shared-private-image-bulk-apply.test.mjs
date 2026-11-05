@@ -87,7 +87,7 @@ test("bulk UI only reuses existing authenticated signed-copy and attach actions"
  assert.match(ui,/attachProductImage/);
  assert.match(ui,/storage\.download\(path\)/);
  assert.match(ui,/uploadToSignedUrl\(path,token,blob/);
- assert.match(ui,/private placeholder only/);
+ assert.match(ui,/Reuse a photo on products that it accurately represents/);
  assert.match(ui,/No products were published or approved/);
  assert.match(actions,/productId===sourceProductId/);
  assert.match(actions,/\.eq\("store_id",storeId\)/);
