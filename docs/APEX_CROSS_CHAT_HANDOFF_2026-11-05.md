@@ -24,7 +24,7 @@
 
 ## Latest supplier workbook and product-options decision (not yet imported)
 
-The recent supplier handoff referenced **`MC_LIST__UPDATED_.xlsx`** and screenshots of product options. The workbook itself is **not present in this public repository** and was **not available for parsing in this handoff**. Do not populate product rows or infer exact prices from screenshots or older source-cost files.
+The recent supplier handoff referenced **`MC_LIST__UPDATED_.xlsx`** and screenshots of product options. The workbook itself is **not present in this public repository**; it was subsequently received and parsed privately in the chat, as recorded below. Do not populate product rows or infer exact prices from screenshots or older source-cost files.
 
 Agreed mapping for the supplier-provided workbook:
 
@@ -37,6 +37,21 @@ Agreed mapping for the supplier-provided workbook:
 7. Keep raw supplier prices, workbook cells and other supplier-only materials in an authorized **private** channel or storage, never committed to this public repo.
 
 **Current state of this decision:** design requirements recorded; no workbook rows processed, no variant implementation verified, no stock/pricing/catalog migration or publish action made by this handoff. Track the intake under [Issue #213](https://github.com/zanibethel/apex/issues/213).
+
+## November 5 supplier workbook inspection — file received privately
+
+The owner uploaded the actual `MC_LIST__UPDATED_.xlsx` file in a ChatGPT conversation, and Lily explicitly confirmed in screenshots that its amounts are customer-facing retail prices, not product costs. This file is **not present in this public repository**, and raw prices, workbook rows and the source attachment have intentionally **not** been committed here.
+
+A private, downloadable **review-only** normalized workbook was produced in the conversation. Parsed results from the single `MuscleCandy` worksheet (`A1:G114`):
+
+- **94 source product rows** across six sections: 40 oils/injectables, 17 blends, 8 oral AAS, 10 ancillaries, 3 blood-flow and 16 peptide/other rows.
+- **76 suggested parent-product groupings** after removing only simple Low/High suffixes and grouping comparable single/kit formats. These are **not** 76 confirmed existing Apex SKUs or finalized public listings.
+- **168 candidate option rows** from explicitly listed concentrations/sizes and MCT/GSO carrier choices; **167** have uniquely position-mappable retail amounts in the source. **22 source rows** explicitly offer MCT/GSO.
+- **Five source rows need supplier clarification**: one with two standalone prices and no corresponding structured option; two with nested concentration/volume retail-price pairings to confirm; one where the product name mentions alternative oils but carrier field is blank; and one blend with an E/C composition alternative. These affect **11 candidate option rows**.
+- No supplier stock quantity, source-cost data or verified existing SKU was present in this worksheet. **Do not invent values.** Preserve existing saved SKU/price/description/image edits until duplicate-safe private reconciliation.
+- This is a **proposed mapping, not a staged or live import**. No hosted product or inventory changes, public publishing, checkout, Bitcoin payments or shipping took place during the handoff.
+
+**Next implementation:** use source-row fingerprints and supplier-scoped matching to existing 63 saved product records, review all missing category/product authorizations and manual exceptions, then build the reusable parent/variant model and test exact selected options across cart and order capture. Keep raw supplier pricing/private source files out of GitHub; see [Issue #213](https://github.com/zanibethel/apex/issues/213) for intake tracking.
 
 ## Supplier experience preference
 
