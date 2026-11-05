@@ -1,4 +1,4 @@
-> **Updated execution priorities — November 3, 2026:** See [verified status, review schedule, and tracked requirements](APEX_EXECUTION_CHECKPOINT_2026-11-03.md). Start with the [November 4 supplier intake checklist](SUPPLIER_INTAKE_2026-11-04.md). The six-week plan below is retained as an original baseline, not a current build-status claim.
+> **Active execution plan (November 5–8, 2026):** [November 5–8 verified checkpoint](APEX_WEEKEND_CLOSEOUT_2026-11-05.md). PRs #243–#248 are merged/production READY; the old umbrella #242 and draft stacks require diff triage rather than a bulk merge. The original six-week roadmap below is a historical baseline, not this week's delivery claim.
 
 # Six-week technical MVP roadmap
 
