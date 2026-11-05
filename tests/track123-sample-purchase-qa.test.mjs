@@ -39,7 +39,7 @@ test("sample results omit synthetic private addresses, fingerprints and payment 
   "authorization","private_key",
  ])assert.equal(result.includes(term),false,term);
  assert.match(result,/no real invoice/);
- assert.match(result,/no shipment/);
+ assert.match(result,/no shipment/i);
 });
 test("joint contract tests fail closed and do not modify live operations",()=>{
  const source=readFileSync(
