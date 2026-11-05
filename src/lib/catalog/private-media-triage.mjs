@@ -21,6 +21,13 @@ const nextActions=Object.freeze({
 const valid=product=>Boolean(product)&&typeof product.id==="string"&&
  typeof product.name==="string"&&typeof product.sku==="string";
 
+/**
+ * @param {unknown} product
+ * @param {unknown} readiness
+ * @param {string|null|undefined} reviewStatus
+ * @param {{id:string,sku:string,name:string,category:string|null,status:string}|null|undefined} taxonomyProposal
+ * @param {boolean} setupComplete
+ */
 export function classifyPrivateMediaQueue(product,readiness,reviewStatus,
  taxonomyProposal=null,setupComplete=false){
  let kind="unavailable";
