@@ -19,12 +19,12 @@ do $prepare$
 declare p record;actor uuid='50000000-0000-4000-8000-000000000003';
  ev uuid='84444444-4444-4444-8444-444444444441';
 begin
- select p.id,p.store_id,s.supplier_id,p.category_id,p.image_path
- into p from public.products p join public.stores s on s.id=p.store_id
+ select pr.id,pr.store_id,s.supplier_id,pr.category_id,pr.image_path
+ into p from public.products pr join public.stores s on s.id=pr.store_id
  join public.private_product_review_states r
- on r.product_id=p.id and r.store_id=p.store_id
- where p.category_id is not null and p.image_path is not null
- order by p.id limit 1;
+ on r.product_id=pr.id and r.store_id=pr.store_id
+ where pr.category_id is not null and pr.image_path is not null
+ order by pr.id limit 1;
  if p.id is null then raise exception 'Missing synthetic submitted photo';end if;
  perform set_config('apex.media.product',p.id::text,true);
  perform set_config('apex.media.store',p.store_id::text,true);
