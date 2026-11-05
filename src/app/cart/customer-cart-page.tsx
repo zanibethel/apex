@@ -13,8 +13,8 @@ type Review={
  items?:QuoteLine[];merchandiseSubtotalCents?:number;
  merchandiseDiscountCents?:number;discountedMerchandiseCents?:number;
  shippingBoxSize?:string;shippingCents?:number;envelopeMaxItems?:number;
- freeShippingMinimumCents?:number;
- amountUntilFreeShippingCents?:number;freeShippingReason?:string;
+ freeShippingMinimumCents?:number|null;
+ amountUntilFreeShippingCents?:number|null;freeShippingReason?:string;
  totalCents?:number;canPlaceOrder?:false;canPay?:false;
 };
 const usd=(n:number)=>new Intl.NumberFormat("en-US",{
@@ -26,9 +26,27 @@ export function CustomerCartPage(){
  const boxSize="auto" as const;
  const [enteredCode,setEnteredCode]=useState("");
  const [code,setCode]=useState("");
+ const [codeError,setCodeError]=useState("");
+ const [refreshRevision,setRefreshRevision]=useState(0);
  const [response,setResponse]=useState<{key:string;review:Review}|null>(null);
- const key=useMemo(()=>JSON.stringify({items,boxSize,code}),[items,boxSize,code]);
+ const key=useMemo(()=>JSON.stringify({items,boxSize,code,refreshRevision}),[items,boxSize,code,refreshRevision]);
  const review=response?.key===key?response.review:null;
+ // A restored tab, network reconnection and elapsed promotion/stock windows
+ // invalidate old quotes. All fetches remain server-priced and nonpayable.
+ useEffect(()=>{
+  const refresh=()=>setRefreshRevision(current=>current+1);
+  const visible=()=>{if(document.visibilityState==="visible")refresh();};
+  window.addEventListener("focus",refresh);
+  window.addEventListener("online",refresh);
+  document.addEventListener("visibilitychange",visible);
+  const interval=window.setInterval(visible,60_000);
+  return ()=>{
+   window.removeEventListener("focus",refresh);
+   window.removeEventListener("online",refresh);
+   document.removeEventListener("visibilitychange",visible);
+   window.clearInterval(interval);
+  };
+ },[]);
  useEffect(()=>{
   if(!ready||!items.length)return;
   const controller=new AbortController();
@@ -49,8 +67,13 @@ export function CustomerCartPage(){
  const applyCode=(event:FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
   const cleaned=enteredCode.trim().toUpperCase();
-  if(cleaned&&!/^[A-Z0-9_-]{3,24}$/.test(cleaned))return;
+  if(cleaned&&!/^[A-Z0-9_-]{3,24}$/.test(cleaned)){
+   setCodeError("Enter a valid code (3–24 letters, numbers, dashes or underscores).");
+   return;
+  }
+  setCodeError("");
   setCode(cleaned);
+  setRefreshRevision(current=>current+1);
  };
  const lines=review?.ok?review.items??[]:[];
  const selectedBox=review?.ok?review.shippingBoxSize:null;
@@ -100,7 +123,14 @@ export function CustomerCartPage(){
      <DeliveryDetailsForm items={items} shippingMethod={selectedBox==="medium"?"medium":selectedBox==="small"?"small":null}/>
     </section>
     <aside className="apex-customer-summary" aria-label="Cart summary">
-     <h2>Order summary</h2>
+     <div className="apex-customer-summary-head">
+      <h2>Order summary</h2>
+      <button className="apex-customer-recheck" type="button"
+       onClick={()=>setRefreshRevision(current=>current+1)}
+       disabled={review===null} aria-label="Recheck saved prices and availability">
+       Recheck prices &amp; stock
+      </button>
+     </div>
      <section className="apex-customer-shipping" aria-label="Automatic USPS shipping">
       <strong>USPS Priority Mail shipping</strong>
       <p className="apex-cart-note" aria-live="polite">
@@ -112,15 +142,20 @@ export function CustomerCartPage(){
        padded envelope; above that: Medium box.</p>}
      </section>
      <p className="apex-cart-note">Packaging is subject to fit confirmation.
-      Merchandise over $200 after discounts qualifies for free shipping.</p>
+      {review?.ok&&review.freeShippingMinimumCents!=null?
+       " Free shipping applies from "+usd(review.freeShippingMinimumCents)+" of merchandise after discounts where configured.":
+       " Any free-shipping offer follows current saved store rules."}</p>
      <form onSubmit={applyCode} className="apex-customer-code">
       <label htmlFor="apex-cart-discount">Discount or free-shipping code</label>
       <div><input id="apex-cart-discount" maxLength={24} autoCapitalize="characters"
        autoCorrect="off" spellCheck={false} value={enteredCode}
-       placeholder="Enter code" onChange={e=>setEnteredCode(e.target.value)}/>
+       placeholder="Enter code" aria-invalid={Boolean(codeError)}
+       aria-describedby={codeError?"apex-cart-code-error":undefined}
+       onChange={e=>{setEnteredCode(e.target.value);setCodeError("");}}/>
        <button type="submit">Apply</button></div>
+      {codeError&&<p id="apex-cart-code-error" role="alert" className="apex-cart-validation">{codeError}</p>}
       {code&&<button className="apex-customer-remove" type="button"
-       onClick={()=>{setCode("");setEnteredCode("");}}>Remove code</button>}
+       onClick={()=>{setCode("");setEnteredCode("");setCodeError("");}}>Remove code</button>}
      </form>
      {review===null?<p role="status" className="apex-cart-note">Checking current catalog and prices…</p>:
       !review.ok?<p role="status" className="apex-cart-validation">{review.reason??"Cart verification unavailable."}</p>:
