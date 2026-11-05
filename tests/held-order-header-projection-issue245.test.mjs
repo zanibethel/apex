@@ -6,7 +6,7 @@ const store="62000000-0000-0000-0000-000000000001";
 const other="62000000-0000-0000-0000-000000000002";
 const uuid=i=>"66000245-0000-4000-8000-"+String(i).padStart(12,"0");
 const row=(i,time)=>({
- order_id:uuid(i),original_reference:"SYNTH-HELD-"+i,
+ order_id:uuid(i),store_id:store,original_reference:"SYNTH-HELD-"+i,
  purchased_at_utc:time,recorded_sale_state:"confirmed",
  stored_line_count:0,destination_sealed:false,
  status:"held_unverified",can_pay:false,can_ship:false,can_decrypt:false,
@@ -45,8 +45,8 @@ test("any forged payment, shipping, decrypted, external or customer field denies
   {can_pay:true},{can_ship:true},{can_decrypt:true},
   {status:"ready_to_ship"},{title:"item"},
   {sku:"private"},{price_cents:"8000"},
-  {recipient_email:"private"},{stored_line_count:-1},
-  {destination_sealed:"yes"},{order_id:other},
+  {recipient_email:"private"},{store_id:other},{stored_line_count:-1},
+  {destination_sealed:"yes"},{order_id:"not-a-uuid"},
   {original_reference:" Name\nAddress"},
  ])assert.equal(parseSupplierHeldOrderHeaders(sample([
   {...row(2,"2026-11-04T20:00:00.000Z"),...delta},
