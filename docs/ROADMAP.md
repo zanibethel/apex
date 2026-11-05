@@ -1,4 +1,4 @@
-> **Active execution plan (November 5–8, 2026):** [November 5–8 verified checkpoint](APEX_WEEKEND_CLOSEOUT_2026-11-05.md). PRs #243–#248 are merged/production READY; the old umbrella #242 and draft stacks require diff triage rather than a bulk merge. The original six-week roadmap below is a historical baseline, not this week's delivery claim.
+> **Current continuation — November 5, 2026:** [Cross-chat development and supplier variant handoff](APEX_CROSS_CHAT_HANDOFF_2026-11-05.md) is the latest GitHub/development checkpoint, including merged #279–#283 and the pending private supplier workbook/retail-price/variant mapping. The [November 5–8 verified weekend snapshot](APEX_WEEKEND_CLOSEOUT_2026-11-05.md) remains the last recorded hosted-data inventory baseline, **not a live recheck**. Commerce and shipment release are not authorized.
 
 # Six-week technical MVP roadmap
 
