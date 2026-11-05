@@ -42,6 +42,14 @@ An image replacement, revised product-review submission, changed matching rights
 
 **Integration still required:** a separately privileged, reviewed writer (with transactional revision/CAS, exact current submission/evidence checking and byte-level digest verification); public-safe immutable asset-copy worker; private current-eligibility read adapter wired to both release and media switches; live revocation/invalidation on image and authorization changes; CDN cache purge; and customer delivery with negative tests. A raw row in the ledger is **not** proof of any review and cannot cause public delivery. This migration does not manufacture approvals, copy objects, publish storage/CDN links or give public read grants.
 
+## Automatic irrevocable revocation (separate protected migration)
+
+The migration `20261105170000_apex_public_media_auto_revocation_v1.sql` installs five database trigger sources that append **permanent, version-ID-specific** revocations: source-image/product-detail edits, current review updates, new media-evidence events, product authorization changes/deletes, and supplier authorization changes/deletes. Each trigger executes with a restricted `SECURITY DEFINER` function and writes only into the private version revocation ledger; it does not alter product approval or release switches.
+
+An `automated=true` revocation records a database-initiated decision with a **null user actor**; explicit manual entries still require a real authenticated reviewer. Neither actor type can update/delete the original version or revocation events. Repeat triggers use `ON CONFLICT DO NOTHING` to preserve the first permanent reason. A later renewal/reversion cannot resurrect the old version ID. Future asset replacement **must generate a new version** after evidence and asset-byte verification.
+
+Live deliverability still requires dynamic checks for category publication, listing switches/holds, expiry and the global gate; those events suppress delivery immediately even before a revocation is stored. The new automatic triggers are **not** a publication or checkout mechanism. Tests exercise isolated synthetic changes inside rollback and verify no hosted commerce switch or data rows are changed.
+
 ## Endpoint
 
 `GET /api/catalog/media/v1/[productId]` is intentionally reserved and **always responds 404** with `private, no-store`, without looking up storage or any customer/supplier private data. Do not change it to redirect or return bytes until a separately reviewed release writer, access predicate and distribution mechanism have passed exact-head tests and approval.
