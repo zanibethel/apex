@@ -4,6 +4,7 @@ import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {activateSupplierReportEmailSender} from "./actions";
+import {parseAdminSupplierMailHealth} from "@/lib/supplier/admin-mail-delivery-health.mjs";
 export const dynamic="force-dynamic";
 export const metadata={
  title:"Daily Email Sender | Apex Admin",robots:{index:false,follow:false},
@@ -26,6 +27,9 @@ export default async function AdminSupplierEmailReports({
   "get_admin_daily_mail_sender_readiness",{p_expected_sha256:digest}):null;
  const activated=Boolean(digest&&!record?.error
   &&record?.data?.sender_activated===true);
+ const healthResult=await client.rpc("get_admin_supplier_mail_delivery_health",{p_days:7});
+ const health=healthResult.error?null:parseAdminSupplierMailHealth(healthResult.data,7);
+ const webhookConfigured=Boolean(process.env.RESEND_REPORT_WEBHOOK_SECRET);
  const params=await searchParams;
  return <main className="container supplier-shell apex-branded-dashboard"
   style={{minWidth:0}}>
@@ -63,6 +67,53 @@ export default async function AdminSupplierEmailReports({
    {activated&&<p className="notice">
     The worker is authorized. Only supplier members who enabled email
     reports and confirmed their login email are eligible.</p>}
+  </section>
+  <section className="supplier-panel" style={{maxWidth:"none",marginTop:20}}
+   aria-label="Resend report delivery health">
+   <h2>Delivery monitoring · last 7 days</h2>
+   <p className="notice">Signed provider receipts only. Older reports sent
+    before the webhook was installed are not counted as failed.
+    A delivery event means accepted by the recipient mail server,
+    not independently confirmed inbox placement.</p>
+   <p><strong>Webhook signing credential:</strong>
+    {webhookConfigured?" Configured":" Unavailable"}</p>
+   {!health?<p role="alert">The private delivery health summary is unavailable.
+    No delivery counts or alerts are assumed.</p>:<>
+    {health.alertCount>0?
+     <p role="alert"><strong>{health.alertCount}</strong> report
+      delivery alert(s) need review.</p>:
+     <p role="status">No outstanding alerts in the signed-event journal.</p>}
+    <div className="apex-daily-metrics" style={{
+     display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",
+     gap:12,margin:"16px 0"}}>
+     {([
+      ["Provider accepted",health.accepted],
+      ["Delivered to mail server",health.deliveredToMailServer],
+      ["Pending signed event",health.noSignedEvent],
+      ["Overdue receipts (3h)",health.receiptOverdue],
+      ["Bounced",health.bounced],
+      ["Failed",health.failed],
+      ["Delayed",health.delayed],
+      ["Complaints",health.complained],
+      ["Suppressed",health.suppressed],
+     ] as [string,number][]).map(([name,count])=>
+      <div key={name} style={{padding:14,border:"1px solid #56404f",
+       borderRadius:10,background:"#251c27",minWidth:0}}>
+       <div style={{fontSize:12,color:"#dbbfd0"}}>{name}</div>
+       <strong style={{fontSize:25,fontVariantNumeric:"tabular-nums"}}>{count}</strong>
+      </div>)}
+    </div>
+    <p className="notice"><strong>{health.predatesWebhook}</strong>
+     {" "}historical accepted report(s) predate signed monitoring.
+     These cannot be marked delivered based on a missing webhook event.</p>
+    <p className="notice">Latest signed delivery event:
+     {" "}{health.latestSignedEventAt?
+       new Date(health.latestSignedEventAt).toLocaleString("en-US",{
+        dateStyle:"medium",timeStyle:"short",timeZone:"America/Chicago"
+       })+" Central":"No signed events recorded"}.</p>
+    <p className="notice">Delivery alerts are read-only. Verify current
+     recipient opt-in and provider state before any manual resend.</p>
+   </>}
   </section>
   <section className="supplier-panel" style={{maxWidth:"none",marginTop:20}}>
    <h2>Delivery schedule and safeguards</h2>
