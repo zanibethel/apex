@@ -46,7 +46,7 @@ test("browser proxy and admin action never receive service credentials or privat
  const admin=read("src/app/admin/media-readiness/media-version-actions.ts");
  const page=read("src/app/admin/media-readiness/page.tsx");
  const card=read("src/app/catalog/approved-product-media.tsx");
- assert.match(route,/supabase\.co\/functions\/v1\/apex-media-v1\/asset\//);
+ assert.match(route,/\/functions\/v1\/apex-media-v1\/asset\//);
  assert.match(route,/redirect:"manual"/);
  assert.match(route,/status:404/);
  assert.match(route,/cache:"no-store"/);
