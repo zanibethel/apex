@@ -5,6 +5,7 @@ import Link from "next/link";
 import {filterPublicCatalogPage,publicCatalogCategoryOptions} from "@/lib/catalog/public-browse-filter.mjs";
 import type {ApprovedSoldOutProduct,SoldOutCatalogResult} from "@/lib/supabase/approved-sold-out-catalog";
 import {SaveCatalogItem} from "@/app/cart/cart-provider";
+import {ApprovedProductMedia} from "./approved-product-media";
 import "./sold-out-catalog.css";
 
 const money=(cents:number)=>new Intl.NumberFormat("en-US",{
@@ -63,11 +64,7 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
    </div>}
    <div className="apex-approved-soldout-grid">
     {visible.map((p:ApprovedSoldOutProduct)=><article className="apex-approved-item" key={p.id}>
-     <div className="apex-approved-art">
-      <span className="apex-approved-triangle" aria-hidden="true">▲</span>
-      <span className={"apex-approved-badge"+(p.availability==="in_stock"?" apex-approved-instock":"")}>{p.availability==="in_stock"?"IN STOCK":"SOLD OUT"}</span>
-      <small>APEX ANABOLICS</small>
-     </div>
+     <ApprovedProductMedia productId={p.id} availability={p.availability}/>
      <div className="apex-approved-body">
       <p className="eyebrow">{p.categoryName??"APEX COLLECTION"}</p>
       <h3>{p.name}</h3>
