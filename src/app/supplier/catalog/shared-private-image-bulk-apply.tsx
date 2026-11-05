@@ -108,6 +108,6 @@ export function SharedPrivateImageBulkApply({storeId,products,sources,enabled}:{
    <p className="notice">Refresh the page to retry only products that still lack an image.</p>
   </details>}
   {!enabled&&<p role="status" className="notice">Private catalog image editing is disabled.</p>}
-  <p className="notice">Reuse a photo on products that it accurately represents. You can change each product\'s photo individually later. Image changes save to the product draft and do not publish it.</p>
+  <p className="notice">Reuse a photo on products that it accurately represents. You can change each product&apos;s photo individually later. Image changes save to the product draft and do not publish it.</p>
  </section>;
 }
