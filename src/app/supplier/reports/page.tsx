@@ -15,7 +15,7 @@ export default async function ReportsPage() {
   return <main className="container supplier-shell">
     <Link className="back" href="/supplier">← Supplier workspace</Link>
     <p className="eyebrow">APEX / VERIFIED HISTORY</p><h1>Sales reports.</h1>
-    <div className="actions"><Link className="button primary" href="/supplier/reports/daily">Daily order reports</Link><Link className="button secondary" href="/supplier/usps">USPS fulfillment</Link><Link className="button secondary" href="/supplier/reports/reconcile">Sales reconciliation CSV</Link><Link className="button secondary" href="/supplier/reports/order-foundation">Order detail readiness</Link></div>
+    <div className="actions"><Link className="button primary" href="/supplier/reports/daily">Daily order reports</Link><Link className="button secondary" href="/supplier/usps">USPS fulfillment</Link><Link className="button secondary" href="/supplier/reports/reconcile">Sales reconciliation CSV</Link><Link className="button secondary" href="/supplier/reports/order-foundation">Order detail readiness</Link><Link className="button secondary" href="/supplier/reports/shipment-review">Held shipment review</Link></div>
     <p className="lead">The shared storefront history shows recorded sales and payment status—not estimated or simulated revenue.</p>
     {error ? <section className="supplier-panel"><h2>Reporting is not yet configured</h2>
       <p>No verified sales data source is connected in this environment.</p></section>
