@@ -8,6 +8,8 @@ import {
 import {parseAdminCheckoutJournalSummary} from "@/lib/checkout/admin-private-order-journal.mjs";
 import {assessAdminPaymentAuditSample}
  from "@/lib/payments/admin-payment-audit-quality-v1.mjs";
+import {reconcileAdminPaymentReferencesV1}
+ from "@/lib/payments/admin-payment-reference-reconciliation-v1.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={
@@ -44,10 +46,10 @@ export default async function AdminPaymentMonitor(){
    .select("id,scope_id,scope_type,version,status,created_at")
    .order("created_at",{ascending:false}).limit(LIMIT),
   client.from("payout_transfer_records")
-   .select("id,state,amount_sats,created_at")
+   .select("id,snapshot_id,state,amount_sats,created_at")
    .order("created_at",{ascending:false}).limit(LIMIT),
   client.from("payment_allocation_snapshots")
-   .select("id,created_at")
+   .select("id,rule_id,rule_version,gross_sats,distributable_sats,created_at")
    .order("created_at",{ascending:false}).limit(LIMIT),
   client.from("stores")
    .select("id,display_name")
@@ -58,6 +60,7 @@ export default async function AdminPaymentMonitor(){
  const snapshots=snapshotsResult.error?null:snapshotsResult.data;
  const summary=summarizeAdminPaymentMonitor({rules,transfers,snapshots});
  const audit=assessAdminPaymentAuditSample({rules,transfers,snapshots},{maxRows:LIMIT});
+ const references=reconcileAdminPaymentReferencesV1({rules,transfers,snapshots},{maxRows:LIMIT});
  const journalRead=await client.rpc("get_admin_checkout_journal_overview");
  const journal=journalRead.error?null:parseAdminCheckoutJournalSummary(journalRead.data);
  const storeNames=new Map((storesResult.error?[]:storesResult.data??[])
@@ -115,6 +118,46 @@ export default async function AdminPaymentMonitor(){
     <ul>{audit.reasons.map((reason:string)=><li key={reason}>{reason}</li>)}</ul>
    </div>:<p className="notice">No malformed or duplicate entries detected
     within this sample. Settlement and record completeness remain unverified.</p>}
+  </section>
+  <section className="supplier-panel"
+   aria-label="Read-only payment reference reconciliation"
+   style={{maxWidth:"none",marginBottom:22}}>
+   <h2>Payment record relationships</h2>
+   <p className="notice">This compares only the newest {LIMIT} stored rule,
+    allocation snapshot and transfer records. A reference absent from this
+    sample is not evidence of a missing database row. Full event history,
+    provider reconciliation and blockchain settlement are not available here.</p>
+   <p role="status"><strong>{references.status==="unavailable"
+    ?"Cannot assess all record relationships"
+    :references.status==="review_required"
+     ?"Conflicting or malformed sampled relationships require review"
+     :references.status==="bounded_reference_window"
+      ?"Some references or history fall outside this sample"
+      :"Sampled references agree — independent evidence still required"}
+   </strong></p>
+   <ul className="supplier-stores">
+    <li><span>Snapshots matched to sampled rules</span>
+     <strong>{references.counts.snapshotRuleMatches}</strong></li>
+    <li><span>Snapshot rule references outside sample</span>
+     <strong>{references.counts.snapshotRuleOutsideSample}</strong></li>
+    <li><span>Transfers matched to sampled snapshots</span>
+     <strong>{references.counts.transferSnapshotMatches}</strong></li>
+    <li><span>Transfer snapshot references outside sample</span>
+     <strong>{references.counts.transferSnapshotOutsideSample}</strong></li>
+   </ul>
+   <p className="notice">Recorded timestamps in sample:
+    {" "}{references.observedWindow.earliest
+     ?formatTime(references.observedWindow.earliest):"Unavailable"}
+    {" "}to{" "}{references.observedWindow.latest
+     ?formatTime(references.observedWindow.latest):"Unavailable"}.
+    This is a sampled date range, not an immutable audit history.</p>
+   {references.reasons.length>0?
+    <div className="notice"><strong>Relationship review observations</strong>
+     <ul>{references.reasons.map((reason:string)=>
+      <li key={reason}>{reason}</li>)}</ul>
+    </div>:null}
+   <p className="notice">Recorded states are not verified payments;
+    this review cannot create invoices, send payouts or release checkout.</p>
   </section>
   <section className="supplier-panel"
    aria-label="Private order and provider intent journal"
