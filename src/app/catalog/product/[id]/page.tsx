@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import {SaveCatalogItem} from "@/app/cart/cart-provider";
+import {ApprovedProductMedia} from "../../approved-product-media";
 import {readApprovedSoldOutCatalog} from "@/lib/supabase/approved-sold-out-catalog";
 import "../../sold-out-catalog.css";
 
@@ -31,13 +32,7 @@ export default async function ProductDetails({
   <Link className="back" href={"/catalog?page="+page}>← Back to products</Link>
   <p className="eyebrow">APEX ANABOLICS / PRODUCT DETAILS</p>
   <article className="apex-product-detail-card">
-   <div className="apex-approved-art">
-    <span className="apex-approved-triangle" aria-hidden="true">▲</span>
-    <span className={"apex-approved-badge"+(product.availability==="in_stock"?" apex-approved-instock":"")}>
-     {product.availability==="in_stock"?"IN STOCK":"SOLD OUT"}
-    </span>
-    <small>APEX ANABOLICS</small>
-   </div>
+   <ApprovedProductMedia productId={product.id} availability={product.availability}/>
    <div className="apex-approved-body">
     {product.categoryName&&<p className="eyebrow">{product.categoryName}</p>}
     <h1>{product.name}</h1>
