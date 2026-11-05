@@ -39,3 +39,17 @@
  overflow-wrap:anywhere;
 }
 .apex-admin-media-evidence-form .button{margin-top:0}
+
+/* Protected, page-local review filters. No unsubmitted supplier items exposed. */
+.apex-admin-media-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.apex-admin-media-filter{display:inline-flex;gap:8px;align-items:center;min-height:44px;
+ padding:8px 12px;border:1px solid #654658;border-radius:9px;background:#251a25;
+ color:#f3d6e2;text-decoration:none;font-size:12px;font-weight:700}
+.apex-admin-media-filter span{background:#513246;color:#fff;padding:2px 7px;border-radius:12px;
+ font-variant-numeric:tabular-nums}
+.apex-admin-media-filter.is-active{border-color:#ea98b7;background:#4d2a3b;color:#fff}
+.apex-admin-media-filter:focus-visible{outline:2px solid #ff9ac3;outline-offset:2px}
+.apex-admin-media-next-step{border-left:3px solid #ae6481;margin:9px 0 12px;
+ padding:6px 10px;color:#f3d5e1;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+@media(max-width:600px){.apex-admin-media-filters{gap:6px}
+ .apex-admin-media-filter{font-size:11px;padding:7px 9px;max-width:100%}}
