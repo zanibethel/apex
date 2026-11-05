@@ -1,6 +1,11 @@
 -- Disposable Postgres only: validates privileged issue/resolution, denials and revocation.
 \set ON_ERROR_STOP on
-create role service_role nologin bypassrls;
+do $setup$
+begin
+ if not exists(select 1 from pg_roles where rolname='service_role') then
+  create role service_role nologin bypassrls;
+ end if;
+end $setup$;
 create schema if not exists storage;
 create table if not exists storage.buckets(
  id text primary key,name text not null,public boolean not null,
