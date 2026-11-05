@@ -80,6 +80,7 @@ export function buildOwnerMailAlertEmail(claim){
  return Object.freeze({
   subject:"Apex supplier email delivery alert — "+claim.day,
   idempotencyKey:"apex-owner-mail-health-"+claim.day,
+  alertCount:x.alert_count,
   text,html,
  });
 }
