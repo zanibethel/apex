@@ -22,6 +22,10 @@ const valid=r=>r&&typeof r==="object"&&!Array.isArray(r)&&
  typeof r.submission_id==="string"&&UUID.test(r.submission_id)&&
  ["pending_review","approved_internal","changes_requested"].includes(r.status);
 
+/**
+ * @param {{store_id:string,product_id:string,submission_id:string,status:string,snapshot:unknown,submitted_at?:string}|null|undefined} review
+ * @param {{store_id:string,product_id:string,submission_id:string,image_path:string,review_status:string,identity_reference?:string|null,rights_reference?:string|null}|null|undefined} event
+ */
 export function classifyAdminMediaEvidence(review,event=null){
  const status=valid(review)?privateMediaEvidenceStatus(review,event):null;
  let kind="unavailable";
