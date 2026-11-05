@@ -1,7 +1,9 @@
 import {createClient} from "@supabase/supabase-js";
 import {NextResponse} from "next/server";
-import {verifyResendReportEvent}
+import {verifyResendReportEvent,ReportEventError}
  from "@/lib/supplier/resend-report-event-verification.mjs";
+import {isSupplierDailyReportPayload}
+ from "@/lib/supplier/supplier-report-delivery-status.mjs";
 
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
@@ -40,18 +42,24 @@ export async function POST(request:Request){
   !url||!key)return NextResponse.json({ok:false},{status:503,
   headers:responseHeaders});
  let event;
+ let payload:string;
  try{
-  const payload=await readBoundedText(request);
+  payload=await readBoundedText(request);
   event=verifyResendReportEvent({
    payload,svixId:request.headers.get("svix-id"),
    svixTimestamp:request.headers.get("svix-timestamp"),
    svixSignature:request.headers.get("svix-signature"),
    signingSecret,
   });
- }catch{
-  // Never report whether an event ID, recipient or provider message exists.
+ }catch(e){
+  // Unrelated provider-signed messages belong to other Resend integrations.
+  // Signature verification ran before the scope classification.
+  if(e instanceof ReportEventError&&e.code==="scope")
+   return NextResponse.json({ok:true,ignored:true},{headers:responseHeaders});
   return NextResponse.json({ok:false},{status:400,headers:responseHeaders});
  }
+ if(!isSupplierDailyReportPayload(payload))
+  return NextResponse.json({ok:true,ignored:true},{headers:responseHeaders});
  const db=createClient(url,key,{auth:{
   persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,
  }});
