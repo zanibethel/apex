@@ -1,5 +1,9 @@
+"use client";
+
+import {useState} from "react";
 import Link from "next/link";
-import type {SoldOutCatalogResult} from "@/lib/supabase/approved-sold-out-catalog";
+import {filterPublicCatalogPage} from "@/lib/catalog/public-browse-filter.mjs";
+import type {ApprovedSoldOutProduct,SoldOutCatalogResult} from "@/lib/supabase/approved-sold-out-catalog";
 import {SaveCatalogItem} from "@/app/cart/cart-provider";
 import "./sold-out-catalog.css";
 
@@ -11,6 +15,9 @@ const money=(cents:number)=>new Intl.NumberFormat("en-US",{
 // individual product link. The current preview has no public product media
 // feed, so it never leaks private image paths or signed supplier URLs.
 export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
+ const [query,setQuery]=useState("");
+ const [availability,setAvailability]=useState("all");
+ const visible=filterPublicCatalogPage(result.products,{query,availability}) as ApprovedSoldOutProduct[];
  return <section className="apex-approved-soldout" aria-labelledby="apex-approved-soldout-title">
   <div className="apex-approved-soldout-head">
    <div>
@@ -20,9 +27,33 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
    </div>
    <span className="apex-approved-status">Checkout unavailable</span>
   </div>
+  {result.state==="connected"&&result.products.length>0&&
+   <div className="apex-approved-filters">
+    <label htmlFor="apex-public-product-search">Search this page
+     <input id="apex-public-product-search" type="search" maxLength={64}
+      placeholder="Search product names or details"
+      value={query} onChange={event=>setQuery(event.target.value)}/>
+    </label>
+    <label htmlFor="apex-public-availability">Availability
+     <select id="apex-public-availability" value={availability}
+      onChange={event=>setAvailability(event.target.value)}>
+      <option value="all">All products</option>
+      <option value="in_stock">In stock</option>
+      <option value="sold_out">Sold out</option>
+     </select>
+    </label>
+    <p role="status" aria-live="polite">
+     Showing {visible.length} of {result.products.length} products on page {result.page}.
+    </p>
+   </div>}
   {result.state==="connected"&&result.products.length>0?
+   <>
+   {visible.length===0&&<div className="apex-approved-empty" role="status">
+    <h3>No matches on this page</h3>
+    <p>Change the search or availability filter, or browse another page.</p>
+   </div>}
    <div className="apex-approved-soldout-grid">
-    {result.products.map(p=><article className="apex-approved-item" key={p.id}>
+    {visible.map((p:ApprovedSoldOutProduct)=><article className="apex-approved-item" key={p.id}>
      <div className="apex-approved-art">
       <span className="apex-approved-triangle" aria-hidden="true">▲</span>
       <span className={"apex-approved-badge"+(p.availability==="in_stock"?" apex-approved-instock":"")}>{p.availability==="in_stock"?"IN STOCK":"SOLD OUT"}</span>
@@ -47,13 +78,15 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
        :"Currently unavailable to order"}</p>
      </div>
     </article>)}
-   </div>:
+   </div></>:
    <div className="apex-approved-empty" role="status">
     <h3>No products available right now.</h3>
     <p>{result.state==="unavailable"?
       "The catalog is temporarily unavailable. Please check back later.":
       "Products will appear here as they become available."}</p>
    </div>}
+  {result.state==="connected"&&(result.page>1||result.hasNext)&&
+   <p className="apex-approved-page-note">Search and availability filters apply to the current page.</p>}
   {result.state==="connected"&&(result.page>1||result.hasNext)&&
    <nav className="apex-approved-pagination" aria-label="Approved product pages">
     {result.page>1&&<Link className="button secondary" href={"/catalog?page="+(result.page-1)}>Previous</Link>}
