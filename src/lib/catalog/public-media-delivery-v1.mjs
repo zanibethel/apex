@@ -39,11 +39,13 @@ const unavailable=Object.freeze({
 // release predicate must be independently confirmed on EACH asset lookup.
 // In particular, the latest media evidence must be the very same event, and
 // the product's current image and internal review snapshot must still match.
-export function resolvePublicMediaDeliveryV1({
- version,product,review,evidence,latestEvidenceId,store,category,
- listing,supplierAuthorization,productAuthorization,globalReleaseEnabled,
- mediaDeliveryEnabled,revokedVersionIds=[],identityHoldActive,
-}= {}){
+export function resolvePublicMediaDeliveryV1(input={}){
+ if(!input||typeof input!=="object"||Array.isArray(input))return unavailable;
+ const {
+  version,product,review,evidence,latestEvidenceId,store,category,
+  listing,supplierAuthorization,productAuthorization,globalReleaseEnabled,
+  mediaDeliveryEnabled,revokedVersionIds=[],identityHoldActive,
+ }=input;
  const v=parsePublicMediaVersionV1(version);
  if(!v||globalReleaseEnabled!==true||mediaDeliveryEnabled!==true||
   identityHoldActive!==false||!Array.isArray(revokedVersionIds)||
