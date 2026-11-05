@@ -172,7 +172,7 @@ jobs:
       - name: Verify bounce alerts, owner JWT, privacy, and read-only mail health
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/admin-supplier-mail-health.sql
       - name: Install protected owner delivery health alert outbox
-        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261105190000_apex_owner_mail_health_alert_dispatch.sql
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261105155928_apex_owner_mail_health_alert_dispatch.sql
       - name: Verify owner alert no-send, idempotent claims, token restrictions and leases
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/owner-mail-alert-cron.sql
       - name: Install verified sales review / CSV reconciliation ledger
