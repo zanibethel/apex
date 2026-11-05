@@ -14,7 +14,6 @@ begin
  then raise exception 'Provider event ledger isolation failed'; end if;
 end $guards$;
 
-begin;
 insert into apex_internal.supplier_daily_report_email_outbox(
  id,store_id,report_date,user_id,state,provider_email_id
 )values(
@@ -29,6 +28,7 @@ values('daily_report_sender',
  encode(sha256(convert_to(repeat('a',64),'UTF8')),'hex'))
 on conflict(name) do update set token_sha256=excluded.token_sha256;
 
+begin;
 set local role anon;
 do $deny$
 declare blocked boolean:=false;
@@ -47,8 +47,9 @@ begin
  exception when insufficient_privilege then blocked:=true;end;
  if not blocked then raise exception 'Unrelated Resend message accepted';end if;
 end $deny$;
-set local role postgres;
+rollback;
 
+begin;
 set local role anon;
 do $replay$
 declare first jsonb;second jsonb;blocked boolean:=false;
@@ -72,7 +73,7 @@ begin
  if not blocked then
   raise exception 'Changed receipt reused same provider event identity';end if;
 end $replay$;
-set local role postgres;
+commit;
 
 begin;
 set local role authenticated;
@@ -133,5 +134,4 @@ begin
  if (select enabled from apex_internal.private_release_gate where singleton)
   is distinct from false then raise exception 'Mail event enabled commerce';end if;
 end $still_held$;
-rollback;
 select 'PASS: event replay, supplier-only status, no PII or commerce release';
