@@ -13,3 +13,13 @@
 .apex-media-actions .button{min-width:0;min-height:43px;padding:9px;font-size:11px;text-align:center;line-height:1.35}
 @media(max-width:600px){.apex-media-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.apex-media-photo{height:155px}.apex-media-body{padding:10px}.apex-media-body h2{font-size:15px}.apex-media-actions{grid-template-columns:minmax(0,1fr)}.apex-media-metrics span{font-size:11px;padding:7px}}
 @media(max-width:350px){.apex-media-grid{grid-template-columns:minmax(0,1fr)}}
+
+.apex-media-filters{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 22px}
+.apex-media-filter{display:inline-flex;align-items:center;gap:8px;min-height:43px;padding:8px 12px;border:1px solid #5f4556;border-radius:9px;background:#211823;color:#e7ccda;font-size:12px;font-weight:700;text-decoration:none}
+.apex-media-filter span{border-radius:12px;padding:2px 7px;background:#473040;color:#fff;font-variant-numeric:tabular-nums}
+.apex-media-filter.is-active{border-color:#e38eae;background:#492638;color:#fff}
+.apex-media-filter:focus-visible{outline:2px solid #ff9ac3;outline-offset:2px}
+.apex-media-next-step{font-size:12px;line-height:1.5;color:#f1d0de;border-left:3px solid #a65c79;padding-left:9px;margin:8px 0 12px}
+.apex-media-review-action{margin-top:14px;border-top:1px solid #503444;padding-top:12px}
+.apex-media-review-action .apex-review-submit button{min-height:44px;width:100%}
+@media(max-width:600px){.apex-media-filters{gap:7px}.apex-media-filter{font-size:11px;padding:7px 9px;min-height:44px;max-width:100%}}
