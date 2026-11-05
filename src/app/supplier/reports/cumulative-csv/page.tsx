@@ -18,7 +18,7 @@ export default async function CumulativeHeldCsvPage(){
   <p className="lead">Download a read-only report of existing original
    held-order metadata for each storefront you are authorized to manage.
    Every export starts from the oldest available history through its
-   latest original recorded order, not merely the last day's records.</p>
+   latest original recorded order, not merely the latest reporting day.</p>
   {workspace.stores.map(store=><section className="supplier-panel"
    key={store.id} style={{maxWidth:"none",marginBottom:18}}>
    <h2>{store.display_name}</h2>
