@@ -1,5 +1,10 @@
 -- Disposable Postgres only: validates privileged issue/resolution, denials and revocation.
 \set ON_ERROR_STOP on
+do $guard$
+begin
+ if current_database()<>'apex_test'
+ then raise exception 'Synthetic media authorization fixture cannot run on hosted database';end if;
+end $guard$;
 do $setup$
 begin
  if not exists(select 1 from pg_roles where rolname='service_role') then
