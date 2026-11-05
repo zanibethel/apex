@@ -1,4 +1,4 @@
-> **Current source of truth — November 5, 2026:** [November 5–8 verified checkpoint](APEX_WEEKEND_CLOSEOUT_2026-11-05.md). Production is READY on merged PR #248; private commerce gate remains OFF, 63 products saved but none published, and there are no source sales or held orders. The October 29 notes below are historical. See also the [November 3 checkpoint](APEX_EXECUTION_CHECKPOINT_2026-11-03.md) and [supplier intake checklist](SUPPLIER_INTAKE_2026-11-04.md).
+> **Current technical handoff — November 5, 2026:** [Recent-chat handoff through merged PR #283](APEX_CHAT_HANDOFF_2026-11-05.md). GitHub and Vercel show a READY production build associated with #283, but this does **not** enable real checkout or fulfillment. The [Nov 5–8 closeout checkpoint](APEX_WEEKEND_CLOSEOUT_2026-11-05.md) remains the most recent recorded database/catalog inventory snapshot; its PR #248 deployment SHA is historical. Supplier workbook reconciliation and actual stock are pending independent verification. All October 29 notes below are historical.
 
 # Project status — 2026-10-29
 
