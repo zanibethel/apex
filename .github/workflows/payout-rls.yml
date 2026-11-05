@@ -159,6 +159,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104121500_apex_supplier_daily_report_worker.sql
       - name: Verify opt-ins, other-supplier denial and idempotent report email claims
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-daily-report-email.sql
+      - name: Install private supplier report provider delivery journal
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261105134500_apex_supplier_report_delivery_events.sql
+      - name: Verify sender token, signed receipt correlation, replay, and supplier isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-report-delivery-events.sql
       - name: Install admin-only sender activation and audit
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104123000_apex_admin_daily_report_sender_activation.sql
       - name: Verify only platform admins can register matching server fingerprints
