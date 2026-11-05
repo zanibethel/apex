@@ -8,8 +8,8 @@ import {requestProductImageUpload,attachProductImage,requestProductImageReuse} f
 
 type ExistingImage={productId:string;name:string;sku:string;previewUrl:string};
 
-export function ProductImageUploader({storeId,productId,enabled,existingImages=[]}:{
-  storeId:string;productId:string;enabled:boolean;existingImages?:ExistingImage[];
+export function ProductImageUploader({storeId,productId,enabled,hasImage=false,existingImages=[]}:{
+  storeId:string;productId:string;enabled:boolean;hasImage?:boolean;existingImages?:ExistingImage[];
 }) {
   const router=useRouter();
   const [file,setFile]=useState<File|null>(null);
@@ -84,21 +84,21 @@ export function ProductImageUploader({storeId,productId,enabled,existingImages=[
     <div className="apex-image-picker-tabs" role="group" aria-label="Image source">
       <button type="button" className="button secondary" aria-pressed={mode==="upload"}
         disabled={!enabled||busy} onClick={()=>{setMode("upload");setMessage("");}}>
-        Upload new image
+        {hasImage?"Replace photo":"Upload photo"}
       </button>
       <button type="button" className="button secondary" aria-pressed={mode==="reuse"}
         disabled={!enabled||busy} onClick={()=>{setMode("reuse");setMessage("");}}>
-        Choose existing image
+        Reuse an existing photo
       </button>
     </div>
     {mode==="upload"?<>
-      <label htmlFor={"image-"+productId}>New image (PNG, JPEG, WebP up to 3 MB)</label>
+      <label htmlFor={"image-"+productId}>Choose a photo (PNG, JPEG, WebP, up to 3 MB)</label>
       <input id={"image-"+productId} type="file" accept="image/png,image/jpeg,image/webp"
         disabled={!enabled||busy} onChange={e=>setFile(e.target.files?.[0]??null)}/>
       <button type="button" onClick={upload} className="button secondary"
-        disabled={!file||!enabled||busy}>{busy?"Uploading…":"Upload image"}</button>
+        disabled={!file||!enabled||busy}>{busy?"Saving image…":hasImage?"Replace image":"Save image"}</button>
     </>:<>
-      <p className="notice">Select an image from another draft product in this same supplier storefront. A separate private copy is saved to this product.</p>
+      <p className="notice">Pick a photo already used by another product. Apex copies it to this product and saves it automatically.</p>
       {existingImages.length===0
         ?<p className="notice">No reusable images yet. Upload an image to another private product first.</p>
         :<div className="apex-existing-image-grid" role="group" aria-label="Available saved images">
@@ -116,9 +116,10 @@ export function ProductImageUploader({storeId,productId,enabled,existingImages=[
       <button type="button" className="button secondary" onClick={reuse}
         disabled={!enabled||busy||!sourceProductId||
           !existingImages.some(image=>image.productId===sourceProductId)}>
-        {busy?"Saving image…":"Use selected image"}
+        {busy?"Saving image…":"Use this image"}
       </button>
     </>}
     {message&&<p role="status">{message}</p>}
+    <p className="notice">Saving an image updates this product card. You can change it again any time.</p>
   </div>;
 }
