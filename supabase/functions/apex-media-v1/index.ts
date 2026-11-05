@@ -151,6 +151,34 @@ async function issue(req:Request){
    "X-Content-Type-Options":"nosniff"},
  });
 }
+async function revoke(req:Request){
+ if(!service||req.method!=="POST")return denied(404);
+ const token=(req.headers.get("authorization")??"").match(/^Bearer (\\S{24,})$/i)?.[1];
+ if(!token)return denied(403);
+ const auth=await service.auth.getUser(token);
+ const user=auth.data?.user;
+ if(auth.error||!user||user.is_anonymous||!user.email_confirmed_at||
+  user.app_metadata?.apex_role!=="platform_admin")return denied(403);
+ let data:unknown;
+ try{
+  const raw=await req.text();
+  if(raw.length>1400)return denied(413);
+  data=JSON.parse(raw);
+ }catch{return denied(400);}
+ if(!data||typeof data!=="object"||Array.isArray(data))return denied(400);
+ const d=data as Record<string,unknown>;
+ if(Object.keys(d).length!==3||!validId(d.storeId)||
+  !validId(d.productId)||typeof d.note!=="string"||
+  d.note.trim().length<10||d.note.length>1000)return denied(400);
+ const saved=await service.rpc("apex_media_revoke_v1",{
+  p_store:d.storeId,p_product:d.productId,p_actor:user.id,p_note:d.note.trim(),
+ });
+ if(saved.error||saved.data?.revoked!==true)return denied(409);
+ return new Response(JSON.stringify({ok:true,revoked:true}),{
+  status:200,headers:{"Content-Type":"application/json",
+   "Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"},
+ });
+}
 Deno.serve(async req=>{
  try{
   const parts=new URL(req.url).pathname.split("/").filter(Boolean);
@@ -158,6 +186,7 @@ Deno.serve(async req=>{
   if(suffix[0]==="asset"&&validId(suffix[1])&&req.method==="GET")
    return await getAsset(req,suffix[1]);
   if(parts.at(-1)==="issue"&&req.method==="POST")return await issue(req);
+  if(parts.at(-1)==="revoke"&&req.method==="POST")return await revoke(req);
   return denied();
  }catch{return denied();}
 });
