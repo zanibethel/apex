@@ -134,6 +134,41 @@ test('fresh day-4 edits preview 10 rows and exact replay changes none locally',(
  assert.equal(same.alreadyRecordedRows,40);
  assert.equal(same.unchangedRows,40);
 });
+test('day 4 adds twenty to twenty carried forward; ten offline edits are stale without duplication',()=>{
+ const day3Orders=Array.from({length:20},(_,i)=>order(i+1,{day:3}));
+ const nextDay=[...day3Orders.map((o,i)=>order(i+1,{
+  day:3,revision:i<10?2:1,
+ })),...Array.from({length:20},(_,i)=>order(i+21,{day:4}))];
+ const older=workbook(day3Orders,'2026-11-03');
+ const latest=workbook(nextDay,'2026-11-04');
+ assert.equal(latest.totalOrders,40);
+ assert.equal(latest.summary.carriedForward,20);
+ assert.equal(latest.summary.newToday,20);
+ assert.equal(latest.rows.length,80);
+ assert.equal(new Set(latest.rows.map(r=>r.order_id)).size,40);
+ const plans=latest.rows.filter(r=>r.row_kind==='shipment_plan');
+ assert.equal(new Set(plans.map(r=>r.shipment_id)).size,40);
+ const day3Csv=serializeCumulativeReviewCsv(older.rows,store);
+ const edited=change(day3Csv,r=>{
+  if(r[idx('row_kind')]==='shipment_plan'&&
+   Number(r[idx('order_reference')].split('-').at(-1))<=10){
+   r[idx('review_state')]='reviewed';
+   r[idx('review_note')]='Updated in prior report';
+  }
+  return r;
+ });
+ const preview=parse(edited,latest.rows);
+ assert.equal(preview.status,'rejected');
+ assert.equal(preview.uniqueOrders,20);
+ assert.equal(preview.staleRows,10);
+ assert.equal(preview.changedRows,0);
+ assert.equal(preview.databaseUpdated,false);
+ assert.equal(preview.canShip,false);
+ assert.equal(preview.issues.filter(i=>i.code==='stale_revision').length,10);
+ const conflicts=serializeCumulativeReviewErrorCsv(preview);
+ assert.match(conflicts,/stale_revision/);
+});
+
 test('same exact duplicate rows are suppressed, conflicting duplicate rejected',()=>{
  const w=workbook([order(1)]);
  const csv=serializeCumulativeReviewCsv(w.rows,store);
