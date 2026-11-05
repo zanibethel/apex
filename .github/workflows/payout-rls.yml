@@ -160,7 +160,7 @@ jobs:
       - name: Verify opt-ins, other-supplier denial and idempotent report email claims
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-daily-report-email.sql
       - name: Install private supplier report provider delivery journal
-        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261105134500_apex_supplier_report_delivery_events.sql
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261105134226_apex_supplier_report_delivery_events.sql
       - name: Verify sender token, signed receipt correlation, replay, and supplier isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-report-delivery-events.sql
       - name: Install admin-only sender activation and audit
