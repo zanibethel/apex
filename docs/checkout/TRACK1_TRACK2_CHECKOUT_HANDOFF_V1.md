@@ -2,6 +2,14 @@
 
 **Status:** Versioned request parser and a reserved, **disabled** API boundary. This is not a checkout admission implementation. Release remains disabled; no order, payment, inventory reservation, delivery-data persistence or carrier operation is authorized by this contract.
 
+## Compatibility with merged Track 2 PR #251
+
+Track 2's canonical server-only contract, `docs/checkout/APEX_TRACK2_ORDER_HANDOFF_V1.md`, expects snake_case `schema_version`, `request_id`, `store_id`, `items`, `box_size`, `promotion_code`, `delivery`. Track 1's `schemaVersion`/nested `cart` is the **browser transport** shape, not Track 2's direct input.
+
+**Use `prepareTrack1CheckoutHandoffForTrack2V1(raw,{trustedStoreId,fingerprintKey})` on the trusted server** to parse, validate, map and call `prepareCheckoutOrderHandoffV1` with a server-resolved store ID and private HMAC key. The adapter is `src/lib/checkout/track1-to-track2-adapter-v1.mjs`; tests: `tests/track1-track2-compatibility.test.mjs`. Never transmit the server-only delivery or HMAC values back to the client.
+
+Track 1's saved cart allows **up to 20 distinct items** for review; Track 2's current order-admission validator allows **at most 8 distinct products**. The adapter rejects all 9–20 line handoffs without truncation. Track 2 must decide whether to expand its atomic admission capacity or present a clear cart reduction step when checkout becomes independently authorized. Product quantity limit remains 10 each; total units 50. Track 1's transport requires a UUIDv4 requestId, stricter than Track 2's general UUID syntax.
+
 ## Endpoint and ownership
 
 `POST /api/checkout/handoff/v1` is reserved for Track 2. While Track 2 has not implemented the authenticated admission worker, it returns HTTP 503 with `{schemaVersion:1,accepted:false,code:"CHECKOUT_UNAVAILABLE",canReserveStock:false,canCreateOrder:false,canCreatePayment:false}` **before reading the body**. The handler must not log or persist customer details. Track 1 owns the browser form, cart and request schema; Track 2 owns any privileged server admission and canonical order write.
