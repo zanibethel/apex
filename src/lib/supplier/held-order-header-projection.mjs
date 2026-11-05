@@ -7,7 +7,7 @@ const UTC=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const TOP=['schema_version','store_id','source','limit','offset','total',
  'has_more','orders','held_only','source_attested','payment_enabled',
  'shipping_enabled','delivery_decryption_enabled'];
-const ROW=['order_id','original_reference','purchased_at_utc',
+const ROW=['order_id','store_id','original_reference','purchased_at_utc',
  'recorded_sale_state','stored_line_count','destination_sealed',
  'status','can_pay','can_ship','can_decrypt'];
 const exact=(o,keys)=>o!==null&&typeof o==='object'&&!Array.isArray(o)&&
@@ -31,7 +31,7 @@ export function parseSupplierHeldOrderHeaders(input,storeId,{limit=25,offset=0}=
   input.delivery_decryption_enabled!==false)return null;
  const rows=[],seen=new Set();let previous=null;
  for(const row of input.orders){
-  if(!exact(row,ROW)||!UUID.test(row.order_id??'')||
+  if(!exact(row,ROW)||row.store_id!==storeId||!UUID.test(row.order_id??'')||
    !text(row.original_reference)||!UTC.test(row.purchased_at_utc??'')||
    !Number.isFinite(Date.parse(row.purchased_at_utc))||
    new Date(row.purchased_at_utc).toISOString()!==row.purchased_at_utc||
