@@ -2,7 +2,7 @@
 
 import {useState} from "react";
 import Link from "next/link";
-import {filterPublicCatalogPage} from "@/lib/catalog/public-browse-filter.mjs";
+import {filterPublicCatalogPage,publicCatalogCategoryOptions} from "@/lib/catalog/public-browse-filter.mjs";
 import type {ApprovedSoldOutProduct,SoldOutCatalogResult} from "@/lib/supabase/approved-sold-out-catalog";
 import {SaveCatalogItem} from "@/app/cart/cart-provider";
 import "./sold-out-catalog.css";
@@ -17,7 +17,9 @@ const money=(cents:number)=>new Intl.NumberFormat("en-US",{
 export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
  const [query,setQuery]=useState("");
  const [availability,setAvailability]=useState("all");
- const visible=filterPublicCatalogPage(result.products,{query,availability}) as ApprovedSoldOutProduct[];
+ const [categoryId,setCategoryId]=useState("");
+ const categories=publicCatalogCategoryOptions(result.products);
+ const visible=filterPublicCatalogPage(result.products,{query,availability,categoryId}) as ApprovedSoldOutProduct[];
  return <section className="apex-approved-soldout" aria-labelledby="apex-approved-soldout-title">
   <div className="apex-approved-soldout-head">
    <div>
@@ -34,6 +36,13 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
       placeholder="Search product names or details"
       value={query} onChange={event=>setQuery(event.target.value)}/>
     </label>
+    {categories.length>0&&<label htmlFor="apex-public-category">Category
+     <select id="apex-public-category" value={categoryId}
+      onChange={event=>setCategoryId(event.target.value)}>
+      <option value="">All categories on this page</option>
+      {categories.map(category=><option key={category.id} value={category.id}>{category.name}</option>)}
+     </select>
+    </label>}
     <label htmlFor="apex-public-availability">Availability
      <select id="apex-public-availability" value={availability}
       onChange={event=>setAvailability(event.target.value)}>
@@ -50,7 +59,7 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
    <>
    {visible.length===0&&<div className="apex-approved-empty" role="status">
     <h3>No matches on this page</h3>
-    <p>Change the search or availability filter, or browse another page.</p>
+    <p>Change the search, category or availability filter, or browse another page.</p>
    </div>}
    <div className="apex-approved-soldout-grid">
     {visible.map((p:ApprovedSoldOutProduct)=><article className="apex-approved-item" key={p.id}>
@@ -60,7 +69,7 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
       <small>APEX ANABOLICS</small>
      </div>
      <div className="apex-approved-body">
-      <p className="eyebrow">APEX COLLECTION</p>
+      <p className="eyebrow">{p.categoryName??"APEX COLLECTION"}</p>
       <h3>{p.name}</h3>
       <Link className="apex-approved-details-link" href={`/catalog/product/${p.id}?page=${result.page}`}>View full details</Link>
       <details className="apex-approved-description">

@@ -39,6 +39,7 @@ export default async function ProductDetails({
     <small>APEX ANABOLICS</small>
    </div>
    <div className="apex-approved-body">
+    {product.categoryName&&<p className="eyebrow">{product.categoryName}</p>}
     <h1>{product.name}</h1>
     <p>{product.description}</p>
     <div className="apex-approved-price">

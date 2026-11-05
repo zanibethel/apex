@@ -141,6 +141,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261105094500_apex_public_cart_optional_shipping_quote.sql
       - name: Verify paid, free and no-threshold shipping and admin holds in disposable PostgreSQL
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/public-cart-optional-shipping.sql
+      - name: Install gated public catalog category labels
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261105100000_apex_public_catalog_category_projection.sql
+      - name: Verify only published categories of approved products become visible
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/public-catalog-categories.sql
       - name: Seed isolated sales history reporting source (disposable only)
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-daily-report-source-fixture.sql
       - name: Install supplier USPS readiness and daily order snapshots (disposable)
