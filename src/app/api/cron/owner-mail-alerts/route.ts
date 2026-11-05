@@ -72,7 +72,7 @@ export async function GET(request:Request){
    return json({ok:false,stage:"journal_ack",providerAccepted:true},503);
   return json({
    ok:true,providerAccepted:true,delivered:false,
-   alertCount:"summary" in claim?claim.summary.alert_count:0,
+   alertCount:email.alertCount,
    note:"Provider accepted. Mailbox delivery not independently verified.",
   });
  }catch{
