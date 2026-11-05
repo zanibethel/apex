@@ -44,12 +44,17 @@ export async function issueApprovedMediaVersion(_prior:Result,form:FormData):Pro
  if(!isValidId(storeId)||!isValidId(productId)||
   !isValidId(submissionId)||!isValidId(evidenceId))
   return fail("Invalid product, review, or media-evidence identity.");
- return authorizedRequest("issue",{storeId,productId,submissionId,evidenceId});
+ return authorizedRequest("issue",{
+  storeId:String(storeId),productId:String(productId),
+  submissionId:String(submissionId),evidenceId:String(evidenceId),
+ });
 }
 export async function revokeApprovedMediaVersion(_prior:Result,form:FormData):Promise<Result>{
  const storeId=form.get("storeId"),productId=form.get("productId"),note=form.get("note");
  if(!isValidId(storeId)||!isValidId(productId)||typeof note!=="string"||
   note.trim().length<10||note.length>1000)
   return fail("Choose a product and provide a reason of at least 10 characters.");
- return authorizedRequest("revoke",{storeId,productId,note:note.trim()});
+ return authorizedRequest("revoke",{
+  storeId:String(storeId),productId:String(productId),note:note.trim(),
+ });
 }
