@@ -94,7 +94,7 @@ test("route uses raw bounded Svix HMAC validation before DB RPC and never logs p
 
 test("database journal is private, atomically idempotent and never changes settled orders",()=>{
  const migration=readFileSync(
-  "supabase/migrations/20261105134500_apex_supplier_report_delivery_events.sql",
+  "supabase/migrations/20261105134226_apex_supplier_report_delivery_events.sql",
   "utf8");
  const workflow=readFileSync(".github/workflows/payout-rls.yml","utf8");
  assert.match(migration,/force row level security/);
