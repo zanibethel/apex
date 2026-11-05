@@ -37,11 +37,12 @@ declare
  v_store uuid;
  v_product uuid;
  v_supplier uuid;
+ v_new_evidence_id uuid;
  v_reason text;
  v_note text;
 begin
- if tg_op='UPDATE' and to_jsonb(old)=to_jsonb(new) then
-  return null;
+ if tg_op='UPDATE' then
+  if to_jsonb(old)=to_jsonb(new) then return null;end if;
  end if;
 
  if tg_table_schema='public' and tg_table_name='products' then
@@ -59,6 +60,7 @@ begin
   v_note='Automatic revocation: submitted product review changed';
  elsif tg_table_schema='public' and tg_table_name='private_media_evidence_events' then
   v_store=new.store_id;v_product=new.product_id;
+  v_new_evidence_id=new.id;
   v_reason='evidence_superseded';
   v_note='Automatic revocation: newer image evidence event recorded';
  elsif tg_table_schema='apex_internal'
@@ -83,8 +85,8 @@ begin
    select 1 from public.stores s
    where s.id=v.store_id and s.supplier_id=v_supplier))
   or (v_supplier is null and v.store_id=v_store and v.product_id=v_product
-   and (tg_table_name<>'private_media_evidence_events'
-     or v.evidence_event_id<>new.id))
+   and (v_new_evidence_id is null
+     or v.evidence_event_id<>v_new_evidence_id))
  on conflict(version_id) do nothing;
 
  return null;
