@@ -55,7 +55,7 @@ test("forged delivery, suppressed alerts, extra PII, stale schema and inconsiste
 test("admin page verifies trusted identity and never renders raw provider IDs or addresses",()=>{
  const page=readFileSync("src/app/admin/email-reports/page.tsx","utf8");
  const migration=readFileSync(
-  "supabase/migrations/20261105160000_apex_admin_supplier_mail_delivery_health.sql","utf8");
+  "supabase/migrations/20261105145750_apex_admin_supplier_mail_delivery_health.sql","utf8");
  const workflow=readFileSync(".github/workflows/payout-rls.yml","utf8");
  assert.match(page,/isVerifiedPlatformAdmin/);
  assert.match(page,/get_admin_supplier_mail_delivery_health/);
