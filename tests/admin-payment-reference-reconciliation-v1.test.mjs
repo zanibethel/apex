@@ -119,7 +119,7 @@ test("partial, denied and 30-row reads never imply complete historical coverage"
 
 test("admin route only expands existing RLS-protected column selections",()=>{
  const page=readFileSync("src/app/admin/payment-monitor/page.tsx","utf8");
- const module=readFileSync(
+ const helperSource=readFileSync(
   "src/lib/payments/admin-payment-reference-reconciliation-v1.mjs","utf8");
  assert.match(page,/reconcileAdminPaymentReferencesV1/);
  assert.match(page,/id,snapshot_id,state,amount_sats,created_at/);
@@ -133,6 +133,6 @@ test("admin route only expands existing RLS-protected column selections",()=>{
  assert.equal(page.split(allowed).length,2);
  assert.doesNotMatch(page.replace(allowed,""),
   /\.insert\(|\.update\(|\.delete\(|\.upsert\(|\.rpc\(|service_role|SUPABASE_SECRET|fetch\(|createInvoice\(|createPayout\(/);
- assert.doesNotMatch(module,
+ assert.doesNotMatch(helperSource,
   /\bfetch\(|console\.|\.insert\(|\.update\(|\.delete\(|process\.env|createInvoice\(|createPayout\(/);
 });
