@@ -4,6 +4,34 @@
 **Purpose:** distinguish working technical foundations from activation of real order fulfillment.
 **Live release rule:** no payments, shipping, carrier postage, destination decryption, or customer shipment notification unless separate verified source/merchant permissions are approved. A supplier sales-history record or accepted email is never equivalent to a paid eligible order.
 
+## Fastest interactive acceptance walkthrough (admin-only)
+
+Open **https://apexanabolics.co/admin/fulfillment-qa** using a verified platform admin login.
+This page creates only deterministic synthetic records and never reads or writes
+production orders, delivery addresses or payment accounts.
+
+1. Verify the four stat cards read **Day 3: 20**, **Day 4: 40**,
+   **new on Day 4: 20**, **carried forward: 20**.
+2. Click **Check stale edits**. Expected: **Rejected without changes**,
+   **10 stale rows**, **0 proposed changes**, **20 unique uploaded orders**.
+   Download the conflict report and confirm it lists stale revision errors.
+3. Click **Check valid edits**. Expected: **Review-only preview accepted**,
+   **10 proposed changes**, **0 stale rows**, **40 unique orders**.
+4. Click **Apply to browser-only simulation**, then **Check valid edits** again.
+   Expected: **0 proposed changes** (identical replay, nothing to write).
+5. Click **Reset scenario**, download the Day 3, Day 4, stale-edit and
+   valid-edit CSV samples, and import them using the file picker. The
+   stale file must be rejected and the valid file must pass.
+6. Inspect the attachment manifest below the workbench. It must have
+   **40 original held orders**, no shipment/delivery claim, no customer PII,
+   a deterministic SHA-256 digest and **no send action**.
+7. Open a private/incognito browser window without authentication. Direct
+   access to this path must redirect to admin sign-in. A supplier without
+   platform-admin privileges must be denied.
+
+The workbench is intentionally **not** a customer-facing testing mode,
+live fulfillment queue, or carrier label interface.
+
 ## A. Automatic repository verification (repeat on each PR)
 
 From the Apex repository checkout:
