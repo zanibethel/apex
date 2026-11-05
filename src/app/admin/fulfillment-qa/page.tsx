@@ -4,6 +4,8 @@ import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {createTrack3QaFixtures} from "@/lib/supplier/track3-qa-fixtures.mjs";
 import FulfillmentQaWorkbench from "./workbench";
+import SamplePurchaseFlow from "./sample-purchase-flow";
+import {runEndToEndSamplePurchaseQa} from "@/lib/checkout/end-to-end-sample-purchase-qa.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={
@@ -18,6 +20,7 @@ export default async function Track3FulfillmentQA(){
  if(error||!isVerifiedPlatformAdmin(data.user))
   redirect("/admin/sign-in");
 
+ const sample=runEndToEndSamplePurchaseQa();
  const f=createTrack3QaFixtures();
  const m=f.manifest;
  return <main className="container supplier-shell apex-branded-dashboard"
@@ -28,6 +31,7 @@ export default async function Track3FulfillmentQA(){
   <p className="lead">Test order identity, cumulative review CSVs, stale edits,
    duplicate prevention and a protected email attachment manifest without
    using customer information, changing an order or purchasing postage.</p>
+  <SamplePurchaseFlow result={sample}/>
   <section className="supplier-panel" style={{maxWidth:"none"}}>
    <h2>Deterministic two-day acceptance scenario</h2>
    <div style={{display:"grid",gap:12,
