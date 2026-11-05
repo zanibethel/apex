@@ -37,7 +37,7 @@ test("server-only supplier page uses authenticated workspace and scoped RPC",()=
  assert.match(page,/headers=error\?null:/);
  assert.match(page,/dynamic="force-dynamic"/);
  assert.match(page,/index:false,follow:false/);
- assert.doesNotMatch(page,/createClient\(|service_role|supabaseAdmin|\bf etch\(/);
+ assert.doesNotMatch(page,/createClient\(|service_role|supabaseAdmin|\bfetch\(/);
 });
 
 test("never display individual purchased goods or delivery details in headers",()=>{
