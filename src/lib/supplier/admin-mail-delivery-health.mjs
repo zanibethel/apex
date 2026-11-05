@@ -12,8 +12,9 @@ const COUNT=[
  "complained","suppressed","alert_count"
 ];
 function iso(value){
- return typeof value==="string"&&Number.isFinite(Date.parse(value))&&
-  new Date(value).toISOString()===value;
+ return typeof value==="string"&&
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)$/.test(value)&&
+  Number.isFinite(Date.parse(value));
 }
 export function parseAdminSupplierMailHealth(value,requestedDays=7){
  if(!value||typeof value!=="object"||Array.isArray(value)||
