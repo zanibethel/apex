@@ -10,6 +10,12 @@
 - Nine saved categories, **zero published**; global public-release gate `false`; zero observed order and BTCPay invoice intents.
 - A saved image object is evidence of storage only, not a cleared public asset.
 
+## Admin evidence queue follow-up
+
+The protected admin **Image release readiness** page now supports a prioritized, private submission queue. Filters distinguish pending internal review, evidence awaiting checks, correction requests, and recorded evidence. Signed 90-second previews are created **only for the currently selected queue**, not every submitted image; the underlying review and evidence ledgers remain admin-RLS scoped.
+
+Recording identity and image-use rights references is still a *private evidence step*. It does **not** approve public image delivery, authorize a product or seller, or turn on checkout. An unchanged, approved internal content review and an exact matching image-submission record remain prerequisites. Any later public asset mapping needs a separate review and immutable revision/revocation contract.
+
 ## Delivered supplier workflow
 
 The authenticated supplier **Product Image Readiness** page:

@@ -6,6 +6,9 @@ import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {assessAdminMediaRelease} from "@/lib/catalog/admin-media-release-readiness.mjs";
 import {privateProductMediaPath} from "@/lib/catalog/private-media-readiness.mjs";
 import {privateMediaEvidenceStatus} from "@/lib/catalog/private-media-evidence.mjs";
+import {ADMIN_MEDIA_QUEUE_FILTERS,classifyAdminMediaEvidence,
+ filterAdminMediaEvidenceQueue,summarizeAdminMediaEvidenceQueue}
+ from "@/lib/catalog/admin-media-evidence-queue.mjs";
 import {MediaEvidenceForm} from "./form";
 import "./media-readiness.css";
 
@@ -18,9 +21,18 @@ type ReviewRecord={
  store_id:string;product_id:string;submission_id:string;
  status:string;snapshot:unknown;submitted_at:string;
 };
-type ImageReview={review:ReviewRecord;preview?:string;checks:ReturnType<typeof assessAdminMediaRelease>};
+type ImageReview={
+ review:ReviewRecord;preview?:string;
+ checks:ReturnType<typeof assessAdminMediaRelease>;
+ triage:ReturnType<typeof classifyAdminMediaEvidence>;
+};
 
-export default async function AdminMediaReadiness(){
+export default async function AdminMediaReadiness({searchParams}:{
+ searchParams:Promise<{queue?:string}>;
+}){
+ const {queue:rawQueue}=await searchParams;
+ const queue=typeof rawQueue==="string"&&ADMIN_MEDIA_QUEUE_FILTERS.includes(rawQueue)
+  ?rawQueue:"action";
  const client=await createSupplierServerClient();
  if(!client)redirect("/admin/sign-in");
  const {data:auth,error:authError}=await client.auth.getUser();
@@ -59,11 +71,22 @@ export default async function AdminMediaReadiness(){
   if(!latestEvidence.has(key))latestEvidence.set(key,item);
  }
 
- // Use only the existing admin-review snapshot, not unrestricted supplier
- // product reads (those are intentionally denied by Supabase RLS).
+ // Classify ONLY the authenticated private review records. Unsubmitted draft
+ // products cannot be inferred from this RLS-scoped queue.
+ const triaged=reviews.map(review=>({
+  review,triage:classifyAdminMediaEvidence(
+   review,latestEvidence.get(review.store_id+":"+review.product_id)??null),
+ }));
+ const queueSummary=summarizeAdminMediaEvidenceQueue(triaged);
+ const selected=filterAdminMediaEvidenceQueue(triaged,queue);
+ const selectedIds=new Set(selected.map(row=>row.review.store_id+":"+row.review.product_id));
+ const selectedReviews=reviews.filter(review=>selectedIds.has(
+  review.store_id+":"+review.product_id));
+ // Only sign images for the selected protected queue. Other private images
+ // remain in storage; there is no public image URL or storage grant.
  const reviewed:ImageReview[]=[];
- for(let start=0;start<reviews.length;start+=BATCH){
-  const segment=reviews.slice(start,start+BATCH);
+ for(let start=0;start<selectedReviews.length;start+=BATCH){
+  const segment=selectedReviews.slice(start,start+BATCH);
   const batch=await Promise.all(segment.map(async review=>{
    const snap=review.snapshot;
    const imagePath=snap&&typeof snap==="object"&&!Array.isArray(snap)&&
@@ -75,7 +98,10 @@ export default async function AdminMediaReadiness(){
     .createSignedUrl(valid.path,90):null;
    const preview=signed&&!signed.error?signed.data?.signedUrl:undefined;
    return {review,preview,
-    checks:assessAdminMediaRelease(review,Boolean(preview))};
+    checks:assessAdminMediaRelease(review,Boolean(preview)),
+    triage:classifyAdminMediaEvidence(
+     review,latestEvidence.get(review.store_id+":"+review.product_id)??null),
+   };
   }));
   reviewed.push(...batch);
  }
@@ -94,12 +120,29 @@ export default async function AdminMediaReadiness(){
    publishing rights, product eligibility, or current product revision.
    This page cannot change records, publish assets, or enable checkout.</p>
   <div className="apex-admin-media-summary" role="status">
-   <span><strong>{reviewed.length}</strong> submitted review records</span>
+   <span><strong>{reviews.length}</strong> submitted review records</span>
+   <span><strong>{queueSummary.action}</strong> admin items requiring attention</span>
    <span><strong>{privatePreviews}</strong> private images accessible</span>
    <span><strong>{approvedInternally}</strong> content approvals</span>
    <span><strong>{evidence.data?.length??0}</strong> private media evidence events</span>
   </div>
-  {reviewed.length===0?<section className="supplier-panel">
+  <nav className="apex-admin-media-filters" aria-label="Private media review queues">
+   {[
+    {id:"action",label:"Needs attention",count:queueSummary.action},
+    {id:"all",label:"All submissions",count:queueSummary.total},
+    {id:"pending",label:"Internal review",count:queueSummary.pending},
+    {id:"evidence",label:"Evidence needed",count:queueSummary.evidence},
+    {id:"corrections",label:"Corrections",count:queueSummary.corrections},
+    {id:"recorded",label:"Evidence recorded",count:queueSummary.recorded},
+   ].map(filter=><Link key={filter.id}
+    href={filter.id==="action"?"/admin/media-readiness":
+     "/admin/media-readiness?queue="+filter.id}
+    aria-current={queue===filter.id?"page":undefined}
+    className={"apex-admin-media-filter"+(queue===filter.id?" is-active":"")}>
+    {filter.label} <span>{filter.count}</span>
+   </Link>)}
+  </nav>
+  {reviews.length===0?<section className="supplier-panel">
    <h2>No submitted product reviews</h2>
    <p className="notice">Suppliers must first complete private product drafts,
     attach accurate images and submit their product content for review.</p>
@@ -107,8 +150,12 @@ export default async function AdminMediaReadiness(){
     Open product review queue
    </Link>
   </section>
+  :reviewed.length===0?<section className="supplier-panel" role="status">
+   <h2>No submissions in this queue</h2>
+   <p className="notice">Select All submissions or another private review filter.</p>
+  </section>
   :<div className="apex-admin-media-grid">
-   {reviewed.map(({review,preview,checks})=>{
+   {reviewed.map(({review,preview,checks,triage})=>{
     const s=review.snapshot&&typeof review.snapshot==="object"&&
      !Array.isArray(review.snapshot)
      ?review.snapshot as Record<string,unknown>:{};
@@ -130,6 +177,9 @@ export default async function AdminMediaReadiness(){
      <div className="apex-admin-media-body">
       <h2>{name}</h2>
       <p className="notice">SKU: {sku}</p>
+      <p className="apex-admin-media-next-step">
+       <strong>{triage.label}.</strong> Next: {triage.next}.
+      </p>
       <p className="notice">Internal content status: <strong>{review.status==="approved_internal"
        ?"Approved internally":review.status==="pending_review"?"Pending review":
        review.status==="changes_requested"?"Changes requested":"Unverified"}</strong></p>
