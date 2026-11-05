@@ -10,6 +10,7 @@ import {ADMIN_MEDIA_QUEUE_FILTERS,classifyAdminMediaEvidence,
  filterAdminMediaEvidenceQueue,summarizeAdminMediaEvidenceQueue}
  from "@/lib/catalog/admin-media-evidence-queue.mjs";
 import {MediaEvidenceForm} from "./form";
+import {IssueApprovedMediaVersion,RevokeMediaVersion} from "./media-version-form";
 import "./media-readiness.css";
 
 export const dynamic="force-dynamic";
@@ -118,7 +119,8 @@ export default async function AdminMediaReadiness({searchParams}:{
   <p className="notice"><strong>No public images are approved by this page.</strong>
    An uploaded picture or internal content approval is not proof of its identity,
    publishing rights, product eligibility, or current product revision.
-   This page cannot change records, publish assets, or enable checkout.</p>
+   This page cannot change supplier publication, release switches, or checkout.
+   Admin-reviewed media versions can be recorded only with current independent evidence.</p>
   <div className="apex-admin-media-summary" role="status">
    <span><strong>{reviews.length}</strong> submitted review records</span>
    <span><strong>{queueSummary.action}</strong> admin items requiring attention</span>
@@ -206,6 +208,12 @@ export default async function AdminMediaReadiness({searchParams}:{
       {validPath&&preview&&<MediaEvidenceForm storeId={review.store_id}
        productId={review.product_id} submissionId={review.submission_id}
        imagePath={validPath.path}/>}
+      {mediaEvidence.kind==="recorded"&&review.status==="approved_internal"&&
+       event?.id&&validPath&&preview&&
+       <IssueApprovedMediaVersion storeId={review.store_id} productId={review.product_id}
+        submissionId={review.submission_id} evidenceId={event.id}/>}
+      {review.status==="approved_internal"&&
+       <RevokeMediaVersion storeId={review.store_id} productId={review.product_id}/>}
       <p className="notice">Current product revision, image accuracy,
        copyright permission, seller/product authorization and immutable
        public hosting still require separate evidence and approval.</p>
@@ -221,8 +229,9 @@ export default async function AdminMediaReadiness({searchParams}:{
    <p className="notice">Obtain product-specific photographs or documented
     manufacturer images, confirm reuse rights, independently verify product
     identity and public-listing eligibility, and record an immutable media
-    version and revocation path. The current private image bucket must remain
-    private. Approved public delivery requires a separate reviewed workflow.</p>
+    version and revocation path. Source and approved-copy buckets remain private.
+    The current public-delivery gates must stay off until independent catalog
+    authorization and full supplier/product testing have passed.</p>
    <div className="actions">
     <Link href="/admin/product-reviews" className="button secondary">Private content reviews</Link>
     <Link href="/admin/listing-controls" className="button secondary">Listing holds</Link>
