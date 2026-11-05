@@ -210,6 +210,36 @@ revoke all on function public.apex_media_resolve_v1(uuid)
  from public,anon,authenticated;
 grant execute on function public.apex_media_resolve_v1(uuid) to service_role;
 
+-- Explicit administrative stop: permanently revoke the newest version even
+-- before public activation. No operator can un-revoke or restore the old UUID.
+create function public.apex_media_revoke_v1(
+ p_store uuid,p_product uuid,p_actor uuid,p_note text)
+returns jsonb language plpgsql volatile security definer
+ set search_path=pg_catalog as $fn$
+declare v_version uuid;
+begin
+ if p_actor is null or p_note is null or length(btrim(p_note))<10
+  or length(p_note)>1000
+  or not exists(select 1 from auth.users u where u.id=p_actor
+   and u.raw_app_meta_data->>'apex_role'='platform_admin'
+   and u.email_confirmed_at is not null)
+ then return null;end if;
+ select v.version_id into v_version
+ from apex_internal.public_media_asset_versions_v1 v
+ where v.store_id=p_store and v.product_id=p_product
+ order by v.recorded_at desc,v.version_id desc limit 1;
+ if v_version is null then return null;end if;
+ insert into apex_internal.public_media_asset_revocations_v1(
+  version_id,reason,recorded_by,automated,note)
+ values(v_version,'administrative_revocation',p_actor,false,btrim(p_note))
+ on conflict(version_id) do nothing;
+ return jsonb_build_object('version_id',v_version,'revoked',true);
+end $fn$;
+revoke all on function public.apex_media_revoke_v1(uuid,uuid,uuid,text)
+ from public,anon,authenticated;
+grant execute on function public.apex_media_revoke_v1(uuid,uuid,uuid,text)
+ to service_role;
+
 do $post$
 begin
  if (select enabled from apex_internal.private_release_gate where singleton)
