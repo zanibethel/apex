@@ -69,3 +69,19 @@ export function describeSupplierMailStatus(status){
  };
  return descriptions[status.state]??"Provider status unavailable.";
 }
+
+/**
+ * Only the existing Apex supplier DAILY report subject is eligible for
+ * this journal; owner weekly digests and other Resend projects are ignored.
+ * Call only AFTER verifying the signed raw provider payload.
+ */
+export function isSupplierDailyReportPayload(signedPayload){
+ if(typeof signedPayload!=="string"||signedPayload.length>65536)
+  return false;
+ try{
+  const event=JSON.parse(signedPayload);
+  const subject=event?.data?.subject;
+  return typeof subject==="string"&&
+   /^Apex daily order report — \d{4}-\d{2}-\d{2}$/.test(subject);
+ }catch{return false;}
+}
