@@ -31,3 +31,11 @@
 .apex-approved-pagination span{font-size:12px;color:#d8c7d2}
 
 .apex-approved-badge.apex-approved-instock{background:#315a46;color:#f1fff7}
+
+.apex-approved-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(145px,1fr);gap:12px;align-items:end;margin:0 0 22px}
+.apex-approved-filters label{display:grid;gap:8px;min-width:0;font-size:12px;font-weight:750;color:#eee1eb}
+.apex-approved-filters input,.apex-approved-filters select{min-width:0;width:100%;min-height:44px;padding:11px;background:#16121a;border:1px solid #72576a;border-radius:9px;color:#fff;font:inherit}
+.apex-approved-filters input:focus-visible,.apex-approved-filters select:focus-visible{outline:2px solid #ff8db3;outline-offset:2px}
+.apex-approved-filters p,.apex-approved-page-note{grid-column:1/-1;color:#c7b6c5;font-size:11px;line-height:1.5;margin:0}
+.apex-approved-page-note{text-align:center;margin:18px 0 0}
+@media(max-width:520px){.apex-approved-filters{grid-template-columns:minmax(0,1fr)}}
