@@ -314,3 +314,7 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/held-shipment-plan-ledger.sql
       - name: Verify two-session shipment plan capacity, replay, and stale conflicts
         run: bash tests/payout-rls/held-shipment-plan-concurrency.sh
+      - name: Install read-only eligible order readiness contract (disposable)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106235000_apex_eligible_order_readiness_v1.sql
+      - name: Verify denied eligibility, supplier isolation, and absent shipment capabilities
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/eligible-order-readiness-v1.sql
