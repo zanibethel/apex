@@ -62,7 +62,7 @@ export default async function SupplierProductsPage(){
   sourceResult.data?.some(r=>r.store_id!==store.id))
   return <main className="container supplier-shell">
    <h1>Product list temporarily unavailable</h1>
-   <p>The supplier's complete private catalog could not be verified. No data was changed.</p>
+   <p>The supplier&apos;s complete private catalog could not be verified. No data was changed.</p>
    <Link href="/supplier">Supplier home</Link>
   </main>;
  const sheet=buildSupplierSheetCards(sourceResult.data,eventResult.data);
