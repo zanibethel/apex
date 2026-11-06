@@ -56,7 +56,8 @@ export default async function BulkProductWorkspace({searchParams}:{
  const proposedCards: IntakeCard[]|null=!intakeError&&intakeCount!==null&&
   intakeCount<=INTAKE_MAX_ROWS&&intakeCount===intakeRows?.length
   ?supplierIntakeCards(intakeRows) as IntakeCard[]|null:null;
- const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:sources,error:sourceError,count:sourceCount},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError},{data:reviewRows,error:reviewError,count:reviewCount},{data:imageFeedback,error:feedbackError,count:feedbackCount}]=await Promise.all([
+ const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:sources,error:sourceError,count:sourceCount},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError},{data:reviewRows,error:reviewError,count:reviewCount},{data:imageFeedback,error:feedbackError,count:feedbackCount},
+  {data:stockPreferences,error:stockPrefError,count:stockPrefCount}]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
@@ -77,8 +78,14 @@ export default async function BulkProductWorkspace({searchParams}:{
    .select("store_id,product_id,submission_id,image_path,outcome,supplier_note,created_at,evidence_event_id",{count:"exact"})
    .eq("store_id",store.id).order("created_at",{ascending:false})
    .order("evidence_event_id",{ascending:false}).limit(1000),
+  client.from("supplier_private_stock_preferences")
+   .select("product_id,track_quantities",{count:"exact"})
+   .eq("store_id",store.id).limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
  ]);
- if(productError||categoryError||linkedError||inventoryError)return <main className="container supplier-shell">
+ if(productError||categoryError||linkedError||inventoryError||stockPrefError||
+  stockPrefCount===null||stockPrefCount!==stockPreferences?.length||
+  stockPrefCount>SUPPLIER_BULK_PRODUCT_QUERY_LIMIT)
+  return <main className="container supplier-shell">
   <h1>Private catalog temporarily unavailable.</h1>
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
@@ -103,10 +110,12 @@ export default async function BulkProductWorkspace({searchParams}:{
   productId:p.id,name:p.name,sku:p.sku,previewUrl:signedImages.get(p.id)!,
  }));
  const quantities=new Map((inventory??[]).map(i=>[i.product_id,i]));
+ const trackByProduct=new Map((stockPreferences??[]).map(p=>[p.product_id,p.track_quantities]));
  const media=(products??[]).map(p=>({
   productId:p.id,imageUrl:signedImages.get(p.id),
   quantityOnHand:quantities.get(p.id)?.quantity_on_hand,
   quantityReserved:quantities.get(p.id)?.quantity_reserved,
+  trackQuantities:trackByProduct.get(p.id)??true,
  }));
  const listingByProduct=new Map((listingControls??[]).map(c=>[c.product_id,c]));
  const mediaFeedbackAvailable=!reviewError&&!feedbackError&&
@@ -159,7 +168,8 @@ export default async function BulkProductWorkspace({searchParams}:{
    correctionsPending:!eventsError&&awaitingAdministratorCorrectionReview(eventsByProduct.get(p.id)),
    visibilityKind:visibility.kind,visibilityLabel:visibility.label,
    visibilityDescription:visibility.description,
-   stockKind:stock.kind,stockLabel:stock.label,
+   stockKind:trackByProduct.get(p.id)===false?"untracked":stock.kind,
+   stockLabel:trackByProduct.get(p.id)===false?"Quantity not tracked":stock.label,
    imageStatusKind:mediaStatus.kind,imageStatusLabel:mediaStatus.label,
    imageStatusMessage:mediaStatus.message,imageNeedsAction:mediaStatus.needsAction,
    hasImage:Boolean(p.image_path),
@@ -204,7 +214,7 @@ export default async function BulkProductWorkspace({searchParams}:{
    <a className="button secondary" href="#apex-csv-tools">CSV import</a>
    <a className="button secondary" href="#supplier-extra-tools">More tools</a>
   </nav>
-  <p className="notice">Imported supplier items are review proposals, not saved product IDs. Verify the match before creating duplicates or changing saved product data. Publishing still respects applicable release requirements and admin holds.</p>
+  <p className="notice">Imported supplier items are review proposals, not saved product IDs. Verify the match before creating duplicates or changing saved product data. The per-product Track inventory option affects private quantity entry only; public availability and authorization checks still apply.</p>
   <details className="apex-bulk-advanced apex-supplier-extra-tools" id="supplier-extra-tools">
    <summary>Optional supplier tools <span>Source imports, shared images, shipping and media checks</span></summary>
    <p className="notice">Only needed for specific maintenance tasks.</p>
