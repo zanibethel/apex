@@ -89,6 +89,9 @@ test("UI is an admin synthetic preview and has no order or cart activation",()=>
  assert.match(ui,/type="button" disabled/);
  assert.doesNotMatch(ui,/SaveCatalogItem|createInvoice|createOrder|useCustomerCart|localStorage|fetch\(/);
  assert.match(qa,/isVerifiedPlatformAdmin/);
- assert.match(qa,/<ProductOptions variants=\{sampleOptions\}\/>/);
+ assert.match(qa,/<CompactVariantCard name="Sample Product A"/);
+ assert.match(qa,/<CompactVariantCard name="Sample Product B"/);
+ assert.match(qa,/variants=\{sampleOptions\}/);
+ assert.match(qa,/variants=\{singleSampleOption\}/);
  assert.match(qa,/Private demo with invented sample amounts/);
 });
