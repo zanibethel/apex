@@ -67,6 +67,17 @@ export default async function SupplierWorkspace() {
       <form action={signOutSupplier}><button className="button secondary" type="submit">Sign out</button></form>
     </div>
 
+    <section className="supplier-panel" aria-label="Manage your products">
+      <p className="eyebrow">PRODUCTS</p>
+      <h2>All your products in one place</h2>
+      <p>Find a product, adjust its details, photo or price, review its options,
+       and manage its private listing preference. No need to navigate through
+       technical tools for routine edits.</p>
+      <div className="actions">
+       <Link className="button primary" href="/supplier/products">Manage products</Link>
+       <Link className="button secondary" href="/supplier/reports">Orders &amp; reports</Link>
+      </div>
+    </section>
     <section className="supplier-panel" aria-label="Your shared storefront">
       <h2>Your storefront</h2>
       {storeError ? <p>Storefront information is temporarily unavailable.</p> :
@@ -82,7 +93,9 @@ export default async function SupplierWorkspace() {
       <p className="notice">Every authorized member of this supplier workspace shares the same underlying store and catalog. No separate storefront is created per user.</p>
     </section>
 
-    {storeIds.length > 0 && <section aria-label="Read-only storefront metrics" style={{ marginTop: 24 }}>
+    {storeIds.length > 0 && <details className="supplier-panel" style={{ marginTop: 18 }}>
+      <summary style={{cursor:"pointer"}}>Store metrics</summary>
+      <section aria-label="Read-only storefront metrics" style={{ marginTop: 14 }}>
       <div className="feature-grid">
         {metrics.map(metric => <article className="feature-card" key={metric.label}>
           <p className="eyebrow">{metric.label}</p>
@@ -90,13 +103,16 @@ export default async function SupplierWorkspace() {
           <Link className="button secondary" href={metric.href}>Manage / review</Link>
         </article>)}
       </div>
-    </section>}
+      </section>
+    </details>}
 
     <section className="supplier-panel" style={{ marginTop: 24 }}>
-      <h2>Store operations</h2>
-      <p className="notice">Imported source variants are kept separate from drafted products and actual stock. No unverified source cost is treated as a retail price.</p>
-      <p>Manage products, availability, and account settings from your workspace. Checkout and live payment processing are not available yet.</p>
-      <div className="actions"><Link href="/supplier/catalog" className="button primary">Products</Link><Link href="/supplier/catalog/bulk" className="button secondary">Bulk product manager</Link><Link href="/supplier/catalog/media-readiness" className="button secondary">Image readiness</Link><Link href="/supplier/discounts" className="button secondary">Discount codes</Link><Link href="/supplier/shipping" className="button secondary">Shipping &amp; envelope limit</Link><Link href="/supplier/imports" className="button secondary">Supplier import review</Link><Link href="/supplier/inventory" className="button secondary">Inventory</Link><Link href="/supplier/reports" className="button secondary">Sales history</Link><Link href="/supplier/reports/daily" className="button secondary">Daily order report (by 8 AM CT)</Link><Link href="/supplier/reports/reconcile" className="button secondary">Sales reconciliation CSV</Link><Link href="/supplier/usps" className="button secondary">USPS fulfillment</Link><Link href="/supplier/wallets" className="button secondary">Bitcoin wallets</Link><Link href="/account/profile" className="button secondary">My profile and password</Link></div>
+      <h2>Other tools</h2>
+      <p>Use these only when you need inventory, shipping, reporting or advanced catalog operations.</p>
+      <details>
+       <summary style={{cursor:"pointer"}}>More tools and settings</summary>
+      <div className="actions"><Link href="/supplier/catalog" className="button secondary">Legacy product manager</Link><Link href="/supplier/catalog/bulk" className="button secondary">Bulk product manager</Link><Link href="/supplier/catalog/media-readiness" className="button secondary">Image readiness</Link><Link href="/supplier/discounts" className="button secondary">Discount codes</Link><Link href="/supplier/shipping" className="button secondary">Shipping &amp; envelope limit</Link><Link href="/supplier/imports" className="button secondary">Supplier import review</Link><Link href="/supplier/inventory" className="button secondary">Inventory</Link><Link href="/supplier/reports" className="button secondary">Sales history</Link><Link href="/supplier/reports/daily" className="button secondary">Daily order report (by 8 AM CT)</Link><Link href="/supplier/reports/reconcile" className="button secondary">Sales reconciliation CSV</Link><Link href="/supplier/usps" className="button secondary">USPS fulfillment</Link><Link href="/supplier/wallets" className="button secondary">Bitcoin wallets</Link><Link href="/account/profile" className="button secondary">My profile and password</Link></div>
+      </details>
     </section>
   </main>;
 }
