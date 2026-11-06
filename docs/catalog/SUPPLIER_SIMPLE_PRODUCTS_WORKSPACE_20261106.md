@@ -36,3 +36,15 @@ Updated: 2026-11-06. PR #293.
 ## Remaining work
 
 The next integration step is a controlled reconciliation of the 76 source parents to existing saved product IDs (5 exact normalized name overlaps out of 76 are only candidates, not approved matches), and a versioned authoritative variant-storage/editor model. Until that is completed, supplier intake can be reviewed but cannot be edited as ordinary saved products. Keep this distinction clear.
+
+## Conservative saved-product matching (November 6 follow-up)
+
+The private Products page now compares each staged parent name with the saved product's base name (the portion before an existing spaced em-dash/en-dash strength suffix). Case, whitespace and punctuation differences are normalized **for suggestions only**. It never auto-associates, edits, imports, updates retail prices or enables publishing. An ambiguous normalized parent collision or incomplete data fails closed.
+
+The authenticated server only sends saved products from the same private supplier storefront, and each suggested **Edit saved** link targets that saved product's existing pencil editor. The editor opens on the same `/supplier/catalog/bulk` page, with the product ID rechecked against the current authorized product read before opening. A user cannot pass another store's ID in the query.
+
+Initial live **read-only** comparison of the 76 staged parent groups and 63 saved records produced **6 parents with candidate saved records**, involving **8 existing product records**: BPC-157 (2), GLOW (1), HCG (1), IGF1-LR3 (1), NAD+ (2), TB-500 (1). The other **70 parent groups** have no conservative base-name match. None of those 70 is assumed new, and none is auto-created.
+
+The suppliers can filter intake by **Possible saved matches**, **No saved match**, or **Needs clarification**, review staged variant data, and open existing saved products without switching to a separate source-review tool. These matches **are not confirmed variant identity links**. Compare names, formula, concentration and packaging before editing any suggested saved item; existing saved prices and supplier-proposed retail prices remain separate.
+
+Next contract: a versioned, authoritative parent-to-variant identity reconciliation with a supplier-reviewable match decision and duplicate-safe migration. Keep all 11 held variants blocked and require legal/authorization evidence independently before any public release or purchasability.

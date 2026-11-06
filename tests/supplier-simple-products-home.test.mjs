@@ -58,7 +58,7 @@ test("supplier import remains isolated from authorized saved-product updates",()
  const bulk=file("src/app/supplier/catalog/bulk/page.tsx");
  const intake=file("src/app/supplier/catalog/supplier-intake-cards.tsx");
  assert.match(bulk,/supplierIntakeCards\(intakeRows\)/);
- assert.match(intake,/Review options/);
+ assert.match(intake,/Review source details/);
  assert.match(intake,/Existing product edits, inventory and image management stay in/);
  assert.doesNotMatch(intake,/createOrder|createInvoice|set_supplier_listing_intent|saveBulkProductDrafts|service_role|fetch\(/);
  const review=file("src/app/supplier/catalog/variant-review/page.tsx");

@@ -8,21 +8,33 @@ import type {CardVariant} from "@/components/catalog/compact-variant-card";
 export type IntakeCard={
  name:string;section:string;sourceRow:number;anchor:string;
  options:CardVariant[];compositionByVariantId:Record<string,string>;held:number;
+ savedMatches:{id:string;name:string;sku:string;priceCents:number|null}[];
 };
 
 export function SupplierIntakeCards({cards}:{cards:IntakeCard[]}){
  const [query,setQuery]=useState("");
  const [show,setShow]=useState("all");
  const visible=useMemo(()=>cards.filter(card=>{
-  const text=(card.name+" "+card.section).toLowerCase();
+  const text=(card.name+" "+card.section+" "+
+   card.savedMatches.map(p=>p.name+" "+p.sku).join(" ")).toLowerCase();
   return text.includes(query.trim().toLowerCase())&&
-   (show!=="held"||card.held>0);
+   (show==="all"||show==="held"&&card.held>0||
+    show==="possible"&&card.savedMatches.length>0||
+    show==="unmatched"&&card.savedMatches.length===0);
  }),[cards,query,show]);
  const held=cards.filter(c=>c.held>0).length;
+ const matched=cards.filter(c=>c.savedMatches.length>0).length;
+ const unmatched=cards.length-matched;
+ const matchedRecords=cards.reduce((n,c)=>n+c.savedMatches.length,0);
  return <section className="apex-supplier-intake" aria-label="Imported supplier product options">
-  <p className="notice">These are the supplier&apos;s original proposed product options,
-   grouped into one card each. They are not duplicates of saved products:
-   match them to existing product identities before making edits or adding stock.</p>
+  <p className="notice">Imported variants are grouped under one proposed parent.
+   Potential saved-product matches appear directly on each card; check the
+   strength and packaging before using an existing record. No matching or
+   product data is changed by this screen.</p>
+  <p className="notice" role="status">
+   {cards.length} proposed products · {matched} with possible saved matches
+   ({matchedRecords} existing records) · {unmatched} without a conservative match.
+  </p>
   <div className="apex-bulk-filterbar">
    <label htmlFor="apex-intake-search">Find imported product
     <input id="apex-intake-search" type="search" value={query}
@@ -33,6 +45,8 @@ export function SupplierIntakeCards({cards}:{cards:IntakeCard[]}){
     <select id="apex-intake-filter" value={show}
      onChange={e=>setShow(e.target.value)}>
      <option value="all">All imported products ({cards.length})</option>
+     <option value="possible">Possible saved matches ({matched})</option>
+     <option value="unmatched">No saved match ({unmatched})</option>
      <option value="held">Needs clarification ({held})</option>
     </select>
    </label>
@@ -52,9 +66,29 @@ export function SupplierIntakeCards({cards}:{cards:IntakeCard[]}){
      </article>}
     <div className="apex-supplier-intake-actions">
      {card.held>0&&<p className="notice">{card.held} option(s) held for clarification.</p>}
+     {card.savedMatches.length>0?
+      <div className="apex-supplier-match-suggestions">
+       <strong>Possible existing product {card.savedMatches.length===1?"match":"matches"}</strong>
+       {card.savedMatches.map(saved=><div key={saved.id} className="apex-supplier-saved-match">
+        <span title={saved.sku}>{saved.name}
+         {saved.priceCents!==null&&
+          <small>{" · Saved "+new Intl.NumberFormat("en-US",{
+           style:"currency",currency:"USD",
+          }).format(saved.priceCents/100)}</small>}
+        </span>
+        <Link className="button secondary"
+         href={"/supplier/catalog/bulk?edit="+encodeURIComponent(saved.id)+"#saved-"+saved.id}>
+         Edit saved
+        </Link>
+       </div>)}
+       <p className="notice">Name-based suggestion only. Verify identity,
+        formula, strength and pack size before making changes.</p>
+      </div>:
+      <p className="notice">No reliable saved name match yet. Keep this
+       source card separate until its identity is confirmed.</p>}
      <Link className="button secondary"
       href={"/supplier/catalog/variant-review#"+card.anchor}>
-      Review options
+      Review source details
      </Link>
     </div>
    </div>)}
@@ -62,6 +96,6 @@ export function SupplierIntakeCards({cards}:{cards:IntakeCard[]}){
   {!visible.length&&<p role="status" className="notice">No matching imported products.</p>}
   <p className="notice">Reviewing the source does not create or publish a saved
    product. Existing product edits, inventory and image management stay in
-   Saved products above.</p>
+   Saved products above. Any match is a suggestion, not a verified link.</p>
  </section>;
 }
