@@ -66,7 +66,7 @@ test("candidate links go to private saved-product editing and never publish or a
  assert.match(page,/initialEditProductId=\{initialEditProductId\}/);
  assert.match(intake,/Possible existing product/);
  assert.match(intake,/savedMatches\.map/);
- assert.match(intake,/saved\.id\)+"#saved-"\+saved\.id/);
+ assert.match(intake,/encodeURIComponent\(saved\.id\)\+"#saved-"\+saved\.id/);
  assert.match(intake,/Edit saved/);
  assert.match(intake,/No reliable saved name match yet/);
  assert.match(editor,/id=\{r\.id\?"saved-"\+r\.id:undefined\}/);
