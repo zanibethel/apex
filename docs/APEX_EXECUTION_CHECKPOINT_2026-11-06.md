@@ -95,3 +95,25 @@ with synthetic negative fixtures and production-gate verification.
 See `docs/supplier/ELIGIBLE_ORDER_READ_CONTRACT_V1.md`.
 PR status, CI, preview and hosted migration must be rechecked; branch work
 does not imply that any of it has reached production.
+
+## Track 2 evidence reconciliation v1 — November 6, 2026 follow-on
+
+**Branch:** feat/apex-track2-evidence-reconciliation-v1.
+
+The next bounded Track 2 slice provides a **pure, read-only diagnostic**
+reconciliation of immutable order IDs, complete purchase lines, matching
+provider invoice observations, replay/revocation histories, per-line
+merchandise/transport review and a sealed delivery reference.
+
+The helper is not an external BTCPay webhook verifier, legal eligibility
+authority or release decision. Even internally consistent synthetic evidence
+returns **reconciled_unverified** with all checkout, shipping, tracking,
+postage and protected-address permissions false. There is no new database
+migration or production payment connection in this slice; supplier orders
+remain held. See docs/payments/ORDER_EVIDENCE_RECONCILIATION_V1.md.
+
+**Still required:** independently authenticated provider evidence ingestion
+and settlement/reversal reconciliation; legally valid supplier/product/carrier
+authorization sources and revocation handling; authorized address access;
+new supplier-scoped eligible-order projection and negative RLS tests.
+PR, CI, preview and any release outcomes must be independently verified.
