@@ -80,6 +80,11 @@ test("duplicate SKU across variants and existing SKU collision fail closed",()=>
   const collision=review([candidate({size:"20 mL",sku:"SAMPLE-MCT-100"})],[snapshot()]);
   assert.equal(collision.rows.length,0);
   assert.equal(collision.blockers[0].reason,"sku_option_identity_conflict");
+  const duplicateExistingSku=review([candidate()],[snapshot(),snapshot({
+    id:"dddddddd-dddd-4ddd-8ddd-dddddddddddd",carrierOil:"GSO",
+  })]);
+  assert.equal(duplicateExistingSku.rows.length,0);
+  assert.equal(duplicateExistingSku.blockers[0].reason,"duplicate_sku_or_existing_option");
 });
 
 test("ambiguous prices, unresolved options, spreadsheet formulas and manual exceptions block",()=>{
