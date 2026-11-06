@@ -145,6 +145,7 @@ export default async function DailySupplierReport({
    shipping expenses are tracked separately when label purchasing is authorized.
   </p>
   <div className="actions">
+   <Link className="button primary" href="/supplier/orders">Orders &amp; Fulfillment</Link>
    <Link className="button secondary" href="/supplier/usps">USPS fulfillment</Link>
    <Link className="button secondary" href="/supplier/reports">Sales history</Link>
    <Link className="button secondary" href="/supplier/reports/reconcile">Download / upload sales review CSV</Link>

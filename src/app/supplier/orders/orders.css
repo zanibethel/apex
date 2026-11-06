@@ -1,0 +1,107 @@
+.apex-supplier-orders{max-width:1150px;min-width:0}
+.apex-supplier-orders .lead{max-width:790px}
+.apex-orders-primary-links{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:9px;margin:18px 0 14px
+}
+.apex-orders-primary-links .button{
+ display:flex;align-items:center;justify-content:center;
+ text-align:center;white-space:normal;overflow-wrap:anywhere;
+ padding:10px 8px;min-height:45px;min-width:0
+}
+.apex-orders-warning{
+ padding:12px 14px;margin:16px 0 23px;
+ border-left:3px solid #b98362;background:#241d21;
+ color:#e8d4c8;font-size:13px;line-height:1.55
+}
+.apex-orders-store{
+ background:#1b1821;border-radius:14px;min-width:0;
+ padding:18px;margin:20px 0
+}
+.apex-orders-store-heading{
+ display:flex;align-items:center;justify-content:space-between;
+ flex-wrap:wrap;gap:12px
+}
+.apex-orders-store-heading h2{margin:0;font-size:21px}
+.apex-orders-held-chip{
+ display:inline-flex;align-items:center;border-radius:999px;
+ font-size:11px;font-weight:700;color:#eac9c1;
+ background:#39252b;padding:6px 9px;line-height:1.3
+}
+.apex-orders-metrics{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:9px;margin:18px 0
+}
+.apex-orders-metrics>div{
+ display:grid;gap:7px;min-width:0;padding:13px;
+ border-radius:10px;background:#27212c
+}
+.apex-orders-metrics span{
+ font-size:11px;color:#c4b2bf;
+ overflow-wrap:anywhere
+}
+.apex-orders-metrics strong{
+ font-size:23px;font-variant-numeric:tabular-nums;
+ overflow-wrap:anywhere;line-height:1.25
+}
+.apex-orders-metrics .apex-orders-usps-state{font-size:13px}
+.apex-orders-subheader{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:12px;flex-wrap:wrap;margin:22px 0 12px
+}
+.apex-orders-subheader h3{font-size:17px;margin:0 0 6px}
+.apex-orders-subheader .notice{margin:0;max-width:640px}
+.apex-orders-subheader .button{min-height:42px;white-space:normal}
+.apex-orders-empty{
+ padding:14px;border-radius:9px;background:#29222d;
+ font-size:13px
+}
+.apex-orders-record-list{display:grid;gap:8px;min-width:0}
+.apex-orders-record{
+ min-width:0;padding:13px;border-radius:10px;
+ background:#28222c
+}
+.apex-orders-reference{
+ display:flex;align-items:center;justify-content:space-between;
+ flex-wrap:wrap;gap:8px
+}
+.apex-orders-reference>strong{overflow-wrap:anywhere;font-size:13px}
+.apex-orders-record-data{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:10px;margin-top:11px
+}
+.apex-orders-record-data p{
+ min-width:0;display:grid;gap:5px;margin:0;
+ line-height:1.35
+}
+.apex-orders-record-data p span{font-size:11px;color:#bcb2c0}
+.apex-orders-record-data p strong{font-size:12px;overflow-wrap:anywhere}
+.apex-orders-next{
+ padding:18px;margin:22px 0;background:#1c1921;
+ border-radius:13px
+}
+.apex-orders-next h2{margin:0 0 13px;font-size:19px}
+.apex-orders-next-grid{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px
+}
+.apex-orders-next-grid>div{
+ background:#29212b;padding:14px;border-radius:10px;min-width:0
+}
+.apex-orders-next-grid strong{font-size:13px}
+.apex-orders-next-grid p{
+ font-size:12px;color:#c6b9c7;line-height:1.55;margin:9px 0 0
+}
+@media(max-width:800px){
+ .apex-orders-primary-links,.apex-orders-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .apex-orders-record-data,.apex-orders-next-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:480px){
+ .apex-orders-store,.apex-orders-next{padding:12px}
+ .apex-orders-metrics>div{padding:10px}
+ .apex-orders-metrics strong{font-size:20px}
+ .apex-orders-record-data{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .apex-orders-next-grid{grid-template-columns:minmax(0,1fr)}
+ .apex-orders-subheader .button{width:100%;text-align:center}
+ .apex-orders-record{padding:11px}
+ .apex-orders-primary-links .button{font-size:12px}
+}
