@@ -72,9 +72,10 @@ export function buildSupplierSheetCards(rows,events=[]){
 }
 export function productWorkspaceStatus(row){
  if(!row||typeof row!=="object")return "draft";
- if(row.adminGate==="hold")return "held";
+ if(["hold","review_required"].includes(row.adminGate))return "held";
+ if(row.published===true)return "published";
  if(row.requested===true)return "requested";
- return row.published===true?"published":"draft";
+ return "draft";
 }
 export function filterProductWorkspace(rows,query="",filter="all",kind="sheet"){
  const term=String(query).trim().toLocaleLowerCase();
@@ -85,6 +86,7 @@ export function filterProductWorkspace(rows,query="",filter="all",kind="sheet"){
   if(term&&![
    row.name,row.section,row.sku,
    ...(row.options??[]).map(v=>[v.strength,v.size,v.carrierOil].join(" ")),
+   ...Object.values(row.compositionByVariantId??{}),
   ].some(value=>String(value??"").toLocaleLowerCase().includes(term)))return false;
   if(state==="all")return true;
   if(type==="sheet"){
