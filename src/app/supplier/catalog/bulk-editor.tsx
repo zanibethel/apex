@@ -654,11 +654,13 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
      </div>
      <div id={"bulk-fix-"+r.key+"-media"} className="apex-bulk-media-target" tabIndex={-1} aria-label="Private product image and stock tools">
      {r.id&&!r.needsSave
-      ?<BulkCardMedia key={r.id+":"+String(savedMedia.get(r.id)?.quantityOnHand??"missing")} storeId={storeId} productId={r.id}
+      ?<BulkCardMedia key={r.id+":"+String(savedMedia.get(r.id)?.quantityOnHand??"missing")+":"+String(savedMedia.get(r.id)?.trackQuantities??true)}
+         storeId={storeId} productId={r.id}
          enabled={editable&&!busy}
          imageUrl={savedMedia.get(r.id)?.imageUrl}
          quantityOnHand={savedMedia.get(r.id)?.quantityOnHand}
          quantityReserved={savedMedia.get(r.id)?.quantityReserved}
+         trackQuantities={savedMedia.get(r.id)?.trackQuantities??true}
          existingImages={existingImages}/>
       :<p className="apex-bulk-media-locked">
          {r.id?"Save product edits to unlock image and stock tools.":"Save this draft to upload or reuse an image and set stock."}
