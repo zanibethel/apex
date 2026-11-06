@@ -166,6 +166,56 @@ export async function adjustInventory(_previous: Result, form: FormData): Promis
   return {ok:true,message:"Inventory saved and recorded in audit history. Storefront availability will reflect current verified release status."};
 }
 
+// This preference only controls the private supplier quantity editor. It
+// never changes inventory, reservations, release eligibility or checkout.
+export async function setPrivateStockPreference(_previous:Result,form:FormData):Promise<Result>{
+ if(process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED!=="true")return denied;
+ const store=await authorizedStore(form);
+ if(!store)return denied;
+ const productId=form.get("productId");
+ const expected=form.get("expectedTracking");
+ const choice=form.get("trackQuantities");
+ if(typeof productId!=="string"||!uuid.test(productId)||
+  (expected!=="true"&&expected!=="false")||
+  (choice!=="true"&&choice!=="false")||expected===choice)
+  return {ok:false,message:"Choose a different quantity-tracking preference."};
+
+ const {data:product,error:productError}=await store.client.from("products")
+  .select("id").eq("id",productId).eq("store_id",store.storeId)
+  .eq("is_published",false).maybeSingle();
+ if(productError||!product)
+  return {ok:false,message:"Only a saved private product can change this setting."};
+
+ const {data:previous,error:readError}=await store.client
+  .from("supplier_private_stock_preferences")
+  .select("track_quantities").eq("store_id",store.storeId)
+  .eq("product_id",productId).maybeSingle();
+ if(readError)return {ok:false,message:"Quantity tracking status unavailable. Refresh and retry."};
+ const current=previous?.track_quantities??true;
+ if(current!==(expected==="true"))
+  return {ok:false,message:"Setting changed since you opened this product. Refresh and retry."};
+
+ const target=choice==="true";
+ if(!previous&&target)return {ok:false,message:"Quantity tracking is already enabled."};
+ if(!previous){
+  const {error}=await store.client.from("supplier_private_stock_preferences")
+   .insert({store_id:store.storeId,product_id:productId,track_quantities:false});
+  if(error)return {ok:false,message:"Could not save the preference. Refresh and retry."};
+ }else{
+  const {data,error}=await store.client.from("supplier_private_stock_preferences")
+   .update({track_quantities:target})
+   .eq("store_id",store.storeId).eq("product_id",productId)
+   .eq("track_quantities",current).select("product_id").maybeSingle();
+  if(error||!data)
+   return {ok:false,message:"Preference changed during saving. Refresh and retry."};
+ }
+ revalidatePath("/supplier/catalog/bulk");
+ revalidatePath("/supplier/inventory");
+ return {ok:true,message:target
+  ?"Private stock-count tracking enabled. Existing inventory counts were preserved."
+  :"Private stock-count tracking disabled. Public availability still requires verified inventory and authorization."};
+}
+
 export async function requestWalletDestination(_previous: Result, form: FormData): Promise<Result> {
   if (process.env.APEX_WALLET_REQUESTS_ENABLED !== "true") return denied;
   const store=await authorizedStore(form);
