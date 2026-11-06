@@ -139,3 +139,51 @@
   width:100%;
  }
 }
+
+
+/* Immutable supplier purchase-line review; no operational shipment actions. */
+.apex-supplier-orders .apex-orders-line-review{
+ margin:22px 0;min-width:0;padding:16px;border-radius:12px;
+ background:#211c26
+}
+.apex-supplier-orders .apex-orders-line-review h3{margin:0 0 7px;font-size:19px}
+.apex-supplier-orders .apex-orders-line-list{display:grid;gap:12px;margin:16px 0}
+.apex-supplier-orders .apex-orders-line{
+ padding:14px;min-width:0;border-radius:10px;background:#2b2430
+}
+.apex-supplier-orders .apex-orders-line-metadata{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:12px;margin:14px 0
+}
+.apex-supplier-orders .apex-orders-line-metadata>div{min-width:0}
+.apex-supplier-orders .apex-orders-line-metadata dt{
+ color:#bcafbd;font-size:11px;line-height:1.4
+}
+.apex-supplier-orders .apex-orders-line-metadata dd{
+ margin:5px 0 0;font-size:13px;font-weight:600;
+ overflow-wrap:anywhere;line-height:1.4
+}
+.apex-supplier-orders .apex-orders-line label{
+ display:block;font-size:12px;font-weight:650;
+ line-height:1.5;margin:10px 0 7px
+}
+.apex-supplier-orders .apex-orders-line input[type="number"]{
+ display:block;max-width:135px;width:100%;min-height:40px;
+ border-radius:7px;padding:8px;border:1px solid #786071;
+ background:#17131d;color:#f5e6ef;font-size:15px
+}
+.apex-supplier-orders .apex-orders-line small{
+ display:block;margin-top:7px;color:#c6b5c2;
+ font-size:11px;line-height:1.45
+}
+.apex-supplier-orders .apex-orders-preview-summary{
+ border-radius:9px;background:#342837;padding:12px;
+ font-size:13px;line-height:1.5
+}
+@media(max-width:600px){
+ .apex-supplier-orders .apex-orders-line-review{padding:12px}
+ .apex-supplier-orders .apex-orders-line{padding:11px}
+ .apex-supplier-orders .apex-orders-line-metadata{
+  grid-template-columns:repeat(2,minmax(0,1fr))
+ }
+}

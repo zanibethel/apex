@@ -5,6 +5,8 @@ import {
  isSupplierOrderId,parseSupplierHeldOrderRecord,
 } from "@/lib/supplier/held-order-record.mjs";
 import {recordedOrderObservation} from "@/lib/supplier/supplier-order-operations.mjs";
+import {parseSupplierHeldOrderLines} from "@/lib/supplier/held-order-line-review.mjs";
+import {HeldOrderLineReview} from "./held-order-line-review";
 import "../orders.css";
 
 export const dynamic="force-dynamic";
@@ -37,12 +39,22 @@ export default async function SupplierHeldOrderDetail({
   }):null;
  const order=store&&response&&!response.error?
   parseSupplierHeldOrderRecord(response.data,store.id,orderId):null;
+ // Only query immutable purchase-time lines after the original order record
+ // and its assigned supplier identity have both been verified.
+ const lineResponse=store&&order?await workspace.client.rpc(
+  "get_supplier_held_order_lines",{
+   p_store_id:store.id,p_order_id:order.id,
+  }):null;
+ const lines=store&&order&&lineResponse&&!lineResponse.error?
+  parseSupplierHeldOrderLines(lineResponse.data,store.id,order.id,
+   order.storedLineCount):null;
  return <main className="container supplier-shell apex-supplier-orders">
   <Link className="back" href="/supplier/orders">← Orders &amp; Fulfillment</Link>
   <p className="eyebrow">APEX / SUPPLIER / ORDER REVIEW</p>
   <h1>Original order record</h1>
-  <p className="lead">Review the immutable order identity and record integrity
-   before any independent settlement or fulfillment verification.</p>
+  <p className="lead">Review the immutable order identity, purchased lines,
+   and a local partial-quantity preview. Nothing here authorizes shipment
+   or changes fulfillment records.</p>
   {!store||!order?<section className="apex-orders-store" role="alert">
    <h2>Order record unavailable</h2>
    <p>The order could not be verified for your assigned supplier storefront.
@@ -73,6 +85,11 @@ export default async function SupplierHeldOrderDetail({
     matches the original history. This is not independent payment settlement,
     product authorization, or permission to pack, ship, decrypt addresses,
     purchase labels, or enter tracking.</p>
+   {lines?<HeldOrderLineReview lines={[...lines.lines]}/>:
+    <p className="apex-orders-warning" role="alert">
+     Original purchased lines cannot be verified right now.
+     No details or fulfillment permissions have been inferred.
+    </p>}
    <div className="actions">
     <Link className="button secondary" href="/supplier/reports/cumulative-csv">
      Download / compare original IDs</Link>
