@@ -298,3 +298,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261105021347_apex_supplier_held_order_headers_readonly.sql
       - name: Verify bounded header read, tenancy, and private source exclusion
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-held-order-headers-issue245.sql
+      - name: Install membership-scoped single held-order record read (disposable)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106213000_apex_supplier_held_order_record_readonly.sql
+      - name: Verify individual held-order identity, cross-store denial and no private line leakage
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-held-order-record.sql

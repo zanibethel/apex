@@ -3,6 +3,7 @@ import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
 import {parseSupplierHeldOrderHeaders}
  from "@/lib/supplier/held-order-header-projection.mjs";
+import {supplierHeldOrderHref} from "@/lib/supplier/held-order-record.mjs";
 import {parseHeldHeaderPage,heldHeaderPageHref,
  HELD_HEADER_PAGE_SIZE,HELD_HEADER_LAST_PAGE}
  from "@/lib/supplier/held-order-header-page.mjs";
@@ -101,6 +102,10 @@ export default async function SupplierHeldOrderHeaders({
         Payment unverified for release · Shipping disabled ·
         Destination details unavailable
        </p>
+       <Link className="button secondary"
+        href={supplierHeldOrderHref(store.id,order.id)??"/supplier/orders"}>
+        Review original record
+       </Link>
       </article>)}
      </div>}
      <nav className="actions" style={{marginTop:16}}
