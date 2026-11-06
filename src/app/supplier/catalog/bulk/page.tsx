@@ -5,6 +5,7 @@ import {BulkDraftEditor} from "../bulk-editor";
 import {SupplierIntakeCards} from "../supplier-intake-cards";
 import type {IntakeCard} from "../supplier-intake-cards";
 import {supplierIntakeCards,INTAKE_MAX_ROWS} from "@/lib/catalog/supplier-intake-cards.mjs";
+import {reconcileIntakeWithSaved} from "@/lib/catalog/supplier-intake-reconcile.mjs";
 import {SUPPLIER_OPTION_BATCH} from "@/lib/catalog/supplier-parent-review-snapshot.mjs";
 import "./mobile-layout.css";
 import {SourceDraftImport} from "../source-draft-import";
@@ -23,7 +24,9 @@ import {apexTaxonomyStoreId,apexTaxonomyProposal} from "@/lib/catalog/apex-revie
 export const dynamic="force-dynamic";
 export const metadata={title:"Products | Apex Supplier",robots:{index:false,follow:false}};
 
-export default async function BulkProductWorkspace(){
+export default async function BulkProductWorkspace({searchParams}:{
+ searchParams:Promise<{edit?:string|string[]}>,
+}){
  const client=await createSupplierServerClient();
  if(!client)redirect("/supplier/sign-in");
  const {data:auth,error:authError}=await client.auth.getUser();
@@ -50,7 +53,7 @@ export default async function BulkProductWorkspace(){
   .select("id,source_row,parent_title,source_section,strength,size,carrier_oil,retail_price_cents,review_status,review_note",{count:"exact"})
   .eq("store_id",store.id).eq("source_batch",SUPPLIER_OPTION_BATCH)
   .order("parent_title").order("source_row").limit(INTAKE_MAX_ROWS);
- const importedCards: IntakeCard[]|null=!intakeError&&intakeCount!==null&&
+ const proposedCards: IntakeCard[]|null=!intakeError&&intakeCount!==null&&
   intakeCount<=INTAKE_MAX_ROWS&&intakeCount===intakeRows?.length
   ?supplierIntakeCards(intakeRows) as IntakeCard[]|null:null;
  const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:sources,error:sourceError,count:sourceCount},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError},{data:reviewRows,error:reviewError,count:reviewCount},{data:imageFeedback,error:feedbackError,count:feedbackCount}]=await Promise.all([
@@ -174,6 +177,15 @@ export default async function BulkProductWorkspace(){
   return {id:s.id,sourceIndex:s.source_index,name:s.product_name,strength:s.strength,
    costCents:cost?.sourceCostCents??0,eligible:Boolean(cost)&&Boolean(privateSourceDraftDescription(s.product_name,s.strength))&&name.length<=120};
  }):[];
+ const importedCards: IntakeCard[]|null=proposedCards
+  ?reconcileIntakeWithSaved(proposedCards,products??[]) as IntakeCard[]|null
+  :null;
+ const params=await searchParams;
+ const requestedEdit=params?.edit;
+ // An edit link only opens an existing record from this supplier's own
+ // authenticated, private list. It never trusts a request to choose a store.
+ const initialEditProductId=typeof requestedEdit==="string"&&
+  (products??[]).some(p=>p.id===requestedEdit)?requestedEdit:undefined;
  const initialRows=(products??[]).map(p=>({
   key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",
   price:(Number(p.price_cents)/100).toFixed(2),
@@ -218,6 +230,7 @@ export default async function BulkProductWorkspace(){
   </div>
   </details>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
+   initialEditProductId={initialEditProductId}
    categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}
    taxonomyProposal={store.id===apexTaxonomyStoreId?apexTaxonomyProposal:undefined}
    taxonomyStoreId={apexTaxonomyStoreId}
