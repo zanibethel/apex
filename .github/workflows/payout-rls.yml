@@ -302,3 +302,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106213000_apex_supplier_held_order_record_readonly.sql
       - name: Verify individual held-order identity, cross-store denial and no private line leakage
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-held-order-record.sql
+      - name: Install bounded supplier-only purchase-line review (disposable)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106222500_apex_supplier_held_order_lines_review.sql
+      - name: Verify immutable purchased lines and partial-quantity read privacy
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-held-order-lines-review.sql
