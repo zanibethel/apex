@@ -2,6 +2,10 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {BulkDraftEditor} from "../bulk-editor";
+import {SupplierIntakeCards} from "../supplier-intake-cards";
+import type {IntakeCard} from "../supplier-intake-cards";
+import {supplierIntakeCards,INTAKE_MAX_ROWS} from "@/lib/catalog/supplier-intake-cards.mjs";
+import {SUPPLIER_OPTION_BATCH} from "@/lib/catalog/supplier-parent-review-snapshot.mjs";
 import "./mobile-layout.css";
 import {SourceDraftImport} from "../source-draft-import";
 import {SharedPrivateImageBulkApply} from "../shared-private-image-bulk-apply";
@@ -17,7 +21,7 @@ import {SUPPLIER_BULK_PRODUCT_CAPACITY,SUPPLIER_BULK_PRODUCT_QUERY_LIMIT,supplie
 import {apexTaxonomyStoreId,apexTaxonomyProposal} from "@/lib/catalog/apex-reviewed-taxonomy-20261102.mjs";
 
 export const dynamic="force-dynamic";
-export const metadata={title:"Bulk Product Editor | Apex Supplier",robots:{index:false,follow:false}};
+export const metadata={title:"Products | Apex Supplier",robots:{index:false,follow:false}};
 
 export default async function BulkProductWorkspace(){
  const client=await createSupplierServerClient();
@@ -40,6 +44,15 @@ export default async function BulkProductWorkspace(){
   <Link href="/supplier/catalog">Back to product manager</Link>
  </main>;
  const store=stores[0];
+ // Private intake: these are proposal cards, not authoritative saved product rows.
+ const {data:intakeRows,error:intakeError,count:intakeCount}=await client
+  .from("apex_supplier_variant_review_items")
+  .select("id,source_row,parent_title,source_section,strength,size,carrier_oil,retail_price_cents,review_status,review_note",{count:"exact"})
+  .eq("store_id",store.id).eq("source_batch",SUPPLIER_OPTION_BATCH)
+  .order("parent_title").order("source_row").limit(INTAKE_MAX_ROWS);
+ const importedCards: IntakeCard[]|null=!intakeError&&intakeCount!==null&&
+  intakeCount<=INTAKE_MAX_ROWS&&intakeCount===intakeRows?.length
+  ?supplierIntakeCards(intakeRows) as IntakeCard[]|null:null;
  const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:sources,error:sourceError,count:sourceCount},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError},{data:reviewRows,error:reviewError,count:reviewCount},{data:imageFeedback,error:feedbackError,count:feedbackCount}]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
@@ -169,19 +182,25 @@ export default async function BulkProductWorkspace(){
   linkedSource:linkedProducts.has(p.id),categoryId:p.category_id??"",isActive:p.is_active,
  }));
  return <main className="container supplier-shell apex-bulk-page">
-  <Link className="back" href="/supplier/catalog">← Product manager</Link>
-  <Link className="button secondary" href="/supplier/catalog/media-readiness">Review image readiness</Link>
-  <Link className="button secondary" href="/supplier/shipping">Shipping rules & free-shipping minimum</Link>
-  <p className="eyebrow">APEX / SUPPLIER BULK PRODUCT MANAGEMENT</p>
-  <h1>Add and edit multiple products</h1>
-  <p className="lead">Select products, make changes, save them, then choose Preview single or Preview all before publishing.</p>
-  <p className="notice">New products begin as private drafts with zero stock. Save a draft to unlock its inline image picker and stock editor, then preview the completed offer. Nothing is made public by saving.</p>
-  <nav className="apex-bulk-quick-nav" aria-label="Product manager shortcuts">
-   <a className="button primary" href="#bulk-product-cards">View product cards</a>
-   <a className="button secondary" href="#apex-source-tools">Source import</a>
-   <a className="button secondary" href="#apex-image-tools">Shared images</a>
-   <a className="button secondary" href="#apex-csv-tools">CSV import / export</a>
+  <Link className="back" href="/supplier">← Supplier dashboard</Link>
+  <p className="eyebrow">APEX / SUPPLIER / PRODUCTS</p>
+  <h1>Products</h1>
+  <p className="lead">Find a product, tap the pencil to edit details, images or stock, then Save. Use the Publish switch to set your listing preference.</p>
+  <nav className="apex-bulk-quick-nav apex-supplier-simple-nav" aria-label="Product manager shortcuts">
+   <a className="button primary" href="#apex-product-workspace">Saved products ({initialRows.length})</a>
+   <a className="button secondary" href="#supplier-intake">Supplier intake ({importedCards?.length??"—"})</a>
+   <a className="button secondary" href="#apex-csv-tools">CSV import</a>
+   <a className="button secondary" href="#supplier-extra-tools">More tools</a>
   </nav>
+  <p className="notice">Imported supplier items are review proposals, not saved product IDs. Verify the match before creating duplicates or changing saved product data. Publishing still respects applicable release requirements and admin holds.</p>
+  <details className="apex-bulk-advanced apex-supplier-extra-tools" id="supplier-extra-tools">
+   <summary>Optional supplier tools <span>Source imports, shared images, shipping and media checks</span></summary>
+   <p className="notice">Only needed for specific maintenance tasks.</p>
+   <div className="actions">
+    <Link className="button secondary" href="/supplier/catalog/media-readiness">Image readiness</Link>
+    <Link className="button secondary" href="/supplier/shipping">Shipping rules</Link>
+    <Link className="button secondary" href="/supplier/catalog">Legacy product manager</Link>
+   </div>
   <div className="apex-bulk-advanced-section" aria-label="Optional bulk setup tools">
    <details className="apex-bulk-advanced" id="apex-source-tools">
     <summary>Source import <span>Prepare new product cards from saved source records</span></summary>
@@ -197,11 +216,19 @@ export default async function BulkProductWorkspace(){
      enabled={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}/>
    </details>
   </div>
+  </details>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
    categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}
    taxonomyProposal={store.id===apexTaxonomyStoreId?apexTaxonomyProposal:undefined}
    taxonomyStoreId={apexTaxonomyStoreId}
    resubmissionEnabled={process.env.APEX_SUPPLIER_CORRECTIONS_RESUBMIT_ENABLED==="true"}/>
-  <p className="notice">Upload a new PNG/JPEG/WebP image or reuse an existing private product image; each reuse makes its own private copy. On-hand inventory updates use expected-count checks and are audited. Private source cost for linked variants still requires Source review. The bulk editor loads all private products in storefronts with 250 or fewer private products.</p>
+  <details className="apex-bulk-advanced apex-supplier-intake-toggle" id="supplier-intake">
+   <summary>Supplier intake · {importedCards?.length??"—"} product cards
+    <span>{intakeCount??"—"} proposed options · review and match before creating editable product records</span>
+   </summary>
+   {importedCards?<SupplierIntakeCards cards={importedCards}/>:
+    <p role="status" className="notice">Private supplier intake is unavailable or incomplete. Saved products are still accessible. No import was changed.</p>}
+  </details>
+  <p className="notice">Add / Change / Reuse image controls remain available in each product editor. Source intake does not overwrite product prices, descriptions, SKU identities, inventory, or publication settings.</p>
  </main>;
 }
