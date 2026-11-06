@@ -260,7 +260,11 @@ export default async function SharedCatalog() {
     <Link href="/supplier" className="back">← Supplier dashboard</Link>
     <p className="eyebrow">APEX / SHARED PRODUCT MANAGER</p>
     <h1>Products.</h1>
-    <p className="lead">Create or edit your product, preview its storefront tile, then publish from the preview.</p>
+    <p className="lead">The new Products workspace is the simplest place to find and edit your listings.</p>
+    <Link className="button primary" href="/supplier/products">Open simple Products workspace</Link>
+    <details style={{marginTop:12}}><summary>About the legacy manager</summary>
+     <p className="notice">This older manager remains available for advanced workflows. It is not required for everyday product editing.</p>
+    </details>
     <p className="notice">Read-only preview without edit access; with supplier access you can save private draft changes. Source cost is internal and never used as the customer purchase price or compare-at price.</p>
     <div className="actions">
       <Link className="button primary" href="/supplier/catalog/bulk">Bulk add / edit / preview</Link>
