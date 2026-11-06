@@ -8,14 +8,14 @@ const editor=read("src/app/supplier/catalog/bulk-editor.tsx");
 const css=read("src/app/supplier/catalog/bulk/mobile-layout.css");
 
 test("supplier arrives at compact import tools with immediate product-card shortcut",()=>{
- assert.match(page,/className="apex-bulk-quick-nav" aria-label="Product manager shortcuts"/);
- assert.match(page,/href="#bulk-product-cards">View product cards/);
- assert.match(page,/href="#apex-source-tools">Source import/);
- assert.match(page,/href="#apex-image-tools">Shared images/);
- assert.match(page,/href="#apex-csv-tools">CSV import \/ export/);
- assert.ok(page.indexOf('className="apex-bulk-quick-nav"')<
+ assert.match(page,/className="apex-bulk-quick-nav apex-supplier-simple-nav" aria-label="Product manager shortcuts"/);
+ assert.match(page,/href="#apex-product-workspace">Saved products/);
+ assert.match(page,/href="#supplier-intake">Supplier intake/);
+ assert.match(page,/href="#supplier-extra-tools">More tools/);
+ assert.match(page,/href="#apex-csv-tools">CSV import/);
+ assert.ok(page.indexOf('className="apex-bulk-quick-nav apex-supplier-simple-nav"')<
   page.indexOf('<BulkDraftEditor'));
- assert.ok(page.indexOf('href="#bulk-product-cards"')<
+ assert.ok(page.indexOf('href="#apex-product-workspace"')<
   page.indexOf('<SharedPrivateImageBulkApply'));
  assert.match(page,/<BulkDraftEditor storeId=\{store.id\}/);
 });
