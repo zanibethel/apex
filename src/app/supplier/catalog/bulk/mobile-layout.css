@@ -205,3 +205,50 @@
   max-width:calc(100% - 18px);
  }
 }
+
+
+/* Compact, product-first supplier inventory. Preserve a detailed editor only
+   when the pencil is opened; neither supplier intake nor saved products are public. */
+.apex-bulk-page .apex-supplier-simple-nav{
+ grid-template-columns:repeat(4,minmax(0,1fr));
+}
+.apex-bulk-page .apex-supplier-row-thumbnail{
+ width:64px;height:64px;flex:none;display:grid;place-items:center;
+ border-radius:9px;background:#241c28;overflow:hidden;color:#b4a4b0;
+ border:1px solid #574250;
+}
+.apex-bulk-page .apex-supplier-row-thumbnail img{width:64px;height:64px;object-fit:cover}
+.apex-bulk-page .apex-supplier-row-thumbnail span{font-size:22px;line-height:1}
+.apex-bulk-page .apex-bulk-row-title{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.apex-bulk-page .apex-bulk-select{min-width:0;flex:1 1 175px}
+.apex-bulk-page .apex-supplier-card-heading{min-width:0;display:grid;gap:4px}
+.apex-bulk-page .apex-supplier-card-heading strong{overflow-wrap:anywhere;font-size:14px}
+.apex-bulk-page .apex-supplier-card-heading small{font-size:12px;color:#c4bac5;font-weight:400}
+.apex-bulk-page .apex-supplier-batch-setup,
+.apex-bulk-page .apex-supplier-intake-toggle{
+ margin:14px 0;max-width:100%;
+}
+.apex-bulk-page .apex-supplier-intake{
+ min-width:0;max-width:100%;
+}
+.apex-bulk-page .apex-supplier-intake-entry{min-width:0;display:flex;flex-direction:column}
+.apex-bulk-page .apex-supplier-intake-actions{padding:9px 3px;display:grid;gap:7px}
+.apex-bulk-page .apex-supplier-intake-actions .button{min-height:40px;font-size:12px;white-space:normal}
+.apex-bulk-page .apex-supplier-intake-actions .notice{font-size:12px;margin:0}
+.apex-bulk-page .apex-supplier-intake .apex-compact-product{
+ height:100%;min-width:0;
+}
+.apex-bulk-page .apex-bulk-advanced .apex-compact-product-grid{
+ margin:12px 0;max-width:100%;
+}
+@media(max-width:700px){
+ .apex-bulk-page .apex-supplier-simple-nav{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+ .apex-bulk-page .apex-supplier-row-thumbnail,
+ .apex-bulk-page .apex-supplier-row-thumbnail img{
+  width:52px;height:52px;
+ }
+ .apex-bulk-page .apex-bulk-row-title{gap:8px}
+ .apex-bulk-page .apex-supplier-card-heading strong{font-size:13px}
+}

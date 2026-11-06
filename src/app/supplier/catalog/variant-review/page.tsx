@@ -156,7 +156,7 @@ export default async function SupplierVariantReview(){
       (event.decision==="approved"?"Approved":"Needs Changes"):
       event?"Review again — source changed":"Pending review";
      const canApprove=group.unresolved===0&&group.ready.length>0;
-     return <div key={group.name}>
+     return <div key={group.name} id={"variant-"+group.rows[0].source_row}>
       {group.ready.length?
        <CompactVariantCard name={group.name} category={group.section}
         variants={group.ready} compositionByVariantId={group.compositionByVariantId}/>:

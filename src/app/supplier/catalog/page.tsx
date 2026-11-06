@@ -260,7 +260,9 @@ export default async function SharedCatalog() {
     <Link href="/supplier" className="back">← Supplier dashboard</Link>
     <p className="eyebrow">APEX / SHARED PRODUCT MANAGER</p>
     <h1>Products.</h1>
-    <p className="lead">Create or edit your product, preview its storefront tile, then publish from the preview.</p>
+    <p className="lead">Your product manager is now a single searchable workspace with quick editing and compact cards.</p>
+    <Link className="button primary" href="/supplier/catalog/bulk">Manage products</Link>
+    <Link className="button secondary" href="/supplier/catalog/variant-review">Review imported supplier options</Link>
     <p className="notice">Read-only preview without edit access; with supplier access you can save private draft changes. Source cost is internal and never used as the customer purchase price or compare-at price.</p>
     <div className="actions">
       <Link className="button primary" href="/supplier/catalog/bulk">Bulk add / edit / preview</Link>
@@ -270,6 +272,8 @@ export default async function SharedCatalog() {
       <Link className="button secondary" href="/supplier/discounts">Discount codes</Link>
     </div>
 
+    <details className="apex-bulk-advanced" style={{marginTop:20}}>
+      <summary>Older source review and advanced product tools</summary>
     <section aria-labelledby="source-products-title">
       <div className="apex-products-heading">
         <h2 id="source-products-title">Imported products ({candidates.error?"unavailable":candidates.count??0})</h2>
@@ -341,6 +345,7 @@ export default async function SharedCatalog() {
         <NewCategoryForm storeId={stores[0].id} enabled={canWrite}/>
       </details>
     </div>}
+    </details>
     {!products.data?.length&&<p className="notice">No products yet. Source variants remain private until a reviewed draft is created.</p>}
     <p className="notice">No public publishing, checkout, payments, or order creation is enabled.</p>
   </main>;
