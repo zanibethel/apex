@@ -10,6 +10,7 @@ export type CardVariant={
 type Props={
  name:string;category?:string;description?:string;
  variants:readonly CardVariant[];
+ compositionByVariantId?:Readonly<Record<string,string>>;
 };
 const money=(cents:number)=>new Intl.NumberFormat("en-US",{
  style:"currency",currency:"USD",
@@ -21,7 +22,7 @@ const optionLabel=(variant:CardVariant)=>[
 // Exactly ONE product card, regardless of how many options it has.
 // This is a presentation-only component; the caller must supply an approved,
 // public-safe list. There are no cart, stock, publishing or payment writes.
-export default function CompactVariantCard({name,category,description,variants}:Props){
+export default function CompactVariantCard({name,category,description,variants,compositionByVariantId}:Props){
  const selectId=useId();
  const [chosenId,setChosenId]=useState("");
  const approved=useMemo(()=>validateProductOptions(variants),[variants]) as readonly CardVariant[]|null;
@@ -37,6 +38,11 @@ export default function CompactVariantCard({name,category,description,variants}:
    {category&&<p className="apex-compact-product-category">{category}</p>}
    <h3>{name}</h3>
    {description&&<p className="apex-compact-product-description">{description}</p>}
+   {compositionByVariantId?.[selected.id]&&
+    <div className="apex-compact-product-composition">
+     <strong>Composition</strong>
+     <p>{compositionByVariantId[selected.id]}</p>
+    </div>}
    {approved.length>1?
     <label className="apex-compact-product-select" htmlFor={selectId}>
      <span>Choose option</span>
