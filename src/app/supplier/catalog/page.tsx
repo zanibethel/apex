@@ -264,6 +264,7 @@ export default async function SharedCatalog() {
     <p className="notice">Read-only preview without edit access; with supplier access you can save private draft changes. Source cost is internal and never used as the customer purchase price or compare-at price.</p>
     <div className="actions">
       <Link className="button primary" href="/supplier/catalog/bulk">Bulk add / edit / preview</Link>
+      <Link className="button secondary" href="/supplier/catalog/variant-review">View supplier product options</Link>
       <Link className="button secondary" href="/supplier/inventory">Inventory</Link>
       <Link className="button secondary" href="/supplier/imports">Import review</Link>
       <Link className="button secondary" href="/supplier/discounts">Discount codes</Link>
