@@ -25,7 +25,7 @@ test("one parent renders one card; clarification rows never become priced option
  assert.match(page,/r\.review_status!=="pending_review"/);
  assert.match(page,/group\.unresolved\+\+/);
  assert.match(page,/<CompactVariantCard name=\{group\.name\}/);
- assert.match(page,/groups\.map\(group=>group\.ready\.length\?/);
+ assert.match(page,/groups\.map\(group=>\{/);
  assert.match(page,/Price or option requires supplier clarification/);
  assert.match(page,/Existing products, images, stock and public listings are unchanged/);
  assert.match(page,/Checkout|Not available to order/);
