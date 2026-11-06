@@ -55,6 +55,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106040000_apex_private_supplier_variant_review_v1.sql
       - name: Verify private supplier variant RLS and source integrity
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/private-supplier-variant-review.sql
+      - name: Install append-only private content review events (disposable)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106135000_apex_supplier_parent_review_events_v1.sql
+      - name: Verify supplier content decision authorization and held/stale denials
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/private-supplier-parent-approval.sql
       - name: Verify row isolation and read-only grants
         run: bash tests/payout-rls/check.sh
       - name: Verify atomic draft saving and denial cases

@@ -25,7 +25,7 @@ test("one parent renders one card; clarification rows never become priced option
  assert.match(page,/r\.review_status!=="pending_review"/);
  assert.match(page,/group\.unresolved\+\+/);
  assert.match(page,/<CompactVariantCard name=\{group\.name\}/);
- assert.match(page,/groups\.map\(group=>group\.ready\.length\?/);
+ assert.match(page,/groups\.map\(group=>\{/);
  assert.match(page,/Price or option requires supplier clarification/);
  assert.match(page,/Existing products, images, stock and public listings are unchanged/);
  assert.match(page,/Checkout|Not available to order/);
@@ -49,5 +49,5 @@ test("real workbook prices remain out of GitHub fixtures and source costs stay s
  assert.doesNotMatch(page,/internal_source_cost|supplier_wholesale_cost|source_cost_cents|compare_at_price/);
  assert.match(page,/retail_price_cents/);
  assert.match(page,/not verified[\s\S]*checkout prices/i);
- assert.match(page,/SOURCE_BATCH="supplier-initial-2026-11-05"/);
+ assert.match(page,/SOURCE_BATCH=SUPPLIER_OPTION_BATCH/);
 });
