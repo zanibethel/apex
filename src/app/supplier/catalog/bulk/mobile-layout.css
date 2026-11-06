@@ -279,3 +279,66 @@
  .apex-bulk-page .apex-supplier-match-suggestions{padding:8px}
  .apex-bulk-page .apex-supplier-saved-match .button{width:100%;min-height:40px}
 }
+
+
+/* Mobile supplier cards: reserve separate columns for the thumbnail,
+   text and actions. A long title/category must never cover the pencil
+   button or publish switch. Applied after the earlier flex layout. */
+.apex-bulk-page .apex-bulk-workspace .apex-bulk-row-title{
+ display:grid;
+ grid-template-columns:64px minmax(0,1fr) max-content;
+ align-items:start;
+ column-gap:10px;
+ row-gap:10px;
+}
+.apex-bulk-page .apex-bulk-workspace .apex-bulk-row-title .apex-bulk-select{
+ display:flex;
+ align-items:flex-start;
+ width:100%;
+ max-width:100%;
+ min-width:0;
+ white-space:normal;
+}
+.apex-bulk-page .apex-bulk-workspace .apex-bulk-row-title .apex-bulk-select input{
+ flex:none;
+ margin-top:3px;
+}
+.apex-bulk-page .apex-bulk-workspace .apex-supplier-card-heading{
+ min-width:0;
+ max-width:100%;
+ width:100%;
+ overflow:hidden;
+}
+.apex-bulk-page .apex-bulk-workspace .apex-supplier-card-heading strong{
+ white-space:normal;
+ overflow-wrap:anywhere;
+ overflow:visible;
+ text-overflow:clip;
+}
+.apex-bulk-page .apex-bulk-workspace .apex-supplier-card-heading small{
+ display:-webkit-box;
+ -webkit-box-orient:vertical;
+ -webkit-line-clamp:2;
+ white-space:normal;
+ overflow:hidden;
+ overflow-wrap:anywhere;
+ max-width:100%;
+ line-height:1.35;
+}
+.apex-bulk-page .apex-bulk-workspace .apex-bulk-card-top-actions{
+ min-width:max-content;
+ justify-self:end;
+ align-self:start;
+ flex:none;
+ gap:7px;
+}
+.apex-bulk-page .apex-bulk-workspace .apex-bulk-card-status-row{
+ grid-column:1 / -1;
+ min-width:0;
+}
+@media(max-width:700px){
+ .apex-bulk-page .apex-bulk-workspace .apex-bulk-row-title{
+  grid-template-columns:52px minmax(0,1fr) max-content;
+  column-gap:8px;
+ }
+}
