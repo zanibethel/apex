@@ -74,7 +74,7 @@ test("publish single, publish selected, publish all use existing guarded intent 
  assert.match(actions,/administrator lock/i);
  assert.match(actions,/Public release and purchasing remain independently restricted/);
  assert.match(catalog,/Bulk add \/ edit \/ preview/);
- assert.match(dashboard,/Bulk product manager/);
+ assert.match(dashboard,/href="\/supplier\/catalog\/bulk" className="button primary">Products/);
  assert.match(tile,/apex-offer-tile/);
  assert.match(css,/\.apex-bulk-rows/);
  assert.match(css,/\.apex-offer-gallery/);
