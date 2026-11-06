@@ -1,0 +1,54 @@
+.apex-simple-products{max-width:1160px;min-width:0}
+.apex-simple-products-heading{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:10px 0 20px}
+.apex-simple-products-heading h1{margin:8px 0;font-size:clamp(27px,4vw,40px)}
+.apex-simple-products-heading .lead{margin:0;max-width:650px}
+.apex-products-workspace{display:grid;gap:16px;min-width:0}
+.apex-products-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.apex-products-overview>div{border:1px solid #4a3441;background:#1c151d;border-radius:11px;padding:13px;display:grid;gap:4px;min-width:0}
+.apex-products-overview strong{font-size:24px;color:#fff}
+.apex-products-overview span{font-size:11px;color:#c8b4c1;line-height:1.4}
+.apex-products-switch{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #4c3645;padding-bottom:9px}
+.apex-products-switch button{border:1px solid #5a3c50;border-radius:10px;background:transparent;color:#e8d6df;font-weight:700;font-size:14px;min-height:45px;padding:10px 15px;cursor:pointer}
+.apex-products-switch button.is-active{background:#51263c;border-color:#e798b4;color:#fff}
+.apex-products-switch button span{font-size:11px;opacity:.7;margin-left:5px}
+.apex-products-toolbar{display:grid;gap:10px}
+.apex-products-search input{display:block;width:100%;min-width:0;border-radius:10px;min-height:45px;border:1px solid #60475a;padding:12px 14px;background:#211a24;color:#fff;font:inherit}
+.apex-products-search input:focus-visible,.apex-products-filters button:focus-visible,.apex-products-switch button:focus-visible{outline:2px solid #f39fba;outline-offset:2px}
+.apex-products-filters{display:flex;flex-wrap:wrap;gap:7px}
+.apex-products-filters button{border:1px solid #574457;border-radius:20px;background:transparent;color:#e5d4df;padding:8px 13px;font:inherit;font-size:12px;cursor:pointer}
+.apex-products-filters button.is-active{background:#412a39;color:#fff;border-color:#a3758b}
+.apex-products-resultline{color:#c9bac4;font-size:12px}
+.apex-products-context{margin:0;font-size:12px;line-height:1.5;color:#bca9b5}
+.apex-products-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:14px;align-items:start}
+.apex-products-item{display:grid;gap:0;min-width:0}
+.apex-products-item>.apex-compact-product{border-bottom-left-radius:0;border-bottom-right-radius:0}
+.apex-products-item-actions{border:1px solid #493340;border-top:none;background:#1c151d;border-bottom-left-radius:12px;border-bottom-right-radius:12px;padding:12px;display:grid;gap:8px}
+.apex-products-state{font-size:11px;font-weight:700;color:#e6d2df;display:inline-block;width:fit-content;border-radius:8px;padding:4px 8px;background:#342936}
+.apex-products-state.state-approved{color:#afe2c4;background:#1d3f31}
+.apex-products-state.state-needs_changes,.apex-products-state.state-held,.apex-products-state.state-source_changed{color:#f6bfaf;background:#51322f}
+.apex-products-state.state-requested{color:#d1c0ef;background:#392d51}
+.apex-products-review-details{font-size:12px}
+.apex-products-review-details summary,.apex-simple-products-more summary{cursor:pointer;color:#f0c9dc;font-size:12px;font-weight:750;padding:9px 0}
+.apex-products-review-details .apex-variant-review-panel{padding:10px;margin-top:6px}
+.apex-products-review-details .apex-variant-review-actions button{min-width:0}
+.apex-products-hold-message,.apex-products-issue{font-size:11px;color:#dfaa9d;overflow-wrap:anywhere;line-height:1.5;margin:4px 0}
+.apex-products-held-card .apex-compact-product-art{color:#915575;font-size:36px}
+.apex-products-saved-list{display:grid;gap:9px}
+.apex-products-saved-row{display:grid;grid-template-columns:75px minmax(0,1fr) auto;gap:14px;align-items:center;min-width:0;padding:12px;border:1px solid #493340;background:#18151c;border-radius:12px}
+.apex-products-saved-image{height:70px;width:70px;display:grid;place-items:center;border-radius:8px;background:#261c28;overflow:hidden}
+.apex-products-saved-image span{color:#94687e;font-size:22px}
+.apex-products-saved-info h3{font-size:15px;color:#fff;margin:0 0 5px;overflow-wrap:anywhere}
+.apex-products-saved-info p{margin:0 0 6px;color:#c4b5be;font-size:12px}
+.apex-products-saved-actions .button{font-size:12px;white-space:nowrap}
+.apex-products-empty{padding:24px;border:1px dashed #604358;border-radius:13px;text-align:center;color:#f1d4df}
+.apex-products-more{margin-top:18px;border-top:1px solid #4b3741;padding-top:13px}
+.apex-products-more .actions{display:flex;gap:15px;flex-wrap:wrap;font-size:12px}
+.apex-simple-products-footer{margin:20px 0}
+.apex-products-edit-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(250px,1fr);gap:18px;align-items:start}
+.apex-products-edit-layout .supplier-panel{margin:0 0 14px;padding:18px}
+.apex-products-edit-photo .apex-image-picker{max-width:100%}
+.apex-products-image-placeholder{height:165px;display:grid;place-items:center;background:#261d28;border-radius:10px;color:#886579;font-size:36px}
+.apex-products-publish .button{margin-top:7px}
+@media(max-width:750px){.apex-products-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.apex-products-edit-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:520px){.apex-products-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.apex-products-saved-row{grid-template-columns:56px minmax(0,1fr);gap:10px}.apex-products-saved-image{width:54px;height:54px}.apex-products-saved-actions{grid-column:2}.apex-products-saved-actions .button{display:inline-flex;justify-content:center}.apex-simple-products-heading>.button{width:auto}}
+@media(max-width:365px){.apex-products-cards{grid-template-columns:minmax(0,1fr)}}
