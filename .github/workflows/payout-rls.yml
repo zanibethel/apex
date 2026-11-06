@@ -306,3 +306,11 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106222500_apex_supplier_held_order_lines_review.sql
       - name: Verify immutable purchased lines and partial-quantity read privacy
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-held-order-lines-review.sql
+      - name: Install the held shipment plan ledger in disposable PostgreSQL
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106224242_apex_held_shipment_plan_ledger.sql
+      - name: Verify shipment plan identity, review transitions, and supplier isolation
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/held-shipment-plan-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/held-shipment-plan-ledger.sql
+      - name: Verify two-session shipment plan capacity, replay, and stale conflicts
+        run: bash tests/payout-rls/held-shipment-plan-concurrency.sh

@@ -1,10 +1,20 @@
-> **November 6 addendum — use the latest verified checkpoint:** [Apex execution checkpoint](APEX_EXECUTION_CHECKPOINT_2026-11-06.md) and [next development prompt](supplier/NEXT_TRACK3_SHIPMENT_LEDGER_PROMPT_20261106.md). PRs [#298](https://github.com/zanibethel/apex/pull/298), [#299](https://github.com/zanibethel/apex/pull/299) and [#300](https://github.com/zanibethel/apex/pull/300) merged: one supplier Orders & Fulfillment hub, per-order immutable held-record review, and purchase-time line/partial-quantity **browser-only** preview. Exact PR heads and deployed main were tested; last verified hosted data had **0 real order/line snapshots** and the public release gate **OFF**. The full audited shipment lifecycle, partial allocation persistence, trusted settlement, protected delivery authorization, CSV reconciliation, USPS labels, tracking and live email attachment delivery **remain unimplemented or execution-gated**. The instructions below describe synthetic QA and historical foundations, not a working shipment queue.
+> **November 6 addendum.** See the [Apex execution checkpoint](APEX_EXECUTION_CHECKPOINT_2026-11-06.md) and the [held shipment-plan contract](supplier/HELD_SHIPMENT_PLAN_V1.md). The original-order detail supports persisted review plans for supplier owners and managers. The last hosted read showed zero held order or line snapshots and public release disabled. Use disposable orders to test the populated workflow.
 
 # Apex Track 3 — Fulfillment & reporting technical acceptance tests
 
 **Version:** November 5, 2026. **Scope:** independent supplier operations track (Issues #215–#219).
 **Purpose:** distinguish working technical foundations from activation of real order fulfillment.
 **Live release rule:** no payments, shipping, carrier postage, destination decryption, or customer shipment notification unless separate verified source/merchant permissions are approved. A supplier sales-history record or accepted email is never equivalent to a paid eligible order.
+
+## Held shipment review plans
+
+1. In an isolated environment with the shipment-plan fixture, sign in as the owning supplier. Open **Orders & Fulfillment** and select **View original record**. Check the original ID, purchase date, and purchased quantities.
+2. Select two units on the five-unit line and choose **Save review plan**. Confirm the order remains held and the line shows two in saved plans and three available. Save a second partial plan, then reload and confirm both plans retain distinct IDs and original line references.
+3. Expand a plan in **Shipment plan history**. Start review, flag an issue, and reopen review. Confirm each step adds one revision, actor, timestamp, and reason. Cancel one plan to correct quantities and confirm its units are available again and its history is still visible.
+4. Open the same plan in two tabs. Apply a review action in one and try changing it from the old revision in the other. The stale tab should display the current revision and require a reload. Try exceeding remaining quantity from a stale tab and confirm the conflict leaves both existing plans intact.
+5. Test as a supplier staff member, a different supplier, and while signed out. Staff can preview quantities but have no saved-plan controls. A different supplier cannot view the original record. Signed-out visitors are directed to sign-in. The detail never offers packing, label purchase, shipping, delivery, or tracking actions.
+
+GitHub Actions runs `held-shipment-plan-fixture.sql`, `held-shipment-plan-ledger.sql`, and `held-shipment-plan-concurrency.sh` in the disposable payout PostgreSQL job. The race test verifies competing quantity requests, cancellation, identical and changed replay, cross-order key conflicts, and stale writes under two isolation levels. The fixture has synthetic order and supplier identities. Keep it out of hosted Supabase. For hosted smoke, verify the protected route and the empty Orders & Fulfillment state until original held records exist.
 
 ## One-click three-track sample purchase (recommended first test)
 
@@ -70,6 +80,7 @@ The \`check\` script runs lint, TypeScript, Node tests and Next production build
 Additional focused tests:
 \`\`\`bash
 node --test tests/review-only-fulfillment-state-issue215.test.mjs
+node --test tests/held-shipment-plans.test.mjs
 node --test tests/cumulative-fulfillment-review-csv-issue216.test.mjs
 node --test tests/supplier-review-email-manifest-issue217.test.mjs
 node --test tests/supplier-held-csv-preview-issue216.test.mjs
@@ -119,7 +130,8 @@ Run the focused Node tests in Section A. They verify:
 ## F. Release gates / blockers checklist
 
 - [ ] Track 2 publishes a stable, **server-side, verified** canonical order/line contract with immutable original purchase time, source versions, independent settled-payment and transport-eligibility verdicts, plus a separately audited destination release.
-- [ ] Issue #215: independently eligible shipment queue, supplier-scoped event/partial-shipment ledger, tracking and idempotent immutable audit records are installed and authorized.
+- [x] Issue #215 review foundation: supplier-scoped partial plans, idempotency, and revisioned audit for original held orders.
+- [ ] Issue #215 execution: independently eligible shipment queue, operational transitions, and verified tracking.
 - [ ] Issue #216: only eligible rows may enter the operational cumulative CSV; authorized offline edits get version checks and a truly atomic supplier-scoped import.
 - [ ] Issue #217: pending eligible-order attachment or short-lived authenticated supplier-only download is linked to the verified queue; no addresses in ordinary email.
 - [ ] Issue #218: USPS labels/account approval and supplier-paid quote/confirmation/charge/void/tracking operations pass the provider's approved test environment.
