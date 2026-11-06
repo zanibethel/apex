@@ -77,7 +77,7 @@ begin
   v->>'payment_enabled'<>'false' or
   v->>'shipping_enabled'<>'false' or
   v->>'delivery_decryption_enabled'<>'false' or
-  jsonb_object_length(v)<>14
+  (select count(*) from jsonb_object_keys(v))<>14
  then raise exception 'Original order record projection incorrect';end if;
  if v::text like '%SYNTH-PRIVATE-SKU%'
   or v::text like '%SYNTH-PRIVATE-TITLE%'
