@@ -17,7 +17,7 @@ type Parent={
  name:string;section:string;ready:CardVariant[];unresolved:number;
 };
 const MAX_ROWS=250;
-const SOURCE_BATCH="lily-2026-11-05";
+const SOURCE_BATCH="supplier-initial-2026-11-05";
 const VALID_LABEL=/^[A-Za-z0-9][A-Za-z0-9 .,_()+-]{0,39}$/;
 const cents=(value:string|number|null)=>{
  const parsed=Number(value);
