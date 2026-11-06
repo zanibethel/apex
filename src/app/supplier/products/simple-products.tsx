@@ -85,7 +85,7 @@ export default function SimpleProducts({storeId,sheet,saved}:Props){
    Showing {filtered.length} of {selected.length} products
   </div>
   {kind==="sheet"&&<p className="apex-products-context">
-   These are the supplier's imported product options, grouped into one card
+   These are the supplier&apos;s imported product options, grouped into one card
    per product. Approve the content here. Existing saved records remain separate
    until each product identity and SKU can be matched without duplicates.
   </p>}
