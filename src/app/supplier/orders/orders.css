@@ -105,3 +105,37 @@
  .apex-orders-record{padding:11px}
  .apex-orders-primary-links .button{font-size:12px}
 }
+
+/* The single held-order review has no shipping/customer actions. */
+.apex-supplier-orders .apex-orders-review-link{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ min-width:0;
+ min-height:40px;
+ margin-top:13px;
+ font-size:12px;
+ white-space:normal;
+ text-align:center;
+}
+.apex-supplier-orders .apex-orders-record-detail-grid{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:14px;
+ margin:22px 0 18px;
+ padding:16px;
+ border-radius:10px;
+ background:#27212c;
+}
+.apex-supplier-orders .apex-orders-record-detail-grid p strong{
+ overflow-wrap:anywhere;
+ font-size:13px;
+}
+@media(max-width:550px){
+ .apex-supplier-orders .apex-orders-record-detail-grid{
+  grid-template-columns:minmax(0,1fr);
+  padding:12px;
+ }
+ .apex-supplier-orders .apex-orders-review-link{
+  width:100%;
+ }
+}
