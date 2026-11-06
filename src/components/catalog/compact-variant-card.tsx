@@ -11,6 +11,7 @@ type Props={
  name:string;category?:string;description?:string;
  variants:readonly CardVariant[];
  compositionByVariantId?:Readonly<Record<string,string>>;
+ reviewMode?:boolean;
 };
 const money=(cents:number)=>new Intl.NumberFormat("en-US",{
  style:"currency",currency:"USD",
@@ -22,7 +23,7 @@ const optionLabel=(variant:CardVariant)=>[
 // Exactly ONE product card, regardless of how many options it has.
 // This is a presentation-only component; the caller must supply an approved,
 // public-safe list. There are no cart, stock, publishing or payment writes.
-export default function CompactVariantCard({name,category,description,variants,compositionByVariantId}:Props){
+export default function CompactVariantCard({name,category,description,variants,compositionByVariantId,reviewMode=false}:Props){
  const selectId=useId();
  const [chosenId,setChosenId]=useState("");
  const approved=useMemo(()=>validateProductOptions(variants),[variants]) as readonly CardVariant[]|null;
@@ -60,7 +61,7 @@ export default function CompactVariantCard({name,category,description,variants,c
     <strong>{money(selected.retailPriceCents)}</strong>
     <span>USD</span>
    </div>
-   <p className="apex-compact-product-availability">Checkout unavailable</p>
+   {!reviewMode&&<p className="apex-compact-product-availability">Checkout unavailable</p>}
   </div>
  </article>;
 }
