@@ -52,7 +52,7 @@ test("compact card is a local presentation with no new checkout or publishing co
  const card=read("src/components/catalog/compact-variant-card.tsx");
  const css=read("src/components/catalog/compact-variant-card.css");
  assert.match(card,/Checkout unavailable/);
- assert.doesNotMatch(card,/price_cents.*update|stock.*update|createInvoice|payment|fetch\(/);
+ assert.doesNotMatch(card,/price_cents.*update|stock.*update|createInvoice|useCustomerCart|fetch\(/);
  assert.match(css,/grid-template-columns:repeat\(auto-fit/);
  assert.match(css,/@media\(max-width:530px\)/);
  assert.match(css,/min-height:44px/);
