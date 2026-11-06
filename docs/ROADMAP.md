@@ -1,3 +1,5 @@
+> **Current November 6 checkpoint:** [Verified implementation and remaining work](APEX_EXECUTION_CHECKPOINT_2026-11-06.md). The historical six-week roadmap below remains a planning baseline, not a statement of current code or production commerce readiness. Continue Track 3 from the [separate-chat shipment ledger prompt](supplier/NEXT_TRACK3_SHIPMENT_LEDGER_PROMPT_20261106.md). Supplier Products #293–#296 and read-only Orders #298–#300 are merged; active shipment execution, live checkout, carrier labels and payout remain gated.
+
 > **Current continuation — November 5, 2026:** [Cross-chat development and supplier variant handoff](APEX_CROSS_CHAT_HANDOFF_2026-11-05.md) is the latest GitHub/development checkpoint, including merged #279–#283 and the pending private supplier workbook/retail-price/variant mapping. The [November 5–8 verified weekend snapshot](APEX_WEEKEND_CLOSEOUT_2026-11-05.md) remains the last recorded hosted-data inventory baseline, **not a live recheck**. Commerce and shipment release are not authorized.
 
 # Six-week technical MVP roadmap
