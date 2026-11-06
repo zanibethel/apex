@@ -65,6 +65,6 @@ test("inline controls are mobile responsive and existing product management rema
  assert.match(css,/\.apex-bulk-card-media/);
  assert.match(css,/\.apex-bulk-media-photo/);
  assert.match(css,/@media\(max-width:560px\)/);
- assert.match(page,/Source review/);
- assert.match(page,/New products begin as private drafts with zero stock/);
+ assert.match(page,/Source imports, shared images, shipping and media checks/);
+ assert.match(page,/Imported supplier items are review proposals, not saved product IDs/);
 });
