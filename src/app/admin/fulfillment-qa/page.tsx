@@ -5,7 +5,7 @@ import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {createTrack3QaFixtures} from "@/lib/supplier/track3-qa-fixtures.mjs";
 import FulfillmentQaWorkbench from "./workbench";
 import SamplePurchaseFlow from "./sample-purchase-flow";
-import ProductOptions from "@/app/catalog/product/[id]/product-options";
+import CompactVariantCard from "@/components/catalog/compact-variant-card";
 import {runEndToEndSamplePurchaseQa} from "@/lib/checkout/end-to-end-sample-purchase-qa.mjs";
 
 
@@ -17,6 +17,10 @@ const sampleOptions=[
  {id:"33333333-3333-4333-8333-333333333333",carrierOil:"MCT",strength:"100 mg",size:"20 mL",retailPriceCents:1900},
  {id:"44444444-4444-4444-8444-444444444444",carrierOil:"GSO",strength:"100 mg",size:"20 mL",retailPriceCents:1900},
  {id:"55555555-5555-4555-8555-555555555555",carrierOil:"MCT",strength:"200 mg",size:"10 mL",retailPriceCents:1500},
+] as const;
+// A product with only one size/strength should not require a dropdown.
+const singleSampleOption=[
+ {id:"66666666-6666-4666-8666-666666666666",carrierOil:"",strength:"",size:"",retailPriceCents:900},
 ] as const;
 
 export const dynamic="force-dynamic";
@@ -44,11 +48,19 @@ export default async function Track3FulfillmentQA(){
    duplicate prevention and a protected email attachment manifest without
    using customer information, changing an order or purchasing postage.</p>
   <section className="supplier-panel" style={{maxWidth:"none",marginTop:18}}>
-   <p className="eyebrow">SIMPLE PRODUCT OPTIONS · SAMPLE ONLY</p>
-   <h2>Try the product dropdowns</h2>
-   <p>Choose carrier oil, strength and size. The listed sample price updates
-    automatically. Only available option combinations are shown.</p>
-   <ProductOptions variants={sampleOptions}/>
+   <p className="eyebrow">ONE CARD PER PRODUCT · SAMPLE ONLY</p>
+   <h2>Try the product cards</h2>
+   <p>Each product has one card. If there are different options, choose one
+    inside the card and its price changes automatically. No extra product
+    cards for every strength, size or oil.</p>
+   <div className="apex-compact-product-grid">
+    <CompactVariantCard name="Sample Product A" category="Multiple options"
+     description="One product with oil, strength and size variations."
+     variants={sampleOptions}/>
+    <CompactVariantCard name="Sample Product B" category="Single option"
+     description="A product without variations needs no dropdown."
+     variants={singleSampleOption}/>
+   </div>
    <p className="notice">Private demo with invented sample amounts, not Lily&apos;s
     product list. No product, inventory, cart, order or payment is changed.</p>
   </section>
