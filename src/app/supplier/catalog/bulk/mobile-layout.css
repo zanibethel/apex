@@ -342,3 +342,31 @@
   column-gap:8px;
  }
 }
+
+
+/* Private draft quantity mode is a simple per-product preference, never an
+   availability bypass; keep its checkbox readable on phones. */
+.apex-bulk-page .apex-bulk-stock-editor .apex-bulk-stock-mode{
+ display:flex;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:9px;
+ width:100%;
+ max-width:100%;
+ color:#f4e1ea;
+ font-size:13px;
+ font-weight:650;
+ line-height:1.4;
+ cursor:pointer;
+}
+.apex-bulk-page .apex-bulk-stock-mode input[type="checkbox"]{
+ flex:0 0 auto;
+ width:19px;
+ height:19px;
+ margin:0;
+ accent-color:#db678b;
+}
+.apex-bulk-page .apex-bulk-stock-mode input[type="checkbox"]:focus-visible{
+ outline:2px solid #ffc1d8;
+ outline-offset:3px;
+}

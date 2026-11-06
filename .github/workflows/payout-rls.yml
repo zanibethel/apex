@@ -59,6 +59,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106135000_apex_supplier_parent_review_events_v1.sql
       - name: Verify supplier content decision authorization and held/stale denials
         run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/private-supplier-parent-approval.sql
+      - name: Install private quantity tracking preferences (disposable)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106185000_apex_supplier_private_stock_preferences.sql
+      - name: Verify per-product stock tracking role isolation and public gate separation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/payout-rls/supplier-private-stock-preferences.sql
       - name: Verify row isolation and read-only grants
         run: bash tests/payout-rls/check.sh
       - name: Verify atomic draft saving and denial cases
