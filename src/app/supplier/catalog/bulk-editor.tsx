@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import {previewUsdCents} from "@/lib/catalog/offer-preview-money.mjs";
 import {useRouter} from "next/navigation";
 import {BulkCardMedia} from "./bulk-card-media";
 import {SupplierReviewSubmission} from "./review-submission";
@@ -49,7 +51,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  taxonomyProposal?:ReadonlyArray<ReviewedCategoryProposal>;taxonomyStoreId?:string;
 }){
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
- const [showOfferTiles,setShowOfferTiles]=useState(true);
+ const [showOfferTiles,setShowOfferTiles]=useState(false);
  const [productSearch,setProductSearch]=useState("");
  const [viewFilter,setViewFilter]=useState("all");
  const [setupCategoryId,setSetupCategoryId]=useState("");
@@ -304,12 +306,12 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    <summary>CSV import and export <span>Download templates or upload multiple product changes</span></summary>
    <CsvProductImport rows={rows} categories={categories} disabled={!editable||busy} onLoad={loadFromCsv}/>
   </details>
-  <h2 className="apex-bulk-products-heading" id="apex-product-workspace">Manage products</h2>
+  <h2 className="apex-bulk-products-heading" id="apex-product-workspace">Saved products</h2>
   <p className="apex-bulk-workspace-summary" role="status">
    <strong>{overview.privateSaved} saved private cards</strong>
    <span>· {overview.imagesAttached} images attached</span>
    <span>· {overview.publishRequested} publish settings on</span>
-   <span>· {overview.adminHolds} admin holds</span>
+   {overview.adminHolds>0&&<span>· {overview.adminHolds} admin holds</span>}
   </p>
   <div className="apex-bulk-filterbar" aria-label="Find and filter private products">
    <label htmlFor="apex-bulk-search">Find product
@@ -347,10 +349,12 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    </button>
    <button type="button" className="button secondary"
     aria-pressed={showOfferTiles}
-    onClick={()=>{if(showOfferTiles)setEditOpenKeys(rows.map(row=>row.key));setShowOfferTiles(value=>!value);}}>
+    onClick={()=>setShowOfferTiles(value=>!value)}>
     {showOfferTiles?"Hide previews":"Show previews"}
    </button>
   </div>
+  <details className="apex-bulk-advanced apex-supplier-batch-setup">
+   <summary>Advanced batch setup <span>Category assignment and multi-product setup</span></summary>
   {taxonomyReview&&<section className="supplier-panel" aria-label="Reviewed catalog category mapping"
    style={{maxWidth:"none",marginBottom:18,padding:16}}>
    <h3>Organize saved catalog</h3>
@@ -436,7 +440,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    </form>
    {setupMessage&&<p role="status" className="apex-bulk-result">{setupMessage}</p>}
   </section>
-  <p className="notice">Select cards with the checkbox; use the pencil to edit name, price, description, image and stock. The Publish switch updates the supplier setting immediately. The storefront status confirms whether the product is publicly visible. Admin holds and release checks remain in effect. Zero stock may display Sold Out only after independent release approval.</p>
+  </details>
+  <p className="notice">Tap the pencil to edit the name, description, price, image or stock. Save changes, then set your Publish preference. Admin holds remain visible and cannot be bypassed.</p>
   {recentImportKeys.length>0&&<p className="apex-bulk-import-notice" role="status">
    {recentImportKeys.length} CSV product {recentImportKeys.length===1?"card is":"cards are"} at the top of the workspace.
    Review their live previews and choose Save selected when ready.
@@ -448,6 +453,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    {visibleRows.map((r,i)=>{
     const status=lastSave[r.key];
     const cardMedia=r.id?savedMedia.get(r.id):undefined;
+    const priceCents=previewUsdCents(r.price);
+    const compactPrice=Number.isSafeInteger(priceCents)&&priceCents>0
+     ?new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(priceCents/100)
+     :"Price needed";
     const availableStock=cardMedia?.quantityOnHand==null||cardMedia.quantityReserved==null
      ?undefined:Math.max(0,cardMedia.quantityOnHand-cardMedia.quantityReserved);
     const category=categories.find(c=>c.id===r.categoryId)?.name??"Uncategorized";
@@ -476,10 +485,17 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
     return <article key={r.key} className={"apex-bulk-row"+((editOpenKeys.includes(r.key)||!r.id)?" apex-bulk-row-editing":"")}>
      <div className="apex-bulk-row-title">
+      <div className="apex-supplier-row-thumbnail" aria-hidden="true">
+       {cardMedia?.imageUrl?<Image src={cardMedia.imageUrl}
+         width={64} height={64} alt="" unoptimized/>:<span>+</span>}
+      </div>
       <label className="apex-bulk-select">
        <input type="checkbox" disabled={busy} checked={selectedSet.has(r.key)}
         onChange={()=>toggle(r.key)} aria-label={"Select "+(r.name||"new product "+(i+1))}/>
-       <strong title={r.name||"New product "+(i+1)}>{r.name||"New product "+(i+1)}</strong>
+       <span className="apex-supplier-card-heading">
+        <strong title={r.name||"New product "+(i+1)}>{r.name||"New product "+(i+1)}</strong>
+        <small>{compactPrice} · {category}</small>
+       </span>
       </label>
       <div className="apex-bulk-card-top-actions">
        <button type="button" className="apex-bulk-card-pencil"
@@ -500,9 +516,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        {r.id&&<span className={"apex-bulk-inventory-state apex-bulk-inventory-"+(listingStatus?.stockKind??"unverified")}>
         {listingStatus?.stockLabel??"Inventory unavailable"}
        </span>}
-       {readiness.kind!=="requested"&&<span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>{readiness.label}</span>}
-       <span className={"apex-bulk-image-status apex-bulk-image-"+imageKind}
-        title={imageMessage} aria-label={"Product image: "+imageLabel}>{imageLabel}</span>
+       {adminFeedback&&<span className={"apex-bulk-readiness-state apex-bulk-readiness-"+readiness.kind}>Needs attention</span>}
        {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
       </div>
      </div>
@@ -517,6 +531,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         ?readiness.missing.length+" setup item"+(readiness.missing.length===1?"":"s")+" remaining"
         :"Status details"}</summary>
       <p><strong>Customer visibility:</strong> {visibilityDescription}</p>
+      <p><strong>Setup status:</strong> {readiness.label}</p>
+      <span className={"apex-bulk-image-status apex-bulk-image-"+imageKind}
+       title={imageMessage} aria-label={"Product image: "+imageLabel}>{imageLabel}</span>
       <p><strong>Image evidence:</strong> {imageMessage}</p>
       {imageNeedsAction&&<button type="button" className="button secondary apex-bulk-media-fix"
        disabled={busy} onClick={()=>setEditOpenKeys(prev=>prev.includes(r.key)?prev:[...prev,r.key])}>
