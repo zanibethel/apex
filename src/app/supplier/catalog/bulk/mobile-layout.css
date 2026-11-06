@@ -252,3 +252,30 @@
  .apex-bulk-page .apex-bulk-row-title{gap:8px}
  .apex-bulk-page .apex-supplier-card-heading strong{font-size:13px}
 }
+
+/* Supplier intake-to-saved editor navigation: links stay inside the
+   authenticated private workspace and never imply a confirmed match. */
+.apex-bulk-page .apex-bulk-row[id^="saved-"]{scroll-margin-top:185px}
+.apex-bulk-page .apex-supplier-match-suggestions{
+ display:grid;gap:8px;padding:10px;border:1px solid #574251;
+ border-radius:10px;background:#1b1720;min-width:0;
+}
+.apex-bulk-page .apex-supplier-match-suggestions>strong{
+ color:#f2d5e2;font-size:12px;
+}
+.apex-bulk-page .apex-supplier-saved-match{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+ gap:8px;min-width:0;
+}
+.apex-bulk-page .apex-supplier-saved-match>span{
+ font-size:12px;line-height:1.4;flex:1 1 115px;min-width:0;
+ overflow-wrap:anywhere;color:#efe6ed;
+}
+.apex-bulk-page .apex-supplier-saved-match small{display:block;color:#bfafbd}
+.apex-bulk-page .apex-supplier-saved-match .button{
+ font-size:11px;min-height:38px;min-width:95px;padding:7px 9px;
+}
+@media(max-width:530px){
+ .apex-bulk-page .apex-supplier-match-suggestions{padding:8px}
+ .apex-bulk-page .apex-supplier-saved-match .button{width:100%;min-height:40px}
+}
