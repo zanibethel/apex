@@ -8,7 +8,7 @@ import {BulkCardMedia} from "./bulk-card-media";
 import {SupplierReviewSubmission} from "./review-submission";
 import {BulkInlineOffer} from "./bulk-inline-offer";
 import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
-import {useMemo,useState,useTransition} from "react";
+import {useEffect,useMemo,useRef,useState,useTransition} from "react";
 import {saveBulkProductDrafts,saveBulkPublicationRequests,saveBulkListingIntents,resubmitSupplierCorrections} from "./bulk-actions";
 import {eligiblePrivatePublishIds} from "@/lib/catalog/bulk-publish-selection.mjs";
 import {CsvProductImport} from "./csv-product-import";
@@ -45,10 +45,11 @@ function newRow():BulkEditRow{
   price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,
   needsSave:true};
 }
-export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false,taxonomyProposal,taxonomyStoreId}:{
+export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false,taxonomyProposal,taxonomyStoreId,initialEditProductId}:{
  storeId:string;editable:boolean;initialRows:BulkEditRow[];categories:Category[];
  media:BulkSavedMedia[];existingImages:BulkSavedImage[];listing:ListingReadiness[];resubmissionEnabled?:boolean;
  taxonomyProposal?:ReadonlyArray<ReviewedCategoryProposal>;taxonomyStoreId?:string;
+ initialEditProductId?:string;
 }){
  const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
  const [showOfferTiles,setShowOfferTiles]=useState(false);
@@ -68,7 +69,15 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const [publishPending,startPublishTransition]=useTransition();
  const [publishResults,setPublishResults]=useState<PublishOutcome[]>([]);
  const [listingOverrides,setListingOverrides]=useState<Record<string,boolean>>({});
- const [editOpenKeys,setEditOpenKeys]=useState<string[]>([]);
+ const [editOpenKeys,setEditOpenKeys]=useState<string[]>(
+  initialEditProductId&&initialRows.some(p=>p.id===initialEditProductId)
+   ?[initialEditProductId]:[]);
+ const previousEditTarget=useRef(initialEditProductId);
+ useEffect(()=>{
+  if(initialEditProductId&&initialEditProductId!==previousEditTarget.current)
+   setEditOpenKeys(prev=>prev.includes(initialEditProductId)?prev:[...prev,initialEditProductId]);
+  previousEditTarget.current=initialEditProductId;
+ },[initialEditProductId]);
  const [publicationMessage,setPublicationMessage]=useState("");
  const [correctionNotes,setCorrectionNotes]=useState<Record<string,string>>({});
  const [correctionResults,setCorrectionResults]=useState<Record<string,{ok:boolean;message:string}>>({});
@@ -483,7 +492,8 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       ?"The supplier preference changed. A fresh protected release decision is needed before customer visibility can be confirmed.":
       listingStatus?.visibilityDescription??"Refresh to check the protected release decision.";
     const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
-    return <article key={r.key} className={"apex-bulk-row"+((editOpenKeys.includes(r.key)||!r.id)?" apex-bulk-row-editing":"")}>
+    return <article key={r.key} id={r.id?"saved-"+r.id:undefined}
+      className={"apex-bulk-row"+((editOpenKeys.includes(r.key)||!r.id)?" apex-bulk-row-editing":"")}>
      <div className="apex-bulk-row-title">
       <div className="apex-supplier-row-thumbnail" aria-hidden="true">
        {cardMedia?.imageUrl?<Image src={cardMedia.imageUrl}
