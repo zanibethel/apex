@@ -75,3 +75,23 @@ Agree with Track 2 on a read-only eligible-order contract tied to immutable orde
 Suppliers will manage routine product choices, inventory, shipping choices and fulfillment **once independently eligible**. The platform provides the software, records, payments/reconciliation and reporting infrastructure. Apex is still a marketplace/platform participant; a supplier checkbox or agreement does not automatically establish the permissions required for controlled/prescription substances or legal shipment. Keep admin compliance holds, authorization verification and separate payment gates. Routine approved catalog edits should not require unnecessary repeat approvals.
 
 **End of checkpoint.**
+
+## PR #303 checkpoint — November 6, 2026 (eligibility read handoff)
+
+**Implementation branch:** `feat/apex-eligible-order-read-contract-v1`.
+The additive `get_supplier_eligible_order_readiness_v1` RPC and strict consumer
+at `/supplier/orders` establish an explicitly **blocked**, supplier-scoped
+read contract. Historical held records remain distinct from an independently
+authorized shipment queue. No eligible-order source, settlement attestation,
+delivery access, label, tracking, or fulfillment writer is added. The contract
+returns zero eligible order **projections**, not proof that zero real sales exist.
+Missing/malformed/error responses must display **unavailable**.
+
+The next integration dependency belongs to Track 2: authenticated immutable
+order and purchased-line identities, independent settlement evidence and
+revocations, supplier/product/transport authorization and protected delivery
+reference. Track 3 can add a v2 queue only after these sources are demonstrated
+with synthetic negative fixtures and production-gate verification.
+See `docs/supplier/ELIGIBLE_ORDER_READ_CONTRACT_V1.md`.
+PR status, CI, preview and hosted migration must be rechecked; branch work
+does not imply that any of it has reached production.
