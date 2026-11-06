@@ -3,7 +3,8 @@
 **Repository:** [zanibethel/apex](https://github.com/zanibethel/apex)  
 **Production:** https://apexanabolics.co  
 **Database:** Apex Supabase project `fhqpkpztercadcxspdkg`  
-**Last confirmed `main` SHA before this documentation-only PR:** `c182b977bbe2bbc441b7f3a46ad68ab1a7c2198a` (merged PR #300).  
+**Baseline `main` SHA for the shipment ledger:** `1fa67d22830a2dd14826255b170488754614ff0a` (merged PR #301).
+
 **Target:** December 1, 2026 *technical readiness*, **not** authorization for public commerce.  
 **Status vocabulary:** **Merged and tested**, **private/read-only foundation**, **not integrated**, **blocked for execution**. A green production deployment is not evidence of live checkout, payment settlement, or carrier shipment.
 
@@ -50,30 +51,21 @@ All #293–#296 and #298–#300 are **merged**. PR #292 (older alternate Product
 
 ### Track 3 — supplier operations, fulfillment, reports, USPS
 
-**Done/read-only foundation:** one Orders & Fulfillment hub; same-supplier held-order headers; exact order drilldown with immutable original identity; bounded original line snapshot drilldown; browser-only partial-quantity preview; daily historical sales reports; original-order-ID cumulative CSV and duplicate/stale conflict **preview**; review-only shipment status model; account-scoped USPS readiness; Resend report/email provider-delivery evidence plumbing.
+**Done:** one Orders & Fulfillment hub with same-supplier held-order headers and immutable original records and purchase lines. The shipment-plan foundation adds durable partial allocations, remaining quantities, and audited review and cancellation on the same detail screen for confirmed supplier owners and managers. The private ledger uses stable shipment IDs, store-scoped idempotency keys, and revision checks. The hosted migration and deployment verification are recorded on [Issue #215](https://github.com/zanibethel/apex/issues/215). See the [shipment-plan and tracking contracts](supplier/HELD_SHIPMENT_PLAN_V1.md).
 
-**Not complete:** independently authorized **paid/eligible** operational fulfillment queue; protected delivery-record use; durable audited shipment/line allocation ledger, distinct states and revision checks; partial shipments; supplier-scoped carrier/tracking entry; idempotent replay/stale conflict protections backed by database constraints; safe spreadsheet CSV update reconciliation; USPS label purchase/approval and verified tracking; genuine supplier email delivery/attachment confirmation; live refund and payout/order reconciliation. A recorded `confirmed` historical sale is **not** proof of processor settlement. See [Issues #215–#219](https://github.com/zanibethel/apex/issues/215) and [Track 3 acceptance plan](APEX_TRACK3_ACCEPTANCE_TEST_PLAN_2026-11-05.md).
+Historical sales reports, original-order-ID cumulative CSVs, spreadsheet conflict previews, USPS account readiness, and Resend delivery evidence retain their existing scopes. Review plans cannot advance to packing, label ready, shipped, or delivered. They are separate from the future eligible order queue, and cancellation releases only review quantities.
 
-## Next bounded development slice — separate chat
+**Outstanding:** independently authorized paid/eligible operational fulfillment queue, protected delivery-record use, carrier/tracking entry and reconciliation, atomic eligible CSV updates, authorized USPS labels, and eligible fulfillment email attachments. See [Issues #215–#219](https://github.com/zanibethel/apex/issues/215) and the [Track 3 acceptance plan](APEX_TRACK3_ACCEPTANCE_TEST_PLAN_2026-11-05.md).
 
-**Recommended next PR:** **Audited, versioned private shipment and partial-allocation *foundation*** for eligible future orders, anchored to immutable existing order/line IDs. Avoid another independent order catalog or shipping dashboard.
+## Next bounded development slice
 
-1. Inspect current `main`, Issues #215–#219, #214, the deployed `order_detail_snapshots`, `order_line_snapshots`, existing review-only fulfillment state model, CSV preview, protected delivery contracts and supplier auth patterns. Respect any concurrently changed branches.
-2. Define `shipment_id`, immutable parent `order_id`/`line_id`, supplier `store_id`, version, state, actor and audit event identity; database uniqueness for duplicate/replay protection; strict expected-version conflict rejection; maximum allocations never exceed originally purchased quantities, including partial shipments and cancellations. **Do not fabricate eligible source orders**.
-3. Put **legal/product/supplier/shipping/payment eligibility** in a separate independently validated authority boundary. The existing held/unverified source must **never** become eligible through a UI switch, a recorded sale state, a supplier note, a CSV upload or caller-provided `approved` flag.
-4. Implement a tested read-only shipment/plan preview or fail-closed draft infrastructure first. Do **not** allow operational dispatch, address decryption, label purchase, carrier API calls or state `shipped` until a reviewed eligible-order authorization contract actually exists.
-5. Add durable audit and versioned transition tests, including hostile cross-tenant, anonymous/staff, duplicate ID, replay, stale two-session update, partial allocation overflow, invalid state transition and rollback cases. Prefer transactionally checked, private DB invariants over only UI checks.
-6. Add minimal, simple supplier UI to the existing Orders & Fulfillment / original-order detail when safe. No new redundant screens, and no assumption that test data represent real orders.
-7. Create `feat/apex-supplier-shipment-ledger-foundation`, small coherent PRs, exact-head lint/types/Node, isolated Postgres RLS/concurrency tests, build and Vercel preview. **Never deploy/merge with failing checks**, and verify exact production SHA after an authorized merge.
-8. Update this checkpoint, Track 3 acceptance plan and Issue #215 with what has actually passed, what remains blocked and the smallest follow-up. Keep public product release, checkout and USPS/postage execution disabled.
-
-**Separate-chat prompt (tracked copy):** [Track 3 next-chat prompt](supplier/NEXT_TRACK3_SHIPMENT_LEDGER_PROMPT_20261106.md).
+Agree with Track 2 on a read-only eligible-order contract tied to immutable order and line IDs. It needs independently verified settlement, per-line product and transport eligibility, and a reference to the separately authorized delivery record. Test denial for held, revoked, and mismatched evidence with synthetic fixtures before adding an eligible-order queue or any execution controls.
 
 ## Supplier/manual smoke for currently merged work
 
 - Sign in to https://apexanabolics.co/supplier and choose **Products**. Edit a saved product, verify image/pencil placement and quantity-tracking setting; never claim it becomes public merely because Publish intent is on.
 - Open https://apexanabolics.co/supplier/orders and use Daily reports / Download-compare CSV / USPS setup navigation.
-- With a real verified immutable *held* order, select **View original record**. Confirm original ID/reference/date/line count and purchase-time lines display; trial a partial-quantity **preview**. No saving or shipping should occur.
+- With an immutable held order, select **View original record**. As a supplier owner or manager, save a partial **review plan**, check the remaining quantity, then cancel with a reason and verify it is restored in the ledger. The order stays held. Staff retain the browser-only preview.
 - **Currently zero real held orders** in the latest verified hosted snapshot; therefore do not claim a populated order UI was tested against real purchases. Review-only CI uses synthetic, disposable order fixtures.
 - Verify a signed-out session and a different supplier cannot access another store's original order records or lines.
 - Use https://apexanabolics.co/admin/fulfillment-qa for a separate **synthetic sample** run, not a live transaction.

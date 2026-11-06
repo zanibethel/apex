@@ -1,3 +1,4 @@
+import {randomUUID} from "node:crypto";
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
@@ -6,7 +7,11 @@ import {
 } from "@/lib/supplier/held-order-record.mjs";
 import {recordedOrderObservation} from "@/lib/supplier/supplier-order-operations.mjs";
 import {parseSupplierHeldOrderLines} from "@/lib/supplier/held-order-line-review.mjs";
+import {
+ canReviewHeldShipmentPlans,parseHeldShipmentPlans,parseShipmentPlanPage,
+} from "@/lib/supplier/held-shipment-plans.mjs";
 import {HeldOrderLineReview} from "./held-order-line-review";
+import {HeldShipmentPlanHistory} from "./held-shipment-plan-history";
 import "../orders.css";
 
 export const dynamic="force-dynamic";
@@ -22,7 +27,7 @@ export default async function SupplierHeldOrderDetail({
  params,searchParams,
 }:{
  params:Promise<{orderId:string}>,
- searchParams:Promise<{store?:string|string[]}>,
+ searchParams:Promise<{store?:string|string[];plans?:string|string[]}>,
 }){
  const workspace=await getSupplierWorkspace();
  if(!workspace)redirect("/supplier/sign-in");
@@ -41,20 +46,28 @@ export default async function SupplierHeldOrderDetail({
   parseSupplierHeldOrderRecord(response.data,store.id,orderId):null;
  // Only query immutable purchase-time lines after the original order record
  // and its assigned supplier identity have both been verified.
- const lineResponse=store&&order?await workspace.client.rpc(
+ const lineRequest=store&&order?workspace.client.rpc(
   "get_supplier_held_order_lines",{
    p_store_id:store.id,p_order_id:order.id,
   }):null;
+ const planPage=parseShipmentPlanPage(query.plans);
+ const canReviewPlans=store&&canReviewHeldShipmentPlans(workspace.memberships,store.supplier_id);
+ const planRequest=store&&order&&canReviewPlans?workspace.client.rpc(
+  "get_supplier_held_shipment_plans_v1",{
+   p_store_id:store.id,p_order_id:order.id,p_page:planPage,
+  }):null;
+ const [lineResponse,planResponse]=await Promise.all([lineRequest,planRequest]);
  const lines=store&&order&&lineResponse&&!lineResponse.error?
   parseSupplierHeldOrderLines(lineResponse.data,store.id,order.id,
    order.storedLineCount):null;
+ const shipmentPlans=store&&order&&lines&&planResponse&&!planResponse.error?
+  parseHeldShipmentPlans(planResponse.data,store.id,order.id,planPage,lines.lines):null;
  return <main className="container supplier-shell apex-supplier-orders">
   <Link className="back" href="/supplier/orders">← Orders &amp; Fulfillment</Link>
   <p className="eyebrow">APEX / SUPPLIER / ORDER REVIEW</p>
   <h1>Original order record</h1>
-  <p className="lead">Review the immutable order identity, purchased lines,
-   and a local partial-quantity preview. Nothing here authorizes shipment
-   or changes fulfillment records.</p>
+  <p className="lead">Review the original purchase and plan quantities for internal review.
+   Shipment stays disabled while the order is held.</p>
   {!store||!order?<section className="apex-orders-store" role="alert">
    <h2>Order record unavailable</h2>
    <p>The order could not be verified for your assigned supplier storefront.
@@ -85,11 +98,21 @@ export default async function SupplierHeldOrderDetail({
     matches the original history. This is not independent payment settlement,
     product authorization, or permission to pack, ship, decrypt addresses,
     purchase labels, or enter tracking.</p>
-   {lines?<HeldOrderLineReview lines={[...lines.lines]}/>:
+   {lines?<HeldOrderLineReview key={`${order.id}:${shipmentPlans?.reviewRevision??"preview"}`}
+    lines={[...lines.lines]} planForm={shipmentPlans?{
+     storeId:store.id,orderId:order.id,requestId:randomUUID(),
+     plannedQuantities:shipmentPlans.plannedQuantities,
+    }:undefined}/>:
     <p className="apex-orders-warning" role="alert">
      Original purchased lines cannot be verified right now.
      No details or fulfillment permissions have been inferred.
     </p>}
+   {lines&&shipmentPlans&&<HeldShipmentPlanHistory review={shipmentPlans} lines={lines.lines}
+    storeId={store.id} orderId={order.id} actorId={workspace.user.id}/>}
+   {lines&&canReviewPlans&&!shipmentPlans&&<p className="apex-orders-warning" role="alert">
+    Saved shipment plans are temporarily unavailable. Quantities can still be previewed.
+   </p>}
+   {lines&&!canReviewPlans&&<p className="notice">Owners and managers can save and review shipment plans.</p>}
    <div className="actions">
     <Link className="button secondary" href="/supplier/reports/cumulative-csv">
      Download / compare original IDs</Link>

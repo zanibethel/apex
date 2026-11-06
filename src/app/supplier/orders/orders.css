@@ -187,3 +187,25 @@
   grid-template-columns:repeat(2,minmax(0,1fr))
  }
 }
+
+.apex-orders-plan summary {
+ cursor:pointer;
+ min-height:40px;
+ line-height:1.6;
+ overflow-wrap:anywhere;
+}
+.apex-orders-plan summary span { margin-inline-start:.6rem; font-size:13px; }
+.apex-orders-plan p, .apex-orders-plan li { overflow-wrap:anywhere; }
+.apex-orders-plan li + li { margin-top:.4rem; }
+.apex-orders-plan-action { margin-top:1rem; }
+.apex-orders-plan-controls { display:flex; flex-wrap:wrap; gap:.5rem; }
+.apex-orders-plan-controls select {
+ max-width:100%;
+ min-height:44px;
+ padding:.5rem;
+ border:1px solid #786071;
+ border-radius:7px;
+ color:#f5e6ef;
+ background:#17131d;
+ font:inherit;
+}

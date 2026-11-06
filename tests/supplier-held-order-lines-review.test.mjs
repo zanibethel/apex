@@ -112,7 +112,7 @@ test("individual order page revalidates current membership and authorized record
  assert.match(page,/getSupplierWorkspace\(\)/);
  assert.match(page,/workspace\.stores\.find\(s=>s\.id===storeId\)/);
  assert.match(page,/get_supplier_held_order_record/);
- assert.match(page,/store&&order\?await workspace\.client\.rpc/);
+ assert.match(page,/lineRequest=store&&order\?workspace\.client\.rpc/);
  assert.match(page,/get_supplier_held_order_lines/);
  assert.match(page,/parseSupplierHeldOrderLines\(lineResponse\.data,store\.id,order\.id,/);
  assert.match(page,/order\.storedLineCount/);
