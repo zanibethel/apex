@@ -5,6 +5,8 @@ import {parseSupplierHeldOrderHeaders} from "@/lib/supplier/held-order-header-pr
 import {supplierHeldOrderHref} from "@/lib/supplier/held-order-record.mjs";
 import {parseSupplierOrderDetailFoundation}
  from "@/lib/supplier/order-detail-foundation.mjs";
+import {parseSupplierEligibleOrderReadinessV1}
+ from "@/lib/supplier/eligible-order-readiness.mjs";
 import {parseSupplierUspsReadiness}
  from "@/lib/supplier/daily-order-report.mjs";
 import {
@@ -33,12 +35,13 @@ export default async function SupplierOrdersHub(){
  const w=await getSupplierWorkspace();
  if(!w)redirect("/supplier/sign-in");
  const results=await Promise.all(w.stores.map(async store=>{
-  const [headersResult,detailsResult,uspsResult]=await Promise.all([
+  const [headersResult,detailsResult,uspsResult,eligibleResult]=await Promise.all([
    w.client.rpc("get_supplier_held_order_headers",{
     p_store_id:store.id,p_limit:SUPPLIER_ORDER_VIEW_LIMIT,p_offset:0,
    }),
    w.client.rpc("get_supplier_order_detail_foundation",{p_store_id:store.id}),
    w.client.rpc("get_supplier_usps_readiness",{p_store_id:store.id}),
+   w.client.rpc("get_supplier_eligible_order_readiness_v1",{p_store_id:store.id}),
   ]);
   const headers=headersResult.error?null:parseSupplierHeldOrderHeaders(
    headersResult.data,store.id,{limit:SUPPLIER_ORDER_VIEW_LIMIT,offset:0});
@@ -46,7 +49,10 @@ export default async function SupplierOrdersHub(){
    detailsResult.data,store.id);
   const usps=uspsResult.error?null:parseSupplierUspsReadiness(
    uspsResult.data,store.id);
-  return {store,headers,summary:summarizeSupplierOperations(headers,details,usps)};
+  const eligibility=eligibleResult.error?null:parseSupplierEligibleOrderReadinessV1(
+   eligibleResult.data,store.id);
+  return {store,headers,eligibility,
+   summary:summarizeSupplierOperations(headers,details,usps)};
  }));
  return <main className="container supplier-shell apex-supplier-orders">
   <Link href="/supplier" className="back">← Supplier workspace</Link>
@@ -63,7 +69,7 @@ export default async function SupplierOrdersHub(){
   <p className="apex-orders-warning" role="note">Orders shown here are held for independent
    verification. A recorded sale—even one marked confirmed—does not authorize a
    label, shipment, payment, delivery-address access, or fulfillment update.</p>
-  {results.map(({store,headers,summary})=><section key={store.id}
+  {results.map(({store,headers,summary,eligibility})=><section key={store.id}
    className="apex-orders-store" aria-label={"Orders for "+store.display_name}>
    <div className="apex-orders-store-heading">
     <div>
@@ -74,6 +80,13 @@ export default async function SupplierOrdersHub(){
    </div>
    {!summary?<p role="alert">Could not verify this store&apos;s order
     sources. Nothing has been changed or cleared for shipping.</p>:<>
+    {eligibility?<p className="notice" role="status">
+     Eligible-order handoff: <strong>Not yet integrated.</strong> Original held
+     records ({eligibility.heldOrderCount}) still need independent payment,
+     product and transport authorization before operational fulfillment.
+    </p>:<p className="apex-orders-warning" role="alert">
+     Eligible-order readiness could not be verified. No shipment eligibility is inferred.
+    </p>}
     <div className="apex-orders-metrics">
      <div><span>Original held orders</span>
       <strong>{summary.held===null?"Unavailable":summary.held}</strong></div>
