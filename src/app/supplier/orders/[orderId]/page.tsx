@@ -98,9 +98,10 @@ export default async function SupplierHeldOrderDetail({
     matches the original history. This is not independent payment settlement,
     product authorization, or permission to pack, ship, decrypt addresses,
     purchase labels, or enter tracking.</p>
-   {lines?<HeldOrderLineReview key={`${order.id}:${shipmentPlans?.reviewRevision??"preview"}`}
+   {lines?<HeldOrderLineReview key={order.id}
     lines={[...lines.lines]} planForm={shipmentPlans?{
      storeId:store.id,orderId:order.id,requestId:randomUUID(),
+     reviewRevision:shipmentPlans.reviewRevision,
      plannedQuantities:shipmentPlans.plannedQuantities,
     }:undefined}/>:
     <p className="apex-orders-warning" role="alert">

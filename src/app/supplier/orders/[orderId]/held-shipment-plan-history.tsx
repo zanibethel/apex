@@ -55,10 +55,10 @@ export function HeldShipmentPlanHistory({ review, storeId, orderId, actorId, lin
               </small>
             </li>)}
           </ol>
-          {actions.length > 0 && <HeldShipmentPlanTransition
-            key={plan.revision} storeId={storeId} orderId={orderId} shipmentId={plan.shipment_id}
+          <HeldShipmentPlanTransition
+            storeId={storeId} orderId={orderId} shipmentId={plan.shipment_id}
             revision={plan.revision} requestId={randomUUID()} actions={actions}
-          />}
+          />
         </details>;
       })}
     </div>

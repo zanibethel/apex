@@ -14,14 +14,16 @@ const money=(n:number)=>new Intl.NumberFormat("en-US",{
 }).format(n/100);
 
 type PlanForm={
- storeId:string;orderId:string;requestId:string;plannedQuantities:Record<string,number>;
+ storeId:string;orderId:string;requestId:string;reviewRevision:number;plannedQuantities:Record<string,number>;
 };
 const initial:PlanActionState={message:""};
 
 export function HeldOrderLineReview({lines,planForm}:{
  lines:ReviewLine[],planForm?:PlanForm,
 }){
- const [entered,setEntered]=useState<Record<string,string>>({});
+ const revision=planForm?.reviewRevision;
+ const [selection,setSelection]=useState<{revision?:number;quantities:Record<string,string>}>({quantities:{}});
+ const entered=selection.revision===revision?selection.quantities:{};
  const [result,submit,pending]=useActionState(saveHeldShipmentPlan,initial);
  const formId=useId();
  const rows=lines.map(line=>({
@@ -59,7 +61,12 @@ export function HeldOrderLineReview({lines,planForm}:{
       form={planForm?formId:undefined} name={planForm?`qty:${line.id}`:undefined}
       min={0} max={remaining} step={1} disabled={pending||remaining===0}
       value={entered[line.id]??"0"}
-      onChange={e=>setEntered(v=>({...v,[line.id]:e.target.value}))}
+      onChange={e=>{
+       const value=e.target.value;
+       setSelection(previous=>({revision,quantities:{
+        ...(previous.revision===revision?previous.quantities:{}),[line.id]:value,
+       }}));
+      }}
       aria-describedby={"review-line-note-"+line.id}/>
      <small id={"review-line-note-"+line.id}>
       {planForm?`${planned} in saved plans · ${remaining} available to plan`:
