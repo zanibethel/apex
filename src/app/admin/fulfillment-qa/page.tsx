@@ -5,7 +5,19 @@ import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {createTrack3QaFixtures} from "@/lib/supplier/track3-qa-fixtures.mjs";
 import FulfillmentQaWorkbench from "./workbench";
 import SamplePurchaseFlow from "./sample-purchase-flow";
+import ProductOptions from "@/app/catalog/product/[id]/product-options";
 import {runEndToEndSamplePurchaseQa} from "@/lib/checkout/end-to-end-sample-purchase-qa.mjs";
+
+
+// Synthetic option combinations for a private UI preview only.
+// No supplier workbook rows, product database lookups or checkout calls.
+const sampleOptions=[
+ {id:"11111111-1111-4111-8111-111111111111",carrierOil:"MCT",strength:"100 mg",size:"10 mL",retailPriceCents:1200},
+ {id:"22222222-2222-4222-8222-222222222222",carrierOil:"GSO",strength:"100 mg",size:"10 mL",retailPriceCents:1200},
+ {id:"33333333-3333-4333-8333-333333333333",carrierOil:"MCT",strength:"100 mg",size:"20 mL",retailPriceCents:1900},
+ {id:"44444444-4444-4444-8444-444444444444",carrierOil:"GSO",strength:"100 mg",size:"20 mL",retailPriceCents:1900},
+ {id:"55555555-5555-4555-8555-555555555555",carrierOil:"MCT",strength:"200 mg",size:"10 mL",retailPriceCents:1500},
+] as const;
 
 export const dynamic="force-dynamic";
 export const metadata={
@@ -31,6 +43,15 @@ export default async function Track3FulfillmentQA(){
   <p className="lead">Test order identity, cumulative review CSVs, stale edits,
    duplicate prevention and a protected email attachment manifest without
    using customer information, changing an order or purchasing postage.</p>
+  <section className="supplier-panel" style={{maxWidth:"none",marginTop:18}}>
+   <p className="eyebrow">SIMPLE PRODUCT OPTIONS · SAMPLE ONLY</p>
+   <h2>Try the product dropdowns</h2>
+   <p>Choose carrier oil, strength and size. The listed sample price updates
+    automatically. Only available option combinations are shown.</p>
+   <ProductOptions variants={sampleOptions}/>
+   <p className="notice">Private demo with invented sample amounts, not Lily&apos;s
+    product list. No product, inventory, cart, order or payment is changed.</p>
+  </section>
   <SamplePurchaseFlow result={sample}/>
   <section className="supplier-panel" style={{maxWidth:"none"}}>
    <h2>Deterministic two-day acceptance scenario</h2>
