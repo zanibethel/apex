@@ -1,0 +1,11 @@
+.apex-product-options{display:grid;gap:14px;width:100%;max-width:520px;margin:18px 0}
+.apex-product-options-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.apex-product-options-fields label{display:grid;gap:7px;min-width:0;font-size:12px;font-weight:750;color:#eac9d6}
+.apex-product-options-fields select{width:100%;min-width:0;min-height:45px;border:1px solid #72576a;border-radius:10px;background:#1b151d;color:#fff;padding:10px;font:inherit;font-size:14px}
+.apex-product-options-fields select:focus-visible{outline:2px solid #ff8db3;outline-offset:2px}
+.apex-product-options-single{font-size:12px;color:#c7b9c5;align-self:end;margin:0;padding:11px 0}
+.apex-product-options-single span{font-weight:750;color:#eac9d6}
+.apex-product-options-bottom{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px}
+.apex-product-options-bottom strong{font-size:25px;color:#fff}
+.apex-product-options-bottom span{font-size:11px;color:#bcaeb9}
+@media(max-width:390px){.apex-product-options-fields{grid-template-columns:minmax(0,1fr)}}
