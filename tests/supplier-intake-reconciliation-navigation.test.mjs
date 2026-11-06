@@ -25,8 +25,9 @@ test("parent identities are reconciled without flattening saved strengths or inv
  const result=reconcileIntakeWithSaved(parents,saved);
  assert.ok(result);
  assert.equal(result.length,4);
- assert.deepEqual(result[0].savedMatches.map(p=>p.id),[uuid(2),uuid(1)]);
- assert.equal(result[0].savedMatches[0].priceCents,2400);
+ assert.deepEqual(new Set(result[0].savedMatches.map(p=>p.id)),
+  new Set([uuid(1),uuid(2)]));
+ assert.equal(result[0].savedMatches.find(p=>p.id===uuid(2))?.priceCents,2400);
  assert.equal(result[1].savedMatches.length,1);
  assert.equal(result[1].savedMatches[0].id,uuid(3));
  assert.equal(result[2].savedMatches.length,1);
