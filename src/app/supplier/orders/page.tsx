@@ -2,6 +2,7 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {getSupplierWorkspace} from "@/lib/auth/supplier-workspace";
 import {parseSupplierHeldOrderHeaders} from "@/lib/supplier/held-order-header-projection.mjs";
+import {supplierHeldOrderHref} from "@/lib/supplier/held-order-record.mjs";
 import {parseSupplierOrderDetailFoundation}
  from "@/lib/supplier/order-detail-foundation.mjs";
 import {parseSupplierUspsReadiness}
@@ -114,6 +115,10 @@ export default async function SupplierOrdersHub(){
         <p><span>Protected destination</span>
          <strong>{order.destinationSealed?"Sealed · not accessible":"Not recorded"}</strong></p>
        </div>
+       <Link className="button secondary apex-orders-review-link"
+        href={supplierHeldOrderHref(store.id,order.id)??"/supplier/orders"}>
+        View original record
+       </Link>
       </article>)}
      </div>}
     <p className="notice">Shipping status: <strong>Not authorized</strong>.
