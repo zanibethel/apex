@@ -136,7 +136,8 @@ export function buildSupplierVariantReviewV1(payload) {
     }
     duplicatesSuppressed += group.length - 1;
     if ((row.sku && (bySku.get(row.sku).size > 1 ||
-      existing.ambiguousSkus.has(row.sku))) || existing.ambiguousKeys.has(key)) {
+      existing.ambiguousSkus.has(row.sku))) || existing.ambiguousKeys.has(key) ||
+      existing.ambiguousSkus.has(existing.byKey.get(key)?.sku)) {
       blockers.push(blocked(row.sourceRow, "duplicate_sku_or_existing_option"));
       continue;
     }
