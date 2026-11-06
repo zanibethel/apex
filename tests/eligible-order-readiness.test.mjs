@@ -60,9 +60,9 @@ test("hosted RPC is member-scoped and cannot turn held data into operational aut
  assert.match(sql,/m\.user_id = v_uid/);
  assert.match(sql,/security definer/);
  assert.match(sql,/set search_path = pg_catalog/);
- assert.match(sql,/eligible_orders.*\\[\\]'::jsonb/);
+ assert.ok(sql.includes("'eligible_orders', '[]'::jsonb"));
  const ci=readFileSync(".github/workflows/payout-rls.yml","utf8");
- assert.match(ci,/20261106235000_apex_eligible_order_readiness_v1\\.sql/);
- assert.match(ci,/eligible-order-readiness-v1\\.sql/);
+ assert.ok(ci.includes("20261106235000_apex_eligible_order_readiness_v1.sql"));
+ assert.ok(ci.includes("tests/payout-rls/eligible-order-readiness-v1.sql"));
  assert.doesNotMatch(sql,/create table|insert into|update apex_internal|delete from apex_internal/i);
 });
