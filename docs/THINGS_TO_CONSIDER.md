@@ -2,7 +2,7 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-05
+Last reviewed: 2026-11-06
 
 ## 1. Isolate Bitcoin signing and payment authority from web/worker compromise
 
@@ -82,3 +82,6 @@ Last reviewed: 2026-11-05
 
 
 **2026-11-05 catalog/payment-gate review (existing catalog and signing entries):** Connected hosted database confirms **63 products / 0 published / 50 active**, unchanged from Nov 4. Public catalog readiness, independently eligible order fulfillment, BTCPay settlement and live payout authorization are not established by saved product counts. Reuters Nov 5 reports ongoing post-election AI infrastructure volatility; cryptocurrency market recovery is not evidence of safer wallet operations. **Status:** Catalog acceptance pending; live payment and shipment release gates unchanged. **Possible solution:** read-only supplier-scoped order-detail, inventory/publish, CSV fulfillment, signing-isolation and settlement-finality acceptance evidence before any activation. **Recommendation:** no mainnet signing, live checkout, shipping or policy changes. Sources: https://www.reuters.com/business/energy/global-markets-global-markets-2026-11-05/ ; connected Apex Supabase read-only snapshot.
+
+
+**2026-11-06 catalog and wallet release-gate review (existing items 1, 2 and 4):** Connected hosted database still shows **63 products / 50 active / 0 published**; no new public-catalog readiness is established. Reuters Nov 6 documents technology/crypto market stress and AI-financing volatility; these are market context, not evidence of a BTCPay/Prism or Apex compromise. **Status:** Catalog acceptance pending; live signing, checkout, settlement and shipment release gates unchanged. **Possible solution:** read-only supplier-scoped catalog/variant/inventory and fulfillment contract acceptance, independent wallet signer and immutable payout-split verification in nonproduction. **Recommendation:** no live checkout, payment, shipping, policy or deployment activation. Sources: https://www.reuters.com/business/take-five/global-markets-themes-graphic-2026-11-06/ ; connected Apex database.
