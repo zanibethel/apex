@@ -20,7 +20,8 @@ export function summarizeSupplierOperations(headers,details,usps){
   !Array.isArray(headers.orders)||
   !Number.isSafeInteger(headers.total)||headers.total<0||
   headers.orders.length>SUPPLIER_ORDER_VIEW_LIMIT||
-  headers.orders.some(row=>row.status!=="held_unverified"||
+  headers.orders.some(row=>!row||typeof row!=="object"||
+    row.status!=="held_unverified"||
     row.canShip!==false||row.canPay!==false)
  ))return null;
  if(details!==null&&(
