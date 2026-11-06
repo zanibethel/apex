@@ -1,3 +1,5 @@
+> **Newer checkpoint available (November 6):** [Apex execution checkpoint](APEX_EXECUTION_CHECKPOINT_2026-11-06.md) records merged supplier Products PRs #293–#296, Orders & Fulfillment PRs #298–#300, verified production/test status and remaining blockers. Use the [next Track 3 separate-chat prompt](supplier/NEXT_TRACK3_SHIPMENT_LEDGER_PROMPT_20261106.md) to continue. This November 5 document remains a dated historical record; it must not be interpreted as the latest main/deployment or catalog snapshot.
+
 # Apex — November 5 cross-chat continuation and supplier variant handoff
 
 **Recorded:** 2026-11-05 (America/Chicago). **Repository:** `zanibethel/apex`. **Purpose:** preserve the latest three-track development and supplier catalog decisions so another work chat can resume without relying on old October planning text.
