@@ -16,3 +16,14 @@
 .apex-compact-product-availability{font-size:11px;color:#c9a9ba;margin:0}
 @media(max-width:530px){.apex-compact-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.apex-compact-product-body{padding:12px}.apex-compact-product-art{height:100px}.apex-compact-product h3{font-size:15px}.apex-compact-product-price strong{font-size:21px}}
 @media(max-width:365px){.apex-compact-product-grid{grid-template-columns:minmax(0,1fr)}}
+
+.apex-compact-product-composition{display:grid;gap:5px;min-width:0;color:#e0d2de;font-size:12px}
+.apex-compact-product-composition strong{color:#f2c4d7;font-size:11px}
+.apex-compact-product-composition p{margin:0;white-space:normal;overflow-wrap:anywhere;line-height:1.5}
+.apex-variant-review-panel{display:grid;gap:9px;padding:12px;border:1px solid #493340;border-radius:12px;background:#17131a;margin-top:8px}
+.apex-variant-review-panel label{display:grid;gap:6px;color:#f1d7e3;font-size:12px}
+.apex-variant-review-panel textarea{width:100%;resize:vertical;min-height:66px;border:1px solid #72576a;border-radius:8px;background:#211820;color:#fff;padding:9px;font:inherit;font-size:13px}
+.apex-variant-review-actions{display:flex;flex-wrap:wrap;gap:7px}
+.apex-variant-review-actions button{padding:10px 12px;min-height:40px;flex:1;font-size:12px}
+.apex-variant-review-panel .notice{margin:0}
+.apex-variant-review-held{font-size:12px;line-height:1.5;overflow-wrap:anywhere;padding:11px}
