@@ -143,3 +143,20 @@ Prism regtest, pending-invoice rule freeze, signature-verified
 provider settlement and order-level revocation, plus independent
 merchant/product/transport eligibility. See
 `docs/APEX_SHARED_BTCPAY_THREE_WAY_SPLIT_20261106.md`.
+
+## Prism three-wallet regtest integration — November 6 follow-on
+
+A bounded Track 2 test branch `feat/apex-btcpay-three-wallet-regtest`
+extends the pinned upstream BTCPay + Prism 1.3.3 disposable CI runner
+from two independently verified split versions to an additional
+one-provider-store, **Apex 10% / Lily 45% / Tierra 45%** scenario with
+three distinct test receiving wallets. A provider store is not the same
+as a payout-recipient wallet. Exact Prism claims, independently confirmed
+regtest receipts and Greenfield readback must agree for all three.
+
+This is a **proposed CI verification**, not a live payment test,
+recipient onboarding, or separate supplier BTCPay store arrangement.
+No wallet credentials, production payment flags, server setup,
+shipping/fulfillment permissions or payout rule activation are added.
+See `docs/BTCPAY_THREE_WALLET_REGTEST_20261106.md`. PR CI and merge
+must be verified independently before calling this complete.

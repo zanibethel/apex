@@ -12,6 +12,8 @@ import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { snapshotSyntheticAdminSplit } from "../src/lib/payments/synthetic-payout-rule-snapshot.mjs";
 import { readRegtestGreenfieldInventory } from "../src/lib/payments/btcpay-provider-drain.mjs";
+import {createThreeWayPrismRegtestSettings,reconcileThreeWayPrismRegtest}
+ from "../src/lib/payments/prism-three-way-regtest.mjs";
 import {
   assessSyntheticPrismFeeBudget,reconcileSyntheticPrismPayout,
 } from "../src/lib/payments/prism-payout-reliability.mjs";
@@ -19,7 +21,12 @@ import {
 const STORE_SCOPE="90000000-0000-4000-8000-000000000001";
 const SUPPLIER="80000000-0000-4000-8000-000000000001";
 const PLATFORM="80000000-0000-4000-8000-000000000002";
-const ratios=[{supplier:9000,version:1},{supplier:8500,version:2}];
+// The third scenario tests ONE provider store with three wallet destinations.
+const ratios=[{supplier:9000,version:1},{supplier:8500,version:2},
+ {apex:1000,lily:4500,tierra:4500,version:3}];
+const THREE_IDS={apex:"80000000-0000-4000-8000-000000000002",
+ lily:"80000000-0000-4000-8000-000000000003",
+ tierra:"80000000-0000-4000-8000-000000000004"};
 // Wider fee headroom while preserving Prism\'s actual 2% reserve. A separate
 // negative test will cover small invoices and minimum-fee policy.
 const TEST_INVOICE_SATS=10_000_000n;
@@ -27,7 +34,7 @@ const origin="http://127.0.0.1:14142";
 const id=/^[a-zA-Z0-9_-]{1,100}$/;
 const sha=/^[a-f0-9]{64}$/i;
 const COMPOSE="BTCPayServer.Tests/docker-compose.yml";
-const MAX_FORWARDED_TEST_MS=14*60*1000;
+const MAX_FORWARDED_TEST_MS=23*60*1000;
 const beginning=Date.now();
 function progress(stage,details="") {
   // Only static phase names and numeric counts, never addresses or credentials.
@@ -104,6 +111,17 @@ async function api(path,{method="GET",auth,json}={}) {
   return r.json();
 }
 export function payoutSettings(ratio,addresses) {
+  if(ratio?.version===3){
+    if(ratio.apex!==1000||ratio.lily!==4500||ratio.tierra!==4500)
+      throw Error("Unreviewed three-way regtest ratio");
+    const proof=createThreeWayPrismRegtestSettings({
+      storeId:STORE_SCOPE,recipientIds:THREE_IDS,
+      addresses,version:ratio.version,lilyBasisPoints:ratio.lily,
+      invoiceSats:TEST_INVOICE_SATS,testOnly:true,network:"regtest",
+    });
+    return {settings:proof.settings,threeWayExpected:proof.expected,
+      threeWayEntitlement:proof.entitlement,feeBudget:null,frozen:null};
+  }
   const rule={status:"approved_test_fixture",scope_type:"storefront",
     scope_id:STORE_SCOPE,version:ratio.version,allocations:[
       {recipient_id:SUPPLIER,basis_points:ratio.supplier},
@@ -201,7 +219,7 @@ async function storeConfig(basic,ratio,suffix){
   progress("configure-regtest-store",String(ratio.version));
   const store=await api("/api/v1/stores",{
     method:"POST",auth:basic,
-    json:{name:"Apex Prism synthetic "+ratio.supplier+" "+suffix},
+    json:{name:"Apex Prism synthetic "+(ratio.version===3?"10-45-45":ratio.supplier)+" "+suffix},
   });
   if(!id.test(store.id))throw Error("Missing Prism test store");
   const walletResponse=await api("/api/v1/stores/"+store.id+
@@ -226,17 +244,26 @@ async function storeConfig(basic,ratio,suffix){
     throw Error("Automatic on-chain payout processor was not configured");
   const sw="prism_s_"+ratio.version+"_"+suffix;
   const pw="prism_p_"+ratio.version+"_"+suffix;
+  const tw=ratio.version===3?"prism_t_"+ratio.version+"_"+suffix:null;
   createWallet(sw);createWallet(pw);
-  const addresses={
+  if(tw)createWallet(tw);
+  const addresses=ratio.version===3?{
+    apex:wallet(pw,"getnewaddress","","bech32"),
+    lily:wallet(sw,"getnewaddress","","bech32"),
+    tierra:wallet(tw,"getnewaddress","","bech32"),
+  }:{
     supplier:wallet(sw,"getnewaddress","","bech32"),
     platform:wallet(pw,"getnewaddress","","bech32"),
   };
-  const {settings,frozen,feeBudget}=payoutSettings(ratio,addresses);
+  const {settings,frozen,feeBudget,threeWayExpected,threeWayEntitlement}=
+    payoutSettings(ratio,addresses);
   persistSettings(store.id,settings);
   progress("configured-regtest-store",String(ratio.version));
-  return {storeId:store.id,sw,pw,addresses,frozen,feeBudget,ratio};
+  return {storeId:store.id,sw,pw,tw,addresses,frozen,feeBudget,
+    threeWayExpected,threeWayEntitlement,ratio};
 }
 async function waitForPayouts(basic,p,minerAddress) {
+  if(p.ratio.version===3)return waitForThreeWayPayouts(basic,p,minerAddress);
   progress("await-prism-claims",String(p.ratio.version));
   const path="/api/v1/stores/"+p.storeId+"/payouts";
   let claims=[];
@@ -365,6 +392,88 @@ async function waitForPayouts(basic,p,minerAddress) {
     payoutsCreated:claims.length,
     pluginGenerated:true,productionReady:false};
 }
+
+/**
+ * Third scenario: ONE disposable BTCPay store -> three distinct regtest
+ * receiving wallets. Do not infer live product or supplier eligibility.
+ */
+async function waitForThreeWayPayouts(basic,p,minerAddress){
+  if(p.ratio.version!==3||!p.tw||!Array.isArray(p.threeWayExpected)||
+     p.threeWayExpected.length!==3)
+    throw Error("Three-wallet synthetic fixture missing");
+  const expected=p.threeWayExpected;
+  const path="/api/v1/stores/"+p.storeId+"/payouts";
+  const roles=["apex","lily","tierra"];
+  const wallets={apex:p.pw,lily:p.sw,tierra:p.tw};
+  progress("await-three-prism-claims");
+  let claims=[];
+  for(let attempt=0;attempt<50;attempt++){
+    bounded("three-way-prism-claims");
+    claims=await api(path,{auth:basic});
+    if(Array.isArray(claims)&&claims.length>=3)break;
+    if(attempt%8===7)rpc("generatetoaddress","1",minerAddress);
+    await delay(1500);
+  }
+  if(!Array.isArray(claims)||claims.length!==3)
+    throw Error("Prism did not create exactly three test payout claims");
+  if(!roles.every(role=>claims.filter(c=>
+      c?.metadata?.Source==="Prism ("+role+")"&&
+      c.payoutMethodId==="BTC-CHAIN").length===1))
+    throw Error("Unrecognized or missing three-recipient Prism claims");
+  progress("three-prism-claims-seen",String(claims.length));
+  let observed={apex:0n,lily:0n,tierra:0n};
+  for(let attempt=0;attempt<90;attempt++){
+    bounded("three-prism-wallet-receipts");
+    observed=Object.fromEntries(roles.map(role=>[role,sats(
+      wallet(wallets[role],"getreceivedbyaddress",p.addresses[role],"0")
+    )]));
+    if(roles.every(role=>observed[role]>0n))break;
+    if(attempt%8===7)rpc("generatetoaddress","1",minerAddress);
+    await delay(2000);
+  }
+  if(!roles.every(role=>observed[role]>0n))
+    throw Error("Three independent regtest wallet receipts did not arrive");
+  rpc("generatetoaddress","2",minerAddress);
+  const confirmed=Object.fromEntries(roles.map(role=>[role,sats(
+    wallet(wallets[role],"getreceivedbyaddress",p.addresses[role],"1")
+  )]));
+  if(!roles.every(role=>confirmed[role]===observed[role]))
+    throw Error("Three-way receipt confirmation mismatch");
+  if(!roles.every(role=>confirmed[role]===
+      expected.find(e=>e.role===role).expectedSats))
+    throw Error("Prism three-way payouts do not match 2% reserve");
+  let final;
+  for(let attempt=0;attempt<40;attempt++){
+    bounded("three-way-payout-reconciliation");
+    const latest=await api(path,{auth:basic});
+    final=reconcileThreeWayPrismRegtest({
+      testOnly:true,network:"regtest",expected,claims:latest,
+      walletReceipts:Object.fromEntries(roles.map(role=>[role,{
+        confirmedSats:confirmed[role],confirmations:2,
+      }])),
+      pendingAgeMinutes:0,pendingAlertMinutes:15,
+    });
+    if(final.status==="verified_complete")break;
+    if(final.status==="manual_review")
+      throw Error("Three-way Prism payout requires operator review");
+    if(attempt%8===7)rpc("generatetoaddress","1",minerAddress);
+    await delay(1500);
+  }
+  if(final?.status!=="verified_complete")
+    throw Error("Three-way Prism claims lack verified complete status");
+  progress("three-prism-wallet-receipts-confirmed");
+  return {
+    ruleVersion:3,platformBasisPoints:1000,
+    lilyBasisPoints:4500,tierraBasisPoints:4500,
+    platformReceivedSats:confirmed.apex.toString(),
+    lilyReceivedSats:confirmed.lily.toString(),
+    tierraReceivedSats:confirmed.tierra.toString(),
+    reserveSats:(TEST_INVOICE_SATS-
+      roles.reduce((sum,role)=>sum+confirmed[role],0n)).toString(),
+    payoutsCreated:3,pluginGenerated:true,productionReady:false,
+  };
+}
+
 async function verifyReadOnlyProviderInventory(basic, p, expectedInvoiceId, walletProof) {
   const permissions=[
     "btcpay.store.canviewinvoices:"+p.storeId,
@@ -386,7 +495,7 @@ async function verifyReadOnlyProviderInventory(basic, p, expectedInvoiceId, wall
     apiKey:key.apiKey,serverUrl:origin+"/",pageSize:10,maxPages:3,
   });
   if(!result.inventoryComplete || result.invoices.length!==1 ||
-     result.payouts.length!==2 ||
+     result.payouts.length!==(p.ratio.version===3?3:2) ||
      !result.invoices.some(x=>x.id===expectedInvoiceId &&
        x.status==="Settled" && x.additionalStatus==="None" &&
        x.metadata?.orderId==="prism-test-"+p.ratio.version) ||
@@ -394,11 +503,15 @@ async function verifyReadOnlyProviderInventory(basic, p, expectedInvoiceId, wall
        x.payoutMethodId==="BTC-CHAIN"))
     throw Error("Actual upstream Greenfield inventory mismatched Prism regtest");
   // Require independent receiving-wallet amounts and destinations, not just counts.
-  const wallets=[
+  const wallets=p.ratio.version===3?[
+    {destination:p.addresses.apex,amount:BigInt(walletProof.platformReceivedSats)},
+    {destination:p.addresses.lily,amount:BigInt(walletProof.lilyReceivedSats)},
+    {destination:p.addresses.tierra,amount:BigInt(walletProof.tierraReceivedSats)},
+  ]:[
     {destination:p.addresses.supplier,amount:BigInt(walletProof.supplierReceivedSats)},
     {destination:p.addresses.platform,amount:BigInt(walletProof.platformReceivedSats)},
   ];
-  if(p.addresses.supplier===p.addresses.platform ||
+  if(new Set(wallets.map(w=>w.destination)).size!==wallets.length ||
     !wallets.every(w=>result.payouts.filter(x=>
       x.destination===w.destination && sats(x.payoutAmount)===w.amount).length===1))
     throw Error("Provider payout destinations or amounts mismatch independent wallets");
@@ -474,9 +587,11 @@ export async function runEphemeralPrismForwarding({basic}) {
     receipts.push(walletProof);
     await verifyReadOnlyProviderInventory(basic,p,invoice.id,walletProof);
   }
-  if(receipts.length!==2)
-    throw Error("Both versioned Prism regtest scenarios did not complete");
+  if(receipts.length!==3||
+     receipts[2]?.payoutsCreated!==3||!receipts.every(x=>x.pluginGenerated))
+    throw Error("Two legacy and three-way Prism regtest scenarios were not verified");
   progress("both-prism-payout-ratios-confirmed");
+  progress("three-prism-payout-scenarios-confirmed");
   return Object.freeze({
     verifiedNetwork:"regtest",prismForwardingVerified:true,
     scenarioCount:receipts.length,receipts,productionReady:false,
