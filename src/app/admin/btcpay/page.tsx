@@ -69,7 +69,7 @@ export default async function AdminBtcpayConnection(){
   <p className="lead">One BTCPay provider store for Apex, Lily and Tierra.
    This diagnostic only reads one configured provider store; it cannot issue
    invoices, send transfers or activate Prism payout rules.</p>
-  <p className="notice"><strong>Live checkout and payouts remain disabled.</strong>
+  <p className="notice"><strong>Checkout remains disabled. Payouts remain disabled.</strong>
    Even a successful provider read does not authorize payment, prove wallet
    ownership, authenticate webhooks or confirm legal product eligibility.</p>
   {stores===null&&<p role="alert" className="notice">
