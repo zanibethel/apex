@@ -14,17 +14,6 @@ const recipients=[
 ];
 const env={APEX_BTCPAY_KEY_READ_ONLY:"read-private-credential-A",
  APEX_BTCPAY_KEY_INVOICE_WRITER:"write-private-credential-B"};
-const connected=async ({url,options})=>{
- let count=0;
- return {fetchImpl:async (u,o)=>{
-  count++;
-  assert.equal(u,url);
-  assert.equal(o.method,"GET");
-  assert.equal(o.headers.Authorization,"token "+env.APEX_BTCPAY_KEY_READ_ONLY);
-  return {status:200,ok:true,headers:{get:()=>null},
-   text:async()=>JSON.stringify({id:"ProviderOne",name:"Apex Anabolics",defaultCurrency:"USD"})};
- },get count(){return count;}};
-};
 test("without hosting, reports no binding and refuses every money operation",async()=>{
  const r=await inspectSharedBtcpayReadinessV1({apexStoreIds:[store],recipients,env:{}});
  assert.equal(r.storeStatus,"no_bindings");
