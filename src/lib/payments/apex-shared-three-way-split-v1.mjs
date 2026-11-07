@@ -14,6 +14,7 @@ const EXACT=(o,keys)=>o!==null&&typeof o==="object"&&!Array.isArray(o)&&
 const PLATFORM_BPS=1000;
 const SUPPLIERS_BPS=9000;
 
+/** @param {{storeId?:string,recipientIds?:{apex:string,lily:string,tierra:string},lilyBasisPoints?:number}} [options] */
 export function buildApexSharedThreeWayDraftV1({
  storeId,recipientIds,lilyBasisPoints=4500,
 }={}) {
