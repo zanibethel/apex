@@ -2,7 +2,7 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-06
+Last reviewed: 2026-11-07
 
 ## 1. Isolate Bitcoin signing and payment authority from web/worker compromise
 
@@ -85,3 +85,6 @@ Last reviewed: 2026-11-06
 
 
 **2026-11-06 catalog and wallet release-gate review (existing items 1, 2 and 4):** Connected hosted database still shows **63 products / 50 active / 0 published**; no new public-catalog readiness is established. Reuters Nov 6 documents technology/crypto market stress and AI-financing volatility; these are market context, not evidence of a BTCPay/Prism or Apex compromise. **Status:** Catalog acceptance pending; live signing, checkout, settlement and shipment release gates unchanged. **Possible solution:** read-only supplier-scoped catalog/variant/inventory and fulfillment contract acceptance, independent wallet signer and immutable payout-split verification in nonproduction. **Recommendation:** no live checkout, payment, shipping, policy or deployment activation. Sources: https://www.reuters.com/business/take-five/global-markets-themes-graphic-2026-11-06/ ; connected Apex database.
+
+
+**2026-11-07 catalog/payment consideration review:** Connected hosted products remain **63 saved / 50 active / 0 published**, unchanged. Latest separately discussed regtest three-way Prism payout evidence (PR #306) is a nonproduction milestone and must not be confused with live settlement or public catalog readiness; exact current main/PR merge status was not independently established in this review. CoinDesk Nov 5 reports crypto liquidation stress, which does not demonstrate BTCPay/Prism compromise. **Status:** Catalog acceptance pending; live checkout, signer and settlement gates unchanged. **Possible solution:** verify current main and latest PRs, then independently test three-way allocation versioning, webhook idempotency, payout reconciliation, signing isolation, and supplier-scoped fulfillment using disposable regtest. **Recommendation:** no mainnet wallet, live checkout, shipment or deployment activation. Sources: https://github.com/zanibethel/apex/pull/306 ; https://www.coindesk.com/markets/2026/11/05/bitcoin-crypto-stocks-caught-in-ai-trade-meltdown-but-wintermute-trader-sees-glass-half-full ; connected Apex database.
