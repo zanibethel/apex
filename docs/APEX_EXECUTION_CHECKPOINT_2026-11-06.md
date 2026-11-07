@@ -160,3 +160,41 @@ No wallet credentials, production payment flags, server setup,
 shipping/fulfillment permissions or payout rule activation are added.
 See `docs/BTCPAY_THREE_WALLET_REGTEST_20261106.md`. PR CI and merge
 must be verified independently before calling this complete.
+
+
+## Track 2 single-store BTCPay infrastructure readiness — November 6 follow-on
+
+**Branch:** `feat/apex-btcpay-shared-store-readiness-20261106`.
+Apex is evaluating one provider BTCPay store with three distinct recipient
+wallets, not three provider stores. The existing read-only Greenfield probe
+is reused behind a stricter one-Apex-store / one-provider-store binding check.
+The admin /admin/btcpay page now makes the missing host, identity, read-only
+key and payout safeguards explicit, without opening an invoice or changing Prism.
+
+**Connected audit:** Vercel `apex` environment currently has no
+`APEX_BTCPAY_BINDINGS_JSON` or server-only BTCPay API keys.
+Supabase `payout_recipients` has three entries (Apex Platform, Lily, Tierra)
+but all are **inactive and wallet-unverified**. There are no production
+`payout_rules`, `payment_allocation_snapshots` or
+`payout_transfer_records`. The Apex store remains a draft.
+Production's last inspected Vercel deployment was READY at
+`0ab1f0726daa0183adc24ea57f1f332f4ac07488`, the #306 merge.
+These are as-of-check findings, not authorization or a new release.
+
+**Host candidate awaiting owner approval:** DigitalOcean 4 GiB/2 vCPU/80 GiB
+Linux VPS ($24/month) with daily automated image backups (+30% / $7.20),
+approximately $31.20/month before independent offsite exports/taxes.
+No VPS, wallet, DNS, key, payment or hosting charge has been initiated.
+See `docs/BTCPAY_SHARED_STORE_INFRASTRUCTURE_20261106.md`.
+
+**Still blocked:** three independently verified wallet ownership claims,
+read-key permissions, invoice-writer permission isolation, merchant/product
+eligibility, test-only signed-webhook receipt and reconciliation, immutable
+rule effective dates and freeze/drain, real Prism configuration verification,
+network fees and refunds, manual payout-failure recovery and all live release
+gates. Existing #305 draft and #306 three-wallet regtest are the validated
+foundation; they do not imply a payment-ready deployment.
+
+Verification of this new branch, PR status, CI and preview must be checked
+independently before any merge. There is no production schema or release
+change from this bounded code slice.

@@ -4,87 +4,114 @@ import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {parseAdminCategoryStores} from "@/lib/catalog/admin-category-publication.mjs";
-import {probePrivateGreenfieldStore} from "@/lib/btcpay/private-greenfield-status.mjs";
+import {inspectSharedBtcpayReadinessV1} from "@/lib/btcpay/shared-store-readiness-v1.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={
  title:"BTCPay Connection | Apex Admin",
  robots:{index:false,follow:false},
 };
-const labels:Record<string,{name:string;detail:string}>={
- no_bindings:{name:"Not configured",detail:"No provider store bindings are configured for Apex yet."},
- invalid_bindings:{name:"Configuration needs correction",detail:"A provider URL, store mapping or credential reference is invalid or duplicated."},
- no_store_binding:{name:"Store not connected",detail:"No BTCPay store is bound to this Apex private supplier store."},
- missing_key:{name:"API key missing",detail:"The private credential for this supplier store is not configured on the server."},
- invalid_key:{name:"Credential format invalid",detail:"Replace the server-side key with a valid scoped Greenfield credential."},
- unreachable:{name:"Provider unreachable",detail:"The BTCPay server could not be reached securely. No retry or payment action was attempted."},
- key_denied:{name:"Permission denied",detail:"The configured Greenfield key cannot read this BTCPay store. Check its store-scoped read permission."},
- store_not_found:{name:"Store not found",detail:"The configured store ID does not exist or cannot be viewed using this key."},
- provider_error:{name:"Provider unavailable",detail:"BTCPay returned a non-successful response to the read-only check."},
- invalid_response:{name:"Unexpected provider response",detail:"BTCPay did not return a usable store record."},
- store_mismatch:{name:"Store identity mismatch",detail:"BTCPay returned a store different from the expected provider store. The connection is not trusted."},
- currency_mismatch:{name:"Currency mismatch",detail:"The BTCPay store's default currency is not USD, which Apex uses for its saved catalog."},
- store_verified:{name:"Store read verified",detail:"The configured key read the expected BTCPay store over HTTPS. Wallet, webhook, invoice writer and release approval are not yet verified."},
- invalid_store:{name:"Store unavailable",detail:"Apex supplied an invalid private store identity."},
-};
 
+const statusText:Record<string,string>={
+ no_bindings:"Hosting and provider-store binding not configured",
+ single_apex_store_required:"Exactly one authorized Apex storefront is required",
+ single_provider_binding_required:"Exactly one valid BTCPay provider-store mapping is required",
+ wrong_store_or_read_key:"Store mapping or read-only key assignment needs correction",
+ credential_reuse_rejected:"Read and invoice-writing credentials must be separate",
+ no_store_binding:"No BTCPay store is mapped to this Apex storefront",
+ missing_key:"Read-only API key has not been configured",
+ invalid_key:"Read-only API key format needs correction",
+ unreachable:"The provider could not be reached securely",
+ key_denied:"Read-only API key denied by the provider",
+ store_not_found:"The mapped store was not found",
+ provider_error:"The provider returned an error",
+ invalid_response:"The provider response could not be verified",
+ store_mismatch:"The returned provider store identity does not match",
+ currency_mismatch:"The provider store default currency is not USD",
+ store_verified:"Expected BTCPay store read over HTTPS — read-only check passed",
+ invalid_store:"Apex storefront identity invalid",
+};
+const recipientText:Record<string,string>={
+ unavailable:"Recipient directory unavailable",
+ three_recipients_required:"Exactly three distinct role entries are needed",
+ inactive_recipients:"Apex, Lily and Tierra entries exist but are not all active",
+ directory_only_wallets_unverified:"Directory entries are active; wallet ownership remains unverified",
+};
+const writerText:Record<string,string>={
+ not_configured:"Not configured (expected for preparation)",
+ invalid:"Credential configuration invalid",
+ same_key_rejected:"Read-only key reuse blocked",
+ configured_not_authorized:"Separate key is present, but write permission has NOT been verified",
+};
 export default async function AdminBtcpayConnection(){
  const client=await createSupplierServerClient();
  if(!client)redirect("/admin/sign-in");
  const {data:auth,error:authError}=await client.auth.getUser();
  if(authError||!isVerifiedPlatformAdmin(auth.user))redirect("/admin/sign-in");
-
- // Existing privileged, verified-admin readback. No global service key.
- const result=await client.rpc("get_admin_private_category_stores");
- const stores=result.error?null:parseAdminCategoryStores(result.data);
- const records=stores===null?null:await Promise.all(stores.slice(0,20).map(async store=>({
-  ...store,probe:await probePrivateGreenfieldStore({
-   apexStoreId:store.id,
-   rawBindings:process.env.APEX_BTCPAY_BINDINGS_JSON,
-   env:process.env,
-  }),
- })));
+ const [storesResult,recipientResult]=await Promise.all([
+  client.rpc("get_admin_private_category_stores"),
+  client.from("payout_recipients")
+   .select("id,display_name,recipient_type,status")
+   .order("display_name").limit(20),
+ ]);
+ const stores=storesResult.error?null:parseAdminCategoryStores(storesResult.data);
+ const readiness=await inspectSharedBtcpayReadinessV1({
+  apexStoreIds:stores?.map(store=>store.id),
+  rawBindings:process.env.APEX_BTCPAY_BINDINGS_JSON,
+  env:process.env,
+  recipients:recipientResult.error?undefined:recipientResult.data??[],
+ });
+ const verified=readiness.storeStatus==="store_verified";
  return <main className="container supplier-shell apex-branded-dashboard">
   <Link className="back" href="/admin">← Admin dashboard</Link>
   <p className="eyebrow">APEX / ADMIN / BITCOIN CONNECTIVITY</p>
   <h1>BTCPay connection</h1>
-  <p className="lead">Check store-specific Greenfield API connectivity using
-   private server credentials. This screen never issues invoices or requests payment.</p>
-  <p className="notice"><strong>Checkout remains disabled.</strong> A successful
-   store-read check does not verify wallet setup, payment webhooks, automatic
-   supplier splits, order storage, or independent product release approval.</p>
-  {records===null?<p role="alert" className="notice">Private storefront readback failed.
-   No provider connection requests were made.</p>:
-   records.length===0?<p className="notice">No private supplier stores are available.</p>:
-   <div className="apex-product-grid">
-    {records.map(({id,name,probe})=>{
-     const info=labels[probe.status]??{name:"Connection not verified",detail:"The check could not confirm a trusted store connection."};
-     return <article key={id} className="apex-product-card">
-      <p className="eyebrow">PRIVATE SUPPLIER STORE</p>
-      <h2>{name}</h2>
-      <p className="notice"><strong>Connection:</strong> {info.name}</p>
-      <p className="notice">{info.detail}</p>
-      {probe.status==="store_verified"&&<p className="notice">
-       <strong>Verified provider store:</strong> {probe.providerName}</p>}
-      <p className="notice">Apex store ID: <code>{id}</code></p>
-     </article>;
-    })}
-   </div>}
+  <p className="lead">One BTCPay provider store for Apex, Lily and Tierra.
+   This diagnostic only reads one configured provider store; it cannot issue
+   invoices, send transfers or activate Prism payout rules.</p>
+  <p className="notice"><strong>Checkout remains disabled. Payouts remain disabled.</strong>
+   Even a successful provider read does not authorize payment, prove wallet
+   ownership, authenticate webhooks or confirm legal product eligibility.</p>
+  {stores===null&&<p role="alert" className="notice">
+   Private storefront verification is unavailable. No provider calls were made.
+  </p>}
+  {recipientResult.error&&<p role="alert" className="notice">
+   Payout recipient directory could not be read.</p>}
+  <section className="supplier-panel" style={{maxWidth:"none",marginTop:24}}>
+   <h2>Shared provider store</h2>
+   <p className="notice"><strong>Connection:</strong> {statusText[readiness.storeStatus]??"Not verified"}</p>
+   {verified&&readiness.providerName&&<p className="notice">
+    <strong>Verified provider name:</strong> {readiness.providerName} (USD)</p>}
+   <p className="notice"><strong>Apex store records:</strong> {stores?.length??"Unavailable"}</p>
+   <p className="notice"><strong>Recipient records:</strong> {recipientText[readiness.recipientStatus]??"Not verified"}</p>
+   <p className="notice"><strong>Invoice writer:</strong> {writerText[readiness.writerStatus]??"Not authorized"}</p>
+   <p className="notice"><strong>Read-key scope:</strong> Independent least-privilege review required,
+    including store-scoped <code>btcpay.store.canviewstoresettings</code>.</p>
+   <p className="notice"><strong>Recipient wallets:</strong> 0 of 3 independently verified in this workflow.</p>
+   <p className="notice"><strong>Prism rule synchronization:</strong> Not implemented or authorized.
+    Saving a new draft does not update the installed Prism plugin.</p>
+   <p className="notice"><strong>Pending invoice freeze/drain:</strong> Not implemented.
+    Fee, minimum payout, refund and reversal policy await review.</p>
+  </section>
   <section className="supplier-panel" style={{maxWidth:"none",marginTop:24}}>
    <h2>Connection setup</h2>
-   <p className="notice">Configure the server-only <code>APEX_BTCPAY_BINDINGS_JSON</code>
-    mapping for each private Apex store, then set a different
-    <code> APEX_BTCPAY_KEY_*</code> secret for each mapped provider store.
-    The probe key needs only BTCPay store-scoped
-    <code> btcpay.store.canviewstoresettings</code> permission.</p>
-   <p className="notice">Add secrets through Vercel project environment settings,
-    not inside Apex forms, GitHub code, or chat. Store-specific invoice-writer
-    credentials must remain separate from the read-only connection key.</p>
-   <p className="notice">No BTCPay credentials are sent to the browser.
-    Use Refresh to repeat the read-only verification.</p>
+   <p className="notice">First obtain approval for a BTCPay host, then create a single
+    <strong> Apex Anabolics</strong> provider store using USD as its default currency.
+    Configure one server-only <code>APEX_BTCPAY_BINDINGS_JSON</code> entry for the
+    Apex storefront using <code>APEX_BTCPAY_KEY_READ_ONLY</code>.
+    Do not create a separate BTCPay store for Lily or Tierra.</p>
+   <p className="notice">The read key must have only the required provider
+    store-scoped permissions. Keep any later
+    <code> APEX_BTCPAY_KEY_INVOICE_WRITER</code> key distinct, server-only and
+    unused until separate authorization. Do not add wallet seeds or payout
+    signing secrets to Vercel.</p>
+   <p className="notice">This page cannot synchronize Prism, confirm payouts
+    or independently verify authorization. See the infrastructure and operator
+    checklist in the Track 2 project documentation.</p>
    <div className="actions">
-    <Link className="button secondary" href="/admin/btcpay">Refresh connection</Link>
-    <Link className="button secondary" href="/admin/checkout-review">Checkout layout review</Link>
+    <Link className="button secondary" href="/admin/btcpay">Refresh read-only status</Link>
+    <Link className="button secondary" href="/admin/recipients">Recipient directory</Link>
+    <Link className="button secondary" href="/admin/splits/configure">10% / 45% / 45% draft split</Link>
     <Link className="button secondary" href="/admin/payment-monitor">Payment monitor</Link>
    </div>
   </section>
