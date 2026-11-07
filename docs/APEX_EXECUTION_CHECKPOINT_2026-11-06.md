@@ -117,3 +117,29 @@ and settlement/reversal reconciliation; legally valid supplier/product/carrier
 authorization sources and revocation handling; authorized address access;
 new supplier-scoped eligible-order projection and negative RLS tests.
 PR, CI, preview and any release outcomes must be independently verified.
+
+## Shared BTCPay store / Apex + Lily + Tierra split — November 6, 2026
+
+**Planning choice:** one BTCPay store, not a separate provider store
+for each supplier. Three internal payout recipients on one Apex
+storefront: fixed platform 10%, Lily 45%, Tierra 45% initially, with
+admin-adjustable Lily/Tierra split of the remaining 90%. Changes must
+create a new draft rule version, not retroactively modify historical
+order allocations.
+
+**Implementation branch:** `feat/apex-shared-btcpay-three-way-split-draft`.
+Existing generic payout recipient/draft tables and admin read scopes
+are reused. The `/admin/splits/configure` admin page gains a dedicated
+single-store three-way proposal editor and protected server validation
+for recipient roles, percentages, scope and draft-only changes. A
+regtest-only immutable entitlement helper tests satoshi allocation.
+**No live BTCPay connection, three-wallet Prism proof, persisted
+payment entitlement or rule activation** is added.
+
+Pre-merge checkpoint status is provisional; CI/PR/production state
+must be separately verified. The next payment gates are real
+Greenfield store identity, independently evidenced three-wallet
+Prism regtest, pending-invoice rule freeze, signature-verified
+provider settlement and order-level revocation, plus independent
+merchant/product/transport eligibility. See
+`docs/APEX_SHARED_BTCPAY_THREE_WAY_SPLIT_20261106.md`.
