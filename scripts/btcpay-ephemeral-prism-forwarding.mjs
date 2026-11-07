@@ -590,6 +590,7 @@ export async function runEphemeralPrismForwarding({basic}) {
   if(receipts.length!==3||
      receipts[2]?.payoutsCreated!==3||!receipts.every(x=>x.pluginGenerated))
     throw Error("Two legacy and three-way Prism regtest scenarios were not verified");
+  progress("both-prism-payout-ratios-confirmed");
   progress("three-prism-payout-scenarios-confirmed");
   return Object.freeze({
     verifiedNetwork:"regtest",prismForwardingVerified:true,
