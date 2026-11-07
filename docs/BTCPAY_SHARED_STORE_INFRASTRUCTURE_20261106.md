@@ -95,3 +95,75 @@ invoice drain are **unverified**. All monetary/release flags remain false.
   (do not put BTC private keys or payout signing secrets on Vercel).
 - Real wallet verification, merchant/legal eligibility and independent
   restore test. Do not enable live checkout or shipments.
+
+
+## Owner hosting approval — November 6, 2026
+
+**Approved:** DigitalOcean Basic Regular 4 GiB RAM / 2 vCPU / 80 GiB
+SSD ($24/month), plus Daily Backup on Basic (+30% = $7.20/month),
+for a projected **$31.20/month** before taxes or separate offsite
+backup costs. Host budget approved; this does not approve real wallet
+authorization, invoice execution, Prism payouts, products, shipping,
+or lifting any commercial release gate.
+
+**Provisioning status: blocked on DigitalOcean account access.**
+There is no DigitalOcean account connection in the current agent
+environment. No Droplet purchased; no billing charge, instance
+ID, IP address, SSH access, DNS change or hosted BTCPay store exists
+as a result of this approval. Track the owner-only provisioning
+steps in [Issue #308](https://github.com/zanibethel/apex/issues/308).
+
+### Exact operator provisioning handoff
+
+1. Open DigitalOcean's [Create Droplet](https://cloud.digitalocean.com/droplets/new)
+   panel using the account owner's login, billing and 2FA. Confirm the
+   displayed plan is **Basic Regular, 4 GiB RAM, 2 vCPUs, 80 GiB SSD,
+   $24/month**; choose a current supported Ubuntu LTS and the preferred
+   region, not an upsold Premium or dedicated-CPU plan.
+2. In **Authentication**, select an owner-controlled **SSH public key**
+   (never paste private keys, wallet seeds or account tokens into GitHub,
+   Vercel, or chat). Enable **Daily Backups** and free monitoring.
+   Avoid optional paid add-ons. Retain account 2FA.
+3. Apply a **DigitalOcean Cloud Firewall**. Allow TCP 22 from a trusted
+   administrator IP or VPN only; TCP 80 and 443 for the default
+   HTTPS/ACME process. Restrict all other inbound management ports.
+   Do not expose PostgreSQL, Bitcoin RPC, Docker API or web admin
+   alternatives. Confirm BTCPay's supported networking profile before
+   allowing additional node-peer ports.
+4. Record the assigned public IPv4 **outside the public repo**. Add
+   `btcpay.apexanabolics.co` **A** record in the existing DNS zone;
+   do not change the storefront root A/CNAME, Proton MX/TXT, or SPF/DKIM
+   records. Validate DNS and HTTPS certificates independently.
+5. Use the
+   [current official BTCPay Docker installation](https://docs.btcpayserver.org/Docker/installation/)
+   rather than committing an improvised installer. Select Bitcoin-only,
+   `BTCPAYGEN_LIGHTNING=none`, nginx HTTPS, and
+   `opt-save-storage-xs` for the 80 GiB disk. The pruning profile has
+   a 25 GiB approximate retained-block target, not a total storage limit;
+   monitor chainstate and free disk space. No payments or wallet onboarding.
+6. Secure the first BTCPay administrator account immediately. Create only
+   one **Apex Anabolics** provider store with **USD** default currency.
+   Verify that the selected Prism version and full payout lifecycle
+   work with this particular BTCPay release; the disposable pinned
+   v1.3.3 regtest alone does not attest the hosted installation.
+7. Validate encrypted backups and restore capability in a disposable
+   environment. Check OS updates, disk alerting, process monitoring,
+   external access restrictions, and all unexpected listening ports.
+8. Only after the host is verified, create a **store-scoped, read-only
+   Greenfield** credential and place it securely into Vercel
+   `APEX_BTCPAY_KEY_READ_ONLY`, with a single
+   `APEX_BTCPAY_BINDINGS_JSON` entry. Verify its expected store ID,
+   HTTPS and USD readback through `/admin/btcpay`. Do **not**
+   provision invoice-writing or payout-signing credentials yet.
+
+No real wallet or merchant acceptance is implied. A successful host
+install is not sufficient to pass the independently gated product,
+custody, settlement, payout, refund and legal eligibility reviews.
+
+Current primary sources:
+- https://www.digitalocean.com/pricing/droplets
+- https://docs.digitalocean.com/products/backups/details/pricing/
+- https://docs.digitalocean.com/products/droplets/how-to/create/
+- https://docs.digitalocean.com/products/networking/firewalls/how-to/configure-rules/
+- https://docs.btcpayserver.org/Docker/specs/
+- https://docs.btcpayserver.org/Docker/networking/
