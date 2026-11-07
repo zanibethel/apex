@@ -198,3 +198,25 @@ foundation; they do not imply a payment-ready deployment.
 Verification of this new branch, PR status, CI and preview must be checked
 independently before any merge. There is no production schema or release
 change from this bounded code slice.
+
+## Approved hosting decision — November 6 follow-on
+
+Owner approved the **DigitalOcean Basic 4 GiB / 2 vCPU / 80 GiB
+single-host** plan at $24/month plus 30% Daily Backup, about
+**$31.20/month** before separate offsite backups/taxes. This is an
+infrastructure-spend approval, **not permission to activate real
+payments, merchandise, recipient wallets, provider payouts or shipping**.
+
+Execution is **blocked on external DigitalOcean account access**: no
+DigitalOcean connector was available for provisioning, and no Droplet,
+billing charge, DNS record, SSH access or BTCPay provider instance was
+created. Explicit next owner action and security acceptance are tracked
+in [Issue #308](https://github.com/zanibethel/apex/issues/308), with
+steps in `docs/BTCPAY_SHARED_STORE_INFRASTRUCTURE_20261106.md`.
+
+Track 2 [PR #307](https://github.com/zanibethel/apex/pull/307)
+was merged at `ef1629e942d97d2e771e0f47bb5be16a5149d767`
+with full PR-head quality and isolated PostgreSQL checks passing.
+Its production deployment at the exact merge SHA was verified READY;
+the public release gate was independently confirmed OFF. No hosting
+API, credential secrets, or monetary operations were introduced.
