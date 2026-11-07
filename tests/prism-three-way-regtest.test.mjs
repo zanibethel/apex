@@ -46,7 +46,7 @@ test("admin rule can rebalance suppliers while platform remains at 10%",()=>{
 });
 
 test("satoshi rounding is complete and all percentages exact",()=>{
- const a=config({lilyBasisPoints:3555,invoiceSats:1234567n});
+ const a=config({lilyBasisPoints:3555,invoiceSats:2345679n});
  assert.equal(a.expected.reduce((sum,x)=>sum+x.expectedSats,0n),a.distributableSats);
  assert.equal(a.expected.reduce((sum,x)=>sum+x.basisPoints,0),10000);
 });
