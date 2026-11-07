@@ -12,6 +12,8 @@ import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { snapshotSyntheticAdminSplit } from "../src/lib/payments/synthetic-payout-rule-snapshot.mjs";
 import { readRegtestGreenfieldInventory } from "../src/lib/payments/btcpay-provider-drain.mjs";
+import {createThreeWayPrismRegtestSettings,reconcileThreeWayPrismRegtest}
+ from "../src/lib/payments/prism-three-way-regtest.mjs";
 import {
   assessSyntheticPrismFeeBudget,reconcileSyntheticPrismPayout,
 } from "../src/lib/payments/prism-payout-reliability.mjs";
@@ -19,7 +21,12 @@ import {
 const STORE_SCOPE="90000000-0000-4000-8000-000000000001";
 const SUPPLIER="80000000-0000-4000-8000-000000000001";
 const PLATFORM="80000000-0000-4000-8000-000000000002";
-const ratios=[{supplier:9000,version:1},{supplier:8500,version:2}];
+// The third scenario tests ONE provider store with three wallet destinations.
+const ratios=[{supplier:9000,version:1},{supplier:8500,version:2},
+ {apex:1000,lily:4500,tierra:4500,version:3}];
+const THREE_IDS={apex:"80000000-0000-4000-8000-000000000002",
+ lily:"80000000-0000-4000-8000-000000000003",
+ tierra:"80000000-0000-4000-8000-000000000004"};
 // Wider fee headroom while preserving Prism\'s actual 2% reserve. A separate
 // negative test will cover small invoices and minimum-fee policy.
 const TEST_INVOICE_SATS=10_000_000n;
@@ -104,6 +111,17 @@ async function api(path,{method="GET",auth,json}={}) {
   return r.json();
 }
 export function payoutSettings(ratio,addresses) {
+  if(ratio?.version===3){
+    if(ratio.apex!==1000||ratio.lily!==4500||ratio.tierra!==4500)
+      throw Error("Unreviewed three-way regtest ratio");
+    const proof=createThreeWayPrismRegtestSettings({
+      storeId:STORE_SCOPE,recipientIds:THREE_IDS,
+      addresses,version:ratio.version,lilyBasisPoints:ratio.lily,
+      invoiceSats:TEST_INVOICE_SATS,testOnly:true,network:"regtest",
+    });
+    return {settings:proof.settings,threeWayExpected:proof.expected,
+      threeWayEntitlement:proof.entitlement,feeBudget:null,frozen:null};
+  }
   const rule={status:"approved_test_fixture",scope_type:"storefront",
     scope_id:STORE_SCOPE,version:ratio.version,allocations:[
       {recipient_id:SUPPLIER,basis_points:ratio.supplier},
@@ -226,17 +244,26 @@ async function storeConfig(basic,ratio,suffix){
     throw Error("Automatic on-chain payout processor was not configured");
   const sw="prism_s_"+ratio.version+"_"+suffix;
   const pw="prism_p_"+ratio.version+"_"+suffix;
+  const tw=ratio.version===3?"prism_t_"+ratio.version+"_"+suffix:null;
   createWallet(sw);createWallet(pw);
-  const addresses={
+  if(tw)createWallet(tw);
+  const addresses=ratio.version===3?{
+    apex:wallet(pw,"getnewaddress","","bech32"),
+    lily:wallet(sw,"getnewaddress","","bech32"),
+    tierra:wallet(tw,"getnewaddress","","bech32"),
+  }:{
     supplier:wallet(sw,"getnewaddress","","bech32"),
     platform:wallet(pw,"getnewaddress","","bech32"),
   };
-  const {settings,frozen,feeBudget}=payoutSettings(ratio,addresses);
+  const {settings,frozen,feeBudget,threeWayExpected,threeWayEntitlement}=
+    payoutSettings(ratio,addresses);
   persistSettings(store.id,settings);
   progress("configured-regtest-store",String(ratio.version));
-  return {storeId:store.id,sw,pw,addresses,frozen,feeBudget,ratio};
+  return {storeId:store.id,sw,pw,tw,addresses,frozen,feeBudget,
+    threeWayExpected,threeWayEntitlement,ratio};
 }
 async function waitForPayouts(basic,p,minerAddress) {
+  if(p.ratio.version===3)return waitForThreeWayPayouts(basic,p,minerAddress);
   progress("await-prism-claims",String(p.ratio.version));
   const path="/api/v1/stores/"+p.storeId+"/payouts";
   let claims=[];
