@@ -40,7 +40,7 @@ export function ApexThreeWayDraft({
  return <section className="supplier-panel" style={{maxWidth:"100%",minWidth:0,marginTop:24,overflowWrap:"anywhere"}}>
   <p className="eyebrow">ONE BTCPAY STORE / THREE RECIPIENTS</p>
   <h2 style={{fontSize:"clamp(1.5rem, 6vw, 2rem)"}}>Apex · Lily · Tierra split</h2>
-  <p className="notice">Default: 10% to Apex, 45% to Lily, 45% to Tierra. Adjust Lily's percentage; Tierra receives the remainder of the 90% supplier pool. This is a versioned proposal only, not a live Prism or wallet configuration.</p>
+  <p className="notice">Default: 10% to Apex, 45% to Lily, 45% to Tierra. Adjust Lily&apos;s percentage; Tierra receives the remainder of the 90% supplier pool. This is a versioned proposal only, not a live Prism or wallet configuration.</p>
   <form action={action} className="supplier-form" style={{display:"grid",gap:16,minWidth:0}}>
    <input type="hidden" name="template" value="apex_shared_three_way_v1"/>
    <input type="hidden" name="scopeType" value="storefront"/>
@@ -59,15 +59,15 @@ export function ApexThreeWayDraft({
    </label>
    <label style={label}>Lily — supplier recipient
     <select style={field} required value={lilyId} onChange={e=>setLilyId(e.target.value)}>
-     <option value="">Choose Lily's recipient record</option>{choices("supplier")}
+     <option value="">Choose Lily&apos;s recipient record</option>{choices("supplier")}
     </select>
    </label>
    <label style={label}>Tierra — supplier recipient
     <select style={field} required value={tierraId} onChange={e=>setTierraId(e.target.value)}>
-     <option value="">Choose Tierra's recipient record</option>{choices("supplier")}
+     <option value="">Choose Tierra&apos;s recipient record</option>{choices("supplier")}
     </select>
    </label>
-   <label style={label}>Lily's share of the entire payment (0.01%–89.99%)
+   <label style={label}>Lily&apos;s share of the entire payment (0.01%–89.99%)
     <input style={field} type="range" min={1} max={8999} step={1}
      value={lilyBasisPoints} onChange={e=>setLilyBasisPoints(Number(e.target.value))}/>
    </label>
