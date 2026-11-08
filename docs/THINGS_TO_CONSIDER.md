@@ -2,7 +2,7 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-07
+Last reviewed: 2026-11-08
 
 ## 1. Isolate Bitcoin signing and payment authority from web/worker compromise
 
@@ -88,3 +88,5 @@ Last reviewed: 2026-11-07
 
 
 **2026-11-07 catalog/payment consideration review:** Connected hosted products remain **63 saved / 50 active / 0 published**, unchanged. Latest separately discussed regtest three-way Prism payout evidence (PR #306) is a nonproduction milestone and must not be confused with live settlement or public catalog readiness; exact current main/PR merge status was not independently established in this review. CoinDesk Nov 5 reports crypto liquidation stress, which does not demonstrate BTCPay/Prism compromise. **Status:** Catalog acceptance pending; live checkout, signer and settlement gates unchanged. **Possible solution:** verify current main and latest PRs, then independently test three-way allocation versioning, webhook idempotency, payout reconciliation, signing isolation, and supplier-scoped fulfillment using disposable regtest. **Recommendation:** no mainnet wallet, live checkout, shipment or deployment activation. Sources: https://github.com/zanibethel/apex/pull/306 ; https://www.coindesk.com/markets/2026/11/05/bitcoin-crypto-stocks-caught-in-ai-trade-meltdown-but-wintermute-trader-sees-glass-half-full ; connected Apex database.
+
+**2026-11-08 catalog/payment consideration review:** Connected products remain **63 saved / 50 active / 0 published**; no new public catalog readiness evidence. Recent three-recipient regtest payout evidence is not live payment or signer approval; current PR merge/deployment state not independently verified in this review. **Status:** Catalog acceptance pending; live payment and fulfillment release gates unchanged. **Possible solution:** verify latest main/PR checkpoint, supplier publication and order/fulfillment permissions, immutable payout splits and webhook replay in disposable regtest. **Recommendation:** no production wallet, checkout, payout, shipment or deployment activation. Sources: connected Apex database 2026-11-08; https://github.com/zanibethel/apex/pull/306 .
