@@ -2,6 +2,7 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {SupplierShowroom,type ShowroomProduct} from "./supplier-showroom";
+import {MarketplaceDemoJourney} from "./marketplace-demo-journey";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Private Storefront Layout Test | Apex Supplier",robots:{index:false,follow:false}};
@@ -83,5 +84,6 @@ export default async function SupplierStorefrontTest(){
  return <main className="container supplier-shell">
   <Link href="/supplier" className="back">← Supplier dashboard</Link>
   <SupplierShowroom products={rows}/>
+  <MarketplaceDemoJourney/>
  </main>;
 }
