@@ -1,0 +1,16 @@
+.apex-live-test-panel{margin:22px 0;padding:clamp(15px,3vw,24px);border:1px solid #3c3d46;background:#191920;border-radius:14px;min-width:0}
+.apex-live-test-panel h2{font-size:clamp(20px,4vw,28px);margin:7px 0 12px}
+.apex-live-test-panel p{max-width:800px;line-height:1.5}
+.apex-live-test-chat-form label,.apex-live-test-filters label{display:flex;flex-direction:column;gap:8px;font-weight:600;font-size:14px}
+.apex-live-test-chat-form>div{display:flex;gap:10px;margin-top:8px;min-width:0}
+.apex-live-test-chat-form input,.apex-live-test-filters input,.apex-live-test-filters select{min-width:0;width:100%;border:1px solid #555861;border-radius:9px;padding:12px;background:#30333c;color:#fff;font:inherit;font-size:16px}
+.apex-live-test-chat-form input{flex:1}
+.apex-live-test-chat-form button{background:#b91c37;color:#fff;border:0;border-radius:9px;padding:12px 20px;font-size:16px;cursor:pointer}
+.apex-live-test-chat-form button:disabled{opacity:.5}
+.apex-live-test-reply{margin-top:16px;border-radius:10px;padding:14px;background:#282b33}
+.apex-live-test-reply p{margin:0}
+.apex-live-test-reply ul{padding:0;list-style:none;display:grid;gap:10px;margin:14px 0 0}
+.apex-live-test-reply li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.apex-live-test-reply li span{color:#d3d6df}
+.apex-live-test-filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;align-items:end}
+@media(max-width:650px){.apex-live-test-filters{grid-template-columns:1fr}.apex-live-test-chat-form>div{gap:7px}.apex-live-test-chat-form button{padding:12px 14px}}
