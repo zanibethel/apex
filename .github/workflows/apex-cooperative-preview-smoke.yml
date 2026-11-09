@@ -16,13 +16,47 @@ jobs:
           APEX_PREVIEW_CHAT_URL: https://apex-git-feat-apex-cooperative-embe-9d288a-zanibethels-projects.vercel.app/api/assistant
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 10); do
-            raw="$(curl --silent --show-error --max-time 20 \
+          for attempt in $(seq 1 3); do
+            raw="$(curl --silent --show-error --max-time 20 --write-out '\n%{http_code}' \
               -X POST "$APEX_PREVIEW_CHAT_URL" \
               -H 'Content-Type: application/json' \
               -H 'Accept: application/json' \
               --data '{"message":"hello"}' || true)"
-            if RESPONSE="$raw" node -e '
+            status="${raw##*
+              const raw=process.env.RESPONSE||"";
+              let v; try {v=JSON.parse(raw);}catch{process.exit(1)}
+              if(v.source!=="cooperative-code-v1"||typeof v.answer!=="string"||
+                 !v.answer.includes("approved Apex")||
+                 !Array.isArray(v.items)||v.items.length!==0)process.exit(1);
+              console.log("Cross-service CoOperative reply confirmed; no products or user data returned.");
+            '; then
+              exit 0
+            fi
+            echo "Preview remote route not verified (attempt $attempt of 3)."
+            sleep 10
+          done
+          echo "::error::Apex preview never returned a confirmed CoOperative reply. Check preview protection and server-only env wiring; local fallback is not a pass."
+          exit 1
+\n'}"
+            response_body="${raw%
+              const raw=process.env.RESPONSE||"";
+              let v; try {v=JSON.parse(raw);}catch{process.exit(1)}
+              if(v.source!=="cooperative-code-v1"||typeof v.answer!=="string"||
+                 !v.answer.includes("approved Apex")||
+                 !Array.isArray(v.items)||v.items.length!==0)process.exit(1);
+              console.log("Cross-service CoOperative reply confirmed; no products or user data returned.");
+            '; then
+              exit 0
+            fi
+            echo "Preview remote route not verified (attempt $attempt of 10)."
+            sleep 12
+          done
+          echo "::error::Apex preview never returned a confirmed CoOperative reply. Check preview protection and server-only env wiring; local fallback is not a pass."
+          exit 1
+\n'*}"
+            source_label="$(RESPONSE="$response_body" node -e 'try {const v=JSON.parse(process.env.RESPONSE||""); process.stdout.write(typeof v.source==="string"?v.source:"no-source")}catch{process.stdout.write("non-json")}' )"
+            echo "Attempt $attempt: HTTP $status; source $source_label"
+            if RESPONSE="$response_body" node -e '
               const raw=process.env.RESPONSE||"";
               let v; try {v=JSON.parse(raw);}catch{process.exit(1)}
               if(v.source!=="cooperative-code-v1"||typeof v.answer!=="string"||
