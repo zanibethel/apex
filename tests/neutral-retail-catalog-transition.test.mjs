@@ -17,13 +17,12 @@ const paths=[
  "src/app/supplier/operations/actions.ts",
 ];
 test("neutral retail transition archives exactly the original snapshot, never deletes products",()=>{
- const manifest=migration.match(/legacy_ids uuid\[\] := array\[([\s\S]*?)\];/)?.[1]??"";
- const ids=[...manifest.matchAll(/'[0-9a-f-]{36}'::uuid/g)].map(x=>x[0]);
- assert.equal(ids.length,63);
- assert.equal(new Set(ids).size,63);
+ assert.match(migration,/slug='apex-shared-store-draft'/);
  assert.match(migration,/matched_count<>63/);
- assert.match(migration,/p\.id=any\(legacy_ids\) and p\.is_published=false/);
- assert.match(migration,/archived_at=coalesce\(archived_at,now\(\)\)/);
+ assert.match(migration,/p\.created_at<'2026-11-03T00:00:00Z'/);
+ assert.match(migration,/p\.store_id=legacy_store and p\.is_published=false/);
+ assert.match(migration,/set archived_at=now\(\)/);
+ assert.doesNotMatch(migration,/'[0-9a-f]{8}-[0-9a-f-]{27}'::uuid/);
  assert.match(migration,/check \(archived_at is null or is_published = false\)/);
  assert.match(migration,/begin;[\s\S]*commit;/);
  assert.doesNotMatch(migration,/\bdelete\s+from\s+public\.products\b|\btruncate\s+\b|\bdrop\s+table\b/i);
