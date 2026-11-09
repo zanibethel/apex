@@ -40,3 +40,11 @@ test("root layout mounts accessible text-only chat, no checkout action",()=>{
  assert.match(ui,/aria-label="Apex assistant"/);
  assert.doesNotMatch(ui,/type="file"|accept="image|createInvoice|upload|image_generation/);
 });
+
+test("remote response must be source-identified, match approved public listings and use bounded throttling",()=>{
+ const route=read("src/app/api/assistant/route.ts");
+ assert.match(route,/obj\.source!=="cooperative-code-v1"/);
+ assert.match(route,/matching=approved\.find/);
+ assert.match(route,/if\(buckets\.size>=500&&!buckets\.has\(ip\)\)return false/);
+ assert.doesNotMatch(route,/SUPABASE_SERVICE_ROLE_KEY|service_role|private_product|supplier_import_candidates/);
+});
