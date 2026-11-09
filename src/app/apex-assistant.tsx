@@ -12,10 +12,11 @@ type Item={
 type Message={id:number;from:"user"|"assistant";text:string;items?:Item[];link?:string};
 const safeLink=(value:unknown):value is string=>
  typeof value==="string"&&(
-  ["/catalog","/supplier","/account/sign-in","/supplier/orders","/cart","/supplier/catalog/bulk"].includes(value)||
+  ["/catalog","/supplier","/account/sign-in","/supplier/orders","/cart","/supplier/catalog/bulk","/supplier/catalog/bulk?new=1#apex-product-workspace"].includes(value)||
   /^\/supplier\/catalog\/preview\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value)
  );
-const linkLabel=(link:string)=>link==="/supplier/catalog/bulk"?"Manage products":
+const linkLabel=(link:string)=>link==="/supplier/catalog/bulk?new=1#apex-product-workspace"?"Add a product":
+ link==="/supplier/catalog/bulk"?"Manage products":
  link==="/supplier"?"Open supplier workspace":link==="/account/sign-in"?"Account sign in":
  link==="/supplier/orders"?"Supplier orders":link==="/cart"?"View cart":"Browse catalog";
 
@@ -26,7 +27,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
  const [pending,setPending]=useState<{item:Item;action:Action}|null>(null);
  const [messages,setMessages]=useState<Message[]>([
   {id:0,from:"assistant",text:supplierCanManage
-   ?"Supplier catalog assistant ready. Ask to review your saved products, check prices and listing requests, or select a product for a confirmed publication request. Chat cannot bypass admin holds or release eligibility."
+   ?"Supplier catalog assistant ready. Ask me to add a product, review your saved products, check prices or request a listing change. Product creation does not require BTCPay. Public release remains separate."
    :"Hi! I can look up approved Apex products, listed prices, and basic site information. No purchases or catalog changes here."},
  ]);
  function append(message:Message){
