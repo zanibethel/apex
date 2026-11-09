@@ -23,6 +23,14 @@ export function answerSupplierCatalogMessage(message,products=[]){
   if(knowledge)return {...knowledge,source:"apex-supplier-code-v1"};
   return {answer:"I can review your own saved product names, listed prices, stock status, and publication requests. Try ‘show my products’, ‘find [name]’, or ‘publish [name]’. Every publication request needs your confirmation and separate storefront eligibility checks.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
  }
+ console.log("TEMP VALID CHECK",products.length&&{
+ id:products[0].id,uuid:UUID.test(products[0].id),name:typeof products[0].name==="string",
+ sku:typeof products[0].sku==="string",safePrice:Number.isSafeInteger(products[0].priceCents),
+ nonneg:products[0].priceCents>=0,currency:products[0].currency==="USD",
+ active:typeof products[0].active==="boolean",requested:typeof products[0].requested==="boolean",
+ updated:typeof products[0].productUpdatedAt==="string",
+ control:products[0].controlChangedAt===null||typeof products[0].controlChangedAt==="string"
+ });
  const rows=Array.isArray(products)?products.filter(x=>x&&typeof x==="object"&&UUID.test(x.id)&&
   typeof x.name==="string"&&typeof x.sku==="string"&&Number.isSafeInteger(x.priceCents)&&x.priceCents>=0&&
   x.currency==="USD"&&typeof x.active==="boolean"&&typeof x.requested==="boolean"&&
