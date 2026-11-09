@@ -28,7 +28,7 @@ export default async function SupplierOfferPreview({params}:{params:Promise<{pro
  // membership check prevents direct-link preview access across tenants.
  const {data:product,error:productError}=await client.from("products")
   .select("id,store_id,category_id,sku,name,description,price_cents,compare_at_price_cents,image_path,currency,is_active,is_published")
-  .eq("id",productId).maybeSingle();
+  .eq("id",productId).is("archived_at",null).maybeSingle();
  if(productError||!product)notFound();
  const {data:store,error:storeError}=await client.from("stores")
   .select("id,supplier_id,is_public,display_name")
