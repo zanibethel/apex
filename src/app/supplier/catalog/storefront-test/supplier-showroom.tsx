@@ -66,7 +66,7 @@ export function SupplierShowroom({products}:{products:ShowroomProduct[]}){
     {controlsOpen?"Hide":"Show"} preview controls · {products.length} saved products
    </button>
    {controlsOpen&&<>
-    <p className="notice">**Show product** controls only this private customer-style preview. **In stock** changes only the simulated tile and test cart. Changes reset when this page is refreshed.</p>
+    <p className="notice"><strong>Show product</strong> controls only this private customer-style preview. <strong>In stock</strong> changes only the simulated tile and test cart. Changes reset when this page is refreshed.</p>
     <div className="apex-showroom-control-list">
      {rows.map(p=><div className="apex-showroom-control-row" key={p.id}>
       <div><strong>{p.name}</strong><small>{p.sku} · {p.active?"Saved as active":"Saved as inactive"} · {p.trackingEnabled?"Stock tracked":"Stock not tracked"}</small></div>
