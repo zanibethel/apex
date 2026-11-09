@@ -19,6 +19,33 @@ alter table public.products
 create index if not exists apex_products_active_supplier_catalog_idx
  on public.products(store_id,name) where archived_at is null;
 
+-- The same tenant/owner-manager checks remain authoritative. Archived rows
+-- cannot be edited or restored through supplier Data API grants.
+alter policy supplier_draft_products_insert on public.products
+ with check (archived_at is null and is_published=false and
+  exists (
+   select 1 from public.stores s
+   join public.supplier_memberships sm on sm.supplier_id=s.supplier_id
+   where s.id=products.store_id and s.is_public=false
+    and sm.user_id=(select auth.uid()) and sm.role in ('owner','manager')
+  ));
+
+alter policy supplier_draft_products_update on public.products
+ using (archived_at is null and is_published=false and
+  exists (
+   select 1 from public.stores s
+   join public.supplier_memberships sm on sm.supplier_id=s.supplier_id
+   where s.id=products.store_id and s.is_public=false
+    and sm.user_id=(select auth.uid()) and sm.role in ('owner','manager')
+  ))
+ with check (archived_at is null and is_published=false and
+  exists (
+   select 1 from public.stores s
+   join public.supplier_memberships sm on sm.supplier_id=s.supplier_id
+   where s.id=products.store_id and s.is_public=false
+    and sm.user_id=(select auth.uid()) and sm.role in ('owner','manager')
+  ));
+
 do $legacy$
 declare
  legacy_store uuid;
