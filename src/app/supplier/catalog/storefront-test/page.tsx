@@ -37,7 +37,7 @@ export default async function SupplierStorefrontTest(){
  ]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,category_id,image_path,currency,is_active",{count:"exact"})
-   .eq("store_id",store.id).order("name").limit(100),
+   .eq("store_id",store.id).is("archived_at",null).order("name").limit(100),
   client.from("categories").select("id,name",{count:"exact"})
    .eq("store_id",store.id).limit(100),
   client.from("inventory_items").select("product_id,quantity_on_hand,quantity_reserved",{count:"exact"})
