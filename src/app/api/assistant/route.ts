@@ -13,7 +13,11 @@ const buckets=new Map<string,{count:number;until:number}>();
 function allowed(request:NextRequest){
  const ip=(request.headers.get("x-forwarded-for")??"unknown").split(",")[0].trim().slice(0,80);
  const now=Date.now();
- if(buckets.size>500)for(const [key,value] of buckets)if(value.until<now)buckets.delete(key);
+ if(buckets.size>=500){
+  for(const [key,value] of buckets)if(value.until<now)buckets.delete(key);
+  // Never allow unlimited unique requester keys to grow the instance map.
+  if(buckets.size>=500&&!buckets.has(ip))return false;
+ }
  const entry=buckets.get(ip);
  if(!entry||entry.until<now){buckets.set(ip,{count:1,until:now+60000});return true;}
  if(entry.count>=15)return false;
@@ -24,7 +28,8 @@ type SafeReply={answer:string;items:SafeItem[];link?:string;source:string};
 function validReply(raw:unknown,approved:ApprovedSoldOutProduct[]):SafeReply|null{
  if(!raw||typeof raw!=="object"||Array.isArray(raw))return null;
  const obj=raw as Record<string,unknown>;
- if(typeof obj.answer!=="string"||obj.answer.length>1200||!Array.isArray(obj.items)||obj.items.length>4)return null;
+ if(obj.source!=="cooperative-code-v1"||typeof obj.answer!=="string"||
+    obj.answer.length>1200||!Array.isArray(obj.items)||obj.items.length>4)return null;
  const items:SafeItem[]=[];
  for(const item of obj.items){
   if(!item||typeof item!=="object"||Array.isArray(item))return null;
