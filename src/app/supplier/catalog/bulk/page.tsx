@@ -60,7 +60,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   {data:stockPreferences,error:stockPrefError,count:stockPrefCount}]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
-   .eq("store_id",store.id).eq("is_published",false).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
+   .eq("store_id",store.id).eq("is_published",false).is("archived_at",null).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
   client.from("categories").select("id,name").eq("store_id",store.id).order("name").limit(SUPPLIER_BULK_PRODUCT_CAPACITY),
   client.from("supplier_candidate_drafts").select("candidate_id,product_id").eq("store_id",store.id).limit(500),
   client.from("supplier_import_candidates").select("id,source_index,product_name,strength,wholesale_cost_cents",{count:"exact"})
@@ -208,6 +208,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   <Link className="back" href="/supplier">← Supplier dashboard</Link>
   <p className="eyebrow">APEX / SUPPLIER / PRODUCTS</p>
   <h1>Products</h1>
+  <p className="notice">The original product records have been archived for reference. This workspace now focuses on ordinary retail sample products and new supplier-created listings; the archive is preserved, not deleted.</p>
   {initialNewProduct&&<p className="notice" role="status"><strong>New product draft opened.</strong> Enter a name, price, and optional category, then save. Your item becomes available immediately in your private supplier catalog and showroom; BTCPay is not required.</p>}
   <p className="lead">Find a product, tap the pencil to edit details, images or stock, then Save. Use the Publish switch to set your listing preference.</p>
   <nav className="apex-bulk-quick-nav apex-supplier-simple-nav" aria-label="Product manager shortcuts">
