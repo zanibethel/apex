@@ -17,7 +17,6 @@ const rows=[
 
 test("supplier questions list only supplied private records without inventing prices",()=>{
  const r=answerSupplierCatalogMessage("show my products",rows);
- console.log("SUPPLIER CHAT DIAGNOSTIC",JSON.stringify(r));
  assert.equal(r.items.length,3);
  assert.equal(r.items[0].price,"$25.99");
  assert.equal(r.items[0].href,"/supplier/catalog/preview/11111111-1111-1111-1111-111111111111");
@@ -30,7 +29,6 @@ test("publication text only proposes actions, never performs writes or bypasses 
  assert.equal(supplierCatalogIntent("please publish Sample One"),"publish");
  assert.equal(supplierCatalogIntent("unpublish Sample Two"),"unpublish");
  const r=answerSupplierCatalogMessage("publish",rows);
- console.log("PUBLISH CHAT DIAGNOSTIC",JSON.stringify(r));
  assert.equal(r.items.find(x=>x.name==="Sample One")?.action,"publish");
  assert.equal(r.items.find(x=>x.name==="Sample Two")?.action,null);
  assert.equal(r.items.find(x=>x.name==="Sample Held")?.action,null);
