@@ -23,7 +23,8 @@ export function answerPrivateCatalogPreview(message,products=[]){
  if(rows.length===0)return {intent:"preview-empty",answer:"No saved products are available in this authorized preview.",items:[]};
  const words=message.toLowerCase().replace(/[^a-z0-9\s-]/g," ").split(/\s+/)
   .filter(w=>w.length>1&&!TOKEN_SKIP.has(w));
- const found=words.length?rows.filter(p=>words.every(w=>
+ const exactCategory=rows.filter(p=>p.category.toLowerCase()===message.trim().toLowerCase());
+ const found=exactCategory.length?exactCategory:words.length?rows.filter(p=>words.every(w=>
   p.name.toLowerCase().includes(w)||p.category.toLowerCase().includes(w)||
   (typeof p.sku==="string"&&p.sku.toLowerCase().includes(w)))):rows;
  if(found.length===0)return {intent:"preview-no-match",answer:"No saved product matches that wording. Try a shorter product name or category. This preview does not invent listings.",items:[]};
