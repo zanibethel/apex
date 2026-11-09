@@ -25,7 +25,7 @@ export const dynamic="force-dynamic";
 export const metadata={title:"Products | Apex Supplier",robots:{index:false,follow:false}};
 
 export default async function BulkProductWorkspace({searchParams}:{
- searchParams:Promise<{edit?:string|string[]}>,
+ searchParams:Promise<{edit?:string|string[];new?:string|string[]}>,
 }){
  const client=await createSupplierServerClient();
  if(!client)redirect("/supplier/sign-in");
@@ -194,6 +194,7 @@ export default async function BulkProductWorkspace({searchParams}:{
  const requestedEdit=params?.edit;
  // An edit link only opens an existing record from this supplier's own
  // authenticated, private list. It never trusts a request to choose a store.
+ const initialNewProduct=params.new==="1";
  const initialEditProductId=typeof requestedEdit==="string"&&
   (products??[]).some(p=>p.id===requestedEdit)?requestedEdit:undefined;
  const initialRows=(products??[]).map(p=>({
@@ -207,6 +208,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   <Link className="back" href="/supplier">← Supplier dashboard</Link>
   <p className="eyebrow">APEX / SUPPLIER / PRODUCTS</p>
   <h1>Products</h1>
+  {initialNewProduct&&<p className="notice" role="status"><strong>New product draft opened.</strong> Enter a name, price, and optional category, then save. Your item becomes available immediately in your private supplier catalog and showroom; BTCPay is not required.</p>}
   <p className="lead">Find a product, tap the pencil to edit details, images or stock, then Save. Use the Publish switch to set your listing preference.</p>
   <nav className="apex-bulk-quick-nav apex-supplier-simple-nav" aria-label="Product manager shortcuts">
    <a className="button primary" href="#apex-product-workspace">Saved products ({initialRows.length})</a>
@@ -240,6 +242,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   </div>
   </details>
   <BulkDraftEditor storeId={store.id} editable={process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED==="true"}
+   initialNewProduct={initialNewProduct}
    initialEditProductId={initialEditProductId}
    categories={categories??[]} initialRows={initialRows} media={media} existingImages={imageLibrary} listing={listing}
    taxonomyProposal={store.id===apexTaxonomyStoreId?apexTaxonomyProposal:undefined}

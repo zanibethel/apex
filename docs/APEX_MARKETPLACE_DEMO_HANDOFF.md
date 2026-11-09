@@ -51,3 +51,13 @@ A prospective buyer should receive a **portable software business**, not the cur
 ## Release standard
 
 A private *UI* demo is valuable for layout iteration; it is not a public sales authorization or a tested payment/fulfillment system. Keep actual checkout and public release disabled until required eligibility, payments, stock and security checks have independent evidence.
+
+
+## Supplier product creation on the live Apex domain
+
+This is independent of the payment rail. An authenticated supplier owner or manager can open the supplier dashboard, select **Add product**, or ask supplier chat **add product**. These direct the user to /supplier/catalog/bulk?new=1#apex-product-workspace, pre-opening an unsaved product card in their authorized private store. After entering title, price, description and optional category, **Save changes** uses the existing supplier-scoped draft creation action and generates a SKU if blank. The product is persisted with starting inventory of zero and can then have an image uploaded/reused and stock tracking configured. It is available on the private storefront tester on a fresh view.
+
+**BTCPay/Prism credentials are not required for product creation, editing or private presentation.** Saving a product does **not** create a BTCPay invoice, mark it eligible for real payment, or open sales. Supplier publishing preferences are separate from actual public release authorization; private test content does not inherit public-release eligibility by being described as a placeholder.
+
+For future transferable marketplace deployments, configure catalog creation/visibility and merchant checkout separately. A legally eligible new operator will provision and verify independent payment credentials and their own release policies before enabling purchasing.
+

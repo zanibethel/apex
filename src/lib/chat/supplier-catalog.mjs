@@ -9,6 +9,7 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function supplierCatalogIntent(message){
  if(typeof message!=="string"||message.length>300||!message.trim())return "invalid";
  const q=message.toLowerCase().trim();
+ if(/\b(add|create|new|upload|enter)\b.{0,45}\b(product|products|listing|listings|item|items)\b|\b(product|listing)\b.{0,20}\b(add|create|new)\b/.test(q))return "create";
  if(/\b(unpublish|unlist|remove (?:from )?(?:the )?(?:catalog|storefront)|disable listing|withdraw publish)\b/.test(q))return "unpublish";
  if(/\b(publish|list (?:the |my )?product|make (?:the |my )?product(?:s)? visible|request listing)\b/.test(q))return "publish";
  if(/\b(show|find|search|review|list|look up|check|stock|inventory|price|prices|sku|catalog|products?|drafts?|status|available)\b/.test(q))return "review";
@@ -19,6 +20,7 @@ export function answerSupplierCatalogMessage(message,products=[]){
  if(knowledge&&knowledge.intent==="medical")return {...knowledge,source:"apex-supplier-code-v1"};
  const intent=supplierCatalogIntent(message);
  if(intent==="invalid")return {answer:"Please enter a short question.",items:[],source:"apex-supplier-code-v1"};
+ if(intent==="create")return {answer:"Open the new-product form to save a product to your own supplier catalog. Enter its name and price, save, then add or reuse an image and set stock. It will appear immediately in your signed-in storefront preview. BTCPay setup is not required for product creation. Public sale eligibility and checkout remain separate.",items:[],link:"/supplier/catalog/bulk?new=1#apex-product-workspace",source:"apex-supplier-code-v1"};
  if(intent==="help"){
   if(knowledge)return {...knowledge,source:"apex-supplier-code-v1"};
   return {answer:"I can review your own saved product names, listed prices, stock status, and publication requests. Try ‘show my products’, ‘find [name]’, or ‘publish [name]’. Every publication request needs your confirmation and separate storefront eligibility checks.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
