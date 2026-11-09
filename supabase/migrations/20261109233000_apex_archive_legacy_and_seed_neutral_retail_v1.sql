@@ -115,7 +115,10 @@ with sample(sku,name,category_name,price_cents,description) as (values
 insert into public.products(store_id,category_id,sku,name,description,price_cents,currency,is_active,is_published)
 select 'bb3a8fe2-48d0-4b0a-938e-e435fe87d7d3'::uuid,c.id,
  sample.sku,sample.name,sample.description,sample.price_cents,'USD',true,false
-from sample join public.categories c on c.name=sample.category_name
+from sample join public.categories c on c.slug=case sample.category_name
+  when 'Sample Apparel' then 'sample-apparel'
+  when 'Sample Accessories' then 'sample-accessories'
+  else '__not_found__' end
  and c.store_id='bb3a8fe2-48d0-4b0a-938e-e435fe87d7d3'::uuid
 on conflict(store_id,sku) do nothing;
 
