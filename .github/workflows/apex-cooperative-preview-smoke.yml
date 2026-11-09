@@ -9,65 +9,33 @@ permissions:
 jobs:
   cross-service-chat:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 5
     steps:
-      - name: Verify Apex preview talks to CoOperative without paid model calls
+      - name: Verify authenticated CoOperative response from Apex preview
         env:
           APEX_PREVIEW_CHAT_URL: https://apex-git-feat-apex-cooperative-embe-9d288a-zanibethels-projects.vercel.app/api/assistant
         run: |
           set -euo pipefail
           for attempt in $(seq 1 3); do
-            raw="$(curl --silent --show-error --max-time 20 --write-out '\n%{http_code}' \
+            raw="$(curl --silent --show-error --max-time 20 \
+              --write-out '\nSTATUS:%{http_code}' \
               -X POST "$APEX_PREVIEW_CHAT_URL" \
               -H 'Content-Type: application/json' \
-              -H 'Accept: application/json' \
               --data '{"message":"hello"}' || true)"
-            status="${raw##*
+            if RESPONSE="$raw" node -e '
               const raw=process.env.RESPONSE||"";
-              let v; try {v=JSON.parse(raw);}catch{process.exit(1)}
-              if(v.source!=="cooperative-code-v1"||typeof v.answer!=="string"||
-                 !v.answer.includes("approved Apex")||
-                 !Array.isArray(v.items)||v.items.length!==0)process.exit(1);
-              console.log("Cross-service CoOperative reply confirmed; no products or user data returned.");
+              const marker=raw.lastIndexOf("\nSTATUS:");
+              const status=marker>=0?raw.slice(marker+8).trim():"unknown";
+              let data;try{data=JSON.parse(marker>=0?raw.slice(0,marker):raw)}catch{data={}}
+              console.log("Preview response status="+status+"; source="+(data.source||"none"));
+              if(status!=="200"||data.source!=="cooperative-code-v1"||
+                typeof data.answer!=="string"||!data.answer.includes("approved Apex")||
+                !Array.isArray(data.items)||data.items.length!==0)process.exit(1);
+              console.log("Confirmed CoOperative reply, no public catalog records leaked.");
             '; then
               exit 0
             fi
-            echo "Preview remote route not verified (attempt $attempt of 3)."
             sleep 10
           done
-          echo "::error::Apex preview never returned a confirmed CoOperative reply. Check preview protection and server-only env wiring; local fallback is not a pass."
-          exit 1
-\n'}"
-            response_body="${raw%
-              const raw=process.env.RESPONSE||"";
-              let v; try {v=JSON.parse(raw);}catch{process.exit(1)}
-              if(v.source!=="cooperative-code-v1"||typeof v.answer!=="string"||
-                 !v.answer.includes("approved Apex")||
-                 !Array.isArray(v.items)||v.items.length!==0)process.exit(1);
-              console.log("Cross-service CoOperative reply confirmed; no products or user data returned.");
-            '; then
-              exit 0
-            fi
-            echo "Preview remote route not verified (attempt $attempt of 10)."
-            sleep 12
-          done
-          echo "::error::Apex preview never returned a confirmed CoOperative reply. Check preview protection and server-only env wiring; local fallback is not a pass."
-          exit 1
-\n'*}"
-            source_label="$(RESPONSE="$response_body" node -e 'try {const v=JSON.parse(process.env.RESPONSE||""); process.stdout.write(typeof v.source==="string"?v.source:"no-source")}catch{process.stdout.write("non-json")}' )"
-            echo "Attempt $attempt: HTTP $status; source $source_label"
-            if RESPONSE="$response_body" node -e '
-              const raw=process.env.RESPONSE||"";
-              let v; try {v=JSON.parse(raw);}catch{process.exit(1)}
-              if(v.source!=="cooperative-code-v1"||typeof v.answer!=="string"||
-                 !v.answer.includes("approved Apex")||
-                 !Array.isArray(v.items)||v.items.length!==0)process.exit(1);
-              console.log("Cross-service CoOperative reply confirmed; no products or user data returned.");
-            '; then
-              exit 0
-            fi
-            echo "Preview remote route not verified (attempt $attempt of 10)."
-            sleep 12
-          done
-          echo "::error::Apex preview never returned a confirmed CoOperative reply. Check preview protection and server-only env wiring; local fallback is not a pass."
+          echo "::error::Preview returned no verified CoOperative answer; local fallback and protected deployments do not pass."
           exit 1
