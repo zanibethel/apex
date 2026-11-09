@@ -6,7 +6,7 @@ import {answerApexKnowledge} from "../chat/apex-knowledge.mjs";
 const TOKEN_SKIP=new Set(["the","what","are","is","do","you","have","show","find","me","your","a","an","all","products","product","listings","listing","items","item","with","price","prices","much","how","does","cost","for","please","see","some","any","from","catalog","in","on","and","at","apex","i","want","looking","available","availability","stock","compare","by","can","get","tell","about","of","to"]);
 const money=v=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(v/100);
 const valid=rows=>Array.isArray(rows)?rows.filter(p=>p&&typeof p==="object"&&typeof p.id==="string"&&
- /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(p.id)&&typeof p.name==="string"&&
+ /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p.id)&&typeof p.name==="string"&&
  Number.isSafeInteger(p.priceCents)&&p.priceCents>=0&&p.currency==="USD"&&
  typeof p.category==="string"&&typeof p.active==="boolean"&&
  (p.availableStock===null||Number.isSafeInteger(p.availableStock))).slice(0,100):[];
