@@ -54,7 +54,7 @@ export default async function SharedCatalog() {
   const [products,categories,inventory,candidates,mappings,reviews,listingControls]=await Promise.all([
     client.from("products")
       .select("id,store_id,category_id,sku,name,description,price_cents,internal_source_cost_cents,compare_at_price_cents,is_active,image_path,currency,is_published")
-      .in("store_id",ids).order("name",{ascending:true}).limit(100),
+      .in("store_id",ids).is("archived_at",null).order("name",{ascending:true}).limit(100),
     client.from("categories").select("id,store_id,name").in("store_id",ids).limit(100),
     client.from("inventory_items").select("product_id,store_id,quantity_on_hand,quantity_reserved")
       .in("store_id",ids).limit(100),
