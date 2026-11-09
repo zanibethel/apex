@@ -1,0 +1,54 @@
+.apex-demo-journey{margin:44px 0 20px;padding:clamp(16px,3vw,26px);border:1px solid #57515e;border-radius:16px;background:linear-gradient(145deg,#211b24,#101116);min-width:0}
+.apex-demo-journey h2{font-size:clamp(24px,4vw,34px);margin:4px 0 10px}
+.apex-demo-journey h3{font-size:20px;margin:8px 0}
+.apex-demo-journey-header{max-width:850px}
+.apex-demo-journey-header p{line-height:1.55}
+.apex-demo-stepper{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:20px 0}
+.apex-demo-stepper span{background:#2c2933;border:1px solid #514b5a;border-radius:9px;padding:9px 10px;color:#cdc4cd;font-size:12px}
+.apex-demo-stepper span.current{background:#74263c;border-color:#e4537c;color:#fff;font-weight:700}
+.apex-demo-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(220px,1fr);gap:22px;align-items:start}
+.apex-demo-layout>div,.apex-demo-checkout-card{min-width:0}
+.apex-demo-layout p.notice{font-size:12px}
+.apex-demo-fixture-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.apex-demo-fixture{border:1px solid #44434e;background:#17181e;border-radius:11px;min-width:0;overflow:hidden}
+.apex-demo-fixture-controls{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:10px;background:#282630}
+.apex-demo-fixture-controls label{display:flex;align-items:center;gap:6px;font-size:12px;color:#f0e5eb;cursor:pointer}
+.apex-demo-fixture-controls input{accent-color:#c52c56;width:17px;height:17px}
+.apex-demo-fixture-body .apex-offer-tile{border:0;border-radius:0;box-shadow:none}
+.apex-demo-fixture-body .apex-offer-image{aspect-ratio:16 / 10}
+.apex-demo-fixture-body .apex-offer-content{padding:12px}
+.apex-demo-fixture-body .apex-offer-content h2{font-size:19px}
+.apex-demo-fixture-action{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.apex-demo-fixture-action strong{font-size:12px}
+.apex-demo-fixture-action button,.apex-demo-checkout-card button,.apex-demo-checkout-form button,.apex-demo-operations button,.apex-demo-footer button{background:#b91c37;border:0;border-radius:9px;color:#fff;padding:11px 14px;min-height:44px;font-weight:700;font-size:13px;cursor:pointer}
+.apex-demo-fixture-action button:disabled,.apex-demo-checkout-card button:disabled,.apex-demo-checkout-form button:disabled,.apex-demo-operations button:disabled{background:#45444d;opacity:.75;cursor:not-allowed}
+.apex-demo-hidden{padding:22px 12px;font-size:12px;color:#bcb6c2}
+.apex-demo-checkout-card{position:sticky;top:70px;padding:14px;border:1px solid #60535d;background:#26222c;border-radius:12px;font-size:13px}
+.apex-demo-checkout-card ul{list-style:none;margin:10px 0;padding:0;display:grid;gap:10px}
+.apex-demo-checkout-card li{display:grid;gap:3px;padding-bottom:9px;border-bottom:1px solid #4e4651}
+.apex-demo-checkout-card li button{background:#41404c;padding:5px 9px;min-height:28px;width:max-content;font-size:11px}
+.apex-demo-checkout-card>button{width:100%}
+.apex-demo-small{color:#c8bdc6;font-size:12px;line-height:1.5}
+.apex-demo-checkout-form{margin:24px auto 0;max-width:760px;border:1px solid #4e4550;background:#211e26;border-radius:13px;padding:18px}
+.apex-demo-input-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.apex-demo-input-grid label{display:grid;gap:6px;font-size:13px;font-weight:650;min-width:0}
+.apex-demo-input-grid input,.apex-demo-input-grid select{width:100%;min-width:0;background:#30313b;color:#fff;border:1px solid #555363;border-radius:9px;padding:11px;font-size:16px}
+.apex-demo-totals{margin:14px 0;border-top:1px solid #4b4652;padding:10px 0;display:grid;gap:4px}
+.apex-demo-totals p{margin:3px 0}
+.apex-demo-totals small{font-size:11px;color:#b8b7c1}
+.apex-demo-checkout-form>button{width:100%}
+.apex-demo-order{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.apex-demo-receipt,.apex-demo-fulfillment{padding:17px;background:#24232d;border:1px solid #574b58;border-radius:13px;min-width:0;overflow-wrap:anywhere}
+.apex-demo-receipt p{font-size:13px}
+.apex-demo-receipt ul{font-size:12px;padding-left:19px}
+.apex-demo-fulfillment p{font-size:13px}
+.apex-demo-operations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.apex-demo-operations button{font-size:12px}
+.apex-demo-fulfillment ol{font-size:12px;line-height:1.8;padding-left:19px}
+.apex-demo-export{color:#f5bdcc;font-weight:700;text-decoration:underline}
+.apex-demo-footer{border-top:1px solid #4d4652;margin-top:25px;padding-top:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.apex-demo-footer button{background:#38343d;border:1px solid #675b69}
+.apex-demo-footer span{font-size:12px;color:#b9b1bd}
+.apex-demo-notice{padding:13px;background:#36313b;border:1px solid #655461;border-radius:9px;font-size:13px}
+@media(max-width:850px){.apex-demo-layout,.apex-demo-order{grid-template-columns:1fr}.apex-demo-checkout-card{position:static}.apex-demo-stepper{grid-template-columns:1fr}}
+@media(max-width:560px){.apex-demo-fixture-grid,.apex-demo-input-grid,.apex-demo-operations{grid-template-columns:1fr}.apex-demo-fixture-body .apex-offer-image{aspect-ratio:16 / 9}}
