@@ -45,7 +45,7 @@ export function ApexAssistant(){
  return <section className="apex-assistant" aria-label="Apex assistant">
   {open&&<div className="apex-assistant-panel" role="region" aria-label="Apex chat messages">
    <div className="apex-assistant-head">
-    <div><strong>Apex Assistant</strong><small>Text-only · Powered by CoOperative</small></div>
+    <div><strong>Apex Assistant</strong><small>Text-only · CoOperative-ready</small></div>
     <button type="button" onClick={()=>setOpen(false)} aria-label="Close assistant">×</button>
    </div>
    <div className="apex-assistant-thread" role="log" aria-live="polite" aria-relevant="additions text">
