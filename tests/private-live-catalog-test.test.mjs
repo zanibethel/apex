@@ -40,5 +40,5 @@ test("only an authenticated platform admin gets saved product preview",()=>{
  assert.match(ui,/answerPrivateCatalogPreview/);
  assert.match(ui,/PRIVATE LIVE-SITE TEST/);
  assert.match(css,/font-size:16px/);
- assert.doesNotMatch(ui,/createInvoice|checkout\/create|paymentIntent|purchase/);
+ assert.doesNotMatch(ui,/createInvoice|checkout\/create|paymentIntent|\.insert\s*\(|\.update\s*\(/);
 });
