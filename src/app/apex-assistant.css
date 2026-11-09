@@ -16,7 +16,7 @@
 .apex-assistant-more{display:block;margin-top:10px}
 .apex-assistant-thinking{color:#c8cbd0;font-size:12px;margin:0}
 .apex-assistant-form{padding:12px 12px 7px;display:flex;gap:8px;background:#20232a}
-.apex-assistant-form input{min-width:0;flex:1;background:#30343c;color:white;border:0;border-radius:10px;padding:12px;font:inherit;font-size:13px}
+.apex-assistant-form input{min-width:0;flex:1;background:#30343c;color:white;border:0;border-radius:10px;padding:12px;font:inherit;font-size:16px;line-height:1.2}
 .apex-assistant-form input::placeholder{color:#bcc0c8}
 .apex-assistant-form button{background:#b91c37;color:white;border:0;border-radius:10px;min-width:42px;font-size:23px;cursor:pointer}
 .apex-assistant-form button:disabled{opacity:.45;cursor:not-allowed}
