@@ -48,3 +48,14 @@ test("remote response must be source-identified, match approved public listings 
  assert.match(route,/if\(buckets\.size>=500&&!buckets\.has\(ip\)\)return false/);
  assert.doesNotMatch(route,/SUPABASE_SERVICE_ROLE_KEY|service_role|private_product|supplier_import_candidates/);
 });
+
+
+test("mobile chat header stays above sticky site navigation, within the viewport",()=>{
+ const css=read("src/app/apex-assistant.css");
+ const ui=read("src/app/apex-assistant.tsx");
+ assert.match(ui,/Powered by CoOperative Chat/);
+ assert.match(css,/\.apex-assistant\{[^}]*z-index:150/);
+ assert.match(css,/\.apex-assistant-head\{[^}]*flex-shrink:0/);
+ assert.match(css,/height:min\(480px,calc\(100dvh - 155px\)\)/);
+ assert.match(css,/safe-area-inset-bottom/);
+});
