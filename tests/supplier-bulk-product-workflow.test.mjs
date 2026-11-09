@@ -40,7 +40,7 @@ test("server always verifies signed-in owner-manager tenant-scoped draft store b
  assert.match(actions,/\.eq\("is_public",false\)/);
  assert.match(actions,/new Set\(rows\.map\(r=>r\.key\)\)/);
  assert.match(actions,/new Set\(ids\)\.size!==ids\.length/);
- assert.match(actions,/\.eq\("store_id",storeId\)\.in\("id",ids\)/);
+ assert.match(actions,/\.eq\("store_id",storeId\)\.is\("archived_at",null\)\.in\("id",ids\)/);
  assert.match(actions,/p_store_id:storeId,p_product_id:id,p_action:action/);
  assert.match(actions,/result[s]?:PublishOutcome/);
  assert.doesNotMatch(actions,/service_role|auth\.admin|is_published:true|is_public:true|publish_storefront/);
