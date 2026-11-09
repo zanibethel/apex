@@ -56,7 +56,7 @@ test("preview is supplier owner/manager-only, RLS-scoped, fail-closed and cannot
  assert.match(component,/Add to test cart/);
  assert.match(component,/No checkout or payment/);
  assert.match(component,/Reset preview/);
- assert.match(component,/font-size/); // visibility labels are plain text, never scripted sales
+ assert.match(component,/private, local simulation/);
  assert.doesNotMatch(server+component+helper,/service_role|SUPABASE_SECRET|createInvoice|set_supplier_listing_intent|\.insert\(|\.update\(|\.upsert\(|\.delete\(/i);
  assert.doesNotMatch(component,/useCustomerCart|\/api\/checkout|window\.localStorage|fetch\s*\(/);
 });
