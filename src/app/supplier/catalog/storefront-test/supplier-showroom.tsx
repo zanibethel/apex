@@ -12,9 +12,9 @@ export type ShowroomProduct={
 };
 const money=(cents:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
 export function SupplierShowroom({products}:{products:ShowroomProduct[]}){
- const [state,setState]=useState<Record<string,{visible:boolean;inStock:boolean}>>(
-  ()=>initialShowroomState(products)
- );
+ type PreviewState=Record<string,{visible:boolean;inStock:boolean}>;
+ const defaultState=()=>initialShowroomState(products) as PreviewState;
+ const [state,setState]=useState<PreviewState>(defaultState);
  const [cart,setCart]=useState<Record<string,number>>({});
  const [query,setQuery]=useState("");
  const [category,setCategory]=useState("");
@@ -38,7 +38,7 @@ export function SupplierShowroom({products}:{products:ShowroomProduct[]}){
   setCart(current=>({...current,[id]:Math.min(10,(current[id]??0)+1)}));
  }
  function reset(){
-  setState(initialShowroomState(products));
+  setState(defaultState());
   setCart({});
   setQuery("");
   setCategory("");
