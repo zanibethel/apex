@@ -4,7 +4,7 @@ import {answerApexKnowledge} from "./apex-knowledge.mjs";
 
 const STOP=new Set(["please","i","want","to","the","a","all","my","me","product","products","item","items","listing","listings","show","find","review","let","can","you","publish","unpublish","request","remove","set","with","price","prices","for","how","do","we","what","is","are","currently","status","stock","inventory","sku","catalog","supplier","draft","drafts","in","on","and","at","of"]);
 const money=cents=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function supplierCatalogIntent(message){
  if(typeof message!=="string"||message.length>300||!message.trim())return "invalid";
@@ -23,14 +23,6 @@ export function answerSupplierCatalogMessage(message,products=[]){
   if(knowledge)return {...knowledge,source:"apex-supplier-code-v1"};
   return {answer:"I can review your own saved product names, listed prices, stock status, and publication requests. Try ‘show my products’, ‘find [name]’, or ‘publish [name]’. Every publication request needs your confirmation and separate storefront eligibility checks.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
  }
- console.log("TEMP VALID CHECK",products.length&&{
- id:products[0].id,uuid:UUID.test(products[0].id),name:typeof products[0].name==="string",
- sku:typeof products[0].sku==="string",safePrice:Number.isSafeInteger(products[0].priceCents),
- nonneg:products[0].priceCents>=0,currency:products[0].currency==="USD",
- active:typeof products[0].active==="boolean",requested:typeof products[0].requested==="boolean",
- updated:typeof products[0].productUpdatedAt==="string",
- control:products[0].controlChangedAt===null||typeof products[0].controlChangedAt==="string"
- });
  const rows=Array.isArray(products)?products.filter(x=>x&&typeof x==="object"&&UUID.test(x.id)&&
   typeof x.name==="string"&&typeof x.sku==="string"&&Number.isSafeInteger(x.priceCents)&&x.priceCents>=0&&
   x.currency==="USD"&&typeof x.active==="boolean"&&typeof x.requested==="boolean"&&
@@ -41,7 +33,6 @@ export function answerSupplierCatalogMessage(message,products=[]){
  const match=words.length?rows.filter(p=>words.every(w=>p.name.toLowerCase().includes(w)||
   p.sku.toLowerCase().includes(w)||(typeof p.category==="string"&&p.category.toLowerCase().includes(w)))):rows;
  const chosen=intent==="unpublish"?match.filter(p=>p.requested):match;
- console.log("TEMP SUPPLIER SELECT DEBUG",{intent,productLength:products.length,validRows:rows.length,words,match:match.length});
  if(!chosen.length)return {answer:intent==="unpublish"
   ?"No matching products currently have an active supplier publication request. Try the exact saved name or open your Products workspace."
   :"No matching saved product found in your authorized store. Try a shorter name, SKU, or category.",
