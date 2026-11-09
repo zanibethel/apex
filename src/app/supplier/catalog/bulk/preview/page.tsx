@@ -41,7 +41,7 @@ export default async function BulkOfferPreview({searchParams}:{
  const store=stores[0];
  let productQuery=client.from("products")
   .select("id,store_id,sku,name,description,category_id,price_cents,compare_at_price_cents,currency,image_path,is_active,is_published",{count:"exact"})
-  .eq("store_id",store.id).eq("is_published",false);
+  .eq("store_id",store.id).eq("is_published",false).is("archived_at",null);
  if(!showAll)productQuery=productQuery.in("id",requestedIds);
  const ordered=productQuery.order("name").order("id");
  const {data:products,error:productError,count:productCount}=showAll
