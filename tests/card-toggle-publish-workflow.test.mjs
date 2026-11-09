@@ -42,7 +42,7 @@ test("supplier server action enforces membership and audited RPC, supports both 
  assert.match(a,/verifiedStore\(storeId\)/);
  assert.match(a,/ids\.length>50/);
  assert.match(a,/new Set\(ids\)\.size!==ids\.length/);
- assert.match(a,/\.eq\("store_id",storeId\)\.in\("id",ids\)/);
+ assert.match(a,/\.eq\("store_id",storeId\)\.is\("archived_at",null\)\.in\("id",ids\)/);
  assert.match(a,/set_supplier_listing_intent/);
  assert.match(a,/p_action:action/);
  assert.match(a,/saveBulkPublicationRequests/);
