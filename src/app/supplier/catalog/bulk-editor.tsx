@@ -45,23 +45,26 @@ function newRow():BulkEditRow{
   price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,
   needsSave:true};
 }
-export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false,taxonomyProposal,taxonomyStoreId,initialEditProductId}:{
+export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false,taxonomyProposal,taxonomyStoreId,initialEditProductId,initialNewProduct=false}:{
  storeId:string;editable:boolean;initialRows:BulkEditRow[];categories:Category[];
  media:BulkSavedMedia[];existingImages:BulkSavedImage[];listing:ListingReadiness[];resubmissionEnabled?:boolean;
  taxonomyProposal?:ReadonlyArray<ReviewedCategoryProposal>;taxonomyStoreId?:string;
- initialEditProductId?:string;
+ initialEditProductId?:string;initialNewProduct?:boolean;
 }){
- const [rows,setRows]=useState<BulkEditRow[]>(initialRows);
+ const [rows,setRows]=useState<BulkEditRow[]>(()=>initialNewProduct&&editable
+  ?[...initialRows,{key:"quick-add-new-product",name:"",sku:"",description:"",
+    price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,needsSave:true}]
+  :initialRows);
  const [showOfferTiles,setShowOfferTiles]=useState(false);
  const [productSearch,setProductSearch]=useState("");
- const [viewFilter,setViewFilter]=useState("all");
+ const [viewFilter,setViewFilter]=useState(initialNewProduct&&editable?"unsaved":"all");
  const [setupCategoryId,setSetupCategoryId]=useState("");
  const [setupMessage,setSetupMessage]=useState("");
  const [taxonomyMessage,setTaxonomyMessage]=useState("");
  const [saveRetryKeys,setSaveRetryKeys]=useState<string[]>([]);
  const router=useRouter();
  const savedMedia=new Map(media.map(m=>[m.productId,m]));
- const [selected,setSelected]=useState<string[]>([]);
+ const [selected,setSelected]=useState<string[]>(initialNewProduct&&editable?["quick-add-new-product"]:[]);
  const [recentImportKeys,setRecentImportKeys]=useState<string[]>([]);
  const [lastSave,setLastSave]=useState<{[key:string]:{ok:boolean;message:string}}>({});
  const [result,setResult]=useState({ok:false,message:"",results:[] as {key:string;ok:boolean;name:string;message:string;id?:string;sku?:string}[]});
