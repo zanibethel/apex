@@ -27,6 +27,7 @@ test("supplier direct creation opens unsaved draft, not existing product modific
  assert.match(editor,/initialNewProduct&&editable/);
  assert.match(editor,/quick-add-new-product/);
  assert.match(editor,/needsSave:true/);
+ assert.match(editor,/isActive:true,needsSave:true/);
  assert.match(editor,/initialNewProduct&&editable\?"unsaved":"all"/);
  assert.match(home,/Add product/);
  assert.match(home,/memberships\.some\(m=>m\.role==="owner"\|\|m\.role==="manager"\)/);
