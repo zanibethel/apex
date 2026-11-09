@@ -86,7 +86,7 @@ export async function POST(request:NextRequest){
   const body=data as Confirm;
   const {data:product,error:productError}=await client.from("products")
    .select("id,store_id,name,updated_at,is_published,is_active")
-   .eq("store_id",store.id).eq("id",body.productId).maybeSingle();
+   .eq("store_id",store.id).eq("id",body.productId).is("archived_at",null).maybeSingle();
   if(productError||!product||product.is_published)
    return respond({error:"Private product not available for this supplier."},404);
   const {data:listing,error:listingError}=await client.from("supplier_listing_controls")
@@ -133,7 +133,7 @@ export async function POST(request:NextRequest){
 
  const {data:products,error:productError,count}=await client.from("products")
   .select("id,name,sku,price_cents,currency,is_active,is_published,updated_at,category_id",{count:"exact"})
-  .eq("store_id",store.id).order("name").limit(100);
+  .eq("store_id",store.id).is("archived_at",null).order("name").limit(100);
  if(productError||count===null||count!==products?.length)
   return respond({error:"The complete saved-product list could not be verified."},503);
  const [{data:controls,error:controlError},{data:stock,error:stockError},

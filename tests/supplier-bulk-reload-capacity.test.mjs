@@ -19,7 +19,7 @@ test("reloading up to 250 private product cards is not silently truncated",()=>{
 });
 
 test("server checks over-capacity before building private media and catalog cards",()=>{
- assert.match(page,/\.eq\("store_id",store\.id\)\.eq\("is_published",false\)\.order\("name"\)\.limit\(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT\)/);
+ assert.match(page,/\.eq\("store_id",store\.id\)\.eq\("is_published",false\)\.is\("archived_at",null\)\.order\("name"\)\.limit\(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT\)/);
  assert.match(page,/\.limit\(SUPPLIER_BULK_PRODUCT_CAPACITY\)/);
  assert.ok(page.indexOf('supplierBulkProductWindowStatus(products)!=="complete"')<
   page.indexOf("const signedImages=new Map"));

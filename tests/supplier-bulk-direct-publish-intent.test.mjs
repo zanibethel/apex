@@ -65,7 +65,7 @@ test("bulk actions publish selected or all eligible with a bounded database requ
  assert.match(actions,/\.rpc\("set_supplier_listing_intent"/);
  assert.match(actions,/p_action:action/);
  assert.match(actions,/ids\.length>50/);
- assert.match(actions,/\.eq\("store_id",storeId\)\.in\("id",ids\)/);
+ assert.match(actions,/\.eq\("store_id",storeId\)\.is\("archived_at",null\)\.in\("id",ids\)/);
  assert.match(actions,/Public release and purchasing remain independently restricted/);
  assert.doesNotMatch(editor+tile,/\.update\(\{is_published|\.update\(\{is_public|createPublicUrl|service_role/);
 });

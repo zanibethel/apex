@@ -20,7 +20,7 @@ export default async function StorefrontPreview(){
         {data:inventory,error:inventoryError}]=await Promise.all([
   client.from("products")
    .select("id,store_id,category_id,sku,name,description,price_cents,compare_at_price_cents,image_path,currency,is_active,is_published",{count:"exact"})
-   .order("name").limit(LIMIT),
+   .is("archived_at",null).order("name").limit(LIMIT),
   client.from("categories").select("id,store_id,name").limit(LIMIT),
   client.from("inventory_items")
    .select("product_id,store_id,quantity_on_hand,quantity_reserved")

@@ -89,7 +89,7 @@ export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):
    if(row.sourceCost){
     const {data:existing,error:readError}=await client.from("products")
      .select("internal_source_cost_cents").eq("store_id",storeId)
-     .eq("id",row.id).eq("is_published",false).maybeSingle();
+     .eq("id",row.id).eq("is_published",false).is("archived_at",null).maybeSingle();
     if(readError||!existing){
      outcomes.push({key:row.key,ok:false,name,message:"Product no longer available for a private update."});
      continue;
@@ -135,7 +135,7 @@ export async function saveBulkListingIntents(_previous:PublishResult,form:FormDa
  if(ids.length<1||ids.length>50||new Set(ids).size!==ids.length||ids.some(x=>!isValidId(x)))
   return {ok:false,message:"Choose 1–50 different products per batch.",results:[]};
  const {data:found,error}=await client.from("products")
-  .select("id,store_id,is_published").eq("store_id",storeId).in("id",ids);
+  .select("id,store_id,is_published").eq("store_id",storeId).is("archived_at",null).in("id",ids);
  if(error||!found||found.length!==ids.length||found.some(p=>p.is_published))
   return {ok:false,message:"One or more products are not in this private supplier store.",results:[]};
  const results:PublishOutcome[]=[];
