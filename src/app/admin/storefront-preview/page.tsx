@@ -34,7 +34,7 @@ export default async function StorefrontPreview(){
    .map(async product=>{
     const {data:preview,error:imageError}=await client.storage
      .from("apex-draft-product-images")
-     .createSignedUrl(product.image_path!,300);
+     .createSignedUrl(product.image_path!,90);
     if(!imageError&&preview?.signedUrl)
      imageUrls.set(product.id,preview.signedUrl);
    }));
