@@ -1,3 +1,4 @@
+import {answerApexKnowledge,APEX_FAQ_IDS} from "../src/lib/chat/apex-knowledge.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -66,4 +67,21 @@ test("iPhone chat input uses 16px font to avoid focus-triggered Safari zoom",()=
  assert.ok(inputRule,"chat input CSS rule is present");
  assert.match(inputRule,/font-size:16px/);
  assert.doesNotMatch(css,/user-scalable\s*=\s*no|maximum-scale\s*:\s*1/);
+});
+
+
+test("versioned no-model FAQ routes cover core customer and supplier intents",()=>{
+ const cases=[["hello","greeting"],["help","chat-capabilities"],["what can you do","chat-capabilities"],["are you an AI bot","assistant-identity"],["powered by cooperative chat","assistant-identity"],["forgot password","account-password"],["I want to sign in","account"],["supplier login","supplier-access"],["create product","catalog-mutations"],["track inventory","supplier-inventory"],["supplier csv order report","supplier-reports"],["is shipping available","shipping"],["what is free shipping","shipping"],["can I return an item","returns"],["where is my order","track-order"],["how to pay with Bitcoin","payments"],["when will Apex launch","launch"],["do you have a coupon code","discounts"],["my data privacy","privacy"],["is this safe for me to take","medical"],["what are side effects","medical"],["recommend a product for weight loss","product-usage"],["when will the product restock","public-stock"],["how do sales tax work","pricing-policy"],["what are your opening hours","where-to-buy"],["contact support","support"],["how do I browse products","public-products"]];
+ assert.ok(APEX_FAQ_IDS.length>=22);
+ for(const [prompt,expected] of cases){
+  const result=answerApexKnowledge(prompt);
+  assert.equal(result?.intent,expected,prompt);
+  assert.equal(result.items.length,0,prompt);
+  assert.equal(answerApexEmbed(prompt,[product],"disabled").items.length,0,prompt);
+ }
+ for(const prompt of ["show me products","what is the price of Example Item","purple mystery widget"]){
+  assert.equal(answerApexKnowledge(prompt),null,prompt);
+ }
+ assert.equal(answerApexEmbed("show me products",[product],"connected").items.length,1);
+ assert.equal(answerApexEmbed("what is the price of Example Item",[product],"connected").items[0].price,"$12.34");
 });
