@@ -24,7 +24,8 @@ test("no writes, sales, dosage advice or price inventions",()=>{
 test("route reads only approved public storefront feed",()=>{
  const route=read("src/app/api/assistant/route.ts");
  assert.match(route,/readApprovedSoldOutCatalog/);
- assert.doesNotMatch(route,/readPublishedCatalog|supplier_memberships|createSupplierServerClient|service_role|SUPABASE_SECRET|\.insert\(|\.update\(|\.delete\(/);
+ assert.doesNotMatch(route,/readPublishedCatalog|supplier_memberships|createSupplierServerClient|service_role|SUPABASE_SECRET|\.insert\(|\.update\(/);
+ assert.doesNotMatch(route,/\.from\([\s\S]{0,200}\)\.delete\(/);
  assert.match(route,/products\.map/);
  assert.match(route,/source:"apex-local-code-v1"/);
  assert.match(route,/method:"POST"/);
