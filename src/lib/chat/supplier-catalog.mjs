@@ -33,6 +33,7 @@ export function answerSupplierCatalogMessage(message,products=[]){
  const match=words.length?rows.filter(p=>words.every(w=>p.name.toLowerCase().includes(w)||
   p.sku.toLowerCase().includes(w)||(typeof p.category==="string"&&p.category.toLowerCase().includes(w)))):rows;
  const chosen=intent==="unpublish"?match.filter(p=>p.requested):match;
+ console.log("TEMP SUPPLIER SELECT DEBUG",{intent,productLength:products.length,validRows:rows.length,words,match:match.length});
  if(!chosen.length)return {answer:intent==="unpublish"
   ?"No matching products currently have an active supplier publication request. Try the exact saved name or open your Products workspace."
   :"No matching saved product found in your authorized store. Try a shorter name, SKU, or category.",
