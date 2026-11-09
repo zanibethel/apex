@@ -30,6 +30,8 @@ test("route reads only approved public storefront feed",()=>{
  assert.match(route,/source:"apex-local-code-v1"/);
  assert.match(route,/method:"POST"/);
  assert.match(route,/AbortSignal\.timeout/);
+ assert.match(route,/matching=approved\.find/);
+ assert.match(route,/callCooperative\(payload,catalog\.products\)/);
 });
 test("root layout mounts accessible text-only chat, no checkout action",()=>{
  const layout=read("src/app/layout.tsx");
