@@ -111,7 +111,7 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
   }
   const {data,error}=await store.client.from("products")
     .update(updates)
-    .eq("id",productId).eq("store_id",store.storeId).eq("is_published",false)
+    .eq("id",productId).eq("store_id",store.storeId).eq("is_published",false).is("archived_at",null)
     .select("id").maybeSingle();
   if(error || !data) return {ok:false,message:"Draft not updated. Check your membership, SKU uniqueness or product status."};
   revalidatePath("/supplier/catalog");
@@ -147,7 +147,7 @@ export async function adjustInventory(_previous: Result, form: FormData): Promis
   }
   const { data: draft, error: draftError } = await store.client.from("products")
     .select("id").eq("id", productId).eq("store_id", store.storeId)
-    .eq("is_published", false).maybeSingle();
+    .eq("is_published", false).is("archived_at",null).maybeSingle();
   if (draftError || !draft) return {ok:false,message:"Only private draft products can have their stock adjusted here."};
 
   // CAS avoids silently overwriting a colleague's concurrent inventory adjustment.
@@ -182,7 +182,7 @@ export async function setPrivateStockPreference(_previous:Result,form:FormData):
 
  const {data:product,error:productError}=await store.client.from("products")
   .select("id").eq("id",productId).eq("store_id",store.storeId)
-  .eq("is_published",false).maybeSingle();
+  .eq("is_published",false).is("archived_at",null).maybeSingle();
  if(productError||!product)
   return {ok:false,message:"Only a saved private product can change this setting."};
 
