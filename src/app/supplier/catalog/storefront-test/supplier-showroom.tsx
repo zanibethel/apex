@@ -47,6 +47,7 @@ export function SupplierShowroom({products}:{products:ShowroomProduct[]}){
   <div className="apex-showroom-intro">
    <p className="eyebrow">SUPPLIER-ONLY STOREFRONT TEST</p>
    <h1>Customer layout preview</h1>
+   <p><Link className="button primary" href="/supplier/catalog/bulk?new=1#apex-product-workspace">+ Add product to supplier catalog</Link></p>
    <p>Review your saved product cards, toggle preview visibility and stock, and try the cart appearance. Everything here is a <strong>private, local simulation</strong> — no public product publishing, inventory update, order, or payment is performed.</p>
   </div>
   <div className="apex-showroom-toolbar">
