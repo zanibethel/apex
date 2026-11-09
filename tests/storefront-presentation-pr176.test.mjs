@@ -46,7 +46,7 @@ test("admin can inspect actual product cards with existing signed-in Supabase RL
  assert.match(page,/from\("inventory_items"\)/);
  assert.match(page,/from\("categories"\)/);
  assert.match(page,/createSignedUrl\(product\.image_path!,90\)/);
- assert.match(page,/<OfferTile/);
+ assert.match(read("src/app/admin/storefront-preview/live-catalog-tester.tsx"),/<OfferTile/);
  assert.match(page,/limit\(LIMIT\)/);
  assert.match(dash,/href: "\/admin\/storefront-preview"/);
  assert.doesNotMatch(page,/service_role|createPublicUrl|\.insert\(|\.update\(|\.delete\(|\.upsert\(|createInvoice|createPayout/);
