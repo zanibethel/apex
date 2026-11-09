@@ -53,7 +53,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
 }){
  const [rows,setRows]=useState<BulkEditRow[]>(()=>initialNewProduct&&editable
   ?[...initialRows,{key:"quick-add-new-product",name:"",sku:"",description:"",
-    price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,needsSave:true}]
+    price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:true,needsSave:true}]
   :initialRows);
  const [showOfferTiles,setShowOfferTiles]=useState(false);
  const [productSearch,setProductSearch]=useState("");
