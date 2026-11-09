@@ -21,7 +21,7 @@ CoOperative PR \`feat/cooperative-apex-embedded-chat-v1\` exposes a private, aut
 **CoOperative server-only variable:**
 - \`COOPERATIVE_APEX_EMBED_TOKEN\` — the same shared secret, >=32 characters.
 
-The payload is \`{ version: 1, message, catalogState, products }\`, where each product contains ONLY \`id, name, priceCents, currency, availability, categoryName\` from the approved public projection. No customer identity, PII, cookies, supplier role, private pricing, or auth tokens cross to CoOperative. The server rejects unauthenticated requests. Apex validates returned content and only permits internal catalog/supplier links.
+The payload is \`{ version: 1, message, catalogState, products }\`, where each product contains ONLY \`id, name, priceCents, currency, availability, categoryName\` from the approved public projection. No account identity, cookies, supplier role, private pricing, or user auth tokens are added by Apex. Because the visitor types freeform text, their own message could contain personal details; do not submit sensitive information. The server rejects unauthenticated requests. Apex validates returned content and only permits internal catalog/supplier links.
 
 Until both PRs are verified, merged, deployed, and environment variables configured, Apex uses the matching deterministic local fallback. Do not advertise a *connected* CoOperative service or an AI model until the remote endpoint has been tested end-to-end.
 
