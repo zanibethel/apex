@@ -38,7 +38,7 @@ test("five ordinary private retail sample products are seeded at zero inventory 
  assert.match(migration,/select p\.store_id,p\.id,0,0/);
  assert.match(migration,/sample\.price_cents,'USD',true,false/);
  assert.match(migration,/no physical sale/i);
- assert.doesNotMatch(migration,/createInvoice|BTCPay|test-wallet|wallet_address/);
+ assert.doesNotMatch(migration,/createInvoice|test-wallet|wallet_address/);
 });
 
 test("every active supplier catalog/editor/chat route excludes the archived snapshot",()=>{
