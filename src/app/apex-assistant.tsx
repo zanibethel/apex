@@ -67,7 +67,7 @@ export function ApexAssistant(){
      placeholder="Ask about products or the site…" onChange={event=>setDraft(event.target.value)}/>
     <button type="submit" disabled={!draft.trim()||sending} aria-label="Send message">↑</button>
    </form>
-   <p className="apex-assistant-foot">Public catalog only · No orders or product changes</p>
+   <p className="apex-assistant-foot">Public catalog only · Avoid entering personal details</p>
   </div>}
   <button type="button" className="apex-assistant-toggle"
    aria-expanded={open} aria-label={open?"Close Apex assistant":"Open Apex assistant"}
