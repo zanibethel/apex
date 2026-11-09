@@ -33,7 +33,7 @@ export function ApexAssistant(){
    setMessages(current=>[...current.slice(-19),{
     id:id+1,from:"assistant",text:result.answer.slice(0,1200),
     items:Array.isArray(result.items)?result.items.slice(0,4):[],
-    link:["/catalog","/supplier"].includes(result.link??"")?result.link:undefined,
+    link:["/catalog","/supplier","/account/sign-in","/supplier/orders","/cart"].includes(result.link??"")?result.link:undefined,
    }]);
   }catch(error){
    setMessages(current=>[...current.slice(-19),{
@@ -56,7 +56,7 @@ export function ApexAssistant(){
       <span>{item.price} · {item.availability}</span>
      </div>)}
      {message.link&&<Link className="apex-assistant-more" href={message.link}>
-      {message.link==="/supplier"?"Open supplier workspace":"Browse catalog"} →
+      {message.link==="/supplier"?"Open supplier workspace":message.link==="/account/sign-in"?"Account sign in":message.link==="/supplier/orders"?"Supplier orders":message.link==="/cart"?"View cart":"Browse catalog"} →
      </Link>}
     </div>)}
     {sending&&<p className="apex-assistant-thinking" role="status">Checking the approved catalog…</p>}
