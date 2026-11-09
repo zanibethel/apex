@@ -19,8 +19,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const { data } = client ? await client.auth.getUser() : { data: { user: null } };
   const user = data.user && !data.user.is_anonymous && data.user.email_confirmed_at ? data.user : null;
   const admin = isVerifiedPlatformAdmin(user);
-  const membership = user && !admin && client ? await client.from("supplier_memberships").select("supplier_id").limit(1) : null;
+  const membership = user && !admin && client ? await client.from("supplier_memberships").select("supplier_id,role").limit(20) : null;
   const supplier = Boolean(membership && !membership.error && membership.data?.length);
+  const supplierCanManage = Boolean(membership && !membership.error && membership.data?.some(m => m.role === "owner" || m.role === "manager"));
   return (
     <html lang="en">
       <body>
@@ -42,7 +43,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <span>Catalog browsing only · Ordering and payments are unavailable.</span>
           </div>
         </footer>
-        <ApexAssistant />
+        <ApexAssistant supplierCanManage={supplierCanManage}/>
         </CustomerCartProvider>
       </body>
     </html>
