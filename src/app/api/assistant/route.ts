@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from "next/server";
 import {readApprovedSoldOutCatalog, type ApprovedSoldOutProduct} from "@/lib/supabase/approved-sold-out-catalog";
 import {answerApexEmbed} from "@/lib/chat/apex-chat.mjs";
+import {answerApexKnowledge} from "@/lib/chat/apex-knowledge.mjs";
 
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
@@ -46,7 +47,7 @@ function validReply(raw:unknown,approved:ApprovedSoldOutProduct[]):SafeReply|nul
   items.push({name:v.name,price:v.price,availability:v.availability,href:v.href});
  }
  const link=obj.link===undefined?undefined:obj.link;
- if(link!==undefined&&!["/catalog","/supplier"].includes(String(link)))return null;
+ if(link!==undefined&&!["/catalog","/supplier","/account/sign-in","/supplier/orders","/cart"].includes(String(link)))return null;
  return {answer:obj.answer,items,link:link as string|undefined,source:"cooperative-code-v1"};
 }
 async function collectApprovedCatalog(){
@@ -92,6 +93,10 @@ export async function POST(request:NextRequest){
   message=body&&typeof body==="object"&&!Array.isArray(body)?(body as Record<string,unknown>).message:null;
  }catch{return send({error:"Invalid message"},400);}
  if(typeof message!=="string"||!message.trim()||message.length>300)return send({error:"Enter a shorter message."},400);
+ // Static FAQ replies are sourced from reviewed code; avoid catalog reads,
+ // upstream CoOperative requests, and all model usage for routine questions.
+ const knowledge=answerApexKnowledge(message);
+ if(knowledge)return send({...knowledge,source:"apex-local-code-v1"});
  const catalog=await collectApprovedCatalog();
  // Deliberately remove private costs, stock quantities, supplier IDs and images.
  const products=catalog.products.map(p=>({
@@ -99,8 +104,12 @@ export async function POST(request:NextRequest){
   availability:p.availability,categoryName:p.categoryName,
  }));
  const payload={version:1,message:message.trim(),catalogState:catalog.state,products};
- const remote=await callCooperative(payload,catalog.products);
- if(remote)return send(remote);
+ // Remote lookup is explicitly opt-in and currently implements code only.
+ // If not configured, every answer stays local with zero external AI calls.
+ if(process.env.COOPERATIVE_APEX_REMOTE_FALLBACK==="enabled"){
+  const remote=await callCooperative(payload,catalog.products);
+  if(remote)return send(remote);
+ }
  const local=answerApexEmbed(payload.message,products,catalog.state);
  return send({...local,source:"apex-local-code-v1"});
 }
