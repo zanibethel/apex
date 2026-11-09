@@ -24,6 +24,9 @@ test("neutral retail transition archives exactly the original snapshot, never de
  assert.match(migration,/set archived_at=now\(\)/);
  assert.doesNotMatch(migration,/'[0-9a-f]{8}-[0-9a-f-]{27}'::uuid/);
  assert.match(migration,/check \(archived_at is null or is_published = false\)/);
+ assert.match(migration,/alter policy supplier_draft_products_insert on public\.products/);
+ assert.match(migration,/alter policy supplier_draft_products_update on public\.products/);
+ assert.match(migration,/archived_at is null and is_published=false/);
  assert.match(migration,/begin;[\s\S]*commit;/);
  assert.doesNotMatch(migration,/\bdelete\s+from\s+public\.products\b|\btruncate\s+\b|\bdrop\s+table\b/i);
 });
