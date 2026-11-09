@@ -59,3 +59,11 @@ test("mobile chat header stays above sticky site navigation, within the viewport
  assert.match(css,/height:min\(480px,calc\(100dvh - 155px\)\)/);
  assert.match(css,/safe-area-inset-bottom/);
 });
+
+test("iPhone chat input uses 16px font to avoid focus-triggered Safari zoom",()=>{
+ const css=read("src/app/apex-assistant.css");
+ const inputRule=css.match(/\.apex-assistant-form input\{([^}]*)\}/)?.[1];
+ assert.ok(inputRule,"chat input CSS rule is present");
+ assert.match(inputRule,/font-size:16px/);
+ assert.doesNotMatch(css,/user-scalable\s*=\s*no|maximum-scale\s*:\s*1/);
+});
