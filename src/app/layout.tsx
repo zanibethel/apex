@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createSupplierServerClient } from "@/lib/supabase/server";
 import { isVerifiedPlatformAdmin } from "@/lib/auth/admin-access";
 import { AccountMenu } from "./account-menu";
+import { ApexAssistant } from "./apex-assistant";
 import {CustomerCartProvider,CustomerCartLink} from "./cart/cart-provider";
 import "./cart/customer-cart.css";
 import "./globals.css";
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <span>Catalog browsing only · Ordering and payments are unavailable.</span>
           </div>
         </footer>
+        <ApexAssistant />
         </CustomerCartProvider>
       </body>
     </html>

@@ -1,0 +1,26 @@
+.apex-assistant{position:fixed;bottom:18px;right:18px;z-index:150;font-family:inherit}
+.apex-assistant-toggle{background:#b91c37;color:white;border:0;border-radius:999px;min-width:66px;height:49px;padding:0 18px;font-weight:800;box-shadow:0 9px 28px #0008;cursor:pointer}
+.apex-assistant-toggle:hover{background:#d62945}
+.apex-assistant-panel{position:absolute;bottom:63px;right:0;width:min(370px,calc(100vw - 26px));height:min(525px,calc(100dvh - 110px));background:#16191f;color:#f5f5f5;box-shadow:0 16px 50px #000b;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}
+.apex-assistant-head{background:#20232a;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;min-height:70px}
+.apex-assistant-head strong{display:block;font-size:15px}
+.apex-assistant-head small{display:block;color:#bcbec3;margin-top:3px;font-size:11px}
+.apex-assistant-head button{background:transparent;border:0;color:#fff;font-size:27px;cursor:pointer;width:34px;height:34px}
+.apex-assistant-thread{padding:15px;flex:1;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:12px}
+.apex-assistant-message{align-self:flex-start;max-width:94%;background:#292c33;color:#f1f1f1;padding:11px 12px;border-radius:13px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.apex-assistant-message.user{align-self:flex-end;background:#762037}
+.apex-assistant-message p{margin:0;white-space:pre-line}
+.apex-assistant-item{padding-top:8px;margin-top:8px;border-top:1px solid #ffffff25;display:flex;flex-direction:column;gap:2px}
+.apex-assistant-item a,.apex-assistant-more{color:#ff98aa;text-decoration:underline;font-weight:650}
+.apex-assistant-item span{font-size:12px;color:#c8cbd0}
+.apex-assistant-more{display:block;margin-top:10px}
+.apex-assistant-thinking{color:#c8cbd0;font-size:12px;margin:0}
+.apex-assistant-form{padding:12px 12px 7px;display:flex;gap:8px;background:#20232a}
+.apex-assistant-form input{min-width:0;flex:1;background:#30343c;color:white;border:0;border-radius:10px;padding:12px;font:inherit;font-size:16px;line-height:1.2}
+.apex-assistant-form input::placeholder{color:#bcc0c8}
+.apex-assistant-form button{background:#b91c37;color:white;border:0;border-radius:10px;min-width:42px;font-size:23px;cursor:pointer}
+.apex-assistant-form button:disabled{opacity:.45;cursor:not-allowed}
+.apex-assistant-foot{margin:0;background:#20232a;color:#aeb2bb;text-align:center;padding:2px 8px 10px;font-size:10px}
+.apex-assistant-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:520px){.apex-assistant{bottom:calc(12px + env(safe-area-inset-bottom, 0px));right:12px}.apex-assistant-panel{bottom:61px;height:min(480px,calc(100dvh - 155px));max-height:calc(100dvh - 155px)}.apex-assistant-head{padding:12px 16px;min-height:65px}}
+@media(prefers-reduced-motion:reduce){.apex-assistant *{scroll-behavior:auto}}
