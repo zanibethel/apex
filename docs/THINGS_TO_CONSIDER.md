@@ -2,7 +2,17 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-08
+Last reviewed: 2026-11-09
+
+## November 9, 2026 — Catalog and three-recipient payment release evidence (existing release considerations)
+
+**Status:** Evaluate / release gate remains pending  
+**Last reviewed:** 2026-11-09
+
+**Evidence:** Connected database has 63 saved products, 50 active, 0 published. Payment PRs #304–#307 record order evidence, one-store three-recipient Prism regtest and readiness diagnostics; PR #309 documents proposed DigitalOcean BTCPay hosting (https://github.com/zanibethel/apex/pull/309). These do not independently establish a live signer, settlement or fulfillment authorization. Reuters Nov 9 reports renewed crypto-market weakness amid risk repricing (https://www.reuters.com/world/asia-pacific/global-markets-global-markets-2026-11-09/).
+
+**Possible solution / recommendation:** Keep supplier publication/inventory acceptance separate from immutable payment evidence, webhook replay defense, recipient wallet verification, and partial-fulfillment eligibility. Review actual PR and deployment state before any live payment proposal. No keys, signer changes, or activation.
+
 
 ## 1. Isolate Bitcoin signing and payment authority from web/worker compromise
 
