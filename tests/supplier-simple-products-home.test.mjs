@@ -47,7 +47,8 @@ test("supplier home directs to one product editor and keeps advanced tools colla
  assert.match(bulk,/id="supplier-intake"/);
  assert.match(bulk,/id="supplier-extra-tools"/);
  assert.match(editor,/const \[showOfferTiles,setShowOfferTiles\]=useState\(false\)/);
- assert.match(editor,/apex-supplier-row-thumbnail/);
+ assert.match(editor,/QuickProductImagePicker/);
+ assert.match(file("src/app/supplier/catalog/quick-image-picker.tsx"),/className="apex-supplier-row-thumbnail apex-quick-image-trigger"/);
  assert.match(editor,/apex-supplier-card-heading/);
  assert.match(editor,/id="apex-bulk-search"/);
  assert.match(editor,/apex-supplier-batch-setup/);
