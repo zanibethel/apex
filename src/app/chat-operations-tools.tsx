@@ -19,6 +19,12 @@ type Data={
  ok:boolean;admin:boolean;stores:Store[];storeId:string|null;
  notices:Notice[];noticesReady:boolean;discounts:Discount[];
  discountsReady:boolean;discountsWritable:boolean;
+ payouts?:{
+  sales:{order_reference:string;sale_state:string;gross_cents:number;currency:string;occurred_at:string}[];
+  walletRequests:{label:string;request_state:string;created_at:string}[];
+  splitDraft:{supplier_percent:number;updated_at:string}|null;
+  salesReady:boolean;walletReady:boolean;splitReady:boolean;
+ };
 };
 type Mode="banners"|"discounts"|"payouts"|"security";
 const formatDate=(date:string|null)=>date?new Date(date).toLocaleString():"Any time";
@@ -150,9 +156,31 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
    <Link href="/account/profile">Open secure password settings</Link>
   </div>;
  if(mode==="payouts")return <div className="apex-chat-ops">
-  <p>View verified reporting or manage proposed payout allocations from their protected workspaces. Chat does not transfer funds, change wallets, or handle secret credentials.</p>
+  <p>Read-only payout readiness and verified sale records. Sales are not evidence that a payout occurred; chat cannot transfer money or edit wallet credentials.</p>
+  {error&&<p role="alert">{error}</p>}
+  {data?.stores.length&&data.stores.length>1&&<label>Store
+   <select value={selectedStore} onChange={e=>setSelectedStore(e.target.value)}>
+    {data.stores.map(st=><option key={st.id} value={st.id}>{st.name}</option>)}
+   </select></label>}
+  {data?.payouts&&<>
+   {isAdmin&&<p>Supplier split draft: {data.payouts.splitReady?
+    data.payouts.splitDraft?data.payouts.splitDraft.supplier_percent+"% supplier share":
+    "No saved proposal":"Unavailable"}. This does not activate BTCPay/Prism allocations.</p>}
+   <strong>Recent verified sale records</strong>
+   {!data.payouts.salesReady?<p>Sales records unavailable.</p>:
+    data.payouts.sales.length===0?<p>No recorded sales.</p>:
+    <ul>{data.payouts.sales.map((sale,i)=><li key={i}>
+     {sale.order_reference} · {sale.sale_state} · {sale.currency} {(Number(sale.gross_cents)/100).toFixed(2)}
+    </li>)}</ul>}
+   <strong>Wallet change requests</strong>
+   {!data.payouts.walletReady?<p>Wallet request statuses unavailable.</p>:
+    data.payouts.walletRequests.length===0?<p>No recent wallet change requests.</p>:
+    <ul>{data.payouts.walletRequests.map((item,i)=><li key={i}>
+     {item.label}: {item.request_state}
+    </li>)}</ul>}
+  </>}
   <div className="apex-chat-ops-actions">
-   <Link href="/supplier/reports">Supplier sales and payout reports</Link>
+   <Link href="/supplier/reports">Supplier verified sales reports</Link>
    {isAdmin&&<Link href="/admin/splits/configure">Admin payout split proposals</Link>}
    {isAdmin&&<Link href="/admin/payment-monitor">Payment monitor</Link>}
   </div>
