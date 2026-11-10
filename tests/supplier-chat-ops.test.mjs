@@ -33,7 +33,7 @@ test("publication text only proposes actions, never performs writes or bypasses 
  assert.equal(r.items.find(x=>x.name==="Sample Two")?.action,null);
  assert.equal(r.items.find(x=>x.name==="Sample Held")?.action,null);
  assert.match(r.answer,/confirm/i);
- assert.match(r.answer,/does not make it publicly available/i);
+ assert.match(r.answer,/neutral retail items appear on the public showcase/i);
  const undo=answerSupplierCatalogMessage("unpublish",rows);
  assert.equal(undo.items.length,1);
  assert.equal(undo.items[0].action,"unpublish");
@@ -57,7 +57,7 @@ test("API verifies owner or manager on every action and delegates release contro
  assert.match(route,/APEX_DRAFT_CATALOG_WRITES_ENABLED!=="true"/);
  assert.match(route,/client\.rpc\("set_supplier_listing_intent"/);
  assert.match(route,/client\.rpc\("get_private_release_readiness"/);
- assert.match(route,/public:false/);
+ assert.match(route,/public:retailShowcase/);
  assert.doesNotMatch(route,/\.update\(\{\s*is_published|\.update\(\{\s*is_public|service_role|SUPABASE_SECRET|createInvoice|modelProvider/);
 });
 
