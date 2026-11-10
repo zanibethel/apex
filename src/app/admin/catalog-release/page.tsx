@@ -91,7 +91,7 @@ export default async function CatalogReleaseDashboard({searchParams}:{
    exact reason an offer cannot appear on the storefront.</p>
   <p className="notice"><strong>Release status is read-only, but retail visibility restrictions are editable.</strong>
    Suppliers choose Publish or Unpublish. Platform admins can restrict or
-   unrestrict each product's retail display independently; admin holds,
+   unrestrict retail display for each product independently; admin holds,
    content safeguards and verified release eligibility still apply.
    This page does not approve checkout, create orders, or accept payments.</p>
   <section className="feature-grid" aria-label="Current catalog release counts">
