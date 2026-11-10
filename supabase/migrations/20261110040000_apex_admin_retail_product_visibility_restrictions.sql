@@ -36,6 +36,9 @@ create table if not exists apex_internal.retail_product_visibility_restriction_e
 );
 create index if not exists apex_retail_restriction_events_lookup
  on apex_internal.retail_product_visibility_restriction_events(store_id,product_id,id desc);
+-- Defense in depth, including if future schema grants change.
+alter table apex_internal.retail_product_visibility_restrictions enable row level security;
+alter table apex_internal.retail_product_visibility_restriction_events enable row level security;
 revoke all on apex_internal.retail_product_visibility_restrictions from public,anon,authenticated;
 revoke all on apex_internal.retail_product_visibility_restriction_events from public,anon,authenticated;
 
