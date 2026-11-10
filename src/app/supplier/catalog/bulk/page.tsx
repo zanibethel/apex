@@ -156,11 +156,12 @@ export default async function BulkProductWorkspace({searchParams}:{
   const mediaStatus=supplierImageCorrectionStatus(
    {id:p.id,store_id:store.id,image_path:p.image_path},
    reviewsByProduct.get(p.id),latestImageFeedback.get(p.id),mediaFeedbackAvailable);
-  const isRetail=eligibleRetailCategoryIds.has(p.category_id??"");
-  const stockEntry=quantities.get(p.id);
+  const isRetail=p.category_id===null||eligibleRetailCategoryIds.has(p.category_id);
+  // Supplier-entered display essentials: name, positive price and description.
+  // SKU is generated at draft creation. Category/image/inventory are optional for
+  // checkout-disabled retail display; higher-risk categories remain gated.
   const retailSetupComplete=isRetail&&p.is_active&&p.price_cents>0&&
-   Boolean(p.description?.trim())&&Boolean(p.sku.trim())&&
-   Boolean(stockEntry)&&stockEntry!.quantity_on_hand>=stockEntry!.quantity_reserved&&
+   Boolean(p.name?.trim())&&Boolean(p.description?.trim())&&
    !linkedProductIds.has(p.id)&&
    !["pending_review","changes_requested"].includes(reviewsByProduct.get(p.id)?.status??"draft");
   const visibility=supplierStorefrontVisibility({
@@ -183,7 +184,7 @@ export default async function BulkProductWorkspace({searchParams}:{
     ?(control?.supplier_wants_listing?"Public retail showcase selected":"Not listed publicly")
     :visibility.label,
    visibilityDescription:isRetail
-    ?"Ordinary retail products display publicly after supplier confirmation. Sold-out items stay visible; checkout is disabled. Archived or restricted categories and explicit admin holds remain excluded."
+    ?"Ordinary retail products need only a name, positive price and description for display. Category, image and inventory are optional; missing stock shows Sold Out. Checkout remains disabled, and admin holds still apply."
     :visibility.description,
    stockKind:trackByProduct.get(p.id)===false?"untracked":stock.kind,
    stockLabel:trackByProduct.get(p.id)===false?"Quantity not tracked":stock.label,
