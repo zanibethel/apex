@@ -5,6 +5,7 @@ import {parseProductTags} from "../src/lib/catalog/product-tags.mjs";
 import {parseProductCsv,PRODUCT_CSV_HEADERS} from "../src/lib/catalog/product-csv.mjs";
 import {validateSupplierChatCsv} from "../src/lib/chat/supplier-csv.mjs";
 import {proposeSupplierTags} from "../src/lib/chat/supplier-tags.mjs";
+import {answerSupplierCatalogMessage} from "../src/lib/chat/supplier-catalog.mjs";
 import {answerApexEmbed} from "../src/lib/chat/apex-chat.mjs";
 const read=path=>readFileSync(path,"utf8");
 const id="11111111-1111-4111-8111-111111111111";
@@ -86,4 +87,19 @@ test("public tags projection remains strictly authorized and private-safe",()=>{
  assert.match(supplierRoute,/expectedProductUpdatedAt/);
  assert.match(supplierRoute,/\.eq\("updated_at",edit\.expectedProductUpdatedAt\)/);
  assert.doesNotMatch(supplierRoute,/service_role|SUPABASE_SECRET/);
+});
+
+test("supplier can summarize and locate incomplete catalog records using private data only",()=>{
+ const inactive={...retail,id:"44444444-4444-4444-8444-444444444444",name:"Test Inactive Hoodie",
+  sku:"QA-HOOD-100",active:false,tags:[],availableStock:0};
+ const summary=answerSupplierCatalogMessage("how many products are in my catalog?",[retail,inactive]);
+ assert.match(summary.answer,/2 saved products/);
+ assert.match(summary.answer,/1 inactive/);
+ assert.match(summary.answer,/1 without discovery tags/);
+ const filtered=answerSupplierCatalogMessage("show inactive products",[retail,inactive]);
+ assert.equal(filtered.items.length,1);
+ assert.equal(filtered.items[0].name,inactive.name);
+ const untagged=answerSupplierCatalogMessage("show products without tags",[retail,inactive]);
+ assert.equal(untagged.items.length,1);
+ assert.equal(untagged.items[0].name,inactive.name);
 });
