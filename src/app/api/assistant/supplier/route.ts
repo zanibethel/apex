@@ -174,8 +174,10 @@ export async function POST(request:NextRequest){
     listing?.admin_gate==="hold"||listing?.admin_gate==="review_required"||
     (listing?.republish_approval_required&&!listing.republish_approved)))
    return respond({error:"Inactive products and admin-held items cannot request publication."},409);
-  const {data:retailCategory,error:retailCategoryError}=await client.from("categories")
-   .select("slug").eq("store_id",store.id).eq("id",product.category_id).maybeSingle();
+  const {data:retailCategory,error:retailCategoryError}=product.category_id
+   ?await client.from("categories")
+     .select("slug").eq("store_id",store.id).eq("id",product.category_id).maybeSingle()
+   :{data:null,error:null};
   if(retailCategoryError)return respond({error:"Unable to verify this product category."},503);
   const retailShowcase=retailCategory?.slug==="sample-apparel"||retailCategory?.slug==="sample-accessories";
   const result=await client.rpc("set_supplier_listing_intent",{
