@@ -35,3 +35,20 @@
 .apex-assistant-confirm>div{display:flex;gap:8px;flex-wrap:wrap}
 .apex-assistant-confirm button{border:1px solid #9c7b85;border-radius:8px;padding:10px 12px;color:#fff;background:#8f1f3b;font-size:13px;font-weight:700;cursor:pointer}
 .apex-assistant-confirm button:last-child{background:#30343c}
+
+
+.apex-assistant-csv-shortcut{padding:6px 12px;background:#20232a;border-top:1px solid #40434a}
+.apex-assistant-csv-shortcut button{color:#ffc5d0;background:transparent;border:1px solid #875c69;border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer}
+.apex-assistant-csv-shortcut button:disabled{opacity:.5;cursor:not-allowed}
+.apex-assistant-csv{margin-top:9px;display:grid;gap:9px;background:#1d222c;border:1px solid #5c5262;border-radius:10px;padding:10px;min-width:0;font-size:12px}
+.apex-assistant-csv a{color:#ffb8c7;font-weight:700;text-decoration:underline}
+.apex-assistant-csv p{line-height:1.5;margin:0;overflow-wrap:anywhere}
+.apex-assistant-csv-picker{display:flex;align-items:center;flex-direction:column;gap:7px;border:1px solid #866775;padding:10px;border-radius:9px;font-weight:700;min-width:0}
+.apex-assistant-csv-picker input{width:100%;min-width:0;font-size:16px}
+.apex-assistant-csv-preview{padding:9px;background:#34313a;border-radius:8px;display:grid;gap:7px}
+.apex-assistant-csv-preview ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:115px;overflow:auto}
+.apex-assistant-csv-preview li{font-size:11px;overflow-wrap:anywhere}
+.apex-assistant-csv-preview button{padding:10px 12px;border:0;border-radius:8px;background:#b91c37;color:#fff;font-weight:700;cursor:pointer;font-size:12px}
+.apex-assistant-csv-preview button:disabled{opacity:.65;cursor:not-allowed}
+.apex-assistant-csv-muted{color:#c2c5d0;font-size:11px}
+.apex-assistant-csv-errors{padding:9px;border:1px solid #da6881;background:#48272d;border-radius:8px;display:grid;gap:4px}

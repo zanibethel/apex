@@ -9,6 +9,12 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function supplierCatalogIntent(message){
  if(typeof message!=="string"||message.length>300||!message.trim())return "invalid";
  const q=message.toLowerCase().trim();
+ if(/\b(csv|spreadsheet|bulk file)\b/.test(q)){
+  if(/\b(download|get|give|send|need|provide|template|sample|blank|example)\b/.test(q)&&
+     !/\b(import|upload|submit)\b/.test(q))return "csv_template";
+  return "csv_import";
+ }
+ if(/\b(import|upload)\b.{0,45}\b(products|items|listings)\b|\bbulk upload\b/.test(q))return "csv_import";
  if(/\b(add|create|new|upload|enter)\b.{0,45}\b(product|products|listing|listings|item|items)\b|\b(product|listing)\b.{0,20}\b(add|create|new)\b/.test(q))return "create";
  if(/\b(unpublish|unlist|remove (?:from )?(?:the )?(?:catalog|storefront)|disable listing|withdraw publish)\b/.test(q))return "unpublish";
  if(/\b(publish|list (?:the |my )?product|make (?:the |my )?product(?:s)? visible|request listing)\b/.test(q))return "publish";
@@ -20,10 +26,18 @@ export function answerSupplierCatalogMessage(message,products=[]){
  if(knowledge&&knowledge.intent==="medical")return {...knowledge,source:"apex-supplier-code-v1"};
  const intent=supplierCatalogIntent(message);
  if(intent==="invalid")return {answer:"Please enter a short question.",items:[],source:"apex-supplier-code-v1"};
+ if(intent==="csv_template")return {
+  answer:"Here is the reusable Apex product CSV template. Download and fill in SKU, title and price; optional columns cover description, category, cost and active status. Upload the completed file through chat or the Products CSV editor. Importing never publishes or charges customers.",
+  items:[],tool:"csv_template",source:"apex-supplier-code-v1",
+ };
+ if(intent==="csv_import")return {
+  answer:"Choose your CSV file below. I'll validate the rows, check SKUs against your existing private catalog and show a preview before any save. Confirm to add products in batches. For updating existing items, use the full Products CSV editor. Publishing is a separate supplier action with release checks.",
+  items:[],tool:"csv_import",source:"apex-supplier-code-v1",
+ };
  if(intent==="create")return {answer:"Open the new-product form to save a product to your own supplier catalog. Enter its name and price, save, then add or reuse an image and set stock. It will appear immediately in your signed-in storefront preview. BTCPay setup is not required for product creation. Public sale eligibility and checkout remain separate.",items:[],link:"/supplier/catalog/bulk?new=1#apex-product-workspace",source:"apex-supplier-code-v1"};
  if(intent==="help"){
   if(knowledge)return {...knowledge,source:"apex-supplier-code-v1"};
-  return {answer:"I can review your own saved product names, listed prices, stock status, and publication requests. Try ‘show my products’, ‘find [name]’, or ‘publish [name]’. Every publication request needs your confirmation and separate storefront eligibility checks.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
+  return {answer:"I can review your own saved product names, listed prices, stock status, and publication requests. Try ‘show my products’, ‘find [name]’, ‘publish [name]’, ‘CSV template’, or ‘upload CSV’. Every publication request needs your confirmation and separate storefront eligibility checks.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
  }
  const rows=Array.isArray(products)?products.filter(x=>x&&typeof x==="object"&&UUID.test(x.id)&&
   typeof x.name==="string"&&typeof x.sku==="string"&&Number.isSafeInteger(x.priceCents)&&x.priceCents>=0&&

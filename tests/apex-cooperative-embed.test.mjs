@@ -39,7 +39,11 @@ test("root layout mounts accessible text-only chat, no checkout action",()=>{
  const ui=read("src/app/apex-assistant.tsx");
  assert.match(layout,/ApexAssistant/);
  assert.match(ui,/aria-label="Apex assistant"/);
- assert.doesNotMatch(ui,/type="file"|accept="image|createInvoice|upload|image_generation/);
+ assert.doesNotMatch(ui,/accept="image|createInvoice|image_generation/);
+ assert.match(ui,/supplierCanManage&&message\.tool&&<SupplierChatCsvTools/);
+ const csv=read("src/app/supplier/catalog/chat-csv-tools.tsx");
+ assert.match(csv,/type="file" accept="\.csv,text\/csv"/);
+ assert.doesNotMatch(csv,/createInvoice|service_role|SUPABASE_SECRET/);
 });
 
 test("remote response must be source-identified, match approved public listings and use bounded throttling",()=>{
