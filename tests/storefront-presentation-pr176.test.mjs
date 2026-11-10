@@ -63,6 +63,6 @@ test("Publish/Unpublish control does not falsely grant release or override admin
  assert.match(rpc,/set_supplier_listing_intent/);
  assert.match(helper,/control\?\.adminGate==="hold"/);
  assert.match(helper,/releaseDecision\.effective_public===true/);
- assert.match(gate,/APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled"/);
+ assert.match(gate,/get_public_retail_showcase_catalog/);
  assert.doesNotMatch(control+rpc,/\.update\(\{is_published|\.update\(\{is_public|createPublicUrl/);
 });
