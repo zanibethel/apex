@@ -167,7 +167,7 @@ export default async function CatalogReleaseDashboard({searchParams}:{
       })}
      </div>}
    </>}
-  {restrictionsAvailable&&<section aria-label="Currently restricted retail products"
+  {restrictionsAvailable&&<section id="visibility-restrictions" aria-label="Currently restricted retail products"
     className="supplier-panel" style={{marginTop:24}}>
    <h2>Retail product restriction list ({restrictionRows.length})</h2>
    <p className="notice">These products are hidden from the public retail showcase regardless of category or supplier Publish preference. Removing a restriction does not override other release checks.</p>
