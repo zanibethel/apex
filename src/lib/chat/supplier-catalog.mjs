@@ -50,13 +50,34 @@ export function answerSupplierCatalogMessage(message,products=[]){
   x.currency==="USD"&&typeof x.active==="boolean"&&typeof x.requested==="boolean"&&
   typeof x.productUpdatedAt==="string"&&
   (x.controlChangedAt===null||typeof x.controlChangedAt==="string")).slice(0,100):[];
+ const lower=message.toLowerCase();
+ if(/\b(?:how many|counts?|summary|overview|statistics)\b/.test(lower)&&
+    /\b(?:products?|listings?|catalog|drafts?|active|stock)\b/.test(lower)){
+  const active=rows.filter(p=>p.active).length;
+  const requested=rows.filter(p=>p.requested).length;
+  const untagged=rows.filter(p=>!Array.isArray(p.tags)||p.tags.length===0).length;
+  const out=rows.filter(p=>p.availableStock===0).length;
+  return {answer:"Your private catalog has "+rows.length+" saved products: "+active+
+   " active, "+(rows.length-active)+" inactive, "+requested+
+   " with a supplier publication request, "+out+" with zero available stock, and "+
+   untagged+" without discovery tags. Counts describe only your authorized store.",
+   items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
+ }
+ const filterInactive=/\b(?:inactive|not active)\b/.test(lower);
+ const filterUntagged=/\b(?:without tags|no tags|untagged)\b/.test(lower);
+ const filterSoldOut=/\b(?:sold out|out of stock|zero stock)\b/.test(lower);
  const q=message.toLowerCase().replace(/[^a-z0-9\s-]/g," ");
- const words=q.split(/\s+/).filter(w=>w.length>1&&!STOP.has(w));
+ const words=q.split(/\s+/).filter(w=>w.length>1&&!STOP.has(w)&&
+   !(filterInactive&&["inactive","active","not"].includes(w))&&
+   !(filterUntagged&&["without","no","tags","untagged"].includes(w))&&
+   !(filterSoldOut&&["sold","out","of","stock","zero"].includes(w)));
  const match=words.length?rows.filter(p=>words.every(w=>p.name.toLowerCase().includes(w)||
   p.sku.toLowerCase().includes(w)||(typeof p.category==="string"&&p.category.toLowerCase().includes(w))||
    (typeof p.description==="string"&&p.description.toLowerCase().includes(w))||
    (Array.isArray(p.tags)&&p.tags.some(tag=>tag.toLowerCase().includes(w))))):rows;
- const chosen=intent==="unpublish"?match.filter(p=>p.requested):match;
+ const filtered=match.filter(p=>(!filterInactive||!p.active)&&
+  (!filterUntagged||!p.tags?.length)&&(!filterSoldOut||p.availableStock===0));
+ const chosen=intent==="unpublish"?filtered.filter(p=>p.requested):filtered;
  if(!chosen.length)return {answer:intent==="unpublish"
   ?"No matching products currently have an active supplier publication request. Try the exact saved name or open your Products workspace."
   :"No matching saved product found in your authorized store. Try a shorter name, SKU, or category.",
