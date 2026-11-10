@@ -97,3 +97,16 @@ Apex now supports a **separate public retail display** for supplier-controlled l
 **Manual acceptance**: Supplier signs in, publishes a neutral 0-stock sample, visits \`/catalog\` signed out, sees the product with SOLD OUT and no way to checkout. Increase stock to a positive number through supplier chat; refresh public page and see IN STOCK with a working local cart, but checkout remains unavailable. Unpublish the product; it disappears publicly. Add an explicit admin hold; it disappears even if the supplier preference remains on. Verify archived and unrelated category products are not visible. Confirm no BTCPay invoice or order is created and event history records supplier changes.
 
 **Remaining**: Safe image presentation, broader operator-configurable category eligibility/moderation, real shipment/payment sandbox, and merchant go-live remain separate tested phases. This public display lane does not fulfill live payment readiness.
+
+
+## General retail-category publishing — removal of sample-only limit
+
+The original fixed allowlist of **Sample Apparel** and **Sample Accessories** has been replaced with a database policy that allows additional **ordinary retail categories** without code changes or routine admin approval. An owner/manager can create a new category in their supplier workspace, create products in that category, and use the same publish switch or supplier chat confirmation to make eligible products publicly browsable.
+
+The authoritative helper \`apex_internal.retail_showcase_category_allowed\` and authenticated category-list RPC \`public.get_supplier_retail_eligible_categories\` ensure the supplier editor, supplier chat and public catalog agree. Categories associated with the 63 archived legacy products remain excluded automatically, as do categories whose names/slugs indicate restricted merchandise. Product title/description restricted-content checks, supplier tenant/role authorization, explicit admin holds, linked import/review holds and original public payment/checkout gates remain untouched.
+
+This is **not an all-products override**. It eliminates the arbitrary two-category sample cap but does not revive the historical restricted catalog. Product public visibility requires positive supplier intent, valid content, stock record (zero is allowed), no administrative holds and an enabled showcase gate. The projected public item always returns \`can_checkout=false\`. Checkout and BTCPay remain disabled.
+
+### Acceptance checks
+
+Create a new normal category such as **Office Supplies** and a fictional notebook. Publish through supplier chat and confirm it appears on the public storefront as **Sold Out**. Change stock to positive; refresh to see **In Stock**. Unpublish to hide. Verify the old archived categories and restricted category names are ineligible, even if someone edits product metadata. Verify a linked import or administrator-held product never appears. A dedicated rollback transaction tests these cases before applying the production migration.

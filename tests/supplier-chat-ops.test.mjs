@@ -33,7 +33,7 @@ test("publication text only proposes actions, never performs writes or bypasses 
  assert.equal(r.items.find(x=>x.name==="Sample Two")?.action,null);
  assert.equal(r.items.find(x=>x.name==="Sample Held")?.action,null);
  assert.match(r.answer,/confirm/i);
- assert.match(r.answer,/neutral retail items appear on the public showcase/i);
+ assert.match(r.answer,/ordinary retail items appear on the public showcase/i);
  const undo=answerSupplierCatalogMessage("unpublish",rows);
  assert.equal(undo.items.length,1);
  assert.equal(undo.items[0].action,"unpublish");

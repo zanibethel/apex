@@ -57,7 +57,8 @@ export default async function BulkProductWorkspace({searchParams}:{
   intakeCount<=INTAKE_MAX_ROWS&&intakeCount===intakeRows?.length
   ?supplierIntakeCards(intakeRows) as IntakeCard[]|null:null;
  const [{data:products,error:productError},{data:categories,error:categoryError},{data:linked,error:linkedError},{data:sources,error:sourceError,count:sourceCount},{data:inventory,error:inventoryError},{data:listingControls,error:listingError},{data:listingEvents,error:eventsError},{data:reviewRows,error:reviewError,count:reviewCount},{data:imageFeedback,error:feedbackError,count:feedbackCount},
-  {data:stockPreferences,error:stockPrefError,count:stockPrefCount}]=await Promise.all([
+  {data:stockPreferences,error:stockPrefError,count:stockPrefCount},
+  {data:retailAllowed,error:retailAllowedError}]=await Promise.all([
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).is("archived_at",null).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
@@ -81,8 +82,10 @@ export default async function BulkProductWorkspace({searchParams}:{
   client.from("supplier_private_stock_preferences")
    .select("product_id,track_quantities",{count:"exact"})
    .eq("store_id",store.id).limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
+  client.rpc("get_supplier_retail_eligible_categories",{p_store_id:store.id}),
  ]);
- if(productError||categoryError||linkedError||inventoryError||stockPrefError||
+ if(productError||categoryError||linkedError||inventoryError||stockPrefError||retailAllowedError||
+  !Array.isArray(retailAllowed)||
   stockPrefCount===null||stockPrefCount!==stockPreferences?.length||
   stockPrefCount>SUPPLIER_BULK_PRODUCT_QUERY_LIMIT)
   return <main className="container supplier-shell">
@@ -142,7 +145,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   existing.push({action:event.action});
   eventsByProduct.set(event.product_id,existing);
  }
- const neutralCategoryIds=new Set((categories??[]).filter(c=>c.slug==="sample-apparel"||c.slug==="sample-accessories").map(c=>c.id));
+ const eligibleRetailCategoryIds=new Set(retailAllowed);
  const linkedProductIds=new Set((linked??[]).map(p=>p.product_id));
  const listing=(products??[]).map(p=>{
   const control=listingByProduct.get(p.id);
@@ -153,7 +156,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   const mediaStatus=supplierImageCorrectionStatus(
    {id:p.id,store_id:store.id,image_path:p.image_path},
    reviewsByProduct.get(p.id),latestImageFeedback.get(p.id),mediaFeedbackAvailable);
-  const isRetail=neutralCategoryIds.has(p.category_id??"");
+  const isRetail=eligibleRetailCategoryIds.has(p.category_id??"");
   const stockEntry=quantities.get(p.id);
   const retailSetupComplete=isRetail&&p.is_active&&p.price_cents>0&&
    Boolean(p.description?.trim())&&Boolean(p.sku.trim())&&
@@ -180,7 +183,7 @@ export default async function BulkProductWorkspace({searchParams}:{
     ?(control?.supplier_wants_listing?"Public retail showcase selected":"Not listed publicly")
     :visibility.label,
    visibilityDescription:isRetail
-    ?"Neutral retail products display on the public catalog after supplier confirmation when the showcase is enabled. Sold-out items stay visible; checkout is disabled. Explicit admin holds take precedence."
+    ?"Ordinary retail products display publicly after supplier confirmation. Sold-out items stay visible; checkout is disabled. Archived or restricted categories and explicit admin holds remain excluded."
     :visibility.description,
    stockKind:trackByProduct.get(p.id)===false?"untracked":stock.kind,
    stockLabel:trackByProduct.get(p.id)===false?"Quantity not tracked":stock.label,
