@@ -11,6 +11,7 @@ const dashboardLinks = [
   { title: "Product reviews", description: "Review private supplier submissions and request changes.", href: "/admin/product-reviews", icon: "▤" },
   { title: "Media readiness", description: "Inspect submitted images and outstanding public release evidence. No image approvals here.", href: "/admin/media-readiness", icon: "▣" },
   { title: "Listing controls", description: "Manage supplier publication requests, holds and republish approvals.", href: "/admin/listing-controls", icon: "🛡" },
+  { title: "Promotions & banners", description: "Manage rotating notices, date schedules, and discount codes.", href: "/admin/promotions", icon: "◈" },
   { title: "Catalog release", description: "See public retail display and product-level restrictions.", href: "/admin/catalog-release", icon: "▦" },
   { title: "Display restrictions", description: "Add or remove product restrictions without blocking entire categories.", href: "/admin/catalog-release#visibility-restrictions", icon: "◈" },
   { title: "Category controls", description: "Publish or unpublish store categories with an audit trail.", href: "/admin/categories", icon: "▥" },
