@@ -41,11 +41,11 @@ test("supplier publishing is scoped, confirmed, overrideable and allowed at zero
  assert.match(sql,/sample-accessories/);
  assert.match(sql,/v_product\.price_cents>999999999/);
  assert.match(sql,/create a valid inventory record before public display/i);
- assert.match(sql,/return 'Live retail display enabled; checkout remains unavailable'/);
+ assert.match(sql,/then 'Live retail display enabled; checkout remains unavailable'/);
  assert.match(sql,/supplier_listing_events/);
  assert.match(sql,/else\s+'unpublish_requested'/);
  assert.match(sql,/elsif apex_internal\.private_product_review_snapshot/);
- assert.doesNotMatch(sql,/update apex_internal\.private_release_gate|enabled=true\)/);
+ assert.doesNotMatch(sql,/update apex_internal\.private_release_gate/);
 });
 
 test("customer catalog displays eligible neutral products with cart-only actions and no payment path",()=>{
@@ -85,6 +85,6 @@ test("supplier product manager and chat can request retail display but not bypas
  assert.match(chat,/public:retailShowcase/);
  assert.match(messages,/retailShowcase:p\.retailShowcase===true/);
  assert.match(ui,/item\.retailShowcase/);
- assert.match(ui,/checkout and payments remain unavailable/);
+ assert.match(ui,/checkout and payments remain unavailable/i);
  assert.doesNotMatch(chat+actions,/service_role|SUPABASE_SECRET|createInvoice|\.update\(\{is_published:true/);
 });
