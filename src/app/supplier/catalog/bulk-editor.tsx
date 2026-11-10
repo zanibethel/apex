@@ -32,7 +32,7 @@ export type BulkEditRow={
 type Category={id:string;name:string};
 type ReviewedCategoryProposal={id:string;sku:string;name:string;category:string|null;status:string;note:string};
 type ListingReadiness={
- productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
+ productId:string;canRequest:boolean;requested:boolean;retailShowcase?:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
  visibilityKind:string;visibilityLabel:string;visibilityDescription:string;
  stockKind:string;stockLabel:string;
  imageStatusKind:string;imageStatusLabel:string;imageStatusMessage:string;imageNeedsAction:boolean;hasImage:boolean;
