@@ -27,8 +27,10 @@ test("public notice projection excludes future-disabled and expired notices, nev
  assert.match(sql,/n\.ends_at is null or n\.ends_at>now\(\)/);
  assert.match(sql,/n\.starts_at is null or n\.starts_at<now\(\)\+interval '90 days'/);
  assert.match(sql,/'headline',q\.headline/);
- assert.doesNotMatch(sql,/get_apex_public_notices\(\)[\s\S]*?revoke all on function public\.get_apex_public_notices\(\)/i,
-  /'actor_id'|'created_by'|'updated_by'|'address'/);
+ const publicSql=sql.slice(
+  sql.indexOf("create or replace function public.get_apex_public_notices()"),
+  sql.indexOf("revoke all on function public.get_apex_public_notices()"));
+ assert.doesNotMatch(publicSql,/'actor_id'|'created_by'|'updated_by'|'address'/);
  assert.match(ui,/usePathname\(\)/);
  assert.match(ui,/visibleNoticeAt\(n,now\)/);
  assert.match(ui,/setInterval/);
