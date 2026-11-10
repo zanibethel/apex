@@ -168,7 +168,7 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
  function submitSplit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();
   if(!isAdmin||!data?.splitDraftWritable)return;
-  if(!/^\\d{1,2}(?:\\.\\d{1,2})?$/.test(lilyPercent)) {
+  if(!/^\d{1,2}(?:\.\d{1,2})?$/.test(lilyPercent)) {
    setError("Enter Lily's share between 0.01% and 89.99%.");return;
   }
   const lilyBps=Math.round(Number(lilyPercent)*100);
