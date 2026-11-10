@@ -123,7 +123,7 @@ type PublishOutcome={id:string;ok:boolean;message:string};
 type PublishResult={ok:boolean;message:string;results:PublishOutcome[]};
 
 // Shared authenticated action for an individual card switch or a batch.
-// This saves audited supplier INTENT only; it cannot release products publicly.
+// Saves audited supplier intent. Neutral retail categories can become publicly visible in the separate read-only retail showcase; checkout remains disabled.
 export async function saveBulkListingIntents(_previous:PublishResult,form:FormData):Promise<PublishResult>{
  const storeId=form.get("storeId"),raw=form.get("ids"),action=form.get("action");
  if(typeof storeId!=="string"||typeof raw!=="string"||
@@ -145,7 +145,13 @@ export async function saveBulkListingIntents(_previous:PublishResult,form:FormDa
   });
   results.push({id,ok:!rpcError&&!!data,message:rpcError
    ?(action==="publish"?"Not requested: check required details and any administrator lock.":"Unpublish failed; refresh and retry.")
-   :(action==="publish"?"Publish preference saved; public release still gated.":"Publication preference turned off.")});
+   :(action==="publish"
+     ?String(data).startsWith("Live retail display enabled")
+      ?"Published on public retail showcase; checkout disabled."
+      :"Publish preference saved; other product release checks may still apply."
+     :String(data).startsWith("Retail product removed")
+       ?"Removed from public retail showcase."
+       :"Publication preference turned off.")});
  }
  revalidatePath("/supplier/catalog");
  revalidatePath("/supplier/catalog/bulk");
@@ -156,7 +162,7 @@ export async function saveBulkListingIntents(_previous:PublishResult,form:FormDa
  revalidatePath("/cart");
  const saved=results.filter(r=>r.ok).length;
  return {ok:saved===results.length,
-  message:`${saved} of ${results.length} listing preferences updated. Public release and purchasing remain independently restricted.`,
+  message:`${saved} of ${results.length} listing preferences updated. Neutral retail items can display publicly; checkout and payments remain disabled.`,
   results};
 }
 
