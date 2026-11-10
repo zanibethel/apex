@@ -32,7 +32,7 @@ Discount codes: reused `saveSupplierPromotion` and `toggleSupplierPromotion` act
 ## Rollout and migration
 Migration: `supabase/migrations/20261110065000_apex_scheduled_storefront_notices.sql`
 
-**Do not run this migration on production without review.** Test first with the disposable PostgreSQL workflow `.github/workflows/notice-migrations.yml`, which installs the complete new schema in isolation and tests:
+**Migration applied to production November 9, 2026 (Central time)** after isolated PostgreSQL verification. Source migration: `20261110065000_apex_scheduled_storefront_notices.sql`. The disposable PostgreSQL workflow `.github/workflows/notice-migrations.yml`, which installs the complete new schema in isolation and tests:
 - public active/current/future/expired projection
 - cross-supplier denials, admin-only global notices
 - audit and private RLS
@@ -47,4 +47,4 @@ After migration, verify from authorized admin/supplier accounts, including mobil
 6. Confirm admin three-way chat split draft is disabled unless `APEX_MULTI_SPLIT_DRAFT_WRITES_ENABLED` is enabled; verify no live payouts are affected.
 7. Confirm passwords/verification codes cannot be submitted in chat and profile security controls remain independent.
 
-Current staging is intended to be merged only after CI and Vercel preview checks pass; no new migration has been applied by this branch.
+PR #327 was merged as `332c788f8d6fd7f508ab90f08df57823b25d28f1`, and Vercel production deployed READY. The notice migration is live. The public notice feed initially returned `[]`; authorized live-browser creation, rotation and expiry verification remains to be completed. Existing payout draft and checkout payment gates were not enabled.
