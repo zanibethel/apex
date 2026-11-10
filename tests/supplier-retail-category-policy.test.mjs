@@ -37,7 +37,10 @@ test("supplier manager and chat use server-owned eligibility instead of category
  assert.match(manager,/client\.rpc\("get_supplier_retail_eligible_categories",\{p_store_id:store\.id\}\)/);
  assert.match(manager,/retailAllowedError/);
  assert.match(manager,/!Array\.isArray\(retailAllowed\)/);
- assert.match(manager,/eligibleRetailCategoryIds\.has\(p\.category_id\?\?""\)/);
+ assert.match(manager,/p\.category_id===null\|\|eligibleRetailCategoryIds\.has\(p\.category_id\)/);
+ const minimum=read("supabase/migrations/20261110032000_apex_retail_minimum_listing_fields.sql");
+ assert.match(minimum,/apex_internal\.retail_showcase_category_allowed\(p\.store_id,c\.id\)/);
+ assert.match(minimum,/v_product\.category_id is null or/);
  assert.doesNotMatch(manager,/neutralCategoryIds|c\.slug==="sample-apparel"/);
  assert.match(chat,/client\.rpc\("get_supplier_retail_eligible_categories"/);
  assert.match(chat,/retailAllowedError/);
