@@ -1,8 +1,9 @@
+import {parseProductTags} from "./product-tags.mjs";
 // Spreadsheet-compatible private draft catalog CSV. No server-side parsing,
 // external CSV dependency, network access or product publication actions.
 export const PRODUCT_CSV_HEADERS=Object.freeze([
  "product_id","sku","title","description","source_cost","price",
- "compare_at_price","category","active",
+ "compare_at_price","category","active","tags",
 ]);
 export const PRODUCT_CSV_TEMPLATE=PRODUCT_CSV_HEADERS.join(",")+"\r\n";
 const DANGEROUS_SHEET_CELL=/^[\s\u0000-\u001f]*[=+@\-]/u;
@@ -73,7 +74,7 @@ export function parseProductCsv(text){
  for(const {line:lineNo,values:fields} of values){
   if(fields.length!==headers.length){rowErrors.push("Line "+lineNo+": expected "+headers.length+" columns; found "+fields.length+".");continue}
   const item=Object.fromEntries(headers.map((h,i)=>[h,fields[i].trim()]));
-  const badText=["title","description","category","sku"].find(k=>DANGEROUS_SHEET_CELL.test(item[k]??""));
+  const badText=["title","description","category","sku","tags"].find(k=>DANGEROUS_SHEET_CELL.test(item[k]??""));
   if(badText){rowErrors.push("Line "+lineNo+": formula-style content not permitted in "+badText+".");continue}
   if((item.title??"").length<1||(item.title??"").length>120 ||
      (item.description??"").length>1500 ||
@@ -84,7 +85,8 @@ export function parseProductCsv(text){
      (item.compare_at_price&&(!PRICE.test(item.compare_at_price)||
         Number(item.compare_at_price)<=Number(item.price))) ||
      (item.active&&!["true","false","yes","no","1","0"].includes(item.active.toLowerCase())) ||
-     (item.category??"").length>80){
+     (item.category??"").length>80 ||
+     (item.tags!==undefined&&!parseProductTags(item.tags).ok)){
    rowErrors.push("Line "+lineNo+": check title, SKU, prices, category and active value.");continue;
   }
   rows.push({line:lineNo,...item});
