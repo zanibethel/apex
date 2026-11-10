@@ -8,6 +8,7 @@ import {supplierIntakeCards,INTAKE_MAX_ROWS} from "@/lib/catalog/supplier-intake
 import {reconcileIntakeWithSaved} from "@/lib/catalog/supplier-intake-reconcile.mjs";
 import {SUPPLIER_OPTION_BATCH} from "@/lib/catalog/supplier-parent-review-snapshot.mjs";
 import "./mobile-layout.css";
+import "./publish-feedback.css";
 import "./quick-image-picker.css";
 import {SourceDraftImport} from "../source-draft-import";
 import {SharedPrivateImageBulkApply} from "../shared-private-image-bulk-apply";

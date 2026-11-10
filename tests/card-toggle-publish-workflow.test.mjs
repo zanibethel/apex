@@ -23,7 +23,7 @@ test("supplier product card has an explicit pencil editor, selection and switch"
  assert.match(c,/aria-expanded=\{editOpenKeys\.includes\(r\.key\)\|\|!r\.id\}/);
  assert.match(c,/role="switch"/);
  assert.match(c,/aria-label=\{"Publish "\+\(r\.name/);
- assert.match(c,/onChange=\{e=>r\.id&&publish\(\[r\.id\],e\.target\.checked\?"publish":"unpublish"\)\}/);
+ assert.match(c,/onChange=\{e=>attemptCardPublish\(r,listingStatus,publishReady,e\.target\.checked\)\}/);
  assert.match(c,/type="checkbox" disabled=\{busy\} checked=\{selectedSet\.has\(r\.key\)\}/);
  assert.match(c,/Unpublish selected/);
  assert.match(c,/Publish selected/);

@@ -1,0 +1,18 @@
+/* Simple, inline feedback from the per-product Publish switch.
+   Never cover the card, hide controls, or alter the public storefront. */
+.apex-bulk-page .apex-bulk-card-publish-switch input[type="checkbox"][data-can-publish="true"]:not(:checked){
+ border-color:#e16a9c;box-shadow:0 0 0 1px rgba(232,91,145,.22);
+}
+.apex-bulk-page .apex-bulk-card-publish-switch input[type="checkbox"][data-can-publish="false"]:not(:checked){
+ border-style:dashed;opacity:.75;
+}
+.apex-bulk-page .apex-card-publish-feedback{
+ margin:9px 0 7px;padding:8px 10px;font-size:12px;line-height:1.5;
+ border-radius:8px;overflow-wrap:anywhere;
+}
+.apex-bulk-page .apex-card-publish-error{
+ background:#30222b;border:1px solid #9b6076;color:#f2cbd9;
+}
+.apex-bulk-page .apex-card-publish-success{
+ background:#211f26;border:1px solid #6e5a68;color:#f3e5ed;
+}
