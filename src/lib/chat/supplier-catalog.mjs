@@ -40,7 +40,7 @@ export function answerSupplierCatalogMessage(message,products=[]){
  if(intent==="create")return {answer:"Open the new-product form to save a product to your own supplier catalog. Enter its name and price, save, then add or reuse an image and set stock. It will appear immediately in your signed-in storefront preview. BTCPay setup is not required for product creation. Public sale eligibility and checkout remain separate.",items:[],link:"/supplier/catalog/bulk?new=1#apex-product-workspace",source:"apex-supplier-code-v1"};
  if(intent==="help"){
   if(knowledge)return {...knowledge,source:"apex-supplier-code-v1"};
-  return {answer:"I can review product records and propose confirmed price or stock changes, plus publication requests. Try ‘show my products’, ‘find [name]’, ‘publish [name]’, ‘CSV template’, or ‘upload CSV’. Every publication request needs your confirmation and separate storefront eligibility checks.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
+  return {answer:"I can review products, confirm price and stock changes, publish neutral retail products to the checkout-disabled public showcase, or upload CSV. Try ‘show my products’, ‘publish [name]’, ‘CSV template’, or ‘upload CSV’. Non-retail listings remain separately gated.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
  }
  const rows=Array.isArray(products)?products.filter(x=>x&&typeof x==="object"&&UUID.test(x.id)&&
   typeof x.name==="string"&&typeof x.sku==="string"&&Number.isSafeInteger(x.priceCents)&&x.priceCents>=0&&
@@ -63,12 +63,12 @@ export function answerSupplierCatalogMessage(message,products=[]){
   return {id:p.id,name:p.name,sku:p.sku,price:money(p.priceCents),
    availability:p.active?(p.availableStock===null?"Stock unverified":p.availableStock>0?"Stock recorded":"Sold out"):"Inactive draft",
    href:"/supplier/catalog/preview/"+p.id,
-   requested:p.requested,held,action,productUpdatedAt:p.productUpdatedAt,
+   requested:p.requested,held,action,retailShowcase:p.retailShowcase===true,productUpdatedAt:p.productUpdatedAt,
    controlChangedAt:p.controlChangedAt};
  });
- const info=intent==="publish"?"Choose a saved product below and confirm its publication request. This does not make it publicly available: product and supplier release checks remain in force.":
+ const info=intent==="publish"?"Choose a saved product and confirm its listing. Eligible neutral retail items appear on the public showcase when enabled—even at zero stock—with checkout disabled. All other products remain under separate release checks.":
   intent==="unpublish"?"Choose a product to withdraw its publication request. Confirm the change below; it does not modify checkout or historical orders.":
-  "Here are your saved products from the signed-in supplier workspace. These records are private; ‘Requested’ is not the same as publicly published.";
+  "Here are the saved supplier products. Neutral retail items can be displayed on the public, checkout-disabled showcase when the supplier has enabled them; other drafts remain private.";
  return {answer:info+(chosen.length>4?" Showing 4 of "+chosen.length+" matching products; narrow your search or open Products for the rest.":""),
   items,link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
 }

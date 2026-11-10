@@ -79,8 +79,8 @@ test("main product cards fetch protected release status, and cannot mark Live lo
  assert.match(page,/listingByProduct\.get\(p\.id\)\?\.supplier_wants_listing===true/);
  assert.match(page,/if\(!error&&data\)releases\.set\(p\.id,data\)/);
  assert.match(page,/supplierStorefrontVisibility/);
- assert.match(page,/visibilityKind:visibility\.kind/);
- assert.match(page,/visibilityDescription:visibility\.description/);
+ assert.match(page,/visibilityKind:isRetail\?"retail-showcase":visibility\.kind/);
+ assert.match(page,/visibilityDescription:isRetail/);
  assert.match(editor,/Storefront: \{visibilityLabel\}/);
  assert.match(editor,/visibilityKind/);
  assert.match(editor,/locallyChanged/);

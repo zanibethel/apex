@@ -61,7 +61,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   client.from("products")
    .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).is("archived_at",null).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
-  client.from("categories").select("id,name").eq("store_id",store.id).order("name").limit(SUPPLIER_BULK_PRODUCT_CAPACITY),
+  client.from("categories").select("id,name,slug").eq("store_id",store.id).order("name").limit(SUPPLIER_BULK_PRODUCT_CAPACITY),
   client.from("supplier_candidate_drafts").select("candidate_id,product_id").eq("store_id",store.id).limit(500),
   client.from("supplier_import_candidates").select("id,source_index,product_name,strength,wholesale_cost_cents",{count:"exact"})
    .eq("store_id",store.id).order("source_index").limit(250),
@@ -142,6 +142,8 @@ export default async function BulkProductWorkspace({searchParams}:{
   existing.push({action:event.action});
   eventsByProduct.set(event.product_id,existing);
  }
+ const neutralCategoryIds=new Set((categories??[]).filter(c=>c.slug==="sample-apparel"||c.slug==="sample-accessories").map(c=>c.id));
+ const linkedProductIds=new Set((linked??[]).map(p=>p.product_id));
  const listing=(products??[]).map(p=>{
   const control=listingByProduct.get(p.id);
   const status=listingControlStatus(control);
@@ -151,6 +153,13 @@ export default async function BulkProductWorkspace({searchParams}:{
   const mediaStatus=supplierImageCorrectionStatus(
    {id:p.id,store_id:store.id,image_path:p.image_path},
    reviewsByProduct.get(p.id),latestImageFeedback.get(p.id),mediaFeedbackAvailable);
+  const isRetail=neutralCategoryIds.has(p.category_id??"");
+  const stockEntry=quantities.get(p.id);
+  const retailSetupComplete=isRetail&&p.is_active&&p.price_cents>0&&
+   Boolean(p.description?.trim())&&Boolean(p.sku.trim())&&
+   Boolean(stockEntry)&&stockEntry!.quantity_on_hand>=stockEntry!.quantity_reserved&&
+   !linkedProductIds.has(p.id)&&
+   !["pending_review","changes_requested"].includes(reviewsByProduct.get(p.id)?.status??"draft");
   const visibility=supplierStorefrontVisibility({
    available:!listingError,requested:!!control?.supplier_wants_listing,
    adminGate:control?.admin_gate,
@@ -159,15 +168,20 @@ export default async function BulkProductWorkspace({searchParams}:{
   },releases.get(p.id));
   return {
    productId:p.id,
-   canRequest:!listingError&&setup.setupComplete&&status.canRequest&&!control?.supplier_wants_listing,
+   canRequest:!listingError&&(setup.setupComplete||retailSetupComplete)&&status.canRequest&&!control?.supplier_wants_listing,
    requested:!!control?.supplier_wants_listing,
    status:listingError?"Publication status unavailable":status.label,
    kind:listingError?"unavailable":status.kind,
    reason:!listingError&&["hold","review"].includes(status.kind)?control?.reason??null:null,
    missing,
    correctionsPending:!eventsError&&awaitingAdministratorCorrectionReview(eventsByProduct.get(p.id)),
-   visibilityKind:visibility.kind,visibilityLabel:visibility.label,
-   visibilityDescription:visibility.description,
+   visibilityKind:isRetail?"retail-showcase":visibility.kind,
+   visibilityLabel:isRetail
+    ?(control?.supplier_wants_listing?"Public retail showcase selected":"Not listed publicly")
+    :visibility.label,
+   visibilityDescription:isRetail
+    ?"Neutral retail products display on the public catalog after supplier confirmation when the showcase is enabled. Sold-out items stay visible; checkout is disabled. Explicit admin holds take precedence."
+    :visibility.description,
    stockKind:trackByProduct.get(p.id)===false?"untracked":stock.kind,
    stockLabel:trackByProduct.get(p.id)===false?"Quantity not tracked":stock.label,
    imageStatusKind:mediaStatus.kind,imageStatusLabel:mediaStatus.label,
@@ -210,7 +224,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   <h1>Products</h1>
   <p className="notice">The original product records have been archived for reference. This workspace now focuses on ordinary retail sample products and new supplier-created listings; the archive is preserved, not deleted.</p>
   {initialNewProduct&&<p className="notice" role="status"><strong>New product draft opened.</strong> Enter a name, price, and optional category, then save. Your item becomes available immediately in your private supplier catalog and showroom; BTCPay is not required.</p>}
-  <p className="lead">Find a product, tap the pencil to edit details, images or stock, then Save. Use the Publish switch to set your listing preference.</p>
+  <p className="lead">Find a product, tap the pencil to edit details, images or stock, then Save. Publishing eligible neutral retail products makes them visible on the public showcase when enabled, even if sold out. Checkout and payments stay disabled; admin holds still apply.</p>
   <nav className="apex-bulk-quick-nav apex-supplier-simple-nav" aria-label="Product manager shortcuts">
    <a className="button primary" href="#apex-product-workspace">Saved products ({initialRows.length})</a>
    <a className="button secondary" href="#supplier-intake">Supplier intake ({importedCards?.length??"—"})</a>

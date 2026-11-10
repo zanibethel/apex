@@ -62,17 +62,18 @@ export async function readApprovedSoldOutCatalog(page=1):Promise<SoldOutCatalogR
  if(!Number.isSafeInteger(page)||page<1||page>417)
   return {state:"unavailable",products:[],page:1,hasNext:false};
  const empty=(state:SoldOutCatalogResult["state"]):SoldOutCatalogResult=>({state,products:[],page,hasNext:false});
- // A separate future migration and approval are required to turn on this
- // feed. Under the current SQL release check, the feed must return [].
- if(process.env.APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled")
-  return empty("disabled");
+ // Dedicated display-only retail projection. The database holds an
+ // independent kill switch; existing restricted-product release stays off.
+ // This returns only neutral retail categories and can_checkout=false.
+ // Never fall back to the protected general product release feed.
+ 
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
  const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
  if(!url||!key)return empty("unconfigured");
  if(url!==APEX_ORIGIN||!key.startsWith("sb_publishable_"))
   return empty("unavailable");
  try{
-  const endpoint=new URL("/rest/v1/rpc/get_public_inventory_catalog",url);
+  const endpoint=new URL("/rest/v1/rpc/get_public_retail_showcase_catalog",url);
   endpoint.searchParams.set("p_offset",String((page-1)*24));
   endpoint.searchParams.set("p_limit","24");
   const response=await fetch(endpoint,{

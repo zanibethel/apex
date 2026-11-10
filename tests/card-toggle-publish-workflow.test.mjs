@@ -76,7 +76,10 @@ test("purchase and public display remain separate gates",()=>{
  assert.match(sql,/gate\.enabled=true/);
  assert.match(sql,/pa\.status='verified'/);
  assert.match(sql,/sa\.status='verified'/);
- assert.match(gate,/APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled"/);
+ assert.match(gate,/get_public_retail_showcase_catalog/);
+ const retail=read("supabase/migrations/20261110011000_apex_supplier_retail_showcase_display_v1.sql");
+ assert.match(retail,/retail_showcase_gate/);
+ assert.match(retail,/(?:can_checkout|canCheckout)\x27?,false/);
 });
 
 test("mobile card header keeps title, pencil and publish control on one row",()=>{

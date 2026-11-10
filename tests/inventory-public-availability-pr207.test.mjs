@@ -85,7 +85,7 @@ test("approved catalog remains gated and source never exposes stock counts",()=>
  assert.match(sql,/v_available>=v_quantity then 'in_stock'/);
  assert.match(sql,/when v_available>0 then 'insufficient_stock'/);
  assert.doesNotMatch(sql,/update public\.products|update public\.stores|insert into apex_internal|can_pay',true/);
- assert.match(client,/get_public_inventory_catalog/);
+ assert.match(client,/get_public_retail_showcase_catalog/);
  assert.match(client,/cache:"no-store"/);
  assert.match(client,/row.availability as "sold_out"\|"in_stock"/);
  assert.doesNotMatch(client,/service_role|\.insert\(|\.update\(/);

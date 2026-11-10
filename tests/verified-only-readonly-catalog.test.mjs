@@ -44,8 +44,8 @@ test("public Next pagination is bounded and uses the read-only verified-only RPC
  const client=read("src/lib/supabase/approved-sold-out-catalog.ts");
  const page=read("src/app/catalog/page.tsx");
  const shelf=read("src/app/catalog/approved-sold-out-shelf.tsx");
- assert.match(client,/APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled"/);
- assert.match(client,/get_public_inventory_catalog/);
+ assert.match(client,/get_public_retail_showcase_catalog/);
+ assert.doesNotMatch(client,/get_public_inventory_catalog/);
  assert.match(client,/searchParams.set\("p_offset"/);
  assert.match(client,/searchParams.set\("p_limit","24"\)/);
  assert.match(client,/raw\.length>24/);

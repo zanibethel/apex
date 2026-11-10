@@ -54,7 +54,7 @@ test("strict public TypeScript parser supports rollout but refuses private field
  assert.match(client,/typeof row\.category_name!=="string"/);
  assert.match(client,/typeof row\.category_id!=="string"/);
  assert.match(client,/row\.can_checkout!==false/);
- assert.match(client,/APEX_PUBLIC_SOLD_OUT_CATALOG/);
+ assert.match(client,/get_public_retail_showcase_catalog/);
  assert.match(shelf,/publicCatalogCategoryOptions/);
  assert.match(shelf,/Category/);
  assert.match(shelf,/p\.categoryName\?\?"APEX COLLECTION"/);

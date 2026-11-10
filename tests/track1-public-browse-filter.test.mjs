@@ -29,6 +29,7 @@ test("public filtering is only applied after release-gated projection, never pri
  assert.match(shelf,/filterPublicCatalogPage/);
  assert.match(shelf,/Search this page/);
  assert.match(shelf,/p.availability==="in_stock"/);
- assert.match(shelf,/Checkout unavailable/);
+ assert.match(shelf,/Browse current product listings|Browse supplier-published ordinary retail samples/);
+ assert.match(shelf,/Browsing only/);
  assert.doesNotMatch(shelf,/service_role|private.*inventory|\.(?:insert|update|delete)\(/);
 });

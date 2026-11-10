@@ -37,7 +37,8 @@ test("bulk page computes server-side draft completeness and prevents admin hold 
  assert.match(page,/\.eq\("store_id",store\.id\)\.limit\(250\)/);
  assert.match(page,/draftSetupSteps\(p,quantities\.get\(p\.id\)\)/);
  assert.match(page,/status\.canRequest&&!control\?\.supplier_wants_listing/);
- assert.match(page,/!listingError&&setup\.setupComplete/);
+ assert.match(page,/retailSetupComplete/);
+ assert.match(page,/!listingError&&\(setup\.setupComplete\|\|retailSetupComplete\)/);
  assert.match(page,/listing=\{listing\}/);
 });
 
@@ -66,7 +67,7 @@ test("bulk actions publish selected or all eligible with a bounded database requ
  assert.match(actions,/p_action:action/);
  assert.match(actions,/ids\.length>50/);
  assert.match(actions,/\.eq\("store_id",storeId\)\.is\("archived_at",null\)\.in\("id",ids\)/);
- assert.match(actions,/Public release and purchasing remain independently restricted/);
+ assert.match(actions,/checkout and payments remain disabled/);
  assert.doesNotMatch(editor+tile,/\.update\(\{is_published|\.update\(\{is_public|createPublicUrl|service_role/);
 });
 

@@ -13,7 +13,7 @@ test("product detail route uses only exact released public catalog page",()=>{
  assert.match(page,/product\.availability==="in_stock"/);
  assert.match(page,/Checkout is currently unavailable/);
  assert.doesNotMatch(page,/service_role|inventory_items|supabaseAdmin|createInvoice|fetch\(/);
- assert.match(projection,/private_release_gate|APEX_PUBLIC_SOLD_OUT_CATALOG/);
+ assert.match(projection,/get_public_retail_showcase_catalog/);
 });
 test("catalog tile links to verified product details and preserves sold-out handling",()=>{
  const shelf=read("src/app/catalog/approved-sold-out-shelf.tsx");

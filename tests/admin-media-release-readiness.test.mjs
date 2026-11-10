@@ -81,7 +81,7 @@ test("current storefront requires independent release and does not consume admin
  const publicFeed=readFileSync("src/lib/supabase/approved-sold-out-catalog.ts","utf8");
  const sql=readFileSync("database/sql/apex_public_sold_out_catalog_REVIEW_ONLY.sql","utf8");
  const admin=readFileSync("src/app/admin/media-readiness/page.tsx","utf8");
- assert.match(publicFeed,/APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled"/);
+ assert.match(publicFeed,/get_public_retail_showcase_catalog/);
  assert.match(sql,/gate\.enabled=true/);
  assert.match(sql,/'can_checkout',false/);
  assert.doesNotMatch(admin,/getPublicUrl|storage\/v1\/object\/public/);
