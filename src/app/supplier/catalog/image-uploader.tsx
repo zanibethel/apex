@@ -8,8 +8,8 @@ import {requestProductImageUpload,attachProductImage,requestProductImageReuse} f
 
 type ExistingImage={productId:string;name:string;sku:string;previewUrl:string};
 
-export function ProductImageUploader({storeId,productId,enabled,hasImage=false,existingImages=[]}:{
-  storeId:string;productId:string;enabled:boolean;hasImage?:boolean;existingImages?:ExistingImage[];
+export function ProductImageUploader({storeId,productId,enabled,hasImage=false,existingImages=[],onSaved}:{
+  storeId:string;productId:string;enabled:boolean;hasImage?:boolean;existingImages?:ExistingImage[];onSaved?:()=>void;
 }) {
   const router=useRouter();
   const [file,setFile]=useState<File|null>(null);
@@ -42,7 +42,7 @@ export function ProductImageUploader({storeId,productId,enabled,hasImage=false,e
       if(error){setMessage("Image upload failed. Try another image.");return;}
       const linked=await attachProductImage(storeId,productId,authorized.path);
       setMessage(linked.message);
-      if(linked.ok){setFile(null);router.refresh();}
+      if(linked.ok){setFile(null);router.refresh();onSaved?.();}
     } catch {
       setMessage("Image upload could not be completed.");
     } finally {
@@ -73,7 +73,7 @@ export function ProductImageUploader({storeId,productId,enabled,hasImage=false,e
       if(writeError){setMessage("Could not reuse that image. Try again.");return;}
       const linked=await attachProductImage(storeId,productId,authorized.path);
       setMessage(linked.ok?"Existing image saved as a private copy for this product.":linked.message);
-      if(linked.ok){setSourceProductId("");router.refresh();}
+      if(linked.ok){setSourceProductId("");router.refresh();onSaved?.();}
     } catch {
       setMessage("Existing image could not be reused.");
     } finally {

@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import {previewUsdCents} from "@/lib/catalog/offer-preview-money.mjs";
 import {useRouter} from "next/navigation";
 import {BulkCardMedia} from "./bulk-card-media";
+import {QuickProductImagePicker} from "./quick-image-picker";
 import {SupplierReviewSubmission} from "./review-submission";
 import {BulkInlineOffer} from "./bulk-inline-offer";
 import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
@@ -453,7 +453,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
    {setupMessage&&<p role="status" className="apex-bulk-result">{setupMessage}</p>}
   </section>
   </details>
-  <p className="notice">Tap the pencil to edit the name, description, price, image or stock. Save changes, then set your Publish preference. Admin holds remain visible and cannot be bypassed.</p>
+  <p className="notice">Tap the product image or + to add or replace a photo directly. Use the pencil for product details and stock. Save changes before publishing; admin holds still apply.</p>
   {recentImportKeys.length>0&&<p className="apex-bulk-import-notice" role="status">
    {recentImportKeys.length} CSV product {recentImportKeys.length===1?"card is":"cards are"} at the top of the workspace.
    Review their live previews and choose Save selected when ready.
@@ -501,10 +501,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     return <article key={r.key} id={r.id?"saved-"+r.id:undefined}
       className={"apex-bulk-row"+((editOpenKeys.includes(r.key)||!r.id)?" apex-bulk-row-editing":"")}>
      <div className="apex-bulk-row-title">
-      <div className="apex-supplier-row-thumbnail" aria-hidden="true">
-       {cardMedia?.imageUrl?<Image src={cardMedia.imageUrl}
-         width={64} height={64} alt="" unoptimized/>:<span>+</span>}
-      </div>
+      <QuickProductImagePicker storeId={storeId} productId={r.id}
+       productName={r.name||"New product "+(i+1)}
+       imageUrl={cardMedia?.imageUrl} existingImages={existingImages}
+       enabled={editable&&!busy} needsSave={!r.id||Boolean(r.needsSave)}/>
       <label className="apex-bulk-select">
        <input type="checkbox" disabled={busy} checked={selectedSet.has(r.key)}
         onChange={()=>toggle(r.key)} aria-label={"Select "+(r.name||"new product "+(i+1))}/>
