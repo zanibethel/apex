@@ -95,8 +95,11 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
  useEffect(()=>{
   if(mode==="security")return;
   let alive=true;
-  load().then(()=>{if(alive)setError("");}).catch(e=>{if(alive)setError(e instanceof Error?e.message:"Unable to load tools.");});
-  return ()=>{alive=false;};
+  const timer=window.setTimeout(()=>{
+   void load().then(()=>{if(alive)setError("");})
+    .catch(e=>{if(alive)setError(e instanceof Error?e.message:"Unable to load tools.");});
+  },0);
+  return ()=>{alive=false;window.clearTimeout(timer);};
  },[load,mode,loadCount]);
  const rows=useMemo(()=>data?.notices.filter(n=>isAdmin||n.store_id===selectedStore)??[],
   [data,isAdmin,selectedStore]);
@@ -186,7 +189,7 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
   </div>
  </div>;
  return <div className="apex-chat-ops">
-  <p>Changes need a review and a second confirmation. Dates are interpreted in your device's local time.</p>
+  <p>Changes need a review and a second confirmation. Dates are interpreted in the local time shown by your device.</p>
   {error&&<p role="alert">{error}</p>}
   {message&&<p role="status">{message}</p>}
   {data?.stores.length&&data.stores.length>1&&<label>Store
