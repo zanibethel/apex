@@ -9,6 +9,7 @@ export function parseProductTags(value){
  const seen=new Set(),tags=[];
  for(const part of raw){
   if(typeof part!=="string")return {ok:false,tags:[],error:"Each tag must be text."};
+  if(UNSAFE.test(part))return {ok:false,tags:[],error:"Remove control characters and the | delimiter from each tag."};
   const tag=part.toLowerCase().trim().replace(/\s+/g," ");
   if(!tag)continue;
   if(tag.length>40||UNSAFE.test(tag))return {ok:false,tags:[],error:"Keep tags to 40 characters without control characters or the | delimiter."};
