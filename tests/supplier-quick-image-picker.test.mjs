@@ -5,7 +5,7 @@ const file=path=>readFileSync(path,"utf8");
 const editor=file("src/app/supplier/catalog/bulk-editor.tsx");
 const picker=file("src/app/supplier/catalog/quick-image-picker.tsx");
 const uploader=file("src/app/supplier/catalog/image-uploader.tsx");
-const css=file("src/app/supplier/catalog/bulk/mobile-layout.css");
+const css=file("src/app/supplier/catalog/bulk/quick-image-picker.css");
 
 test("image tile offers a distinct quick picker without opening the full editor",()=>{
  assert.match(editor,/QuickProductImagePicker/);
