@@ -48,9 +48,12 @@ begin
  then raise exception 'Verified platform administrator required' using errcode='42501';end if;
  select coalesce(jsonb_agg(jsonb_build_object(
   'store_id',r.store_id,'product_id',r.product_id,
+  'product_name',p.name,'product_sku',p.sku,'store_name',s.display_name,
   'reason',r.reason,'changed_at',r.changed_at
  ) order by r.changed_at desc,r.product_id),'[]'::jsonb)
  into v_rows from apex_internal.retail_product_visibility_restrictions r
+ join public.products p on p.store_id=r.store_id and p.id=r.product_id
+ join public.stores s on s.id=p.store_id and s.is_public=false
  where r.is_restricted=true;
  return v_rows;
 end $$;
