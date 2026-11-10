@@ -94,3 +94,6 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f database/tests/verified_only_sold_out_feed_integration.sql
           # New synthetic full workflow uses only disposable data in a rollback.
           psql -X -v ON_ERROR_STOP=1 -f database/tests/full_supplier_card_workflow_e2e.sql
+          # Administrator off-platform review records; no release or checkout changes.
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261110123000_apex_admin_offline_product_reviews.sql
+          psql -X -v ON_ERROR_STOP=1 -f database/tests/admin_offline_product_review_integration.sql
