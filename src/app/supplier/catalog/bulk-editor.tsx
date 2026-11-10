@@ -42,7 +42,7 @@ type PublishOutcome={id:string;ok:boolean;message:string};
 
 function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
-  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,tagsText:"",
+  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:true,tagsText:"",
   needsSave:true};
 }
 export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false,taxonomyProposal,taxonomyStoreId,initialEditProductId,initialNewProduct=false}:{
