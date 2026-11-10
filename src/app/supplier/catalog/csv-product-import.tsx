@@ -60,6 +60,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
     key:target?.key??crypto.randomUUID(),id:target?.id,
     name:item.title,sku:sku||target?.sku||draftSkuFromUuid(item.title,crypto.randomUUID()),
     description:csvEditableOptionalText(item,"description",target?.description),price:item.price,
+    tagsText:Object.hasOwn(item,"tags")?String(item.tags??""):target?.tagsText??"",
     comparePrice:csvEditableOptionalText(item,"compare_at_price",target?.comparePrice),
     sourceCost:item.source_cost||target?.sourceCost||"",
     categoryId:categoryId||"",
@@ -89,7 +90,7 @@ export function CsvProductImport({rows,categories,disabled,onLoad}:{
    product_id:r.id,sku:r.sku,title:r.name,description:r.description,
    source_cost:r.sourceCost??"",price:r.price,compare_at_price:r.comparePrice,
    category:categories.find(c=>c.id===r.categoryId)?.name??"",
-   active:r.isActive?"true":"false",
+   active:r.isActive?"true":"false",tags:r.tagsText??"",
   }));
   saveCsv(buildProductCsv(items),batch.filename);
  }
