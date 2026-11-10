@@ -1,5 +1,5 @@
 "use client";
-import {useState,type FormEvent} from "react";
+import {useRef,useState,type FormEvent} from "react";
 import Link from "next/link";
 import {SupplierChatCsvTools} from "./supplier/catalog/chat-csv-tools";
 import "./apex-assistant.css";
@@ -24,6 +24,7 @@ const linkLabel=(link:string)=>link==="/supplier/catalog/bulk?new=1#apex-product
  link==="/supplier/orders"?"Supplier orders":link==="/cart"?"View cart":"Browse catalog";
 
 export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:boolean}){
+ const requestSequence=useRef(1);
  const [open,setOpen]=useState(false);
  const [draft,setDraft]=useState("");
  const [sending,setSending]=useState(false);
@@ -42,7 +43,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
   setDraft("");
   setPending(null);
   setSending(true);
-  const id=Date.now();
+  const id=requestSequence.current++;
   append({id,from:"user",text:message});
   try{
    const response=await fetch(supplierCanManage?"/api/assistant/supplier":"/api/assistant",{
