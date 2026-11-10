@@ -6,6 +6,7 @@ const money=value=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD
 function normalize(value){
  return String(value??"").toLowerCase().replace(/\bt[\s-]?shirts?\b/g,"tshirt")
   .replace(/\bworkouts?\b/g,"working out").replace(/\btees?\b/g,"tshirt")
+  .replace(/\bshirts?\b/g,"tshirt")
   .replace(/\bmen['’]?s\b/g,"men").replace(/\bwomen['’]?s\b/g,"women")
   .replace(/[^a-z0-9]+/g," ").trim().replace(/\s+/g," ");
 }
