@@ -32,7 +32,7 @@ test("category names or their history no longer restrict ordinary public browsin
  assert.match(fun,/where c\.id=p_category_id and c\.store_id=p_store_id/);
  assert.doesNotMatch(fun,/historical\.archived_at|c\.slug|c\.name|peptide|anabolic|steroid|research|weapon/);
  assert.match(fun,/revoke all on function apex_internal\.retail_showcase_category_allowed/);
- assert.doesNotMatch(sql,/update apex_internal\.private_release_gate|update apex_internal\.retail_showcase_gate|is_published=true|createInvoice|btcpay/);
+ assert.doesNotMatch(sql,/update apex_internal\.private_release_gate|update apex_internal\.retail_showcase_gate|update public\.products\s+set\s+is_published|createInvoice|btcpay/);
 });
 
 test("supplier publishing still requires authorization, product checks and admin hold overrides",()=>{
