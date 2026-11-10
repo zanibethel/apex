@@ -2,7 +2,17 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-09
+Last reviewed: 2026-11-10
+
+## November 10, 2026 — Catalog row-count discontinuity and payment release gates
+
+**Status:** Recommend (read-only catalog provenance audit); Evaluate (payment release gate remains pending)  
+**Last reviewed:** 2026-11-10
+
+**Evidence:** Connected production-designated Supabase `products` table now contains **5 rows, all active and none published**; all five have the same 2026-11-09 23:19 UTC creation timestamp. Previous Nov 9 intelligence recorded 63 saved / 50 active / 0 published. This is a **material count discontinuity** requiring verification of migration, reset, tenant/store scope or archival; the count alone cannot establish deletion or data loss. Prior three-wallet BTCPay/Prism regtest evidence is not proof of mainnet readiness. No keys, wallet addresses or private partner data recorded.
+
+**Possible solution / recommendation:** Perform read-only product provenance, source-import, audit-log, store-scope and backup reconciliation before approving bulk import or publication. Keep immutable order/payout snapshots, signed webhooks, recipient reconciliation, signer isolation and fulfillment authorization as independent release gates. No live signing, settlement, product changes or deployment.
+
 
 ## November 9, 2026 — Catalog and three-recipient payment release evidence (existing release considerations)
 
