@@ -152,7 +152,7 @@ export async function POST(request:NextRequest){
    return respond({error:"Supplier publication controls are not currently enabled."},503);
   const body=data as Confirm;
   const {data:product,error:productError}=await client.from("products")
-   .select("id,store_id,name,updated_at,is_published,is_active")
+   .select("id,store_id,name,category_id,updated_at,is_published,is_active")
    .eq("store_id",store.id).eq("id",body.productId).is("archived_at",null).maybeSingle();
   if(productError||!product||product.is_published)
    return respond({error:"Private product not available for this supplier."},404);
@@ -174,6 +174,10 @@ export async function POST(request:NextRequest){
     listing?.admin_gate==="hold"||listing?.admin_gate==="review_required"||
     (listing?.republish_approval_required&&!listing.republish_approved)))
    return respond({error:"Inactive products and admin-held items cannot request publication."},409);
+  const {data:retailCategory,error:retailCategoryError}=await client.from("categories")
+   .select("slug").eq("store_id",store.id).eq("id",product.category_id).maybeSingle();
+  if(retailCategoryError)return respond({error:"Unable to verify this product category."},503);
+  const retailShowcase=retailCategory?.slug==="sample-apparel"||retailCategory?.slug==="sample-accessories";
   const result=await client.rpc("set_supplier_listing_intent",{
    p_store_id:store.id,p_product_id:product.id,p_action:body.action,
   });
@@ -189,11 +193,21 @@ export async function POST(request:NextRequest){
   revalidatePath("/catalog");
   return respond({
    ok:true,source:"apex-supplier-code-v1",
-   answer:body.action==="publish"
-    ?"Publication preference saved for "+product.name+". It is NOT publicly published. The separate product, seller and admin release checks still apply."
-    :"Publication request withdrawn for "+product.name+".",
-   public:false,
-   statusCode:releaseError?"unverified":typeof release?.status_code==="string"?release.status_code:"unverified",
+   answer:retailShowcase
+    ?(body.action==="publish"
+      ?(String(result.data).startsWith("Live retail display enabled")
+        ?product.name+" is now on the public Apex retail showcase. It is visible even when sold out; checkout and payments remain unavailable."
+        :product.name+" is requested for the retail showcase, but public display is not activated yet.")
+      :product.name+" has been removed from the public retail showcase.")
+    :(body.action==="publish"
+      ?"Publication preference saved for "+product.name+
+       ". It is NOT publicly published. Separate release requirements still apply."
+      :"Publication request withdrawn for "+product.name+"."),
+   public:retailShowcase&&body.action==="publish"&&
+    String(result.data).startsWith("Live retail display enabled"),
+   statusCode:retailShowcase?(body.action==="unpublish"?"retail_hidden":
+     String(result.data).startsWith("Live retail display enabled")?"retail_visible":"retail_pending"):
+     releaseError?"unverified":typeof release?.status_code==="string"?release.status_code:"unverified",
    items:[],
   });
  }
@@ -209,12 +223,13 @@ export async function POST(request:NextRequest){
    .eq("store_id",store.id).limit(100),
   client.from("inventory_items").select("product_id,quantity_on_hand,quantity_reserved")
    .eq("store_id",store.id).limit(100),
-  client.from("categories").select("id,name").eq("store_id",store.id).limit(100),
+  client.from("categories").select("id,name,slug").eq("store_id",store.id).limit(100),
  ]);
  if(controlError||stockError||categoryError)return respond({error:"Supplier catalog status is temporarily unavailable."},503);
  const controlsById=new Map((controls??[]).map(x=>[x.product_id,x]));
  const stockById=new Map((stock??[]).map(x=>[x.product_id,x]));
  const categoryById=new Map((categories??[]).map(x=>[x.id,x.name]));
+ const retailCategories=new Set((categories??[]).filter(x=>x.slug==="sample-apparel"||x.slug==="sample-accessories").map(x=>x.id));
  const projection=(products??[]).map(p=>{
   const control=controlsById.get(p.id);
   const inventory=stockById.get(p.id);
@@ -225,6 +240,7 @@ export async function POST(request:NextRequest){
    published:p.is_published,held:control?.admin_gate==="hold"||control?.admin_gate==="review_required",
    currency:p.currency,
    category:categoryById.get(p.category_id??"")??"",active:p.is_active,
+   retailShowcase:retailCategories.has(p.category_id??""),
    requested:control?.supplier_wants_listing===true,
    adminGate:control?.admin_gate??"clear",
    republishBlocked:control?.republish_approval_required===true&&control.republish_approved!==true,
