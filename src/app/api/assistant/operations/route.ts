@@ -3,6 +3,7 @@ import {revalidatePath} from "next/cache";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
 import {saveSupplierPromotion,toggleSupplierPromotion} from "@/app/supplier/discounts/actions";
+import {saveMultiRecipientDraft} from "@/app/admin/splits/configure/actions";
 
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
@@ -108,10 +109,16 @@ export async function GET(req:NextRequest){
    .select("store_id,supplier_percent,updated_at").eq("store_id",storeId).maybeSingle():
    Promise.resolve({data:null,error:null}),
  ]):[{data:[],error:null},{data:[],error:null},{data:null,error:null}];
+ const recipientResult=ctx.admin?await ctx.client.from("payout_recipients")
+  .select("id,display_name,recipient_type,status")
+  .eq("status","active").order("display_name").limit(100):
+  {data:[],error:null};
  return send({
   ok:true,admin:ctx.admin,stores:ctx.stores.map(s=>({id:s.id,name:s.display_name})),
   storeId:storeId??null,notices:notices.rows,noticesReady:notices.ready,
   discounts,discountsReady,discountsWritable:promosEnabled()&&discountsReady,
+  payoutRecipients:recipientResult.error?[]:recipientResult.data??[],
+  splitDraftWritable:ctx.admin&&process.env.APEX_MULTI_SPLIT_DRAFT_WRITES_ENABLED==="true"&&!recipientResult.error,
   payouts:{sales:salesResult.error?[]:salesResult.data??[],
    walletRequests:walletResult.error?[]:walletResult.data??[],
    splitDraft:splitResult.error?null:splitResult.data,
@@ -179,6 +186,28 @@ export async function POST(req:NextRequest){
   if(result.error)return send({error:"Notice not saved. Verify permissions and refresh if someone else edited it."},409);
   revalidatePath("/");revalidatePath("/catalog");
   return send({ok:true,message:"Announcement saved with its active schedule.",notice:result.data});
+ }
+ if(body.operation==="save_split_draft"){
+  if(!ctx.admin)return send({error:"Verified platform admin required."},403);
+  if(process.env.APEX_MULTI_SPLIT_DRAFT_WRITES_ENABLED!=="true")
+   return send({error:"Payout draft saving is currently disabled."},503);
+  if(Object.keys(body).some(k=>!["operation","storeId","apexId","lilyId","tierraId","lilyBps"].includes(k)))
+   return send({error:"Unsupported payout draft fields."},400);
+  if(!storeId||![body.apexId,body.lilyId,body.tierraId].every(x=>typeof x==="string"&&ID.test(x))||
+   new Set([body.apexId,body.lilyId,body.tierraId]).size!==3||
+   !Number.isSafeInteger(body.lilyBps)||Number(body.lilyBps)<1||Number(body.lilyBps)>8999)
+   return send({error:"Select three distinct active recipients and a valid allocation."},400);
+  const form=new FormData();
+  form.set("template","apex_shared_three_way_v1");
+  form.set("scopeType","storefront");
+  form.set("scopeId",storeId);
+  form.set("recipients",JSON.stringify([
+   {recipient_id:body.apexId,basis_points:1000},
+   {recipient_id:body.lilyId,basis_points:body.lilyBps},
+   {recipient_id:body.tierraId,basis_points:9000-Number(body.lilyBps)},
+  ]));
+  const result=await saveMultiRecipientDraft({ok:false,message:""},form);
+  return send(result,result.ok?200:409);
  }
  if(body.operation==="save_discount"||body.operation==="toggle_discount"){
   if(!storeId)return send({error:"Select a supplier store for discount codes."},400);
