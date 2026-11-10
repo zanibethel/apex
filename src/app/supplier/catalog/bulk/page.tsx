@@ -225,7 +225,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   <Link className="back" href="/supplier">← Supplier dashboard</Link>
   <p className="eyebrow">APEX / SUPPLIER / PRODUCTS</p>
   <h1>Products</h1>
-  <p className="notice">The original product records have been archived for reference. This workspace now focuses on ordinary retail sample products and new supplier-created listings; the archive is preserved, not deleted.</p>
+  <p className="notice">Manage your supplier catalog here. Create products, edit stock and pricing, import CSV files and publish eligible listings to the public storefront. Checkout remains disabled until separately verified.</p>
   {initialNewProduct&&<p className="notice" role="status"><strong>New product draft opened.</strong> Enter a name, price, and optional category, then save. Your item becomes available immediately in your private supplier catalog and showroom; BTCPay is not required.</p>}
   <p className="lead">Find a product, tap the pencil to edit details, images or stock, then Save. Publishing eligible neutral retail products makes them visible on the public showcase when enabled, even if sold out. Checkout and payments stay disabled; admin holds still apply.</p>
   <nav className="apex-bulk-quick-nav apex-supplier-simple-nav" aria-label="Product manager shortcuts">
