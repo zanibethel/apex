@@ -95,10 +95,28 @@ export async function GET(req:NextRequest){
   discountsReady=!res.error;
   discounts=res.data??[];
  }
+ // Read-only preview of existing protected evidence. Never equate gross sales
+ // with completed payouts and never return wallet addresses or payment secrets.
+ const [salesResult,walletResult,splitResult]=storeId?await Promise.all([
+  ctx.client.from("supplier_sales_history")
+   .select("order_reference,sale_state,gross_cents,currency,occurred_at")
+   .eq("store_id",storeId).order("occurred_at",{ascending:false}).limit(5),
+  ctx.client.from("supplier_wallet_requests")
+   .select("label,request_state,created_at")
+   .eq("store_id",storeId).order("created_at",{ascending:false}).limit(5),
+  ctx.admin?ctx.client.from("store_split_drafts")
+   .select("store_id,supplier_percent,updated_at").eq("store_id",storeId).maybeSingle():
+   Promise.resolve({data:null,error:null}),
+ ]):[{data:[],error:null},{data:[],error:null},{data:null,error:null}];
  return send({
   ok:true,admin:ctx.admin,stores:ctx.stores.map(s=>({id:s.id,name:s.display_name})),
   storeId:storeId??null,notices:notices.rows,noticesReady:notices.ready,
   discounts,discountsReady,discountsWritable:promosEnabled()&&discountsReady,
+  payouts:{sales:salesResult.error?[]:salesResult.data??[],
+   walletRequests:walletResult.error?[]:walletResult.data??[],
+   splitDraft:splitResult.error?null:splitResult.data,
+   salesReady:!salesResult.error,walletReady:!walletResult.error,
+   splitReady:ctx.admin&&!splitResult.error},
   links:{profile:"/account/profile",payoutReports:"/supplier/reports",
    payoutAdmin:"/admin/splits/configure",paymentMonitor:"/admin/payment-monitor"},
  });
@@ -136,7 +154,6 @@ export async function POST(req:NextRequest){
    if(!notice)return send({error:"Notice not found."},404);
    if(notice.updated_at!==body.expectedUpdatedAt)return send({error:"Notice changed; refresh before confirming."},409);
   }
-  const input=notice??body;
   const id=notice?notice.id:body.id??null;
   if(!(id===null||(typeof id==="string"&&ID.test(id))))return send({error:"Invalid notice identity."},400);
   const headline=notice?notice.headline:body.headline;
