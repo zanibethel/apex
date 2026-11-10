@@ -29,7 +29,9 @@ export function buildCheckoutConnectionReportV1({
  const journalConnected=journal?.checkoutEnabled===false&&
   journal?.invoicePostEnabled===false&&
   Number.isSafeInteger(journal?.heldOrderRecords)&&
-  Number.isSafeInteger(journal?.heldProviderIntents);
+  Number.isSafeInteger(journal?.heldProviderIntents)&&
+  journal.heldOrderRecords>=0&&journal.heldProviderIntents>=0&&
+  journal.heldProviderIntents<=journal.heldOrderRecords;
  const steps=[
   step("retail","Public retail showcase",
    typeof retailShowcase!=="boolean"?"unavailable":
