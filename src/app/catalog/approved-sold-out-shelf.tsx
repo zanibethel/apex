@@ -24,11 +24,11 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
  return <section className="apex-approved-soldout" aria-labelledby="apex-approved-soldout-title">
   <div className="apex-approved-soldout-head">
    <div>
-    <p className="eyebrow">APEX PRODUCT CATALOG</p>
+    <p className="eyebrow">PUBLIC RETAIL SHOWCASE</p>
     <h2 id="apex-approved-soldout-title">Product catalog</h2>
-    <p>Browse current product listings. Availability reflects verified current stock. Checkout is currently unavailable.</p>
+    <p>Browse supplier-published ordinary retail samples. Stock labels reflect current recorded inventory; checkout and payment remain unavailable.</p>
    </div>
-   <span className="apex-approved-status">Checkout unavailable</span>
+   <span className="apex-approved-status">Browsing only</span>
   </div>
   {result.state==="connected"&&result.products.length>0&&
    <div className="apex-approved-filters">
@@ -64,7 +64,7 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
    </div>}
    <div className="apex-approved-soldout-grid">
     {visible.map((p:ApprovedSoldOutProduct)=><article className="apex-approved-item" key={p.id}>
-     <ApprovedProductMedia productId={p.id} availability={p.availability}/>
+     <ApprovedProductMedia productId={p.id} availability={p.availability} retailShowcase/>
      <div className="apex-approved-body">
       <p className="eyebrow">{p.categoryName??"APEX COLLECTION"}</p>
       <h3>{p.name}</h3>
