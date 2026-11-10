@@ -52,3 +52,8 @@
 .apex-assistant-csv-preview button:disabled{opacity:.65;cursor:not-allowed}
 .apex-assistant-csv-muted{color:#c2c5d0;font-size:11px}
 .apex-assistant-csv-errors{padding:9px;border:1px solid #da6881;background:#48272d;border-radius:8px;display:grid;gap:4px}
+
+.apex-assistant-prompts{display:flex;gap:7px;overflow-x:auto;flex-shrink:0;padding:7px 12px;background:#20232a;border-top:1px solid #343a42;scrollbar-width:thin}
+.apex-assistant-prompts button{white-space:nowrap;min-height:35px;border:1px solid #75606b;border-radius:999px;background:#292b35;color:#ffe0e7;padding:7px 10px;font-size:12px;cursor:pointer}
+.apex-assistant-prompts button:focus-visible{outline:2px solid #f7a4b7;outline-offset:2px}
+.apex-assistant-prompts button:disabled{opacity:.5;cursor:wait}
