@@ -2,8 +2,9 @@
 // and owner/manager membership. No external AI, mutations or public release.
 import {answerApexKnowledge} from "./apex-knowledge.mjs";
 import {proposeSupplierEdit} from "./supplier-edit.mjs";
+import {proposeSupplierTags} from "./supplier-tags.mjs";
 
-const STOP=new Set(["please","i","want","to","the","a","all","my","me","product","products","item","items","listing","listings","show","find","review","let","can","you","publish","unpublish","request","remove","set","with","price","prices","for","how","do","we","what","is","are","currently","status","stock","inventory","sku","catalog","supplier","draft","drafts","in","on","and","at","of"]);
+const STOP=new Set(["please","i","want","to","the","a","all","my","me","product","products","item","items","listing","listings","show","find","review","let","can","you","publish","unpublish","request","remove","set","with","price","prices","for","how","do","we","what","is","are","currently","status","stock","inventory","sku","catalog","supplier","draft","drafts","in","on","and","at","of","tag","tags","tagged","having","named"]);
 const money=cents=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -25,12 +26,14 @@ export function supplierCatalogIntent(message){
 export function answerSupplierCatalogMessage(message,products=[]){
  const knowledge=answerApexKnowledge(message);
  if(knowledge&&knowledge.intent==="medical")return {...knowledge,source:"apex-supplier-code-v1"};
+ const tagEdit=proposeSupplierTags(message,products);
+ if(tagEdit)return tagEdit;
  const edit=proposeSupplierEdit(message,products);
  if(edit)return edit;
  const intent=supplierCatalogIntent(message);
  if(intent==="invalid")return {answer:"Please enter a short question.",items:[],source:"apex-supplier-code-v1"};
  if(intent==="csv_template")return {
-  answer:"Here is the reusable Apex product CSV template. Download and fill in SKU, title and price; optional columns cover description, category, cost and active status. Upload the completed file through chat or the Products CSV editor. Importing never publishes or charges customers.",
+  answer:"Here is the reusable Apex product CSV template. Download and fill in SKU, title and price; optional columns include description, category, cost, active status and | separated discovery tags. Upload the completed file through chat or the Products CSV editor. Importing never publishes or charges customers.",
   items:[],tool:"csv_template",source:"apex-supplier-code-v1",
  };
  if(intent==="csv_import")return {
@@ -40,7 +43,7 @@ export function answerSupplierCatalogMessage(message,products=[]){
  if(intent==="create")return {answer:"Open the new-product form to save a product to your own supplier catalog. Enter its name and price, save, then add or reuse an image and set stock. It will appear immediately in your signed-in storefront preview. BTCPay setup is not required for product creation. Public sale eligibility and checkout remain separate.",items:[],link:"/supplier/catalog/bulk?new=1#apex-product-workspace",source:"apex-supplier-code-v1"};
  if(intent==="help"){
   if(knowledge)return {...knowledge,source:"apex-supplier-code-v1"};
-  return {answer:"I can review products, confirm price and stock changes, publish ordinary retail products to the checkout-disabled public showcase, or upload CSV. Try ‘show my products’, ‘publish [name]’, ‘CSV template’, or ‘upload CSV’. Non-retail listings remain separately gated.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
+  return {answer:"I can review products, confirm price and stock changes, publish ordinary retail products to the checkout-disabled public showcase, manage discovery tags, or upload CSV. Try ‘show my products’, ‘publish [name]’, ‘CSV template’, or ‘upload CSV’. Non-retail listings remain separately gated.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
  }
  const rows=Array.isArray(products)?products.filter(x=>x&&typeof x==="object"&&UUID.test(x.id)&&
   typeof x.name==="string"&&typeof x.sku==="string"&&Number.isSafeInteger(x.priceCents)&&x.priceCents>=0&&
@@ -50,7 +53,9 @@ export function answerSupplierCatalogMessage(message,products=[]){
  const q=message.toLowerCase().replace(/[^a-z0-9\s-]/g," ");
  const words=q.split(/\s+/).filter(w=>w.length>1&&!STOP.has(w));
  const match=words.length?rows.filter(p=>words.every(w=>p.name.toLowerCase().includes(w)||
-  p.sku.toLowerCase().includes(w)||(typeof p.category==="string"&&p.category.toLowerCase().includes(w)))):rows;
+  p.sku.toLowerCase().includes(w)||(typeof p.category==="string"&&p.category.toLowerCase().includes(w))||
+   (typeof p.description==="string"&&p.description.toLowerCase().includes(w))||
+   (Array.isArray(p.tags)&&p.tags.some(tag=>tag.toLowerCase().includes(w))))):rows;
  const chosen=intent==="unpublish"?match.filter(p=>p.requested):match;
  if(!chosen.length)return {answer:intent==="unpublish"
   ?"No matching products currently have an active supplier publication request. Try the exact saved name or open your Products workspace."
@@ -63,7 +68,8 @@ export function answerSupplierCatalogMessage(message,products=[]){
   return {id:p.id,name:p.name,sku:p.sku,price:money(p.priceCents),
    availability:p.active?(p.availableStock===null?"Stock unverified":p.availableStock>0?"Stock recorded":"Sold out"):"Inactive draft",
    href:"/supplier/catalog/preview/"+p.id,
-   requested:p.requested,held,action,retailShowcase:p.retailShowcase===true,productUpdatedAt:p.productUpdatedAt,
+   requested:p.requested,held,action,tags:Array.isArray(p.tags)?p.tags:[],
+   retailShowcase:p.retailShowcase===true,productUpdatedAt:p.productUpdatedAt,
    controlChangedAt:p.controlChangedAt};
  });
  const info=intent==="publish"?"Choose a saved product and confirm its listing. Eligible ordinary retail items appear on the public showcase when enabled—even at zero stock—with checkout disabled. All other products remain under separate release checks.":
