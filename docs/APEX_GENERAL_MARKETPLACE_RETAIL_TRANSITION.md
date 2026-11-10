@@ -56,3 +56,16 @@ If an issue occurs, **do not delete the archive**. Use a reviewed restoration mi
 **Transfer readiness.** Make brand identity, domain, platform commission and merchant accounts configurable. Create tenant onboarding, provider configuration and key-rotation, RLS/access audits, backup/restore and environment templates, licenses/IP inventory, documentation and acceptance tests for the acquiring operator.
 
 A software test catalog does not by itself waive legal obligations for any later physical goods; future merchants remain responsible for permitted listings and transaction compliance.
+
+
+## Supplier-chat CSV operations
+
+A supplier owner or manager can ask CoOperative-branded chat for "CSV template" or "upload CSV". The template is the same existing nine-column Products CSV, available as a direct file download.
+
+The chat accepts files with up to 100 rows (256 KB). It validates the CSV headers, each SKU, price, known category and row duplication, then gives a **read-only preview** of new and skipped records. Only clicking **Confirm import** triggers any changes. Imports run in bounded chunks of 20 through the existing server-authorized supplier draft action. Saved products begin with zero stock and are private, never automatically released or sent to BTCPay.
+
+Repeating an identical CSV skips existing matching SKUs. A conflicting SKU or nonblank existing product ID must be resolved through the full Products CSV editor, which is linked inside the chat. This simplified assistant flow creates new supplier products and intentionally does not overwrite saved records.
+
+**Publishing status:** The existing supplier chatbot can request and withdraw publication intent using the audited RPC after a second confirmation. Public release is still separately gated; chat must never say "live" when only the preference has been recorded. The supplier-controlled release of eligible general-retail products, with administrator takedown and checkout controls, remains Issue #319.
+
+Manual acceptance: sign out (no supplier tools), sign in as supplier owner/manager, request the template, upload a small CSV, confirm the preview, check two saved drafts, retry and check SKUs skipped, verify cross-supplier access blocked, and confirm the public catalog/BTCPay are unchanged.
