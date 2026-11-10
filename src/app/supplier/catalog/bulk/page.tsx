@@ -152,7 +152,6 @@ export default async function BulkProductWorkspace({searchParams}:{
   const status=listingControlStatus(control);
   const setup=draftSetupSteps(p,quantities.get(p.id));
   const stock=privateInventoryState(quantities.get(p.id));
-  const missing=setup.steps.filter(step=>!step.complete).map(step=>step.label);
   const mediaStatus=supplierImageCorrectionStatus(
    {id:p.id,store_id:store.id,image_path:p.image_path},
    reviewsByProduct.get(p.id),latestImageFeedback.get(p.id),mediaFeedbackAvailable);
@@ -160,8 +159,14 @@ export default async function BulkProductWorkspace({searchParams}:{
   // Supplier-entered display essentials: name, positive price and description.
   // SKU is generated at draft creation. Category/image/inventory are optional for
   // checkout-disabled retail display; higher-risk categories remain gated.
-  const retailSetupComplete=isRetail&&p.is_active&&p.price_cents>0&&
-   Boolean(p.name?.trim())&&Boolean(p.description?.trim())&&
+  const retailMissing=isRetail?[
+   !p.name?.trim()?"Product name":null,
+   !(p.price_cents>0)?"Purchase price":null,
+   !p.description?.trim()?"Product description":null,
+   !p.is_active?"Active in private catalog":null,
+  ].filter((item):item is string=>Boolean(item)):[];
+  const missing=isRetail?retailMissing:setup.steps.filter(step=>!step.complete).map(step=>step.label);
+  const retailSetupComplete=isRetail&&retailMissing.length===0&&
    !linkedProductIds.has(p.id)&&
    !["pending_review","changes_requested"].includes(reviewsByProduct.get(p.id)?.status??"draft");
   const visibility=supplierStorefrontVisibility({
@@ -171,7 +176,7 @@ export default async function BulkProductWorkspace({searchParams}:{
    republishApproved:control?.republish_approved,
   },releases.get(p.id));
   return {
-   productId:p.id,
+   productId:p.id,retailShowcase:isRetail,
    canRequest:!listingError&&(setup.setupComplete||retailSetupComplete)&&status.canRequest&&!control?.supplier_wants_listing,
    requested:!!control?.supplier_wants_listing,
    status:listingError?"Publication status unavailable":status.label,
