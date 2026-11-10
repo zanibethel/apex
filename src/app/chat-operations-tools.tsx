@@ -19,6 +19,8 @@ type Data={
  ok:boolean;admin:boolean;stores:Store[];storeId:string|null;
  notices:Notice[];noticesReady:boolean;discounts:Discount[];
  discountsReady:boolean;discountsWritable:boolean;
+ payoutRecipients?:{id:string;display_name:string;recipient_type:string;status:string}[];
+ splitDraftWritable?:boolean;
  payouts?:{
   sales:{order_reference:string;sale_state:string;gross_cents:number;currency:string;occurred_at:string}[];
   walletRequests:{label:string;request_state:string;created_at:string}[];
@@ -82,6 +84,11 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
   return {...emptyDiscount,...found};
  });
  const [review,setReview]=useState<string|null>(null);
+ const [apexId,setApexId]=useState("");
+ const [lilyId,setLilyId]=useState("");
+ const [tierraId,setTierraId]=useState("");
+ const [lilyPercent,setLilyPercent]=useState("45.00");
+ const [splitReview,setSplitReview]=useState<string|null>(null);
  const [toggleReview,setToggleReview]=useState<{type:"notice"|"discount";id:string;active:boolean;version:string}|null>(null);
  const [loadCount,setLoadCount]=useState(0);
  const load=useCallback(async()=>{
@@ -158,6 +165,27 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
    <p>For security, passwords and verification codes never go through chat. Open the protected account form to change your password or request a security code.</p>
    <Link href="/account/profile">Open secure password settings</Link>
   </div>;
+ function submitSplit(event:FormEvent<HTMLFormElement>){
+  event.preventDefault();
+  if(!isAdmin||!data?.splitDraftWritable)return;
+  if(!/^\\d{1,2}(?:\\.\\d{1,2})?$/.test(lilyPercent)) {
+   setError("Enter Lily's share between 0.01% and 89.99%.");return;
+  }
+  const lilyBps=Math.round(Number(lilyPercent)*100);
+  const recipients=data.payoutRecipients??[];
+  const selected=[apexId,lilyId,tierraId];
+  if(lilyBps<1||lilyBps>8999||new Set(selected).size!==3||
+   !recipients.some(r=>r.id===apexId&&r.recipient_type==="platform")||
+   !recipients.some(r=>r.id===lilyId&&r.recipient_type==="supplier")||
+   !recipients.some(r=>r.id===tierraId&&r.recipient_type==="supplier")){
+   setError("Choose one active platform recipient and two different supplier recipients.");return;
+  }
+  const payload={operation:"save_split_draft",storeId:selectedStore,
+   apexId,lilyId,tierraId,lilyBps};
+  const snapshot=JSON.stringify(payload);
+  if(splitReview!==snapshot){setSplitReview(snapshot);setError("");return;}
+  void save(payload);
+ }
  if(mode==="payouts")return <div className="apex-chat-ops">
   <p>Read-only payout readiness and verified sale records. Sales are not evidence that a payout occurred; chat cannot transfer money or edit wallet credentials.</p>
   {error&&<p role="alert">{error}</p>}
@@ -184,9 +212,41 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
   </>}
   <div className="apex-chat-ops-actions">
    <Link href="/supplier/reports">Supplier verified sales reports</Link>
-   {isAdmin&&<Link href="/admin/splits/configure">Admin payout split proposals</Link>}
+   {isAdmin&&<Link href="/admin/splits/configure">Full admin payout split editor</Link>}
    {isAdmin&&<Link href="/admin/payment-monitor">Payment monitor</Link>}
   </div>
+  {isAdmin&&<form className="apex-chat-ops-form" onSubmit={submitSplit}>
+   <strong>Draft three-way allocation (no transfers)</strong>
+   <p>Apex receives 10% fixed; Lily and Tierra divide the remaining 90%.</p>
+   <label>Apex platform recipient<select value={apexId} required
+    onChange={e=>{setApexId(e.target.value);setSplitReview(null);}}>
+    <option value="">Select platform recipient</option>
+    {(data?.payoutRecipients??[]).filter(r=>r.recipient_type==="platform").map(r=>
+      <option key={r.id} value={r.id}>{r.display_name}</option>)}
+   </select></label>
+   <label>Lily recipient<select value={lilyId} required
+    onChange={e=>{setLilyId(e.target.value);setSplitReview(null);}}>
+    <option value="">Select Lily recipient</option>
+    {(data?.payoutRecipients??[]).filter(r=>r.recipient_type==="supplier").map(r=>
+      <option key={r.id} value={r.id}>{r.display_name}</option>)}
+   </select></label>
+   <label>Tierra recipient<select value={tierraId} required
+    onChange={e=>{setTierraId(e.target.value);setSplitReview(null);}}>
+    <option value="">Select Tierra recipient</option>
+    {(data?.payoutRecipients??[]).filter(r=>r.recipient_type==="supplier").map(r=>
+      <option key={r.id} value={r.id}>{r.display_name}</option>)}
+   </select></label>
+   <label>Lily percent <input type="number" required min=".01" max="89.99" step=".01"
+    value={lilyPercent} onChange={e=>{setLilyPercent(e.target.value);setSplitReview(null);}}/></label>
+   <p>Apex 10% · Lily {Number(lilyPercent)||0}% · Tierra {(90-(Number(lilyPercent)||0)).toFixed(2)}%</p>
+   {splitReview&&<p role="status">Review all three recipient identities and percentages.
+     Confirming saves a new draft version; it does not activate Prism or transfer Bitcoin.</p>}
+   {message&&<p role="status">{message}</p>}
+   <button type="submit" disabled={busy||!data?.splitDraftWritable}>
+    {busy?"Saving…":!data?.splitDraftWritable?"Payout draft editing disabled":
+      splitReview?"Confirm payout draft":"Review payout draft"}
+   </button>
+  </form>}
  </div>;
  return <div className="apex-chat-ops">
   <p>Changes need a review and a second confirmation. Dates are interpreted in the local time shown by your device.</p>
