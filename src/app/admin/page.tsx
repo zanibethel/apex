@@ -22,7 +22,6 @@ const dashboardLinks = [
   { title: "BTCPay connection", description: "Verify store-scoped Greenfield credentials without creating invoices.", href: "/admin/btcpay", icon: "₿" },
   { title: "Payment monitor", description: "Read-only reporting, payout states and review attention. No live payment controls.", href: "/admin/payment-monitor", icon: "₿" },
   { title: "Storefront review", description: "Review actual product cards, prices and images in the customer-facing layout.", href: "/admin/storefront-preview", icon: "▧" },
-  { title: "Historical catalog", description: "Review archived legacy product records preserved for reference and audit history.", href: "/admin/catalog-archive", icon: "▤" },
   { title: "Supplier workspace", description: "Inspect supplier inventory and operations.", href: "/supplier", icon: "▣" },
 ];
 

@@ -110,3 +110,16 @@ This is **not an all-products override**. It eliminates the arbitrary two-catego
 ### Acceptance checks
 
 Create a new normal category such as **Office Supplies** and a fictional notebook. Publish through supplier chat and confirm it appears on the public storefront as **Sold Out**. Change stock to positive; refresh to see **In Stock**. Unpublish to hide. Verify the old archived categories and restricted category names are ineligible, even if someone edits product metadata. Verify a linked import or administrator-held product never appears. A dedicated rollback transaction tests these cases before applying the production migration.
+
+
+## Retired catalog hard deletion and category-policy simplification
+
+**Latest decision (November 2026):** The former archived 63-product development catalog is no longer retained in the live products table. The hard-delete migration 20261110033000_apex_hard_delete_legacy_catalog_remove_category_rules.sql explicitly removes the retired products, their 63 candidate draft links, related private inventory/review/listing rows through existing FK cascades, and the nine categories used only by those products. This supersedes earlier archive-preservation plans in the historical sections above.
+
+Safety preconditions: exactly 63 archived products and nine legacy-only categories, all in one store; exactly 63 draft candidate links; no shared active product categories, no protected order-line snapshots, no public media versions, no product tax events, and at least five surviving active retail products. The migration aborts as one SQL transaction on mismatch. It does not delete active retail listings, customers, orders, store roles, provider settings, or checkout records. Rollback is possible **only before commit**; once committed, historical product IDs, private histories, and categories are gone from the live database.
+
+The retail_showcase_category_allowed helper now checks only that a category exists within the supplier's own store. There is no category-name/slug keyword denylist and no archived-category-history veto. The rest of the product-release logic remains: supplier owner/manager authentication, valid product fields and inventory, item-level title/description checks, explicit admin holds and review/linked-import safeguards. Public listing continues to return can_checkout=false; this is not real merchant checkout authorization.
+
+**Storage cleanup is separate.** The 63 private product images were confirmed unshared with active products, but the database migration does **not** remove the underlying Supabase Storage object binaries. Do not delete rows directly from storage.objects, which does not guarantee deletion of file bytes. Use the Supabase Storage Object API with scoped service credentials and verify object removal before claiming media deletion. Old file versions or database backups may also persist under provider retention policies.
+
+After hard deletion, the admin archived-catalog page and link are removed, while the nullable products.archived_at column and its RLS protections remain as future safety mechanisms with no legacy rows.

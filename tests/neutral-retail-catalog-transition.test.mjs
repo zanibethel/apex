@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {readFileSync,existsSync} from "node:fs";
 
 const read=p=>readFileSync(p,"utf8");
 const migration=read("supabase/migrations/20261109233000_apex_archive_legacy_and_seed_neutral_retail_v1.sql");
@@ -49,16 +49,14 @@ test("every active supplier catalog/editor/chat route excludes the archived snap
  assert.match(operations,/\.eq\("is_published",false\)\.is\("archived_at",null\)/);
  assert.match(operations,/\.eq\("is_published", false\)\.is\("archived_at",null\)/);
  const bulk=read("src/app/supplier/catalog/bulk/page.tsx");
- assert.match(bulk,/records have been archived for reference/);
+ assert.doesNotMatch(bulk,/archive is preserved, not deleted|records have been archived for reference/);
 });
 
-test("archive remains a private read-only admin capability",()=>{
- const archive=read("src/app/admin/catalog-archive/page.tsx");
+test("retired archive UI has been removed after the scoped hard-delete migration",()=>{
  const home=read("src/app/admin/page.tsx");
- assert.match(archive,/isVerifiedPlatformAdmin\(auth\.user\)/);
- assert.match(archive,/\.not\("archived_at","is",null\)/);
- assert.match(archive,/count===null\|\|!products\|\|products\.length!==count/);
- assert.match(archive,/This view cannot publish, sell, edit or restore products/);
- assert.match(home,/\/admin\/catalog-archive/);
- assert.doesNotMatch(archive,/\.insert\(|\.update\(|\.upsert\(|\.delete\(|service_role|SUPABASE_SECRET|createInvoice/);
+ const migration=read("supabase/migrations/20261110033000_apex_hard_delete_legacy_catalog_remove_category_rules.sql");
+ assert.equal(existsSync("src/app/admin/catalog-archive/page.tsx"),false);
+ assert.doesNotMatch(home,/\/admin\/catalog-archive/);
+ assert.match(migration,/delete from public\.products p/);
+ assert.match(migration,/delete from public\.categories c/);
 });
