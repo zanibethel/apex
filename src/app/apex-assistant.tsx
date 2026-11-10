@@ -48,20 +48,21 @@ export function ApexAssistant({supplierCanManage=false,adminCanManage=false}:{
   setPending(null);
   setSending(true);
   const id=requestSequence.current++;
-  append({id,from:"user",text:message});
-  // Operational tools are rendered inside chat and call separate authenticated
-  // endpoints. Do not pass credentials or password data through chat.
-  const mode=canManageOperations?(/\b(banner|banners|notice|notices|announcement|announcements|rotating)\b/i.test(message)?"ops_banners":
+  // Passwords and OTPs are never sent to either chat endpoint, including
+  // from signed-out customers. The local transcript omits the input itself.
+  const sensitive=/\b(password|passcode|security code|verification code|one[- ]time|reset login|change login)\b/i.test(message);
+  const mode=sensitive?"ops_security":canManageOperations?(
+   /\b(banner|banners|notice|notices|announcement|announcements|rotating)\b/i.test(message)?"ops_banners":
    /\b(discount|discounts|coupon|coupons|promo code|promotion code|promo|promotional code)\b/i.test(message)?"ops_discounts":
-   /\b(payout|payouts|payment split|wallet|split percentages|commission allocation)\b/i.test(message)?"ops_payouts":
-   /\b(password|reset login|security code|change login)\b/i.test(message)?"ops_security":null):null;
+   /\b(payout|payouts|payment split|wallet|split percentages|commission allocation)\b/i.test(message)?"ops_payouts":null):null;
+  append({id,from:"user",text:sensitive?"Open secure account settings":message});
   if(mode){
    append({id:id+1,from:"assistant",text:mode==="ops_banners"
     ?"Manage rotating storefront notices here. Set start and expiration dates, edit or pause existing banners, and review every change before saving."
     :mode==="ops_discounts"?"Create, edit or activate discount codes here. Review changes before saving."
     :mode==="ops_payouts"?"Payout reporting and proposed allocations are protected. Open their secured dashboards below."
     :"For account security, use the protected password form. Never send passwords or verification codes in chat.",
-    tool:mode,operationRequest:message});
+    tool:mode,operationRequest:sensitive?"":message});
    setSending(false);return;
   }
   try{
@@ -173,7 +174,7 @@ export function ApexAssistant({supplierCanManage=false,adminCanManage=false}:{
      </div>)}
      {supplierCanManage&&(message.tool==="csv_template"||message.tool==="csv_import")&&
        <SupplierChatCsvTools uploadEnabled={message.tool==="csv_import"}/>}
-      {canManageOperations&&message.tool?.startsWith("ops_")&&<ChatOperationsTools
+      {(canManageOperations||message.tool==="ops_security")&&message.tool?.startsWith("ops_")&&<ChatOperationsTools
        mode={message.tool==="ops_banners"?"banners":message.tool==="ops_discounts"?"discounts":
         message.tool==="ops_payouts"?"payouts":"security"}
        initialMessage={message.operationRequest??""} isAdmin={adminCanManage}/>}
