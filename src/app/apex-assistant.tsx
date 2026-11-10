@@ -1,6 +1,7 @@
 "use client";
 import {useState,type FormEvent} from "react";
 import Link from "next/link";
+import {SupplierChatCsvTools} from "./supplier/catalog/chat-csv-tools";
 import "./apex-assistant.css";
 
 type Action="publish"|"unpublish";
@@ -9,7 +10,7 @@ type Item={
  sku?:string;requested?:boolean;held?:boolean;action?:Action|null;
  productUpdatedAt?:string;controlChangedAt?:string|null;
 };
-type Message={id:number;from:"user"|"assistant";text:string;items?:Item[];link?:string};
+type Message={id:number;from:"user"|"assistant";text:string;items?:Item[];link?:string;tool?:"csv_template"|"csv_import"};
 const safeLink=(value:unknown):value is string=>
  typeof value==="string"&&(
   ["/catalog","/supplier","/account/sign-in","/supplier/orders","/cart","/supplier/catalog/bulk","/supplier/catalog/bulk?new=1#apex-product-workspace"].includes(value)||
@@ -27,7 +28,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
  const [pending,setPending]=useState<{item:Item;action:Action}|null>(null);
  const [messages,setMessages]=useState<Message[]>([
   {id:0,from:"assistant",text:supplierCanManage
-   ?"Supplier catalog assistant ready. Ask me to add a product, review your saved products, check prices or request a listing change. Product creation does not require BTCPay. Public release remains separate."
+   ?"Supplier catalog assistant ready. Ask me to add a product, review saved products, request publication, download a CSV template or upload a CSV. CSV imports create private drafts; public release remains separate."
    :"Hi! I can look up approved Apex products, listed prices, and basic site information. No purchases or catalog changes here."},
  ]);
  function append(message:Message){
@@ -54,11 +55,12 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
    }
    if(!data||typeof data!=="object"||typeof (data as {answer?:unknown}).answer!=="string")
     throw new Error("The assistant couldn't respond. Please try again.");
-   const result=data as {answer:string;items?:Item[];link?:string};
+   const result=data as {answer:string;items?:Item[];link?:string;tool?:string};
    append({
     id:id+1,from:"assistant",text:result.answer.slice(0,1200),
     items:Array.isArray(result.items)?result.items.slice(0,4):[],
     link:safeLink(result.link)?result.link:undefined,
+    tool:supplierCanManage&&(result.tool==="csv_template"||result.tool==="csv_import")?result.tool:undefined,
    });
   }catch(error){
    append({id:id+1,from:"assistant",text:error instanceof Error?error.message:"The assistant is currently unavailable."});
@@ -121,6 +123,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
        {item.action==="publish"?"Review publish request":"Review unpublish request"}
       </button>}
      </div>)}
+     {supplierCanManage&&message.tool&&<SupplierChatCsvTools uploadEnabled={message.tool==="csv_import"}/>}
      {message.link&&<Link className="apex-assistant-more" href={message.link}>
       {linkLabel(message.link)} →
      </Link>}
@@ -138,10 +141,13 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
     </div>}
     {sending&&<p className="apex-assistant-thinking" role="status">Checking your request…</p>}
    </div>
+   {supplierCanManage&&<div className="apex-assistant-csv-shortcut">
+    <button type="button" disabled={sending} onClick={()=>append({id:Date.now(),from:"assistant",text:"CSV import tools are ready. Download a template or select a completed CSV to preview before saving private supplier drafts.",tool:"csv_import"})}>CSV upload / template</button>
+   </div>}
    <form onSubmit={submit} className="apex-assistant-form">
     <label htmlFor="apex-assistant-input" className="apex-assistant-sr">Ask Apex a question</label>
     <input id="apex-assistant-input" value={draft} maxLength={300} disabled={sending}
-     placeholder={supplierCanManage?"Ask to review or publish products…":"Ask about products or the site…"}
+     placeholder={supplierCanManage?"Ask about products, publishing or CSV…":"Ask about products or the site…"}
      onChange={event=>setDraft(event.target.value)}/>
     <button type="submit" disabled={!draft.trim()||sending} aria-label="Send message">↑</button>
    </form>
