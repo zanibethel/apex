@@ -40,7 +40,9 @@ test("root layout mounts accessible text-only chat, no checkout action",()=>{
  assert.match(layout,/ApexAssistant/);
  assert.match(ui,/aria-label="Apex assistant"/);
  assert.doesNotMatch(ui,/accept="image|createInvoice|image_generation/);
- assert.match(ui,/supplierCanManage&&message\.tool&&<SupplierChatCsvTools/);
+ assert.match(ui,/supplierCanManage&&\(message\.tool==="csv_template"\|\|message\.tool==="csv_import"\)/);
+ assert.match(ui,/<SupplierChatCsvTools uploadEnabled=/);
+ assert.match(ui,/canManageOperations\|\|message\.tool==="ops_security"/);
  const csv=read("src/app/supplier/catalog/chat-csv-tools.tsx");
  assert.match(csv,/type="file" accept="\.csv,text\/csv"/);
  assert.doesNotMatch(csv,/createInvoice|service_role|SUPABASE_SECRET/);

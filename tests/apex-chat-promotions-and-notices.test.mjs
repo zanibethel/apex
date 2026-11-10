@@ -1,0 +1,82 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {visibleNoticeAt} from "../src/lib/announcements/notice-visibility.mjs";
+const read=p=>readFileSync(p,"utf8");
+const sql=read("supabase/migrations/20261110065000_apex_scheduled_storefront_notices.sql");
+const ops=read("src/app/api/assistant/operations/route.ts");
+const ui=read("src/app/storefront-notice-rotator.tsx");
+const tools=read("src/app/chat-operations-tools.tsx");
+const chat=read("src/app/apex-assistant.tsx");
+
+test("scheduled notices activate on start and expire strictly at end, without timer jobs",()=>{
+ const start=Date.parse("2026-11-20T14:00:00Z"),end=Date.parse("2026-11-22T14:00:00Z");
+ const notice={starts_at:new Date(start).toISOString(),ends_at:new Date(end).toISOString()};
+ assert.equal(visibleNoticeAt(notice,start-1),false);
+ assert.equal(visibleNoticeAt(notice,start),true);
+ assert.equal(visibleNoticeAt(notice,end-1),true);
+ assert.equal(visibleNoticeAt(notice,end),false);
+ assert.equal(visibleNoticeAt({starts_at:null,ends_at:null},Date.now()),true);
+ assert.equal(visibleNoticeAt({starts_at:"invalid",ends_at:null},Date.now()),false);
+ assert.equal(visibleNoticeAt({starts_at:null,ends_at:"invalid"},Date.now()),false);
+ assert.equal(visibleNoticeAt({},NaN),false);
+});
+test("public notice projection excludes future-disabled and expired notices, never private rows",()=>{
+ assert.match(sql,/create or replace function public\.get_apex_public_notices/);
+ assert.match(sql,/where n\.is_active=true/);
+ assert.match(sql,/n\.ends_at is null or n\.ends_at>now\(\)/);
+ assert.match(sql,/n\.starts_at is null or n\.starts_at<now\(\)\+interval '90 days'/);
+ assert.match(sql,/'headline',q\.headline/);
+ const publicSql=sql.slice(
+  sql.indexOf("create or replace function public.get_apex_public_notices()"),
+  sql.indexOf("revoke all on function public.get_apex_public_notices()"));
+ assert.doesNotMatch(publicSql,/'actor_id'|'created_by'|'updated_by'|'address'/);
+ assert.match(ui,/usePathname\(\)/);
+ assert.match(ui,/visibleNoticeAt\(n,now\)/);
+ assert.match(ui,/setInterval/);
+ assert.match(ui,/prefers-reduced-motion/);
+ assert.match(ui,/Previous announcement/);
+ assert.match(ui,/Next announcement/);
+ assert.match(read("src/app/layout.tsx"),/StorefrontNoticeRotator notices=/);
+});
+test("notices use authenticated role-specific writes and protect audit tables",()=>{
+ assert.match(sql,/alter table apex_internal\.apex_storefront_notices enable row level security/);
+ assert.match(sql,/alter table apex_internal\.apex_storefront_notice_events enable row level security/);
+ assert.match(sql,/revoke all on apex_internal\.apex_storefront_notices from public,anon,authenticated/);
+ assert.match(sql,/revoke all on apex_internal\.apex_storefront_notice_events from public,anon,authenticated/);
+ assert.match(sql,/m\.user_id=v_actor/);
+ assert.match(sql,/m\.role in \('owner','manager'\)/);
+ assert.match(sql,/p_store_id is null and not v_admin/);
+ assert.match(sql,/v_row\.store_id is distinct from p_store_id/);
+ assert.match(sql,/v_row\.updated_at is distinct from p_expected_updated_at/);
+ assert.match(sql,/into apex_internal\.apex_storefront_notice_events/);
+ assert.match(sql,/p_href not in \('\/','\/catalog'\)/);
+});
+test("chat mutations require verified ownership, same origin and explicit review",()=>{
+ assert.match(ops,/isVerifiedPlatformAdmin\(user\)/);
+ assert.match(ops,/\.in\("role",\["owner","manager"\]\)/);
+ assert.match(ops,/originAllowed\(req\)/);
+ assert.match(ops,/saveSupplierPromotion\(/);
+ assert.match(ops,/toggleSupplierPromotion\(/);
+ assert.match(ops,/promosEnabled\(\)/);
+ assert.match(ops,/p_expected_updated_at:expected/);
+ assert.match(ops,/readNotices\(ctx/);
+ assert.match(ops,/\["operation","storeId","id","active","expectedUpdatedAt"\]/);
+ assert.match(tools,/Review announcement/);
+ assert.match(tools,/Confirm announcement/);
+ assert.match(tools,/Confirm discount/);
+ assert.match(tools,/Confirm /);
+ assert.match(tools,/toIso\(notice\.startsAt\)/);
+ assert.match(chat,/ops_banners/);
+ assert.match(chat,/ops_discounts/);
+ assert.match(chat,/ops_payouts/);
+ assert.match(chat,/ops_security/);
+});
+test("chat never handles password secrets or direct payout transfers",()=>{
+ assert.match(tools,/href="\/account\/profile"/);
+ assert.match(tools,/href="\/admin\/splits\/configure"/);
+ assert.match(tools,/href="\/supplier\/reports"/);
+ assert.doesNotMatch(ops,/signInWithPassword|updateUser\(\{password|wallet_address|private_key|createInvoice/);
+ assert.match(ops,/select\("label,request_state,created_at"\)/);
+ assert.doesNotMatch(ops,/\.select\("label,address/);
+});

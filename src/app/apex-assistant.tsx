@@ -2,6 +2,7 @@
 import {useRef,useState,type FormEvent} from "react";
 import Link from "next/link";
 import {SupplierChatCsvTools} from "./supplier/catalog/chat-csv-tools";
+import {ChatOperationsTools} from "./chat-operations-tools";
 import "./apex-assistant.css";
 
 type Action="publish"|"unpublish"|"edit_price"|"edit_stock"|"edit_tags";
@@ -12,7 +13,7 @@ type Item={
  tags?:string[];tagExpected?:string[];tagTarget?:string[];
  productUpdatedAt?:string;controlChangedAt?:string|null;
 };
-type Message={id:number;from:"user"|"assistant";text:string;items?:Item[];link?:string;tool?:"csv_template"|"csv_import"};
+type Message={id:number;from:"user"|"assistant";text:string;items?:Item[];link?:string;tool?:"csv_template"|"csv_import"|"ops_banners"|"ops_discounts"|"ops_payouts"|"ops_security";operationRequest?:string};
 const safeLink=(value:unknown):value is string=>
  typeof value==="string"&&(
   ["/catalog","/supplier","/account/sign-in","/supplier/orders","/cart","/supplier/catalog/bulk","/supplier/catalog/bulk?new=1#apex-product-workspace"].includes(value)||
@@ -23,7 +24,10 @@ const linkLabel=(link:string)=>link==="/supplier/catalog/bulk?new=1#apex-product
  link==="/supplier"?"Open supplier workspace":link==="/account/sign-in"?"Account sign in":
  link==="/supplier/orders"?"Supplier orders":link==="/cart"?"View cart":"Browse catalog";
 
-export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:boolean}){
+export function ApexAssistant({supplierCanManage=false,adminCanManage=false}:{
+ supplierCanManage?:boolean;adminCanManage?:boolean;
+}){
+ const canManageOperations=supplierCanManage||adminCanManage;
  const requestSequence=useRef(1);
  const [open,setOpen]=useState(false);
  const [draft,setDraft]=useState("");
@@ -44,7 +48,23 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
   setPending(null);
   setSending(true);
   const id=requestSequence.current++;
-  append({id,from:"user",text:message});
+  // Passwords and OTPs are never sent to either chat endpoint, including
+  // from signed-out customers. The local transcript omits the input itself.
+  const sensitive=/\b(password|passcode|security code|verification code|one[- ]time|reset login|change login)\b/i.test(message);
+  const mode=sensitive?"ops_security":canManageOperations?(
+   /\b(banner|banners|notice|notices|announcement|announcements|rotating)\b/i.test(message)?"ops_banners":
+   /\b(discount|discounts|coupon|coupons|promo code|promotion code|promo|promotional code)\b/i.test(message)?"ops_discounts":
+   /\b(payout|payouts|payment split|wallet|split percentages|commission allocation)\b/i.test(message)?"ops_payouts":null):null;
+  append({id,from:"user",text:sensitive?"Open secure account settings":message});
+  if(mode){
+   append({id:id+1,from:"assistant",text:mode==="ops_banners"
+    ?"Manage rotating storefront notices here. Set start and expiration dates, edit or pause existing banners, and review every change before saving."
+    :mode==="ops_discounts"?"Create, edit or activate discount codes here. Review changes before saving."
+    :mode==="ops_payouts"?"Payout reporting and proposed allocations are protected. Open their secured dashboards below."
+    :"For account security, use the protected password form. Never send passwords or verification codes in chat.",
+    tool:mode,operationRequest:sensitive?"":message});
+   setSending(false);return;
+  }
   try{
    const response=await fetch(supplierCanManage?"/api/assistant/supplier":"/api/assistant",{
     method:"POST",headers:{"Content-Type":"application/json"},
@@ -131,7 +151,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
  return <section className="apex-assistant" aria-label="Apex assistant">
   {open&&<div className="apex-assistant-panel" role="region" aria-label="Apex chat messages">
    <div className="apex-assistant-head">
-    <div><strong>{supplierCanManage?"Supplier Catalog Assistant":"Apex Assistant"}</strong><small>Powered by CoOperative Chat</small></div>
+    <div><strong>{adminCanManage?"Apex Admin Assistant":supplierCanManage?"Supplier Catalog Assistant":"Apex Assistant"}</strong><small>Powered by CoOperative Chat</small></div>
     <button type="button" onClick={()=>{setOpen(false);setPending(null);}} aria-label="Close assistant">×</button>
    </div>
    <div className="apex-assistant-thread" role="log" aria-live="polite" aria-relevant="additions text">
@@ -152,7 +172,12 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
         item.action==="unpublish"?"Review unpublish request":"Review change"}
       </button>}
      </div>)}
-     {supplierCanManage&&message.tool&&<SupplierChatCsvTools uploadEnabled={message.tool==="csv_import"}/>}
+     {supplierCanManage&&(message.tool==="csv_template"||message.tool==="csv_import")&&
+       <SupplierChatCsvTools uploadEnabled={message.tool==="csv_import"}/>}
+      {(canManageOperations||message.tool==="ops_security")&&message.tool?.startsWith("ops_")&&<ChatOperationsTools
+       mode={message.tool==="ops_banners"?"banners":message.tool==="ops_discounts"?"discounts":
+        message.tool==="ops_payouts"?"payouts":"security"}
+       initialMessage={message.operationRequest??""} isAdmin={adminCanManage}/>}
      {message.link&&<Link className="apex-assistant-more" href={message.link}>
       {linkLabel(message.link)} →
      </Link>}
@@ -185,7 +210,8 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
     {sending&&<p className="apex-assistant-thinking" role="status">Checking your request…</p>}
    </div>
    <div className="apex-assistant-prompts" aria-label="Try a chat question">
-    {(supplierCanManage?["Show my products","Show products tagged working out","CSV template"]:
+    {(adminCanManage?["Manage banners","Discount codes","Payout settings"]:
+      supplierCanManage?["Manage banners","Discount codes","Show my products"]:
       ["Show workout T-shirts","Products under $30","What is in stock?"]).map(prompt=><button
        type="button" key={prompt} disabled={sending} onClick={()=>{void sendQuestion(prompt);}}>{prompt}</button>)}
    </div>
@@ -199,7 +225,9 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
      onChange={event=>setDraft(event.target.value)}/>
     <button type="submit" disabled={!draft.trim()||sending} aria-label="Send message">↑</button>
    </form>
-   <p className="apex-assistant-foot">{supplierCanManage
+   <p className="apex-assistant-foot">{adminCanManage
+    ?"Verified admin · Operational changes use protected tools · No payments from chat"
+    :supplierCanManage
     ?"Supplier-only · Changes require confirmation · Retail display only; checkout disabled"
     :"Public catalog only · Avoid entering personal details"}</p>
   </div>}
