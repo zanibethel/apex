@@ -24,6 +24,7 @@ end $assert$;
 set role authenticated;
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',false);
 select set_config('request.jwt.claims','{}',false);
+select set_config('request.jwt.claim.apex_role','',false);
 do $assert$
 begin
  begin
@@ -44,6 +45,7 @@ begin
 end $assert$;
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',false);
 select set_config('request.jwt.claims','{"app_metadata":{"apex_role":"platform_admin"}}',false);
+select set_config('request.jwt.claim.apex_role','platform_admin',false);
 do $assert$
 declare v_rows jsonb;
 begin
@@ -73,6 +75,7 @@ update public.products set description='Changed after external review'
 set role authenticated;
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',false);
 select set_config('request.jwt.claims','{"app_metadata":{"apex_role":"platform_admin"}}',false);
+select set_config('request.jwt.claim.apex_role','platform_admin',false);
 do $assert$
 declare v_rows jsonb;
 begin
