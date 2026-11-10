@@ -32,7 +32,7 @@ export default async function ProductDetails({
   <Link className="back" href={"/catalog?page="+page}>← Back to products</Link>
   <p className="eyebrow">APEX ANABOLICS / PRODUCT DETAILS</p>
   <article className="apex-product-detail-card">
-   <ApprovedProductMedia productId={product.id} availability={product.availability}/>
+   <ApprovedProductMedia productId={product.id} availability={product.availability} retailShowcase/>
    <div className="apex-approved-body">
     {product.categoryName&&<p className="eyebrow">{product.categoryName}</p>}
     <h1>{product.name}</h1>
