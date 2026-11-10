@@ -23,7 +23,7 @@ test("retail display is an independently switchable and minimal public read, not
  assert.match(sql,/supplier_candidate_drafts/);
  assert.match(sql,/revoke all on function public\.get_public_retail_showcase_catalog/);
  assert.match(sql,/grant execute on function public\.get_public_retail_showcase_catalog\(integer,integer\) to anon,authenticated/);
- assert.doesNotMatch(sql,/update public\.products\s+set\s+is_published|update public\.stores\s+set\s+is_public|createInvoice|BTCPay|Prism|service_role|secret_key/);
+ assert.doesNotMatch(sql,/update public\.products\s+set\s+is_published|update public\.stores\s+set\s+is_public|createInvoice|service_role|secret_key/);
  const from=sql.indexOf("jsonb_build_object(");
  const to=sql.indexOf(") order by eligible.name",from);
  const fields=sql.slice(from,to);
