@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import {previewUsdCents} from "@/lib/catalog/offer-preview-money.mjs";
 import {useRouter} from "next/navigation";
 import {BulkCardMedia} from "./bulk-card-media";
