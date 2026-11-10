@@ -89,11 +89,11 @@ export default async function CatalogReleaseDashboard({searchParams}:{
   <h1>Catalog release</h1>
   <p className="lead">Review product publishing, public visibility, and the
    exact reason an offer cannot appear on the storefront.</p>
-  <p className="notice"><strong>Read-only release status.</strong> Suppliers
-   choose Publish or Unpublish. Admin holds override those settings.
-   Public Sold Out listings require verified release eligibility.
-   This page cannot approve products, change release permissions,
-   create orders, or accept payments.</p>
+  <p className="notice"><strong>Release status is read-only, but retail visibility restrictions are editable.</strong>
+   Suppliers choose Publish or Unpublish. Platform admins can restrict or
+   unrestrict each product's retail display independently; admin holds,
+   content safeguards and verified release eligibility still apply.
+   This page does not approve checkout, create orders, or accept payments.</p>
   <section className="feature-grid" aria-label="Current catalog release counts">
    {[
     ["Products reviewed",summary.total],
