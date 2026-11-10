@@ -11,6 +11,7 @@ import type {BulkSavedMedia,BulkSavedImage} from "./bulk-card-media";
 import {useEffect,useMemo,useRef,useState,useTransition} from "react";
 import {saveBulkProductDrafts,saveBulkPublicationRequests,saveBulkListingIntents,resubmitSupplierCorrections} from "./bulk-actions";
 import {eligiblePrivatePublishIds} from "@/lib/catalog/bulk-publish-selection.mjs";
+import {supplierPublishBlocker} from "@/lib/catalog/supplier-publish-feedback.mjs";
 import {CsvProductImport} from "./csv-product-import";
 import {prioritizeImportedProducts} from "@/lib/catalog/prioritize-imported-products.mjs";
 import {reconcileSavedBulkRow} from "@/lib/catalog/bulk-save-revision.mjs";
@@ -82,6 +83,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
   previousEditTarget.current=initialEditProductId;
  },[initialEditProductId]);
  const [publicationMessage,setPublicationMessage]=useState("");
+ const [cardPublishFeedback,setCardPublishFeedback]=useState<Record<string,{ok:boolean;message:string}>>({});
  const [correctionNotes,setCorrectionNotes]=useState<Record<string,string>>({});
  const [correctionResults,setCorrectionResults]=useState<Record<string,{ok:boolean;message:string}>>({});
  const [correctionConfirmed,setCorrectionConfirmed]=useState<string[]>([]);
@@ -261,6 +263,17 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
  const eligibleUnpublishIds=selectedRows.filter(r=>r.id&&listingByProduct.get(r.id)?.requested).map(r=>r.id!);
  const publicationLimit=50;
  function toggleEdit(key:string){if(busy)return;setEditOpenKeys(previous=>previous.includes(key)?previous.filter(id=>id!==key):[...previous,key]);}
+ function attemptCardPublish(row:BulkEditRow,status:ListingReadiness|undefined,ready:boolean,nextChecked:boolean){
+  const requested=Boolean(status?.requested);
+  const blocker=supplierPublishBlocker({row,status,editable,busy,requested:!nextChecked,ready});
+  if(blocker){
+   setCardPublishFeedback(previous=>({...previous,[row.key]:{ok:false,message:blocker}}));
+   return;
+  }
+  if(!row.id)return;
+  setCardPublishFeedback(previous=>{const next={...previous};delete next[row.key];return next;});
+  publish([row.id],nextChecked?"publish":"unpublish");
+ }
  function publish(ids:string[],action:"publish"|"unpublish"="publish"){
   if(!editable||busy||ids.length<1||ids.length>publicationLimit||
    new Set(ids).size!==ids.length||ids.some(id=>action==="publish"
@@ -279,10 +292,16 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
      ...response.results,
     ]);
     setPublicationMessage(response.message);
+    setCardPublishFeedback(previous=>({...previous,...Object.fromEntries(
+     (response.results.length?response.results:ids.map(id=>({id,ok:false,message:response.message})))
+      .map(item=>[item.id,{ok:item.ok,message:item.message}])
+    )}));
     setListingOverrides(previous=>({...previous,...Object.fromEntries(response.results.filter(item=>item.ok).map(item=>[item.id,action==="publish"]))}));
     if(response.results.some(item=>item.ok))router.refresh();
    }catch{
-    setPublicationMessage("Publishing settings could not be saved. Refresh and check product status.");
+    const message="Publishing settings could not be saved. Refresh and check product status.";
+    setPublicationMessage(message);
+    setCardPublishFeedback(previous=>({...previous,...Object.fromEntries(ids.map(id=>[id,{ok:false,message}]))}));
    }
   });
  }
@@ -480,11 +499,15 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const imageKind=!r.id?"missing":listingStatus?.imageStatusKind??"unavailable";
     const retailImageOptional=listingStatus?.retailShowcase===true&&!listingStatus?.hasImage;
     const imageLabel=!r.id?"Image optional":retailImageOptional?"Image optional":
+     listingStatus?.retailShowcase===true&&imageKind==="unreviewed"?"Image saved privately":
      listingStatus?.imageStatusLabel??"Image status unavailable";
     const imageMessage=!r.id?"You can add an image after saving; it is optional for retail display.":
      retailImageOptional?"An image helps customers but is not required for the retail showcase.":
+     listingStatus?.retailShowcase===true&&imageKind==="unreviewed"
+      ?"Photo saved privately. Internal image review is not required for ordinary retail display; public image delivery is separate.":
      listingStatus?.imageStatusMessage??"Refresh to check image evidence.";
-    const imageNeedsAction=!r.id||listingStatus?.imageNeedsAction===true;
+    const imageNeedsAction=!r.id||listingStatus?.imageNeedsAction===true&&
+     !(listingStatus?.retailShowcase===true&&imageKind==="unreviewed");
     const adminFeedback=r.id?supplierAdminFeedback(listingStatus):null;
     const correctionsPending=Boolean(listingStatus?.correctionsPending||(r.id&&correctionConfirmed.includes(r.id)));
     const override=r.id?listingOverrides[r.id]:undefined;
@@ -498,6 +521,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       ?"The supplier preference changed. A fresh protected release decision is needed before customer visibility can be confirmed.":
       listingStatus?.visibilityDescription??"Refresh to check the protected release decision.";
     const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
+    const cardFeedback=cardPublishFeedback[r.key];
     return <article key={r.key} id={r.id?"saved-"+r.id:undefined}
       className={"apex-bulk-row"+((editOpenKeys.includes(r.key)||!r.id)?" apex-bulk-row-editing":"")}>
      <div className="apex-bulk-row-title">
@@ -520,8 +544,10 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        <label className="apex-bulk-card-publish-switch">
         <span>{requested?"Publish enabled":"Publish"}</span>
         <input type="checkbox" role="switch" aria-label={"Publish "+(r.name||"new product")}
-         checked={requested} disabled={!editable||busy||!r.id||r.needsSave||(!requested&&!publishReady)}
-         onChange={e=>r.id&&publish([r.id],e.target.checked?"publish":"unpublish")}/>
+         checked={requested} aria-disabled={!editable||busy||(!requested&&!publishReady)}
+         aria-describedby={cardFeedback?"publish-feedback-"+r.key:undefined}
+         data-can-publish={publishReady||requested?"true":"false"}
+         onChange={e=>attemptCardPublish(r,listingStatus,publishReady,e.target.checked)}/>
        </label>
        </div>
       <div className="apex-bulk-card-status-row">
@@ -536,6 +562,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        {recentImported.has(r.key)&&<span className="apex-bulk-import-tag">FROM CSV</span>}
       </div>
      </div>
+     {cardFeedback&&<p id={"publish-feedback-"+r.key} className={"apex-card-publish-feedback"+(cardFeedback.ok?" apex-card-publish-success":" apex-card-publish-error")} role="status">
+      {cardFeedback.ok?"✓ ":""}{cardFeedback.message}
+     </p>}
      {taxonomyHold&&<p className="notice" role="note">
       <strong>Identity review required:</strong> {taxonomyHold.note}
       {" "}Check source documentation before assigning a category or requesting public release.
@@ -556,7 +585,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
        Edit image and product details
       </button>}
       <p>{readiness.description}</p>
-      {r.id&&listingStatus?.reviewStatusAvailable&&<section className="apex-bulk-inline-review">
+      {r.id&&listingStatus?.retailShowcase!==true&&listingStatus?.reviewStatusAvailable&&<section className="apex-bulk-inline-review">
        <strong>Internal product review: {listingStatus.reviewStatus==="approved_internal"
         ?"Approved internally":listingStatus.reviewStatus==="pending_review"
         ?"Pending admin review":listingStatus.reviewStatus==="changes_requested"

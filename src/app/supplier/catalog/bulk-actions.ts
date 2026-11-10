@@ -124,6 +124,8 @@ export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):
   results:outcomes};
 }
 
+import {supplierPublishRpcError} from "@/lib/catalog/supplier-publish-feedback.mjs";
+
 type PublishOutcome={id:string;ok:boolean;message:string};
 type PublishResult={ok:boolean;message:string;results:PublishOutcome[]};
 
@@ -149,7 +151,7 @@ export async function saveBulkListingIntents(_previous:PublishResult,form:FormDa
    p_store_id:storeId,p_product_id:id,p_action:action,
   });
   results.push({id,ok:!rpcError&&!!data,message:rpcError
-   ?(action==="publish"?"Not requested: check required details and any administrator lock.":"Unpublish failed; refresh and retry.")
+   ?supplierPublishRpcError(rpcError,action)
    :(action==="publish"
      ?String(data).startsWith("Live retail display enabled")
       ?"Published on public retail showcase; checkout disabled."
