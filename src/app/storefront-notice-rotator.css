@@ -1,0 +1,12 @@
+.apex-notice-rotator{background:linear-gradient(100deg,#160f13,#451419 50%,#180d12);color:#fff;border-bottom:1px solid rgba(255,255,255,.12);font-size:.87rem}
+.apex-notice-rotator-inner{display:flex;align-items:center;justify-content:center;gap:.65rem;min-height:42px;padding-top:.28rem;padding-bottom:.28rem}
+.apex-notice-rotator-copy{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.5rem 1rem;min-width:0;text-align:center}
+.apex-notice-rotator-copy strong{font-weight:750;letter-spacing:.02em}
+.apex-notice-rotator-copy span{color:#e6d8d9}
+.apex-notice-rotator-copy a{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.apex-notice-rotator-inner>button{flex:0 0 30px;height:30px;background:transparent;color:#fff;border:0;border-radius:6px;font-size:1.6rem;cursor:pointer}
+.apex-notice-rotator-inner>button:hover,.apex-notice-rotator-inner>button:focus-visible{background:rgba(255,255,255,.13)}
+.apex-notice-rotator-dots{display:flex;justify-content:center;gap:6px;padding-bottom:6px}
+.apex-notice-rotator-dots button{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.32);border:0;padding:0;cursor:pointer}
+.apex-notice-rotator-dots button[aria-current=true]{background:white}
+@media(max-width:600px){.apex-notice-rotator-copy{flex-direction:column;gap:2px;font-size:.79rem}.apex-notice-rotator-inner{gap:.15rem;padding-top:.35rem;padding-bottom:.35rem}}
