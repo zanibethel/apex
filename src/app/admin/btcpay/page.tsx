@@ -109,6 +109,7 @@ export default async function AdminBtcpayConnection(){
     or independently verify authorization. See the infrastructure and operator
     checklist in the Track 2 project documentation.</p>
    <div className="actions">
+    <Link className="button secondary" href="/admin/checkout-integration">Checkout integration status</Link>
     <Link className="button secondary" href="/admin/btcpay">Refresh read-only status</Link>
     <Link className="button secondary" href="/admin/recipients">Recipient directory</Link>
     <Link className="button secondary" href="/admin/splits/configure">10% / 45% / 45% draft split</Link>

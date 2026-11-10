@@ -18,6 +18,7 @@ Use `DECIDED FOR BUILD`, `PROPOSED`, `VERIFIED`, or `APPROVED FOR LIVE`. Only a 
 | ADR-012 | Repository privacy | VERIFIED | Repo was public on 2026-10-29. Never publish partner contracts, wallet keys, account secrets or identity data. |
 | ADR-013 | December target | PROPOSED | Partner prefers technical readiness **before Dec 10, 2026** for possible holiday launch. Dec 7–9 stretch assumes immediate funding/inputs; live sales remain gated. |
 | ADR-014 | Holiday promotions | PROPOSED | Simple 24-hour, scheduled, single-rule sale is a priority candidate only if it fits the scoped six-week plan. New Year's campaign may follow approval. |
+| ADR-015 | Changes to product restrictions | DECIDED FOR BUILD | Do not add new product keyword denylist entries, forbidden categories, discretionary publishing restrictions or mandatory admin-review steps without explicit owner approval. Propose any change with its exact behavior, affected surfaces and tests first. This does not waive applicable legal requirements, security authorization or payment-integrity controls; do not silently change those either. |
 
 ## Important unresolved design questions
 1. Can Prism payout signing be configured without undue custody/security risk?
