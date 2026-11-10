@@ -478,8 +478,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const requested=Boolean(listingStatus?.requested);
     const readiness=privateBulkReadiness(r,listingStatus,requested&&Boolean(publication?.ok));
     const imageKind=!r.id?"missing":listingStatus?.imageStatusKind??"unavailable";
-    const imageLabel=!r.id?"Image needed":listingStatus?.imageStatusLabel??"Image status unavailable";
-    const imageMessage=!r.id?"Save the product, then add an image from the pencil editor.":
+    const retailImageOptional=listingStatus?.retailShowcase===true&&!listingStatus?.hasImage;
+    const imageLabel=!r.id?"Image optional":retailImageOptional?"Image optional":
+     listingStatus?.imageStatusLabel??"Image status unavailable";
+    const imageMessage=!r.id?"You can add an image after saving; it is optional for retail display.":
+     retailImageOptional?"An image helps customers but is not required for the retail showcase.":
      listingStatus?.imageStatusMessage??"Refresh to check image evidence.";
     const imageNeedsAction=!r.id||listingStatus?.imageNeedsAction===true;
     const adminFeedback=r.id?supplierAdminFeedback(listingStatus):null;
