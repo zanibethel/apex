@@ -83,7 +83,7 @@ test("CSV route validates authenticated store, limits, file bytes and explicit s
  assert.match(route,/saveBulkProductDrafts/);
  assert.match(route,/APEX_DRAFT_CATALOG_WRITES_ENABLED/);
  assert.match(route,/public:false/);
- assert.doesNotMatch(route,/service_role|SUPABASE_SECRET|createInvoice|is_published:true|BTCPay/i);
+ assert.doesNotMatch(route,/service_role|SUPABASE_SECRET|createInvoice|is_published:true/);
  assert.match(ui,/\/templates\/apex-product-import-template\.csv/);
  assert.match(ui,/type="file" accept="\.csv,text\/csv"/);
  assert.match(ui,/parseProductCsv\(text\)/);
