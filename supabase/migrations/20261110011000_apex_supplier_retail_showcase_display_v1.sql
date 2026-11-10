@@ -35,7 +35,7 @@ declare
  v_retail boolean:=false;
  v_showcase_enabled boolean:=false;
 begin
- if v_actor is null or p_action not in ('publish','unpublish') or
+ if v_actor is null or p_action is null or p_action not in ('publish','unpublish') or
  not exists (
   select 1 from public.stores s
   join public.supplier_memberships m on m.supplier_id=s.supplier_id
