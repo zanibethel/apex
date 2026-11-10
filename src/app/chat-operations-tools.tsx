@@ -124,7 +124,7 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
    const json=await res.json();
    if(!res.ok||!json.ok)throw new Error(json.error??json.message??"Change could not be saved.");
    setMessage(json.message??"Saved.");
-   setReview(null);setEditingNotice(null);setEditingDiscount(null);
+   setReview(null);setSplitReview(null);setEditingNotice(null);setEditingDiscount(null);
    setNotice({...emptyNotice});setDiscount({...emptyDiscount});
    setLoadCount(x=>x+1);setToggleReview(null);router.refresh();
   }catch(e){setError(e instanceof Error?e.message:"Change not saved.");}
