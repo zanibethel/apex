@@ -123,7 +123,7 @@ reset role;
 -- Audit and physical RLS verification is intentionally performed by the
 -- fixture superuser. No public/admin application role can directly read
 -- the private audit tables.
-do $
+do $audit$
 begin
  if (select count(*) from apex_internal.retail_product_visibility_restriction_events
     where product_id='50000000-0000-4000-8000-000000000001')<>2
@@ -134,7 +134,7 @@ begin
  if not (select relrowsecurity from pg_class
     where oid='apex_internal.retail_product_visibility_restrictions'::regclass)
  then raise exception 'Private restriction table RLS not enabled';end if;
-end $;
+end $audit$;
 -- The public may read only the sanitized eligible catalog, not private tables.
 set role anon;
 select set_config('test.actor','',false);
