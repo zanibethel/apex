@@ -13,6 +13,7 @@ import {SharedPrivateImageBulkApply} from "../shared-private-image-bulk-apply";
 import {proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs";
 import {privateSourceDraftDescription} from "@/lib/catalog/private-source-draft-description.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
+import {retailDisplayMinimum} from "@/lib/catalog/retail-display-minimum.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
 import {privateInventoryState} from "@/lib/catalog/private-inventory-state.mjs";
 import {supplierStorefrontVisibility} from "@/lib/catalog/supplier-storefront-visibility.mjs";
@@ -159,14 +160,9 @@ export default async function BulkProductWorkspace({searchParams}:{
   // Supplier-entered display essentials: name, positive price and description.
   // SKU is generated at draft creation. Category/image/inventory are optional for
   // checkout-disabled retail display; higher-risk categories remain gated.
-  const retailMissing=isRetail?[
-   !p.name?.trim()?"Product name":null,
-   !(p.price_cents>0)?"Purchase price":null,
-   !p.description?.trim()?"Product description":null,
-   !p.is_active?"Active in private catalog":null,
-  ].filter((item):item is string=>Boolean(item)):[];
-  const missing=isRetail?retailMissing:setup.steps.filter(step=>!step.complete).map(step=>step.label);
-  const retailSetupComplete=isRetail&&retailMissing.length===0&&
+  const retailMinimum=retailDisplayMinimum(p);
+  const missing=isRetail?retailMinimum.missing:setup.steps.filter(step=>!step.complete).map(step=>step.label);
+  const retailSetupComplete=isRetail&&retailMinimum.ready&&
    !linkedProductIds.has(p.id)&&
    !["pending_review","changes_requested"].includes(reviewsByProduct.get(p.id)?.status??"draft");
   const visibility=supplierStorefrontVisibility({
