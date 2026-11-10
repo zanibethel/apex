@@ -53,7 +53,7 @@ export async function createDraftProduct(_previous: Result, form: FormData): Pro
   const internal_source_cost_cents=sourceRaw===""?null:dollarsToCents(sourceRaw);
   const description=String(form.get("description")??"").trim().slice(0,1500);
   const tags=parseProductTags(form.get("tags")??"");
-  if(!tags.ok)return {ok:false,message:tags.error};
+  if(!tags.ok)return {ok:false,message:tags.error??"Invalid product tags."};
   const categoryRaw=form.get("categoryId");
   if (typeof categoryRaw!=="string" || (categoryRaw!=="" && !uuid.test(categoryRaw)))
     return {ok:false,message:"Invalid category."};
@@ -89,7 +89,7 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
   const description=String(form.get("description")??"").trim();
   const rawTags=form.get("tags");
   const tags=rawTags===null?null:parseProductTags(rawTags);
-  if(tags&&!tags.ok)return {ok:false,message:tags.error};
+  if(tags&&!tags.ok)return {ok:false,message:tags.error??"Invalid product tags."};
   const sourceRaw=form.get("directSourceCost");
   const internal_source_cost_cents=sourceRaw===""?null:dollarsToCents(sourceRaw);
   const is_active=form.get("isActive")==="on";
