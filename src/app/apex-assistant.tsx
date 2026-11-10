@@ -7,7 +7,7 @@ import "./apex-assistant.css";
 type Action="publish"|"unpublish"|"edit_price"|"edit_stock";
 type Item={
  id?:string;name:string;price:string;availability:string;href:string;
- sku?:string;requested?:boolean;held?:boolean;action?:Action|null;
+ sku?:string;requested?:boolean;held?:boolean;retailShowcase?:boolean;action?:Action|null;
  editTarget?:number;editExpected?:number;
  productUpdatedAt?:string;controlChangedAt?:string|null;
 };
@@ -29,7 +29,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
  const [pending,setPending]=useState<{item:Item;action:Action}|null>(null);
  const [messages,setMessages]=useState<Message[]>([
   {id:0,from:"assistant",text:supplierCanManage
-   ?"Supplier catalog assistant ready. Ask me to review products, change a private product price or stock with confirmation, request publication, add products, or upload a CSV. No public release or payments happen here."
+   ?"Supplier catalog assistant ready. Review products, confirm price or stock changes, publish eligible neutral retail listings publicly without checkout, add products, or upload CSV."
    :"Hi! I can look up approved Apex products, listed prices, and basic site information. No purchases or catalog changes here."},
  ]);
  function append(message:Message){
@@ -100,6 +100,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
      typeof (data as {answer?:unknown}).answer!=="string")
     throw new Error("Could not verify the publication response. Check the Products workspace.");
    const answer=(data as {answer:string}).answer;
+   const publicVisible=(data as {public?:unknown}).public===true;
    const id=Date.now();
    setMessages(current=>[
     ...current.slice(-19).map(m=>({...m,items:m.items?.map(i=>i.id===item.id?{
@@ -110,7 +111,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
       availability:action==="edit_stock"&&item.editTarget!==undefined?
        item.editTarget===0?"Sold out":"Stock recorded":i.availability,
     }:i)})),
-    {id,from:"assistant",text:answer.slice(0,1200),link:"/supplier/catalog/bulk"},
+    {id,from:"assistant",text:answer.slice(0,1200),link:publicVisible?"/catalog":"/supplier/catalog/bulk"},
    ]);
   }catch(error){
    append({id:Date.now(),from:"assistant",text:error instanceof Error?error.message:"Could not save request."});
@@ -129,11 +130,13 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
       {safeLink(item.href)?<Link href={item.href}>{item.name}</Link>:<strong>{item.name}</strong>}
       <span>{item.sku?"SKU "+item.sku+" · ":""}{item.price} · {item.availability}</span>
       {supplierCanManage&&item.id&&<small>{item.held?"Admin review/hold applies · ":""}
-        {item.requested?"Supplier publication requested · Not public":"Private saved product · Not public"}</small>}
+        {item.retailShowcase
+        ?(item.requested?"Retail showcase selected · Checkout disabled":"Retail showcase eligible · Not listed")
+        :item.requested?"Supplier publication requested · Not public":"Private saved product · Not public"}</small>}
       {supplierCanManage&&item.action&&!pending&&<button
        type="button" className="apex-assistant-item-action" disabled={sending}
        onClick={()=>setPending({item,action:item.action!})}>
-       {item.action==="publish"?"Review publish request":
+       {item.action==="publish"?(item.retailShowcase?"Review public listing":"Review publish request"):
         item.action==="unpublish"?"Review unpublish request":"Review change"}
       </button>}
      </div>)}
@@ -143,12 +146,14 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
      </Link>}
     </div>)}
     {pending&&<div className="apex-assistant-confirm" role="group" aria-label="Confirm supplier listing request">
-     <strong>{pending.action==="publish"?"Request publication":
+     <strong>{pending.action==="publish"?(pending.item.retailShowcase?"Publish retail listing":"Request publication"):
       pending.action==="unpublish"?"Withdraw publication request":
       pending.action==="edit_price"?"Confirm price change":"Confirm stock change"}?</strong>
      <p>{pending.item.name}</p>
      <p>{pending.action==="publish"
-      ?"This saves the supplier's preference only. The product will NOT become publicly visible until separate release checks pass."
+      ?(pending.item.retailShowcase
+       ?"This makes the neutral retail product visible on the public Apex showcase, even if sold out. Checkout and payments remain unavailable. Admin holds still override it."
+       :"This saves the supplier's preference only. The product will NOT become publicly visible until separate release checks pass.")
       :pending.action==="unpublish"
       ?"This withdraws the supplier request. Public release is not controlled by this chat."
       :"Current "+(pending.action==="edit_price"?"price":"on-hand stock")+": "+
@@ -173,7 +178,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
     <button type="submit" disabled={!draft.trim()||sending} aria-label="Send message">↑</button>
    </form>
    <p className="apex-assistant-foot">{supplierCanManage
-    ?"Supplier-only · Changes require confirmation · Public release separate"
+    ?"Supplier-only · Changes require confirmation · Retail display only; checkout disabled"
     :"Public catalog only · Avoid entering personal details"}</p>
   </div>}
   <button type="button" className="apex-assistant-toggle"
