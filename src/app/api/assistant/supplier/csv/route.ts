@@ -90,7 +90,7 @@ export async function POST(request:NextRequest){
  if(params.operation==="preview"){
   return respond({ok:true,source:"apex-supplier-csv-code-v1",
    rowCount:validation.rows.length,newCount:plan.creates.length,skippedCount:plan.skipped.length,
-   preview:validation.rows.slice(0,5).map(p=>({sku:p.sku,name:p.name,price:p.price})),
+   preview:validation.rows.slice(0,5).map(p=>({sku:p.sku,name:p.name,price:p.price,tags:p.tags})),
    answer:"Preview only. Nothing saved. Confirm import to create private supplier drafts in batches of 20. Existing matching SKUs will be skipped. This does not publish products or create BTCPay charges.",
    public:false,
   });
