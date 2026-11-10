@@ -62,7 +62,7 @@ begin
    and length(btrim(p.name)) between 1 and 120
    and length(btrim(p.sku))>0
    and length(btrim(coalesce(p.description,''))) between 1 and 1500
-   and (p.name||' '||coalesce(p.description,'')||' '||array_to_string(p.tags,' ')) !~*
+   and (p.name||' '||coalesce(p.description,'')) !~*
     '(peptide|anabolic|steroid|testosterone|trenbolone|injectable|research use only|not for human consumption)'
    and not exists(select 1 from public.private_product_review_states r
     where r.store_id=p.store_id and r.product_id=p.id
