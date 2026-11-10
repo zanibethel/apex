@@ -1,6 +1,6 @@
 import {answerApexKnowledge} from "./apex-knowledge.mjs";
 // Code-first search over already-approved public listings only; never use private drafts.
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ignored=new Set(["categories","category","show","browse","all","what","are","is","the","a","an","of","for","me","your","you","do","have","find","can","i","please","tell","about","price","prices","cost","costs","much","how","product","products","item","items","available","availability","stock","in","on","and","with","from","apex","catalog","list","looking","any","something","related","suitable","some","kind","types","type","want","need","like","that","these","those","sell","recommend","recommendations","options","under","below","less","than","up","to","dollars","dollar","cheapest","lowest","expensive","most","highest","showing"]);
 const money=value=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(value/100);
 function normalize(value){
