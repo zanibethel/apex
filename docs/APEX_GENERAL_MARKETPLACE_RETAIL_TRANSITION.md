@@ -69,3 +69,14 @@ Repeating an identical CSV skips existing matching SKUs. A conflicting SKU or no
 **Publishing status:** The existing supplier chatbot can request and withdraw publication intent using the audited RPC after a second confirmation. Public release is still separately gated; chat must never say "live" when only the preference has been recorded. The supplier-controlled release of eligible general-retail products, with administrator takedown and checkout controls, remains Issue #319.
 
 Manual acceptance: sign out (no supplier tools), sign in as supplier owner/manager, request the template, upload a small CSV, confirm the preview, check two saved drafts, retry and check SKUs skipped, verify cross-supplier access blocked, and confirm the public catalog/BTCPay are unchanged.
+
+
+## Supplier chat: direct confirmed price and quantity edits
+
+The code-first supplier chat now recognizes precise commands such as "set price of Demo Cotton T-Shirt to $29.99", "set stock of DEMO-TEE-001 to 10" and "mark Demo Cotton T-Shirt out of stock". It selects exactly one saved product in the verified owner/manager's current private store, prepares an explicit **old → new** preview, and requires a separate **Confirm request** click. Without confirmation, nothing is written.
+
+The server requires fresh Supabase authentication and store membership, same-origin request, a current private unarchived product and optimistic-concurrency comparisons against the preview values. Price edits preserve the product's compare-at-price constraint and update only price_cents. Stock edits compare the current on-hand count before writing through the existing audited inventory table; newly reserved stock cannot be invalidated by a concurrent update. Results revalidate supplier views and return the actual saved change.
+
+No client input controls the store ID. Editing never publishes a product, creates BTCPay invoices, changes payment settings or touches archived products. If multiple products match, the assistant asks for an exact name/SKU. "Mark in stock" without a number asks for a quantity instead of fabricating inventory. For now combined requests are explicitly decomposed into separate confirmations (price, stock, then any publishing request), rather than attempting non-atomic multi-table changes.
+
+**Remaining:** full direct conversational descriptions/images, bulk stock changes, and actual supplier-controlled public release of eligible retail products are separate tested phases; see Issue #319. The original publish/unpublish command continues to save supplier intent only.
