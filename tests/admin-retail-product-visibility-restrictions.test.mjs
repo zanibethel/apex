@@ -24,6 +24,8 @@ test("verified admin can manage a private auditable product restriction list",()
  assert.match(sql,/create table if not exists apex_internal\.retail_product_visibility_restriction_events/);
  assert.match(sql,/foreign key\(store_id,product_id\) references public\.products\(store_id,id\)/);
  assert.match(sql,/revoke all on apex_internal\.retail_product_visibility_restrictions from public,anon,authenticated/);
+ assert.match(sql,/alter table apex_internal\.retail_product_visibility_restrictions enable row level security/);
+ assert.match(sql,/alter table apex_internal\.retail_product_visibility_restriction_events enable row level security/);
  assert.match(sql,/revoke all on apex_internal\.retail_product_visibility_restriction_events from public,anon,authenticated/);
  assert.match(sql,/\(select auth\.jwt\(\)\) #>> '\{app_metadata,apex_role\}' is distinct from 'platform_admin'/);
  assert.match(sql,/p_restrict is null/);
