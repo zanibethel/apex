@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupplierServerClient } from "@/lib/supabase/server";
 import { chooseNewSku, normalizeSku } from "@/lib/catalog/sku.mjs";
+import { parseProductTags } from "@/lib/catalog/product-tags.mjs";
 
 type Result = { ok: boolean; message: string; productId?: string; sku?: string };
 const denied: Result = { ok: false, message: "This account cannot change this storefront." };
@@ -51,6 +52,8 @@ export async function createDraftProduct(_previous: Result, form: FormData): Pro
   const sourceRaw=form.get("directSourceCost");
   const internal_source_cost_cents=sourceRaw===""?null:dollarsToCents(sourceRaw);
   const description=String(form.get("description")??"").trim().slice(0,1500);
+  const tags=parseProductTags(form.get("tags")??"");
+  if(!tags.ok)return {ok:false,message:tags.error};
   const categoryRaw=form.get("categoryId");
   if (typeof categoryRaw!=="string" || (categoryRaw!=="" && !uuid.test(categoryRaw)))
     return {ok:false,message:"Invalid category."};
@@ -62,7 +65,7 @@ export async function createDraftProduct(_previous: Result, form: FormData): Pro
     return {ok:false,message:"Enter a title, SKU, valid purchase price, source cost and an optional higher compare-at price."};
   const {data,error} = await store.client.from("products")
     .insert({store_id:store.storeId,name,sku,description,price_cents,currency:"USD",
-      category_id,compare_at_price_cents,internal_source_cost_cents,is_active:form.get("isActive")==="on"})
+      category_id,compare_at_price_cents,internal_source_cost_cents,tags:tags.tags,is_active:form.get("isActive")==="on"})
     .select("id").single();
   if (error || !data) return {ok:false,message:"Draft product was not saved. The SKU may already be in use."};
   const inventory=await store.client.from("inventory_items")
@@ -84,6 +87,9 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
   const compareRaw=form.get("comparePrice");
   const compare_at_price_cents=compareRaw===""?null:dollarsToCents(compareRaw);
   const description=String(form.get("description")??"").trim();
+  const rawTags=form.get("tags");
+  const tags=rawTags===null?null:parseProductTags(rawTags);
+  if(tags&&!tags.ok)return {ok:false,message:tags.error};
   const sourceRaw=form.get("directSourceCost");
   const internal_source_cost_cents=sourceRaw===""?null:dollarsToCents(sourceRaw);
   const is_active=form.get("isActive")==="on";
@@ -100,8 +106,9 @@ export async function updateDraftProduct(_previous: Result, form: FormData): Pro
   }
   const updates:{
     name:string;sku:string;description:string;price_cents:number;compare_at_price_cents:number|null;
-    is_active:boolean;category_id:string|null;internal_source_cost_cents?:number|null;
+    is_active:boolean;category_id:string|null;internal_source_cost_cents?:number|null;tags?:string[];
   }={name,sku,description,price_cents,compare_at_price_cents,is_active,category_id};
+  if(tags)updates.tags=tags.tags;
   if(sourceRaw!==null){
     // Never create a second, conflicting source-cost value for a linked variant.
     const {data:source,error:sourceError}=await store.client.from("supplier_candidate_drafts")
