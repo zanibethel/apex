@@ -13,7 +13,10 @@ test("approved public gallery defaults OFF, only calls pinned Apex read-only RPC
  assert.match(loader,/method:"GET"/);
  assert.match(loader,/cache:"no-store"/);
  assert.match(loader,/AbortSignal\.timeout\(6000\)/);
- assert.match(loader,/return empty\("disabled"\)/);
+ const retailGate=read("supabase/migrations/20261110011000_apex_supplier_retail_showcase_display_v1.sql");
+ assert.match(retailGate,/retail_showcase_gate/);
+ assert.match(retailGate,/where singleton=true and enabled=true/);
+ assert.match(retailGate,/values\(true,false\)/);
  assert.doesNotMatch(loader,/service_role|SUPABASE_SECRET|\.insert\(|\.update\(|\.delete\(|Bearer /);
 });
 test("strict product result permits ONLY approved public price, not private IDs or stock",()=>{
@@ -49,7 +52,7 @@ test("public sold-out SQL is structurally off, enforces seller/product releases 
  assert.doesNotMatch(sql,/\bupdate\s+public\.products|\binsert into\s+public\.products|\bcreateInvoice\b/);
 });
 
-test("only approved projection is rendered; demo sample catalog is absent",()=>{
+test("only the bounded public projection is rendered; private demo fixture data remains absent",()=>{
  const page=read("src/app/catalog/page.tsx");
  const shelf=read("src/app/catalog/approved-sold-out-shelf.tsx");
  const css=read("src/app/catalog/sold-out-catalog.css");
