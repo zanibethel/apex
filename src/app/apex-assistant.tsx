@@ -4,10 +4,11 @@ import Link from "next/link";
 import {SupplierChatCsvTools} from "./supplier/catalog/chat-csv-tools";
 import "./apex-assistant.css";
 
-type Action="publish"|"unpublish";
+type Action="publish"|"unpublish"|"edit_price"|"edit_stock";
 type Item={
  id?:string;name:string;price:string;availability:string;href:string;
  sku?:string;requested?:boolean;held?:boolean;action?:Action|null;
+ editTarget?:number;editExpected?:number;
  productUpdatedAt?:string;controlChangedAt?:string|null;
 };
 type Message={id:number;from:"user"|"assistant";text:string;items?:Item[];link?:string;tool?:"csv_template"|"csv_import"};
@@ -28,7 +29,7 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
  const [pending,setPending]=useState<{item:Item;action:Action}|null>(null);
  const [messages,setMessages]=useState<Message[]>([
   {id:0,from:"assistant",text:supplierCanManage
-   ?"Supplier catalog assistant ready. Ask me to add a product, review saved products, request publication, download a CSV template or upload a CSV. CSV imports create private drafts; public release remains separate."
+   ?"Supplier catalog assistant ready. Ask me to review products, change a private product price or stock with confirmation, request publication, add products, or upload a CSV. No public release or payments happen here."
    :"Hi! I can look up approved Apex products, listed prices, and basic site information. No purchases or catalog changes here."},
  ]);
  function append(message:Message){
@@ -69,14 +70,21 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
  async function confirm(){
   if(!pending||!supplierCanManage||sending)return;
   const {item,action}=pending;
-  if(!item.id||!item.productUpdatedAt||typeof item.requested!=="boolean")return;
+  if(!item.id||!item.productUpdatedAt)return;
+  const editing=action==="edit_price"||action==="edit_stock";
+  if(editing&&(!Number.isSafeInteger(item.editTarget)||!Number.isSafeInteger(item.editExpected)))return;
+  if(!editing&&typeof item.requested!=="boolean")return;
   setSending(true);
   setPending(null);
   try{
    const response=await fetch("/api/assistant/supplier",{
     method:"POST",headers:{"Content-Type":"application/json"},
     cache:"no-store",
-    body:JSON.stringify({
+    body:JSON.stringify(editing?{
+     operation:"confirm_edit",editKind:action==="edit_price"?"price":"stock",
+     productId:item.id,expectedProductUpdatedAt:item.productUpdatedAt,
+     expectedValue:item.editExpected,targetValue:item.editTarget,
+    }:{
      operation:"confirm",action,productId:item.id,
      expectedRequested:item.requested,
      productUpdatedAt:item.productUpdatedAt,
@@ -95,7 +103,12 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
    const id=Date.now();
    setMessages(current=>[
     ...current.slice(-19).map(m=>({...m,items:m.items?.map(i=>i.id===item.id?{
-      ...i,action:null,requested:action==="publish",
+      ...i,action:null,
+      requested:editing?i.requested:action==="publish",
+      price:action==="edit_price"&&item.editTarget!==undefined?
+       new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(item.editTarget/100):i.price,
+      availability:action==="edit_stock"&&item.editTarget!==undefined?
+       item.editTarget===0?"Sold out":"Stock recorded":i.availability,
     }:i)})),
     {id,from:"assistant",text:answer.slice(0,1200),link:"/supplier/catalog/bulk"},
    ]);
@@ -120,7 +133,8 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
       {supplierCanManage&&item.action&&!pending&&<button
        type="button" className="apex-assistant-item-action" disabled={sending}
        onClick={()=>setPending({item,action:item.action!})}>
-       {item.action==="publish"?"Review publish request":"Review unpublish request"}
+       {item.action==="publish"?"Review publish request":
+        item.action==="unpublish"?"Review unpublish request":"Review change"}
       </button>}
      </div>)}
      {supplierCanManage&&message.tool&&<SupplierChatCsvTools uploadEnabled={message.tool==="csv_import"}/>}
@@ -129,11 +143,18 @@ export function ApexAssistant({supplierCanManage=false}:{supplierCanManage?:bool
      </Link>}
     </div>)}
     {pending&&<div className="apex-assistant-confirm" role="group" aria-label="Confirm supplier listing request">
-     <strong>{pending.action==="publish"?"Request publication":"Withdraw publication request"}?</strong>
+     <strong>{pending.action==="publish"?"Request publication":
+      pending.action==="unpublish"?"Withdraw publication request":
+      pending.action==="edit_price"?"Confirm price change":"Confirm stock change"}?</strong>
      <p>{pending.item.name}</p>
      <p>{pending.action==="publish"
       ?"This saves the supplier's preference only. The product will NOT become publicly visible until separate release checks pass."
-      :"This withdraws the supplier request. Public release is not controlled by this chat."}</p>
+      :pending.action==="unpublish"
+      ?"This withdraws the supplier request. Public release is not controlled by this chat."
+      :"Current "+(pending.action==="edit_price"?"price":"on-hand stock")+": "+
+       (pending.action==="edit_price"?"$"+((pending.item.editExpected??0)/100).toFixed(2):String(pending.item.editExpected))+
+       " → "+(pending.action==="edit_price"?"$"+((pending.item.editTarget??0)/100).toFixed(2):String(pending.item.editTarget))+
+       ". Your supplier product will be updated after confirmation. This does not publish it or enable payments."}</p>
      <div>
       <button type="button" disabled={sending} onClick={confirm}>{sending?"Saving…":"Confirm request"}</button>
       <button type="button" disabled={sending} onClick={()=>setPending(null)}>Cancel</button>

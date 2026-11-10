@@ -51,6 +51,10 @@ type Confirm={
  operation:"confirm";action:"publish"|"unpublish";productId:string;
  expectedRequested:boolean;productUpdatedAt:string;controlChangedAt:string|null;
 };
+type EditConfirm={
+ operation:"confirm_edit";editKind:"price"|"stock";productId:string;
+ expectedProductUpdatedAt:string;expectedValue:number;targetValue:number;
+};
 export async function POST(request:NextRequest){
  if(!request.headers.get("content-type")?.toLowerCase().startsWith("application/json"))
   return respond({error:"JSON required."},415);
@@ -73,6 +77,16 @@ export async function POST(request:NextRequest){
     !(data.controlChangedAt===null||(typeof data.controlChangedAt==="string"&&data.controlChangedAt.length<=50)))
    return respond({error:"Invalid confirmation."},400);
   if(!originAllowed(request))return respond({error:"Same-origin confirmation required."},403);
+ }else if(data.operation==="confirm_edit"){
+  if(Object.keys(data).some(k=>!["operation","editKind","productId","expectedProductUpdatedAt","expectedValue","targetValue"].includes(k))||
+   !["price","stock"].includes(String(data.editKind))||
+   typeof data.productId!=="string"||!UUID.test(data.productId)||
+   typeof data.expectedProductUpdatedAt!=="string"||data.expectedProductUpdatedAt.length>50||
+   !Number.isSafeInteger(data.expectedValue)||Number(data.expectedValue)<0||
+   !Number.isSafeInteger(data.targetValue)||Number(data.targetValue)<0||
+   Number(data.targetValue)===Number(data.expectedValue))
+   return respond({error:"Invalid product edit confirmation."},400);
+  if(!originAllowed(request))return respond({error:"Same-origin confirmation required."},403);
  }else return respond({error:"Invalid operation."},400);
 
  const context=await authorizedStore();
@@ -80,6 +94,59 @@ export async function POST(request:NextRequest){
  const {client,user,store}=context;
  if(!permitted(user.id))return respond({error:"Too many requests. Try again shortly."},429);
 
+ if(data.operation==="confirm_edit"){
+  if(process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED!=="true")
+   return respond({error:"Supplier product editing is currently disabled."},503);
+  const edit=data as EditConfirm;
+  const priceChange=edit.editKind==="price";
+  if((priceChange&&(edit.targetValue<1||edit.targetValue>999999999||edit.expectedValue<1||edit.expectedValue>999999999))||
+     (!priceChange&&(edit.targetValue>1000000||edit.expectedValue>1000000)))
+   return respond({error:"Product value is outside the supported range."},400);
+  const {data:product,error:productError}=await client.from("products")
+   .select("id,name,price_cents,compare_at_price_cents,updated_at,is_published")
+   .eq("store_id",store.id).eq("id",edit.productId)
+   .eq("is_published",false).is("archived_at",null).maybeSingle();
+  if(productError||!product)return respond({error:"Private product unavailable for this supplier."},404);
+  if(product.updated_at!==edit.expectedProductUpdatedAt)
+   return respond({error:"Product changed since the chat preview. Ask again to get its current values."},409);
+  if(priceChange){
+   if(Number(product.price_cents)!==edit.expectedValue)
+    return respond({error:"Price changed. Ask chat to review the product again."},409);
+   if(product.compare_at_price_cents!==null&&edit.targetValue>=Number(product.compare_at_price_cents))
+    return respond({error:"The proposed price must be lower than the compare-at price. Update the comparison in Products first."},409);
+   const {data:saved,error}=await client.from("products")
+    .update({price_cents:edit.targetValue})
+    .eq("store_id",store.id).eq("id",product.id).eq("is_published",false).is("archived_at",null)
+    .eq("updated_at",edit.expectedProductUpdatedAt).eq("price_cents",edit.expectedValue)
+    .select("id").maybeSingle();
+   if(error||!saved)return respond({error:"Price could not be saved. Request a fresh review."},409);
+  }else{
+   const {data:inventory,error:inventoryError}=await client.from("inventory_items")
+    .select("quantity_on_hand,quantity_reserved").eq("store_id",store.id)
+    .eq("product_id",product.id).maybeSingle();
+   if(inventoryError||!inventory)return respond({error:"The stock ledger is unavailable."},409);
+   if(inventory.quantity_on_hand!==edit.expectedValue)
+    return respond({error:"Stock changed since the chat preview. Ask again before saving."},409);
+   if(edit.targetValue<inventory.quantity_reserved)
+    return respond({error:"Stock cannot be below already reserved quantities."},409);
+   // Existing inventory ledger trigger records the actor and before/after values.
+   const {data:saved,error}=await client.from("inventory_items")
+    .update({quantity_on_hand:edit.targetValue})
+    .eq("store_id",store.id).eq("product_id",product.id)
+    .eq("quantity_on_hand",edit.expectedValue)
+    .lte("quantity_reserved",edit.targetValue)
+    .select("product_id").maybeSingle();
+   if(error||!saved)return respond({error:"Stock could not be saved. Request a fresh review."},409);
+  }
+  for(const path of ["/supplier/catalog","/supplier/catalog/bulk","/supplier/inventory",
+   "/supplier/catalog/storefront-test","/admin/catalog-release","/catalog","/cart"])
+   revalidatePath(path);
+  return respond({ok:true,source:"apex-supplier-code-v1",public:false,
+   answer:(priceChange?"Price":"On-hand stock")+" updated for "+product.name+
+    (priceChange?" to $"+(edit.targetValue/100).toFixed(2):" to "+edit.targetValue)+
+    ". Saved in your private supplier catalog. This did not publish the product or enable checkout.",
+   items:[]});
+ }
  if(data.operation==="confirm"){
   if(process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED!=="true")
    return respond({error:"Supplier publication controls are not currently enabled."},503);
@@ -132,7 +199,7 @@ export async function POST(request:NextRequest){
  }
 
  const {data:products,error:productError,count}=await client.from("products")
-  .select("id,name,sku,price_cents,currency,is_active,is_published,updated_at,category_id",{count:"exact"})
+  .select("id,name,sku,price_cents,compare_at_price_cents,currency,is_active,is_published,updated_at,category_id",{count:"exact"})
   .eq("store_id",store.id).is("archived_at",null).order("name").limit(100);
  if(productError||count===null||count!==products?.length)
   return respond({error:"The complete saved-product list could not be verified."},503);
@@ -152,7 +219,11 @@ export async function POST(request:NextRequest){
   const control=controlsById.get(p.id);
   const inventory=stockById.get(p.id);
   const availableStock=inventory?Math.max(0,inventory.quantity_on_hand-inventory.quantity_reserved):null;
-  return {id:p.id,name:p.name,sku:p.sku,priceCents:Number(p.price_cents),currency:p.currency,
+  return {id:p.id,name:p.name,sku:p.sku,priceCents:Number(p.price_cents),
+   compareAtCents:p.compare_at_price_cents===null?null:Number(p.compare_at_price_cents),
+   stockOnHand:inventory?.quantity_on_hand??null,stockReserved:inventory?.quantity_reserved??0,
+   published:p.is_published,held:control?.admin_gate==="hold"||control?.admin_gate==="review_required",
+   currency:p.currency,
    category:categoryById.get(p.category_id??"")??"",active:p.is_active,
    requested:control?.supplier_wants_listing===true,
    adminGate:control?.admin_gate??"clear",

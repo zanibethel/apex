@@ -1,6 +1,7 @@
 // Deterministic supplier-scoped chat. Caller verifies fresh Supabase identity
 // and owner/manager membership. No external AI, mutations or public release.
 import {answerApexKnowledge} from "./apex-knowledge.mjs";
+import {proposeSupplierEdit} from "./supplier-edit.mjs";
 
 const STOP=new Set(["please","i","want","to","the","a","all","my","me","product","products","item","items","listing","listings","show","find","review","let","can","you","publish","unpublish","request","remove","set","with","price","prices","for","how","do","we","what","is","are","currently","status","stock","inventory","sku","catalog","supplier","draft","drafts","in","on","and","at","of"]);
 const money=cents=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
@@ -24,6 +25,8 @@ export function supplierCatalogIntent(message){
 export function answerSupplierCatalogMessage(message,products=[]){
  const knowledge=answerApexKnowledge(message);
  if(knowledge&&knowledge.intent==="medical")return {...knowledge,source:"apex-supplier-code-v1"};
+ const edit=proposeSupplierEdit(message,products);
+ if(edit)return edit;
  const intent=supplierCatalogIntent(message);
  if(intent==="invalid")return {answer:"Please enter a short question.",items:[],source:"apex-supplier-code-v1"};
  if(intent==="csv_template")return {
@@ -37,7 +40,7 @@ export function answerSupplierCatalogMessage(message,products=[]){
  if(intent==="create")return {answer:"Open the new-product form to save a product to your own supplier catalog. Enter its name and price, save, then add or reuse an image and set stock. It will appear immediately in your signed-in storefront preview. BTCPay setup is not required for product creation. Public sale eligibility and checkout remain separate.",items:[],link:"/supplier/catalog/bulk?new=1#apex-product-workspace",source:"apex-supplier-code-v1"};
  if(intent==="help"){
   if(knowledge)return {...knowledge,source:"apex-supplier-code-v1"};
-  return {answer:"I can review your own saved product names, listed prices, stock status, and publication requests. Try ‘show my products’, ‘find [name]’, ‘publish [name]’, ‘CSV template’, or ‘upload CSV’. Every publication request needs your confirmation and separate storefront eligibility checks.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
+  return {answer:"I can review product records and propose confirmed price or stock changes, plus publication requests. Try ‘show my products’, ‘find [name]’, ‘publish [name]’, ‘CSV template’, or ‘upload CSV’. Every publication request needs your confirmation and separate storefront eligibility checks.",items:[],link:"/supplier/catalog/bulk",source:"apex-supplier-code-v1"};
  }
  const rows=Array.isArray(products)?products.filter(x=>x&&typeof x==="object"&&UUID.test(x.id)&&
   typeof x.name==="string"&&typeof x.sku==="string"&&Number.isSafeInteger(x.priceCents)&&x.priceCents>=0&&
