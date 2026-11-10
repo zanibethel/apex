@@ -21,15 +21,15 @@ const safeNotice=(value:unknown):value is StorefrontNotice=>{
 };
 export function StorefrontNoticeRotator({notices}:{notices:unknown}){
  const path=usePathname();
- const [now,setNow]=useState(0);
+ const [now,setNow]=useState(()=>Date.now());
  const [index,setIndex]=useState(0);
  const [reduceMotion,setReduceMotion]=useState(true);
  useEffect(()=>{
   const media=window.matchMedia("(prefers-reduced-motion: reduce)");
   const update=()=>setReduceMotion(media.matches);
-  update();media.addEventListener("change",update);
-  setNow(Date.now());
-  return ()=>media.removeEventListener("change",update);
+  media.addEventListener("change",update);
+  const frame=window.requestAnimationFrame(update);
+  return ()=>{window.cancelAnimationFrame(frame);media.removeEventListener("change",update);};
  },[]);
  useEffect(()=>{
   const timer=window.setInterval(()=>{setNow(Date.now());if(!reduceMotion)setIndex(x=>x+1);},7000);
