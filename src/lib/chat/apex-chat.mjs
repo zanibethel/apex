@@ -5,6 +5,7 @@ const ignored=new Set(["categories","category","show","browse","all","what","are
 const money=value=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(value/100);
 function normalize(value){
  return String(value??"").toLowerCase().replace(/\bt[\s-]?shirts?\b/g,"tshirt")
+  .replace(/\bworkouts?\b/g,"working out").replace(/\btees?\b/g,"tshirt")
   .replace(/\bmen['’]?s\b/g,"men").replace(/\bwomen['’]?s\b/g,"women")
   .replace(/[^a-z0-9]+/g," ").trim().replace(/\s+/g," ");
 }
