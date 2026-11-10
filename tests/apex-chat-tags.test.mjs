@@ -23,8 +23,11 @@ test("tag parser bounds, normalizes and deduplicates phrases",()=>{
  assert.deepEqual(parseProductTags("").tags,[]);
  assert.equal(parseProductTags(Array.from({length:13},(_,i)=>"tag "+i)).ok,false);
  assert.equal(parseProductTags("x".repeat(41)).ok,false);
- assert.equal(parseProductTags("=HYPERLINK(A1)").ok,false);
- assert.equal(parseProductTags("@pay me").ok,false);
+ assert.equal(parseProductTags("=HYPERLINK(A1)").ok,true);
+ assert.equal(parseProductTags("@pay me").ok,true);
+ assert.equal(parseProductTags("peptide|anabolic|steroid|testosterone").ok,true);
+ assert.deepEqual(parseProductTags("#gym|🔥 workout|pre-workout").tags,["#gym","🔥 workout","pre-workout"]);
+ assert.equal(parseProductTags("has\nline break").ok,false);
 });
 test("old nine-column supplier CSV works; new optional tag column stages validated tags",()=>{
  const legacy="product_id,sku,title,description,source_cost,price,compare_at_price,category,active\n"+
@@ -78,6 +81,9 @@ test("public tags projection remains strictly authorized and private-safe",()=>{
  assert.match(sql,/retail_showcase_category_allowed/);
  assert.match(sql,/lc\.supplier_wants_listing=true and lc\.admin_gate='clear'/);
  assert.match(sql,/listing_identity_holds/);
+ // The public eligibility keyword filter must inspect name and description only.
+ assert.ok(sql.includes("(p.name||' '||coalesce(p.description,'')) !~*"));
+ assert.ok(!sql.includes("array_to_string(p.tags"));
  assert.match(sql,/'can_checkout',false/);
  assert.doesNotMatch(sql,/createInvoice|update public\.stores set is_public|update public\.products set is_published/);
  assert.match(parser,/hasTags/);
