@@ -3,6 +3,7 @@
 import {useEffect,useState} from "react";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
+import {visibleNoticeAt} from "@/lib/announcements/notice-visibility.mjs";
 import "./storefront-notice-rotator.css";
 
 export type StorefrontNotice={
@@ -35,12 +36,7 @@ export function StorefrontNoticeRotator({notices}:{notices:unknown}){
   return ()=>window.clearInterval(timer);
  },[reduceMotion]);
  if(!(path==="/"||path==="/catalog")||!Array.isArray(notices)||!now)return null;
- const active=notices.filter(safeNotice).filter(n=>{
-  const start=n.starts_at?Date.parse(n.starts_at):null;
-  const end=n.ends_at?Date.parse(n.ends_at):null;
-  return (start===null||(Number.isFinite(start)&&start<=now))&&
-   (end===null||(Number.isFinite(end)&&end>now));
- });
+ const active=notices.filter(safeNotice).filter(n=>visibleNoticeAt(n,now));
  if(!active.length)return null;
  const current=active[index%active.length];
  if(!current)return null;
