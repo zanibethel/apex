@@ -26,7 +26,7 @@ import {mergeBulkSaveRetryKeys} from "@/lib/catalog/bulk-inline-save-retry.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
- price:string;comparePrice:string;sourceCost:string;categoryId:string;isActive:boolean;
+ price:string;comparePrice:string;sourceCost:string;categoryId:string;isActive:boolean;tagsText?:string;
  linkedSource?:boolean;needsSave?:boolean;
 };
 type Category={id:string;name:string};
@@ -42,7 +42,7 @@ type PublishOutcome={id:string;ok:boolean;message:string};
 
 function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
-  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,
+  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,tagsText:"",
   needsSave:true};
 }
 export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false,taxonomyProposal,taxonomyStoreId,initialEditProductId,initialNewProduct=false}:{
@@ -632,6 +632,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         disabled={!editable||busy} onChange={e=>change(r.key,"isActive",e.target.checked)}/>
        Active in private catalog
       </label>
+      <label>Search tags <small>(optional; separate with |)</small>
+       <input type="text" maxLength={492} value={r.tagsText??""} disabled={!editable||busy}
+        onChange={e=>change(r.key,"tagsText",e.target.value)}/></label>
       <label className="apex-bulk-description">Description
        <textarea id={"bulk-fix-"+r.key+"-description"} value={r.description} rows={2} maxLength={1500} disabled={!editable||busy}
         onChange={e=>change(r.key,"description",e.target.value)}/></label>
