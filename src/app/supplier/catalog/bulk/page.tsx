@@ -60,7 +60,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   {data:stockPreferences,error:stockPrefError,count:stockPrefCount},
   {data:retailAllowed,error:retailAllowedError}]=await Promise.all([
   client.from("products")
-   .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
+   .select("id,sku,name,description,tags,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).is("archived_at",null).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
   client.from("categories").select("id,name,slug").eq("store_id",store.id).order("name").limit(SUPPLIER_BULK_PRODUCT_CAPACITY),
   client.from("supplier_candidate_drafts").select("candidate_id,product_id").eq("store_id",store.id).limit(500),
@@ -215,7 +215,7 @@ export default async function BulkProductWorkspace({searchParams}:{
  const initialEditProductId=typeof requestedEdit==="string"&&
   (products??[]).some(p=>p.id===requestedEdit)?requestedEdit:undefined;
  const initialRows=(products??[]).map(p=>({
-  key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",
+  key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",tagsText:(p.tags??[]).join("|"),
   price:(Number(p.price_cents)/100).toFixed(2),
   comparePrice:p.compare_at_price_cents===null?"":(Number(p.compare_at_price_cents)/100).toFixed(2),
   sourceCost:p.internal_source_cost_cents==null?"":(Number(p.internal_source_cost_cents)/100).toFixed(2),
