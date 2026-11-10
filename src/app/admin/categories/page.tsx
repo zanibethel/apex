@@ -37,10 +37,11 @@ export default async function AdminCategories(){
   <h1>Category publishing</h1>
   <p className="lead">Create, rename and manage category visibility for each
    private supplier storefront. Category renames preserve existing product assignments.</p>
-  <p className="notice"><strong>Publishing a category does not publish its
-   products.</strong> Product Publish/Unpublish settings, admin holds,
-   independent eligibility reviews and the site-wide release gate still
-   determine what appears to customers. Checkout is unavailable.</p>
+  <p className="notice"><strong>Retail display no longer uses blocked category-name lists.</strong>
+   Categories organize products; the platform administrator can restrict individual
+   products in Catalog release. Category publication settings remain available for
+   other protected workflows. Supplier Publish/Unpublish settings, admin holds and
+   independent eligibility checks still apply. Checkout is unavailable.</p>
   <section className="supplier-panel" style={{maxWidth:"none",marginBottom:22}}
    aria-label="Create a new category">
    <h2>Create category</h2>
