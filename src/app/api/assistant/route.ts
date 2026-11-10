@@ -100,13 +100,16 @@ export async function POST(request:NextRequest){
  const catalog=await collectApprovedCatalog();
  // Deliberately remove private costs, stock quantities, supplier IDs and images.
  const products=catalog.products.map(p=>({
-  id:p.id,name:p.name,priceCents:p.priceCents,currency:p.currency,
+  id:p.id,name:p.name,description:p.description,tags:p.tags,
+  priceCents:p.priceCents,currency:p.currency,
   availability:p.availability,categoryName:p.categoryName,
  }));
  const payload={version:1,message:message.trim(),catalogState:catalog.state,products};
  // Remote lookup is explicitly opt-in and currently implements code only.
  // If not configured, every answer stays local with zero external AI calls.
- if(process.env.COOPERATIVE_APEX_REMOTE_FALLBACK==="enabled"){
+ // Keep tag/description discovery local until the remote contract supports both.
+ if(process.env.COOPERATIVE_APEX_REMOTE_FALLBACK==="enabled"&&
+    !products.some(p=>p.tags.length>0)){
   const remote=await callCooperative(payload,catalog.products);
   if(remote)return send(remote);
  }

@@ -32,9 +32,11 @@ export function privateBulkReadiness(row,status,requestRecorded=false){
   missing,completed,total:SETUP_STEPS,
  };
  if(status.requested===true||requestRecorded)return {
-  kind:"requested",label:"Request recorded · private",
-  description:"The private publication request was recorded. This product is not publicly listed.",
-  missing,completed,total:SETUP_STEPS,
+  kind:"requested",label:status.retailShowcase?"Retail display selected":"Request recorded · private",
+  description:status.retailShowcase
+   ?"The supplier chose to display this product in the checkout-disabled public showcase, subject to protected listing checks."
+   :"The private publication request was recorded. This product is not publicly listed.",
+  missing,completed,total:status.retailShowcase?4:SETUP_STEPS,
  };
  if(missing.length>0)return {
   kind:"setup",label:`Draft setup ${completed}/${SETUP_STEPS}`,
@@ -42,9 +44,11 @@ export function privateBulkReadiness(row,status,requestRecorded=false){
   missing,completed,total:SETUP_STEPS,
  };
  if(status.canRequest===true)return {
-  kind:"ready",label:"Ready to request · private",
-  description:"Draft details are complete for a private request. This is not approval for public sales.",
-  missing,completed,total:SETUP_STEPS,
+  kind:"ready",label:status.retailShowcase?"Ready to publish · retail showcase":"Ready to request · private",
+  description:status.retailShowcase
+   ?"Name, price and description are complete. Publish makes this product publicly visible on the checkout-disabled retail showcase; images, categories and stock counts are optional."
+   :"Draft details are complete for a private request. This is not approval for public sales.",
+  missing,completed:status.retailShowcase?4:completed,total:status.retailShowcase?4:SETUP_STEPS,
  };
  return {
   kind:"unavailable",label:"Request unavailable",

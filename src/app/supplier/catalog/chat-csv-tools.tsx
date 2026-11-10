@@ -6,7 +6,7 @@ import {parseProductCsv} from "@/lib/catalog/product-csv.mjs";
 
 type Preview={
  ok:true;rowCount:number;newCount:number;skippedCount:number;
- preview:{name:string;sku:string;price:string}[];
+ preview:{name:string;sku:string;price:string;tags?:string[]}[];
  answer:string;
 };
 type ImportResult={
@@ -93,7 +93,7 @@ export function SupplierChatCsvTools({uploadEnabled=false}:{uploadEnabled?:boole
    {preview&&<div className="apex-assistant-csv-preview">
     <strong>{preview.rowCount} rows · {preview.newCount} new · {preview.skippedCount} existing</strong>
     <ul>{preview.preview.map((p,i)=><li key={p.sku+String(i)}>
-     {p.name} · {p.sku} · ${p.price}
+     {p.name} · {p.sku} · ${p.price}{p.tags?.length?" · Tags: "+p.tags.join(", "):""}
     </li>)}</ul>
     <p>All saved products will be private drafts, with zero starting stock. Importing does not publish listings.</p>
     {!complete&&<button type="button" disabled={busy} onClick={()=>{void confirm();}}>

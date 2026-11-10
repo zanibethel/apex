@@ -4,7 +4,7 @@ import "server-only";
 // private imports, inventory, supplier price costs and the demo checkout.
 export type ApprovedSoldOutProduct={
  id:string;name:string;description:string;priceCents:number;
- categoryId:string|null;categoryName:string|null;
+ categoryId:string|null;categoryName:string|null;tags:string[];
  currency:"USD";availability:"sold_out"|"in_stock";canCheckout:false;
 };
 export type SoldOutCatalogResult={
@@ -28,11 +28,15 @@ export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|
   // Accept the prior seven-field projection during rollout, or the exact
   // nine-field projection with an independently published category.
   const hasCategory=Object.hasOwn(row,"category_id")||Object.hasOwn(row,"category_name");
-  const expected=hasCategory?[...allowedKeys,...categoryKeys]:allowedKeys;
+  const hasTags=Object.hasOwn(row,"tags");
+  const expected=[...allowedKeys,...(hasCategory?categoryKeys:[]),...(hasTags?["tags"]:[])];
   if((Object.keys(row).length!==allowedKeys.length&&
       Object.keys(row).length!==expected.length)||
    Object.keys(row).some(key=>!expected.includes(key))||
-   (hasCategory&&(
+   (hasTags&&(!Array.isArray(row.tags)||row.tags.length>12||
+     row.tags.some((tag:unknown)=>typeof tag!=="string"||tag.length<1||tag.length>40||
+       /[\u0000-\u001f\u007f-\u009f|]/u.test(tag))))||
+   (hasCategory&&!(row.category_id===null&&row.category_name===null)&&(
      typeof row.category_id!=="string"||!UUID.test(row.category_id)||
      typeof row.category_name!=="string"||
      row.category_name.trim().length<1||row.category_name.length>80||
@@ -49,8 +53,9 @@ export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|
   ids.add(row.id);
   output.push(Object.freeze({
    id:row.id,name:row.name,description:row.description,
-   categoryId:hasCategory?row.category_id as string:null,
-   categoryName:hasCategory?row.category_name as string:null,
+   categoryId:hasCategory?row.category_id as string|null:null,
+   categoryName:hasCategory?row.category_name as string|null:null,
+   tags:hasTags?[...(row.tags as string[])]:[],
    priceCents:Number(row.price_cents),
    currency:"USD",availability:row.availability as "sold_out"|"in_stock",canCheckout:false,
   }));

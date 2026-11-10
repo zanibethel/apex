@@ -26,13 +26,13 @@ import {mergeBulkSaveRetryKeys} from "@/lib/catalog/bulk-inline-save-retry.mjs";
 
 export type BulkEditRow={
  key:string;id?:string;name:string;sku:string;description:string;
- price:string;comparePrice:string;sourceCost:string;categoryId:string;isActive:boolean;
+ price:string;comparePrice:string;sourceCost:string;categoryId:string;isActive:boolean;tagsText?:string;
  linkedSource?:boolean;needsSave?:boolean;
 };
 type Category={id:string;name:string};
 type ReviewedCategoryProposal={id:string;sku:string;name:string;category:string|null;status:string;note:string};
 type ListingReadiness={
- productId:string;canRequest:boolean;requested:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
+ productId:string;canRequest:boolean;requested:boolean;retailShowcase?:boolean;status:string;kind:string;reason?:string|null;missing:string[];correctionsPending?:boolean;
  visibilityKind:string;visibilityLabel:string;visibilityDescription:string;
  stockKind:string;stockLabel:string;
  imageStatusKind:string;imageStatusLabel:string;imageStatusMessage:string;imageNeedsAction:boolean;hasImage:boolean;
@@ -42,7 +42,7 @@ type PublishOutcome={id:string;ok:boolean;message:string};
 
 function newRow():BulkEditRow{
  return {key:crypto.randomUUID(),name:"",sku:"",description:"",
-  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:false,
+  price:"",comparePrice:"",sourceCost:"",categoryId:"",isActive:true,tagsText:"",
   needsSave:true};
 }
 export function BulkDraftEditor({storeId,editable,initialRows,categories,media,existingImages,listing,resubmissionEnabled=false,taxonomyProposal,taxonomyStoreId,initialEditProductId,initialNewProduct=false}:{
@@ -478,8 +478,11 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
     const requested=Boolean(listingStatus?.requested);
     const readiness=privateBulkReadiness(r,listingStatus,requested&&Boolean(publication?.ok));
     const imageKind=!r.id?"missing":listingStatus?.imageStatusKind??"unavailable";
-    const imageLabel=!r.id?"Image needed":listingStatus?.imageStatusLabel??"Image status unavailable";
-    const imageMessage=!r.id?"Save the product, then add an image from the pencil editor.":
+    const retailImageOptional=listingStatus?.retailShowcase===true&&!listingStatus?.hasImage;
+    const imageLabel=!r.id?"Image optional":retailImageOptional?"Image optional":
+     listingStatus?.imageStatusLabel??"Image status unavailable";
+    const imageMessage=!r.id?"You can add an image after saving; it is optional for retail display.":
+     retailImageOptional?"An image helps customers but is not required for the retail showcase.":
      listingStatus?.imageStatusMessage??"Refresh to check image evidence.";
     const imageNeedsAction=!r.id||listingStatus?.imageNeedsAction===true;
     const adminFeedback=r.id?supplierAdminFeedback(listingStatus):null;
@@ -632,6 +635,9 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
         disabled={!editable||busy} onChange={e=>change(r.key,"isActive",e.target.checked)}/>
        Active in private catalog
       </label>
+      <label>Search tags <small>(optional; separate with |)</small>
+       <input type="text" maxLength={492} value={r.tagsText??""} disabled={!editable||busy}
+        onChange={e=>change(r.key,"tagsText",e.target.value)}/></label>
       <label className="apex-bulk-description">Description
        <textarea id={"bulk-fix-"+r.key+"-description"} value={r.description} rows={2} maxLength={1500} disabled={!editable||busy}
         onChange={e=>change(r.key,"description",e.target.value)}/></label>

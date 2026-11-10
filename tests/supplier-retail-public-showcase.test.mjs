@@ -74,7 +74,7 @@ test("supplier product manager and chat can request retail display but not bypas
  const ui=read("src/app/apex-assistant.tsx");
  assert.match(bulk,/retailSetupComplete/);
  assert.match(bulk,/status\.canRequest&&!control\?\.supplier_wants_listing/);
- assert.match(bulk,/Ordinary retail products display publicly/);
+ assert.match(bulk,/Ordinary retail products need only a name, positive price and description/);
  assert.match(actions,/\.rpc\("set_supplier_listing_intent"/);
  assert.match(actions,/Live retail display enabled/);
  assert.match(chat,/client\.auth\.getUser\(\)/);

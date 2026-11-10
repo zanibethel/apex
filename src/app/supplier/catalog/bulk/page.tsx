@@ -13,6 +13,7 @@ import {SharedPrivateImageBulkApply} from "../shared-private-image-bulk-apply";
 import {proposedSoldOutPricing} from "@/lib/catalog/sold-out-import-pricing.mjs";
 import {privateSourceDraftDescription} from "@/lib/catalog/private-source-draft-description.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
+import {retailDisplayMinimum} from "@/lib/catalog/retail-display-minimum.mjs";
 import {listingControlStatus} from "@/lib/catalog/listing-control.mjs";
 import {privateInventoryState} from "@/lib/catalog/private-inventory-state.mjs";
 import {supplierStorefrontVisibility} from "@/lib/catalog/supplier-storefront-visibility.mjs";
@@ -60,7 +61,7 @@ export default async function BulkProductWorkspace({searchParams}:{
   {data:stockPreferences,error:stockPrefError,count:stockPrefCount},
   {data:retailAllowed,error:retailAllowedError}]=await Promise.all([
   client.from("products")
-   .select("id,sku,name,description,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
+   .select("id,sku,name,description,tags,price_cents,compare_at_price_cents,internal_source_cost_cents,category_id,is_active,image_path")
    .eq("store_id",store.id).eq("is_published",false).is("archived_at",null).order("name").limit(SUPPLIER_BULK_PRODUCT_QUERY_LIMIT),
   client.from("categories").select("id,name,slug").eq("store_id",store.id).order("name").limit(SUPPLIER_BULK_PRODUCT_CAPACITY),
   client.from("supplier_candidate_drafts").select("candidate_id,product_id").eq("store_id",store.id).limit(500),
@@ -152,15 +153,16 @@ export default async function BulkProductWorkspace({searchParams}:{
   const status=listingControlStatus(control);
   const setup=draftSetupSteps(p,quantities.get(p.id));
   const stock=privateInventoryState(quantities.get(p.id));
-  const missing=setup.steps.filter(step=>!step.complete).map(step=>step.label);
   const mediaStatus=supplierImageCorrectionStatus(
    {id:p.id,store_id:store.id,image_path:p.image_path},
    reviewsByProduct.get(p.id),latestImageFeedback.get(p.id),mediaFeedbackAvailable);
-  const isRetail=eligibleRetailCategoryIds.has(p.category_id??"");
-  const stockEntry=quantities.get(p.id);
-  const retailSetupComplete=isRetail&&p.is_active&&p.price_cents>0&&
-   Boolean(p.description?.trim())&&Boolean(p.sku.trim())&&
-   Boolean(stockEntry)&&stockEntry!.quantity_on_hand>=stockEntry!.quantity_reserved&&
+  const isRetail=p.category_id===null||eligibleRetailCategoryIds.has(p.category_id);
+  // Supplier-entered display essentials: name, positive price and description.
+  // SKU is generated at draft creation. Category/image/inventory are optional for
+  // checkout-disabled retail display; higher-risk categories remain gated.
+  const retailMinimum=retailDisplayMinimum(p);
+  const missing=isRetail?retailMinimum.missing:setup.steps.filter(step=>!step.complete).map(step=>step.label);
+  const retailSetupComplete=isRetail&&retailMinimum.ready&&
    !linkedProductIds.has(p.id)&&
    !["pending_review","changes_requested"].includes(reviewsByProduct.get(p.id)?.status??"draft");
   const visibility=supplierStorefrontVisibility({
@@ -170,7 +172,7 @@ export default async function BulkProductWorkspace({searchParams}:{
    republishApproved:control?.republish_approved,
   },releases.get(p.id));
   return {
-   productId:p.id,
+   productId:p.id,retailShowcase:isRetail,
    canRequest:!listingError&&(setup.setupComplete||retailSetupComplete)&&status.canRequest&&!control?.supplier_wants_listing,
    requested:!!control?.supplier_wants_listing,
    status:listingError?"Publication status unavailable":status.label,
@@ -183,7 +185,7 @@ export default async function BulkProductWorkspace({searchParams}:{
     ?(control?.supplier_wants_listing?"Public retail showcase selected":"Not listed publicly")
     :visibility.label,
    visibilityDescription:isRetail
-    ?"Ordinary retail products display publicly after supplier confirmation. Sold-out items stay visible; checkout is disabled. Archived or restricted categories and explicit admin holds remain excluded."
+    ?"Ordinary retail products need only a name, positive price and description for display. Category, image and inventory are optional; missing stock shows Sold Out. Checkout remains disabled, and admin holds still apply."
     :visibility.description,
    stockKind:trackByProduct.get(p.id)===false?"untracked":stock.kind,
    stockLabel:trackByProduct.get(p.id)===false?"Quantity not tracked":stock.label,
@@ -215,7 +217,7 @@ export default async function BulkProductWorkspace({searchParams}:{
  const initialEditProductId=typeof requestedEdit==="string"&&
   (products??[]).some(p=>p.id===requestedEdit)?requestedEdit:undefined;
  const initialRows=(products??[]).map(p=>({
-  key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",
+  key:p.id,id:p.id,name:p.name,sku:p.sku,description:p.description??"",tagsText:(p.tags??[]).join("|"),
   price:(Number(p.price_cents)/100).toFixed(2),
   comparePrice:p.compare_at_price_cents===null?"":(Number(p.compare_at_price_cents)/100).toFixed(2),
   sourceCost:p.internal_source_cost_cents==null?"":(Number(p.internal_source_cost_cents)/100).toFixed(2),

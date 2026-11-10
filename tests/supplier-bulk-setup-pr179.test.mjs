@@ -81,7 +81,7 @@ test("UI requires explicit selection, local staging, and existing authenticated 
  assert.match(actions,/APEX_DRAFT_CATALOG_WRITES_ENABLED/);
  assert.match(actions,/Only a signed-in supplier owner or manager can edit this private store/);
  assert.match(actions,/saveBulkProductDrafts/);
- assert.match(board,/Needs category/);
+ assert.match(board,/Retail display restrictions/);
  assert.match(board,/Inactive products/);
  assert.match(board,/Finish product setup in bulk/);
  assert.doesNotMatch(editor,/\.from\("products"\)\.update|service_role/);

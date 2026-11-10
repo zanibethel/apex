@@ -13,13 +13,14 @@ const bulkActions=readFileSync("src/app/supplier/catalog/bulk-actions.ts","utf8"
 const operations=readFileSync("src/app/supplier/operations/actions.ts","utf8");
 const template=readFileSync("public/templates/apex-product-import-template.csv","utf8");
 const title="product_id,sku,title,description,source_cost,price,compare_at_price,category,active";
+const fullTitle=title+",tags";
 function raw(...data){return title+"\r\n"+data.join("\r\n")+"\r\n"}
 
 test("template is downloadable CSV with exactly supported header fields",()=>{
  assert.deepEqual(PRODUCT_CSV_HEADERS,["product_id","sku","title","description",
-  "source_cost","price","compare_at_price","category","active"]);
- assert.equal(PRODUCT_CSV_TEMPLATE.trim(),title);
- assert.equal(template.trim(),title);
+  "source_cost","price","compare_at_price","category","active","tags"]);
+ assert.equal(PRODUCT_CSV_TEMPLATE.trim(),fullTitle);
+ assert.equal(template.trim(),fullTitle);
  assert.match(importer,/href="\/templates\/apex-product-import-template.csv"/);
  assert.match(importer,/download/);
 });

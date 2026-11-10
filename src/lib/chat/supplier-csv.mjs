@@ -2,6 +2,7 @@
 // Uses the exact existing supplier import CSV contract; never edits existing
 // products, publishes listings, or calls a payment service.
 import {parseProductCsv} from "../catalog/product-csv.mjs";
+import {parseProductTags} from "../catalog/product-tags.mjs";
 
 export const SUPPLIER_CHAT_CSV_BATCH_SIZE=20;
 const SKU=/^[A-Z0-9][A-Z0-9._-]{0,59}$/;
@@ -19,6 +20,8 @@ export function validateSupplierChatCsv(source,categories=[]){
   const raw=result.rows[i];
   const sku=String(raw.sku??"").trim().toUpperCase();
   const category=String(raw.category??"").trim();
+  const tagResult=parseProductTags(raw.tags??"");
+  if(!tagResult.ok)errors.push("Line "+(Number(raw.line)||i+2)+": "+tagResult.error);
   const line=Number(raw.line)||i+2;
   if(raw.product_id)errors.push("Line "+line+": existing product IDs cannot be updated through chat. Use the Products CSV editor.");
   if(!SKU.test(sku))errors.push("Line "+line+": enter a unique SKU to prevent repeat-import duplicates.");
@@ -29,7 +32,7 @@ export function validateSupplierChatCsv(source,categories=[]){
   rows.push({
    key:"csv-line-"+line,name:raw.title,sku,description:raw.description??"",
    price:raw.price,comparePrice:raw.compare_at_price??"",
-   sourceCost:raw.source_cost??"",categoryId:category?categoriesByName.get(category.toLowerCase())??"": "",
+   sourceCost:raw.source_cost??"",tags:tagResult.tags,categoryId:category?categoriesByName.get(category.toLowerCase())??"": "",
    isActive:!raw.active||["yes","true","1"].includes(raw.active.toLowerCase()),
   });
  }

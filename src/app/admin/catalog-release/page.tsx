@@ -6,6 +6,7 @@ import {classifyAdminRelease,summarizeAdminRelease}
  from "@/lib/catalog/admin-release-board.mjs";
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {privateInventoryState} from "@/lib/catalog/private-inventory-state.mjs";
+import {AdminProductDisplayRestrictionForm} from "./restriction-form";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Catalog Release | Apex",robots:{index:false,follow:false}};
@@ -14,24 +15,45 @@ const RPC_CONCURRENCY=8;
 const formatPrice=(cents:number)=>Number.isSafeInteger(cents)&&cents>=0?
  new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100):"Unavailable";
 
-export default async function CatalogReleaseDashboard(){
+export default async function CatalogReleaseDashboard({searchParams}:{
+ searchParams:Promise<{page?:string|string[]}>,
+}){
+ const params=await searchParams;
+ const rawPage=typeof params.page==="string"?Number(params.page):1;
+ const page=Number.isSafeInteger(rawPage)&&rawPage>=1&&rawPage<=100?rawPage:1;
+ const from=(page-1)*PAGE_LIMIT;
  const client=await createSupplierServerClient();
  if(!client)redirect("/admin/sign-in");
  const {data:auth,error:authError}=await client.auth.getUser();
  if(authError||!isVerifiedPlatformAdmin(auth.user))redirect("/admin/sign-in");
 
- const [productsResult,controlsResult,categoriesResult,stockResult]=await Promise.all([
+ const [productsResult,controlsResult,categoriesResult,stockResult,restrictionResult]=await Promise.all([
   client.from("products")
    .select("id,store_id,category_id,sku,name,description,price_cents,is_active,is_published,image_path")
-   .order("name",{ascending:true}).limit(PAGE_LIMIT),
+   .order("name",{ascending:true}).range(from,from+PAGE_LIMIT-1),
   client.from("supplier_listing_controls")
    .select("store_id,product_id,supplier_wants_listing,admin_gate,republish_approval_required,republish_approved")
    .limit(250),
   client.from("categories").select("id,store_id,name,is_published").limit(250),
   client.from("inventory_items")
    .select("store_id,product_id,quantity_on_hand,quantity_reserved").limit(250),
+  client.rpc("get_admin_retail_product_restrictions"),
  ]);
  const products=productsResult.error?[]:productsResult.data??[];
+ type DisplayRestriction={
+  store_id:string;product_id:string;product_name:string;product_sku:string;
+  store_name:string;reason:string;changed_at:string;
+ };
+ const restrictionRows:Array<DisplayRestriction>=!restrictionResult.error&&
+  Array.isArray(restrictionResult.data)&&restrictionResult.data.every((r:unknown)=>
+   Boolean(r)&&typeof r==="object"&&
+   ["store_id","product_id","reason","product_name","product_sku","store_name"].every(k=>
+    typeof (r as Record<string,unknown>)[k]==="string"))
+   ?restrictionResult.data as Array<DisplayRestriction>:[];
+ const restrictionsAvailable=!restrictionResult.error&&
+  Array.isArray(restrictionResult.data)&&restrictionRows.length===restrictionResult.data.length;
+ const restrictionsByProduct=new Map(restrictionRows.map(r=>
+  [r.store_id+":"+r.product_id,r]));
  const controls=new Map((controlsResult.error?[]:controlsResult.data??[])
   .map(c=>[c.store_id+":"+c.product_id,c]));
  const categories=new Map((categoriesResult.error?[]:categoriesResult.data??[])
@@ -67,11 +89,11 @@ export default async function CatalogReleaseDashboard(){
   <h1>Catalog release</h1>
   <p className="lead">Review product publishing, public visibility, and the
    exact reason an offer cannot appear on the storefront.</p>
-  <p className="notice"><strong>Read-only release status.</strong> Suppliers
-   choose Publish or Unpublish. Admin holds override those settings.
-   Public Sold Out listings require verified release eligibility.
-   This page cannot approve products, change release permissions,
-   create orders, or accept payments.</p>
+  <p className="notice"><strong>Release status is read-only, but retail visibility restrictions are editable.</strong>
+   Suppliers choose Publish or Unpublish. Platform admins can restrict or
+   unrestrict retail display for each product independently; admin holds,
+   content safeguards and verified release eligibility still apply.
+   This page does not approve checkout, create orders, or accept payments.</p>
   <section className="feature-grid" aria-label="Current catalog release counts">
    {[
     ["Products reviewed",summary.total],
@@ -80,7 +102,7 @@ export default async function CatalogReleaseDashboard(){
     ["Blocked by release checks",summary.review],
     ["Publish off",summary.private],
     ["Status unavailable",summary.unavailable],
-    ["Needs category",productsResult.error?"Unavailable":products.filter(p=>!p.category_id).length],
+    ["Retail display restrictions",restrictionsAvailable?restrictionRows.length:"Unavailable"],
     ["Inactive products",productsResult.error?"Unavailable":products.filter(p=>p.is_active!==true).length],
    ].map(([label,value])=><article key={label} className="feature-card">
     <p className="eyebrow">{label}</p><h2>{value}</h2>
@@ -90,11 +112,18 @@ export default async function CatalogReleaseDashboard(){
     Products cannot be read with the current admin session.
     No release status is asserted.</p>:
    <>
+    {!restrictionsAvailable&&<p role="alert" className="notice">
+     Admin restriction status is unavailable. No product should be assumed unrestricted until this readback is restored.</p>}
     {extrasUnavailable&&<p role="status" className="notice">
      Some supporting records were not available. Supplier settings,
      categories, or stock are not assumed to be approved.</p>}
-    {products.length===PAGE_LIMIT&&<p className="notice">
-     Showing the first {PAGE_LIMIT} products; counts do not include later records.</p>}
+    <p className="notice">Product page {page} · showing up to {PAGE_LIMIT} products per page.</p>
+    <nav aria-label="Product pages" className="actions">
+     {page>1&&<Link className="button secondary"
+       href={"/admin/catalog-release?page="+(page-1)}>Previous products</Link>}
+     {products.length===PAGE_LIMIT&&page<100&&<Link className="button secondary"
+       href={"/admin/catalog-release?page="+(page+1)}>Next products</Link>}
+    </nav>
     {!products.length?<p className="notice">No products found in the current
       authorized catalog.</p>:
      <div className="apex-product-grid" style={{marginTop:24}}>
@@ -105,6 +134,7 @@ export default async function CatalogReleaseDashboard(){
        const assessment=privateInventoryState(inventory);
        const setup=draftSetupSteps(p,inventory);
        const missing=setup.steps.filter(step=>!step.complete).map(step=>step.label);
+       const restriction=restrictionsByProduct.get(p.store_id+":"+p.id);
        return <article className="apex-product-card" key={p.id}>
         <div className="apex-product-card-head">
          <p className="eyebrow">{status.label}</p>
@@ -112,6 +142,11 @@ export default async function CatalogReleaseDashboard(){
         </div>
         <p className="notice">SKU {p.sku} · {formatPrice(Number(p.price_cents))}</p>
         <p><strong>Publish:</strong> {row.publishEnabled?"On":"Off"}</p>
+        <p><strong>Admin retail restriction:</strong>{" "}
+         {!restrictionsAvailable?"Status unavailable":restriction?"Restricted":"None"}</p>
+        {restriction&&<p className="apex-review-note"><strong>Reason:</strong> {restriction.reason}</p>}
+        {restrictionsAvailable&&<AdminProductDisplayRestrictionForm
+         storeId={p.store_id} productId={p.id} restricted={Boolean(restriction)}/>}
         <p><strong>Customer visibility:</strong> {status.visible?"Visible · Sold Out":"Not visible"}</p>
         <p className="notice"><strong>Category:</strong> {row.category?.name??"Unavailable"}{" · "}
          {row.category?.is_published===true?"Published":"Not published or unavailable"}</p>
@@ -126,12 +161,26 @@ export default async function CatalogReleaseDashboard(){
         <p className="notice"><strong>Setup:</strong> {setup.completed} of {setup.total} fields ready
          {missing.length>0?" · Needs: "+missing.join(", "):" · Core details complete"}</p>
         <p className="notice">The label above comes from the protected database
-         verdict. Changing a Publish switch does not override a hold,
-         category restriction, or independent product release check.</p>
+         verdict. Changing a Publish switch does not override a product restriction,
+         administrative hold, or independent product release check.</p>
        </article>;
       })}
      </div>}
    </>}
+  {restrictionsAvailable&&<section id="visibility-restrictions" aria-label="Currently restricted retail products"
+    className="supplier-panel" style={{marginTop:24}}>
+   <h2>Retail product restriction list ({restrictionRows.length})</h2>
+   <p className="notice">These products are hidden from the public retail showcase regardless of category or supplier Publish preference. Removing a restriction does not override other release checks.</p>
+   {restrictionRows.length===0?<p>No products are on the admin restriction list.</p>:
+    <div className="apex-product-grid">{restrictionRows.map(r=>
+     <article key={r.store_id+":"+r.product_id} className="apex-product-card">
+      <h3>{r.product_name}</h3>
+      <p className="notice">{r.store_name} · SKU {r.product_sku}</p>
+      <p className="notice">{r.reason}</p>
+      <AdminProductDisplayRestrictionForm storeId={r.store_id}
+       productId={r.product_id} restricted={true}/>
+     </article>)}</div>}
+   </section>}
   <div className="actions">
    <Link className="button secondary" href="/admin/categories">
     Category controls</Link>
