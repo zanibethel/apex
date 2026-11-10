@@ -71,7 +71,9 @@ test("publish single, publish selected, publish all use existing guarded intent 
  assert.match(publishPanel,/status[es]*\.get/);
  assert.match(preview,/Preview single \/ Publish single/);
  assert.match(actions,/set_supplier_listing_intent/);
- assert.match(actions,/administrator lock/i);
+ assert.match(actions,/supplierPublishRpcError\(rpcError,action\)/);
+ const feedback=read("src/lib/catalog/supplier-publish-feedback.mjs");
+ assert.match(feedback,/administrator hold/i);
  assert.match(actions,/checkout and payments remain disabled/);
  assert.match(catalog,/Bulk add \/ edit \/ preview/);
  assert.match(dashboard,/href="\/supplier\/catalog\/bulk" className="button primary">Products/);

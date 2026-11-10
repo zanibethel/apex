@@ -86,7 +86,7 @@ test("main product cards fetch protected release status, and cannot mark Live lo
  assert.match(editor,/locallyChanged/);
  assert.match(editor,/Not visible/);
  assert.match(editor,/role="switch"/);
- assert.match(editor,/onChange=\{e=>r\.id&&publish\(\[r\.id\],e\.target\.checked\?"publish":"unpublish"\)\}/);
+ assert.match(editor,/onChange=\{e=>attemptCardPublish\(r,listingStatus,publishReady,e\.target\.checked\)\}/);
  assert.match(helper,/releaseDecision\.status_code==="public_visible"/);
  assert.match(helper,/releaseDecision\.effective_public===true/);
  assert.doesNotMatch(helper,/localStorage|window\.|document\.|service_role|createSignedUrl|can_checkout=true/i);

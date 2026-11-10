@@ -521,7 +521,7 @@ export function BulkDraftEditor({storeId,editable,initialRows,categories,media,e
       ?"The supplier preference changed. A fresh protected release decision is needed before customer visibility can be confirmed.":
       listingStatus?.visibilityDescription??"Refresh to check the protected release decision.";
     const publishReady=Boolean(r.id&&!r.needsSave&&eligiblePublishSet.has(r.id));
-    const cardFeedback=cardPublishFeedback[r.key]??(r.id?publicationById.get(r.id):undefined);
+    const cardFeedback=cardPublishFeedback[r.key];
     return <article key={r.key} id={r.id?"saved-"+r.id:undefined}
       className={"apex-bulk-row"+((editOpenKeys.includes(r.key)||!r.id)?" apex-bulk-row-editing":"")}>
      <div className="apex-bulk-row-title">
