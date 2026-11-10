@@ -4,7 +4,7 @@ import "server-only";
 // private imports, inventory, supplier price costs and the demo checkout.
 export type ApprovedSoldOutProduct={
  id:string;name:string;description:string;priceCents:number;
- categoryId:string|null;categoryName:string|null;
+ categoryId:string|null;categoryName:string|null;tags:string[];
  currency:"USD";availability:"sold_out"|"in_stock";canCheckout:false;
 };
 export type SoldOutCatalogResult={
@@ -28,10 +28,14 @@ export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|
   // Accept the prior seven-field projection during rollout, or the exact
   // nine-field projection with an independently published category.
   const hasCategory=Object.hasOwn(row,"category_id")||Object.hasOwn(row,"category_name");
-  const expected=hasCategory?[...allowedKeys,...categoryKeys]:allowedKeys;
+  const hasTags=Object.hasOwn(row,"tags");
+  const expected=[...allowedKeys,...(hasCategory?categoryKeys:[]),...(hasTags?["tags"]:[])];
   if((Object.keys(row).length!==allowedKeys.length&&
       Object.keys(row).length!==expected.length)||
    Object.keys(row).some(key=>!expected.includes(key))||
+   (hasTags&&(!Array.isArray(row.tags)||row.tags.length>12||
+     row.tags.some((tag:unknown)=>typeof tag!=="string"||tag.length<1||tag.length>40||
+       !/^[a-z0-9][a-z0-9 '&/-]{0,39}$/.test(tag))))||
    (hasCategory&&(
      typeof row.category_id!=="string"||!UUID.test(row.category_id)||
      typeof row.category_name!=="string"||
@@ -51,6 +55,7 @@ export function parseApprovedSoldOutItems(raw:unknown):ApprovedSoldOutProduct[]|
    id:row.id,name:row.name,description:row.description,
    categoryId:hasCategory?row.category_id as string:null,
    categoryName:hasCategory?row.category_name as string:null,
+   tags:hasTags?[...(row.tags as string[])]:[],
    priceCents:Number(row.price_cents),
    currency:"USD",availability:row.availability as "sold_out"|"in_stock",canCheckout:false,
   }));
