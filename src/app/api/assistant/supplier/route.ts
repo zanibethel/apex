@@ -2,6 +2,7 @@ import {NextRequest,NextResponse} from "next/server";
 import {revalidatePath} from "next/cache";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {answerSupplierCatalogMessage} from "@/lib/chat/supplier-catalog.mjs";
+import {parseProductTags,sameProductTags} from "@/lib/catalog/product-tags.mjs";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -51,6 +52,7 @@ type Confirm={
  operation:"confirm";action:"publish"|"unpublish";productId:string;
  expectedRequested:boolean;productUpdatedAt:string;controlChangedAt:string|null;
 };
+type TagConfirm={operation:"confirm_tags";productId:string;expectedProductUpdatedAt:string;expectedTags:string[];targetTags:string[]};
 type EditConfirm={
  operation:"confirm_edit";editKind:"price"|"stock";productId:string;
  expectedProductUpdatedAt:string;expectedValue:number;targetValue:number;
@@ -77,6 +79,14 @@ export async function POST(request:NextRequest){
     !(data.controlChangedAt===null||(typeof data.controlChangedAt==="string"&&data.controlChangedAt.length<=50)))
    return respond({error:"Invalid confirmation."},400);
   if(!originAllowed(request))return respond({error:"Same-origin confirmation required."},403);
+  }else if(data.operation==="confirm_tags"){
+  if(Object.keys(data).some(k=>!["operation","productId","expectedProductUpdatedAt","expectedTags","targetTags"].includes(k))||
+    typeof data.productId!=="string"||!UUID.test(data.productId)||
+    typeof data.expectedProductUpdatedAt!=="string"||data.expectedProductUpdatedAt.length>50||
+    !Array.isArray(data.expectedTags)||!Array.isArray(data.targetTags)||
+    !parseProductTags(data.expectedTags).ok||!parseProductTags(data.targetTags).ok)
+   return respond({error:"Invalid tag confirmation."},400);
+  if(!originAllowed(request))return respond({error:"Same-origin confirmation required."},403);
  }else if(data.operation==="confirm_edit"){
   if(Object.keys(data).some(k=>!["operation","editKind","productId","expectedProductUpdatedAt","expectedValue","targetValue"].includes(k))||
    !["price","stock"].includes(String(data.editKind))||
@@ -94,6 +104,34 @@ export async function POST(request:NextRequest){
  const {client,user,store}=context;
  if(!permitted(user.id))return respond({error:"Too many requests. Try again shortly."},429);
 
+ if(data.operation==="confirm_tags"){
+  if(process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED!=="true")
+   return respond({error:"Supplier editing is currently disabled."},503);
+  const edit=data as TagConfirm;
+  const previous=parseProductTags(edit.expectedTags),next=parseProductTags(edit.targetTags);
+  if(!previous.ok||!next.ok||!sameProductTags(previous.tags,edit.expectedTags)||
+     !sameProductTags(next.tags,edit.targetTags)||sameProductTags(previous.tags,next.tags))
+   return respond({error:"Invalid or unchanged tags."},400);
+  const {data:product,error:productError}=await client.from("products")
+   .select("id,name,tags,updated_at,is_published")
+   .eq("store_id",store.id).eq("id",edit.productId).eq("is_published",false)
+   .is("archived_at",null).maybeSingle();
+  if(productError||!product)return respond({error:"Private product is unavailable."},404);
+  if(product.updated_at!==edit.expectedProductUpdatedAt||
+     !sameProductTags(product.tags,previous.tags))
+   return respond({error:"Product tags changed. Ask chat to review the product again."},409);
+  const {data:saved,error}=await client.from("products")
+   .update({tags:next.tags}).eq("store_id",store.id).eq("id",edit.productId)
+   .eq("is_published",false).is("archived_at",null)
+   .eq("updated_at",edit.expectedProductUpdatedAt).select("id").maybeSingle();
+  if(error||!saved)return respond({error:"Tags could not be saved. Refresh and retry."},409);
+  for(const path of ["/supplier/catalog","/supplier/catalog/bulk",
+    "/supplier/catalog/preview/"+product.id,"/catalog"])revalidatePath(path);
+  return respond({ok:true,source:"apex-supplier-code-v1",public:false,
+    answer:"Discovery tags updated for "+product.name+": "+(next.tags.join(", ")||"none")+
+      ". Tags are searchable only if the product is approved for public display. Checkout is still unavailable.",
+    items:[]});
+ }
  if(data.operation==="confirm_edit"){
   if(process.env.APEX_DRAFT_CATALOG_WRITES_ENABLED!=="true")
    return respond({error:"Supplier product editing is currently disabled."},503);
@@ -215,7 +253,7 @@ export async function POST(request:NextRequest){
  }
 
  const {data:products,error:productError,count}=await client.from("products")
-  .select("id,name,sku,price_cents,compare_at_price_cents,currency,is_active,is_published,updated_at,category_id",{count:"exact"})
+  .select("id,name,sku,description,tags,price_cents,compare_at_price_cents,currency,is_active,is_published,updated_at,category_id",{count:"exact"})
   .eq("store_id",store.id).is("archived_at",null).order("name").limit(100);
  if(productError||count===null||count!==products?.length)
   return respond({error:"The complete saved-product list could not be verified."},503);
@@ -238,7 +276,7 @@ export async function POST(request:NextRequest){
   const control=controlsById.get(p.id);
   const inventory=stockById.get(p.id);
   const availableStock=inventory?Math.max(0,inventory.quantity_on_hand-inventory.quantity_reserved):null;
-  return {id:p.id,name:p.name,sku:p.sku,priceCents:Number(p.price_cents),
+  return {id:p.id,name:p.name,sku:p.sku,description:p.description,tags:p.tags??[],priceCents:Number(p.price_cents),
    compareAtCents:p.compare_at_price_cents===null?null:Number(p.compare_at_price_cents),
    stockOnHand:inventory?.quantity_on_hand??null,stockReserved:inventory?.quantity_reserved??0,
    published:p.is_published,held:control?.admin_gate==="hold"||control?.admin_gate==="review_required",
