@@ -10,7 +10,7 @@ begin
  if value is null or cardinality(value)>12 then return false;end if;
  foreach item in array value loop
   if item is null or char_length(item)<1 or char_length(item)>40 or
-     item !~ '^[a-z0-9][a-z0-9 ''&/-]{0,39}$' or item<>lower(btrim(item))
+     item ~ '[[:cntrl:]|]' or item<>lower(btrim(item))
   then return false;end if;
  end loop;
  return true;
