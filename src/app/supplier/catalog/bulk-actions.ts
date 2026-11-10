@@ -4,10 +4,11 @@ import {revalidatePath} from "next/cache";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {createDraftProduct,updateDraftProduct} from "../operations/actions";
 import {isValidId} from "@/lib/catalog/private-review-utils.mjs";
+import {parseProductTags} from "@/lib/catalog/product-tags.mjs";
 
 type Row={
  key:string;id?:string;name:string;sku:string;description:string;
- price:string;comparePrice:string;sourceCost?:string;categoryId:string;isActive:boolean;
+ price:string;comparePrice:string;sourceCost?:string;categoryId:string;isActive:boolean;tags?:string[];
 };
 type Outcome={key:string;ok:boolean;name:string;message:string;id?:string;sku?:string};
 type BulkResult={ok:boolean;message:string;results:Outcome[]};
@@ -54,7 +55,8 @@ function validateRow(r:Row){
     Number(r.comparePrice)<=Number(r.price)))||
   typeof r.categoryId!=="string"||
   (r.categoryId!==""&&!isValidId(r.categoryId))||
-  typeof r.isActive!=="boolean")return false;
+  typeof r.isActive!=="boolean"||
+  (r.tags!==undefined&&(!Array.isArray(r.tags)||!parseProductTags(r.tags).ok)))return false;
  return r.id?r.sku.length>0:true;
 }
 export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):Promise<BulkResult>{
@@ -78,6 +80,7 @@ export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):
   rowForm.set("name",row.name.trim());
   rowForm.set("sku",row.sku);
   rowForm.set("description",row.description);
+  if(row.tags!==undefined)rowForm.set("tags",row.tags.join("|"));
   rowForm.set("price",row.price);
   rowForm.set("comparePrice",row.comparePrice);
   rowForm.set("categoryId",row.categoryId);
