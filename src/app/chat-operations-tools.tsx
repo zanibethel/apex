@@ -2,6 +2,8 @@
 
 import {useCallback,useEffect,useMemo,useState,type FormEvent} from "react";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
+import "./chat-operations-tools.css";
 
 type Store={id:string;name:string};
 type Notice={
@@ -60,7 +62,9 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
  mode:Mode;initialMessage?:string;isAdmin?:boolean;
 }){
  const [data,setData]=useState<Data|null>(null);
+ const router=useRouter();
  const [selectedStore,setSelectedStore]=useState("");
+ const [noticeScope,setNoticeScope]=useState("global");
  const [error,setError]=useState("");
  const [message,setMessage]=useState("");
  const [busy,setBusy]=useState(false);
@@ -72,6 +76,7 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
   return {...emptyDiscount,...found};
  });
  const [review,setReview]=useState<string|null>(null);
+ const [toggleReview,setToggleReview]=useState<{type:"notice"|"discount";id:string;active:boolean;version:string}|null>(null);
  const [loadCount,setLoadCount]=useState(0);
  const load=useCallback(async()=>{
   const query=selectedStore?"?storeId="+encodeURIComponent(selectedStore):"";
@@ -105,7 +110,7 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
    setMessage(json.message??"Saved.");
    setReview(null);setEditingNotice(null);setEditingDiscount(null);
    setNotice({...emptyNotice});setDiscount({...emptyDiscount});
-   setLoadCount(x=>x+1);
+   setLoadCount(x=>x+1);setToggleReview(null);router.refresh();
   }catch(e){setError(e instanceof Error?e.message:"Change not saved.");}
   finally{setBusy(false);}
  }
@@ -117,7 +122,8 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
    (start&&end&&Date.parse(end)<=Date.parse(start))){
    setError("Check start and expiration dates; expiration must be later.");return;
   }
-  const payload={operation:"save_notice",storeId:isAdmin?null:selectedStore,
+  const payload={operation:"save_notice",storeId:isAdmin
+   ?(currentNotice?currentNotice.store_id:noticeScope==="global"?null:noticeScope):selectedStore,
    id:editingNotice,headline:notice.headline.trim(),detail:notice.detail,
    href:notice.href||null,startsAt:start,endsAt:end,active:notice.active,
    priority:notice.priority,expectedUpdatedAt:currentNotice?.updated_at??null};
@@ -170,13 +176,23 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
       <button type="button" onClick={()=>{
        setEditingNotice(n.id);setNotice(noticeFrom(n));setReview(null);
       }} disabled={busy}>Edit</button>
-      <button type="button" disabled={busy} onClick={()=>void save({
-       operation:"toggle_notice",storeId:n.store_id,id:n.id,
-       expectedUpdatedAt:n.updated_at,active:!n.is_active,
-      })}>{n.is_active?"Pause":"Resume"}</button>
+      <button type="button" disabled={busy} onClick={()=>{
+       const next={type:"notice" as const,id:n.id,active:!n.is_active,version:n.updated_at};
+       if(toggleReview?.type==="notice"&&toggleReview.id===n.id&&
+         toggleReview.active===next.active&&toggleReview.version===next.version){
+        setToggleReview(null);void save({operation:"toggle_notice",storeId:n.store_id,
+         id:n.id,expectedUpdatedAt:n.updated_at,active:!n.is_active});
+       }else setToggleReview(next);
+      }}>{toggleReview?.type==="notice"&&toggleReview.id===n.id?
+       "Confirm "+(n.is_active?"pause":"resume"):n.is_active?"Pause":"Resume"}</button>
      </div>)}</div>
     <form className="apex-chat-ops-form" onSubmit={submitNotice}>
      <strong>{editingNotice?"Edit announcement":"New announcement"}</strong>
+     {isAdmin&&!editingNotice&&<label>Audience
+      <select value={noticeScope} onChange={e=>{setNoticeScope(e.target.value);setReview(null);}}>
+       <option value="global">All storefront visitors</option>
+       {data?.stores.map(store=><option value={store.id} key={store.id}>{store.name}</option>)}
+      </select></label>
      {editingNotice&&<button type="button" onClick={()=>{
        setEditingNotice(null);setNotice({...emptyNotice});setReview(null);
       }}>Add another</button>}
@@ -212,8 +228,16 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
        setEditingDiscount(c.id);setDiscount(discountFrom(c));setReview(null);
       }} disabled={busy}>Edit</button>
       <button type="button" disabled={busy||!data?.discountsWritable}
-       onClick={()=>void save({operation:"toggle_discount",storeId:selectedStore,id:c.id,
-        expectedActive:c.is_active,active:!c.is_active})}>{c.is_active?"Deactivate":"Activate"}</button>
+       onClick={()=>{
+        const next={type:"discount" as const,id:c.id,active:!c.is_active,
+         version:String(c.is_active)};
+        if(toggleReview?.type==="discount"&&toggleReview.id===c.id&&
+          toggleReview.active===next.active&&toggleReview.version===next.version){
+         setToggleReview(null);void save({operation:"toggle_discount",
+          storeId:selectedStore,id:c.id,expectedActive:c.is_active,active:!c.is_active});
+        }else setToggleReview(next);
+       }}>{toggleReview?.type==="discount"&&toggleReview.id===c.id?
+        "Confirm "+(c.is_active?"deactivate":"activate"):c.is_active?"Deactivate":"Activate"}</button>
      </div>)}</div>
     <form className="apex-chat-ops-form" onSubmit={submitDiscount}>
      <strong>{editingDiscount?"Edit discount code":"Create discount code"}</strong>
