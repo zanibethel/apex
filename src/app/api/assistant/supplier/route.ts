@@ -217,12 +217,12 @@ export async function POST(request:NextRequest){
   );
   if(retailAllowedError||!Array.isArray(retailAllowed))
    return respond({error:"Unable to verify product category eligibility."},503);
-  const retailShowcase=retailAllowed.includes(product.category_id);
+  const retailShowcase=product.category_id===null||retailAllowed.includes(product.category_id);
   const result=await client.rpc("set_supplier_listing_intent",{
    p_store_id:store.id,p_product_id:product.id,p_action:body.action,
   });
   if(result.error||!result.data)
-   return respond({error:"Publication request was not accepted. Recheck product setup, stock and any admin hold."},409);
+   return respond({error:"Publication request was not accepted. Check the product name, price, description and any admin hold."},409);
   const {data:release,error:releaseError}=await client.rpc("get_private_release_readiness",{
    p_store_id:store.id,p_product_id:product.id,
   });
@@ -282,7 +282,7 @@ export async function POST(request:NextRequest){
    published:p.is_published,held:control?.admin_gate==="hold"||control?.admin_gate==="review_required",
    currency:p.currency,
    category:categoryById.get(p.category_id??"")??"",active:p.is_active,
-   retailShowcase:retailCategories.has(p.category_id??""),
+   retailShowcase:p.category_id===null||retailCategories.has(p.category_id),
    requested:control?.supplier_wants_listing===true,
    adminGate:control?.admin_gate??"clear",
    republishBlocked:control?.republish_approval_required===true&&control.republish_approved!==true,
