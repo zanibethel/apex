@@ -1,0 +1,15 @@
+.apex-chat-ops{display:flex;flex-direction:column;gap:.75rem;min-width:0;margin:.4rem 0}
+.apex-chat-ops a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.apex-chat-ops-actions{display:flex;flex-direction:column;gap:.5rem}
+.apex-chat-ops-form{display:flex;flex-direction:column;gap:.65rem;min-width:0;padding:.65rem;border-radius:10px;background:rgba(125,125,125,.1)}
+.apex-chat-ops-form label,.apex-chat-ops>label{display:flex;flex-direction:column;gap:.2rem;font-size:.84rem;min-width:0}
+.apex-chat-ops-form label:has([type=checkbox]){flex-direction:row;align-items:center;gap:.5rem}
+.apex-chat-ops-form input:not([type=checkbox]),.apex-chat-ops-form textarea,.apex-chat-ops-form select,.apex-chat-ops select{font:inherit;min-width:0;width:100%;max-width:100%;padding:.45rem;border-radius:7px;border:1px solid #8a8688;background:#fff;color:#202020;box-sizing:border-box}
+.apex-chat-ops-form button,.apex-chat-ops-item button{cursor:pointer;border-radius:7px;padding:.4rem .7rem;border:1px solid #94888a;background:#28191d;color:#fff}
+.apex-chat-ops button:disabled{opacity:.55;cursor:not-allowed}
+.apex-chat-ops-items{display:flex;flex-direction:column;gap:.5rem;max-height:280px;overflow-y:auto}
+.apex-chat-ops-item{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .55rem;border-bottom:1px solid rgba(125,125,125,.3);padding:.45rem 0}
+.apex-chat-ops-item span{min-width:0;overflow-wrap:anywhere}
+.apex-chat-ops-item small{flex-basis:100%;opacity:.85}
+.apex-chat-ops [role=alert]{color:#ad3943;font-weight:650;overflow-wrap:anywhere}
+.apex-chat-ops [role=status]{font-weight:550;overflow-wrap:anywhere}
