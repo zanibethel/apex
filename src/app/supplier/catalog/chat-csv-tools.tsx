@@ -6,7 +6,7 @@ import {parseProductCsv} from "@/lib/catalog/product-csv.mjs";
 
 type Preview={
  ok:true;rowCount:number;newCount:number;skippedCount:number;
- preview:{name:string;sku:string;price:string}[];
+ preview:{name:string;sku:string;price:string;tags?:string[]}[];
  answer:string;
 };
 type ImportResult={
