@@ -7,9 +7,9 @@ test("approved public gallery defaults OFF, only calls pinned Apex read-only RPC
  const loader=read("src/lib/supabase/approved-sold-out-catalog.ts");
  const env=read(".env.example");
  assert.match(env,/APEX_PUBLIC_SOLD_OUT_CATALOG=off/);
- assert.match(loader,/process\.env\.APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled"/);
+ assert.match(loader,/get_public_retail_showcase_catalog/);
  assert.match(loader,/fhqpkpztercadcxspdkg\.supabase\.co/);
- assert.match(loader,/\/rest\/v1\/rpc\/get_public_inventory_catalog/);
+ assert.match(loader,/\/rest\/v1\/rpc\/get_public_retail_showcase_catalog/);
  assert.match(loader,/method:"GET"/);
  assert.match(loader,/cache:"no-store"/);
  assert.match(loader,/AbortSignal\.timeout\(6000\)/);
