@@ -20,8 +20,8 @@ export function parseSupplierEdit(message){
   return {kind:"price",target:cents};
  }
  if(/\b(?:out of stock|sold out)\b/.test(q))return {kind:"stock",target:0};
- const amount=q.match(/\b(?:stock|inventory|quantity)(?:\s+on\s+hand)?\s*(?:to|at|=)\s*(\d{1,7})\b/)||
-  q.match(/\b(?:to|at)\s*(\d{1,7})\s*(?:units?|pieces?|items?)?(?:\s+(?:in stock|on hand))?(?!\d)/);
+ const amount=q.match(/\b(?:stock|inventory|quantity)(?:\s+on\s+hand)?\s*(?:to|at|=)\s*(\d{1,7})(?![\d.])/)||
+  q.match(/\b(?:to|at)\s*(\d{1,7})\s*(?:units?|pieces?|items?)?(?:\s+(?:in stock|on hand))?(?![\d.])/);
  if(!amount)return {kind:"invalid",error:"Specify an exact on-hand quantity. For example: set stock of Demo Cotton T-Shirt to 10. To mark sold out, say mark Demo Cotton T-Shirt out of stock."};
  const target=Number(amount[1]);
  if(!Number.isSafeInteger(target)||target<0||target>1000000)
