@@ -220,7 +220,7 @@ export function ChatOperationsTools({mode,initialMessage="",isAdmin=false}:{
       <select value={noticeScope} onChange={e=>{setNoticeScope(e.target.value);setReview(null);}}>
        <option value="global">All storefront visitors</option>
        {data?.stores.map(store=><option value={store.id} key={store.id}>{store.name}</option>)}
-      </select></label>
+      </select></label>}
      {editingNotice&&<button type="button" onClick={()=>{
        setEditingNotice(null);setNotice({...emptyNotice});setReview(null);
       }}>Add another</button>}
