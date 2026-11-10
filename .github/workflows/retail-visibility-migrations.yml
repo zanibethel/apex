@@ -1,0 +1,44 @@
+name: Retail visibility migration verification
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261110024500_apex_public_product_tags_v1.sql'
+      - 'supabase/migrations/20261110032000_apex_retail_minimum_listing_fields.sql'
+      - 'supabase/migrations/20261110040000_apex_admin_retail_product_visibility_restrictions.sql'
+      - 'tests/retail-visibility-migrations/**'
+      - '.github/workflows/retail-visibility-migrations.yml'
+  workflow_dispatch:
+jobs:
+  disposable-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: retail_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d retail_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: retail_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Create disposable retail, auth and supplier fixtures
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/bootstrap.sql
+      - name: Apply product-tag migration
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261110024500_apex_public_product_tags_v1.sql
+      - name: Apply three-field publishing migration
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261110032000_apex_retail_minimum_listing_fields.sql
+      - name: Apply admin visibility restriction migration
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261110040000_apex_admin_retail_product_visibility_restrictions.sql
+      - name: Verify anonymous and supplier visibility, admin restrictions, audited changes and RLS
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/assertions.sql
