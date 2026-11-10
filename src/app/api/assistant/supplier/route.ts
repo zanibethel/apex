@@ -134,6 +134,7 @@ export async function POST(request:NextRequest){
     .update({quantity_on_hand:edit.targetValue})
     .eq("store_id",store.id).eq("product_id",product.id)
     .eq("quantity_on_hand",edit.expectedValue)
+    .lte("quantity_reserved",edit.targetValue)
     .select("product_id").maybeSingle();
    if(error||!saved)return respond({error:"Stock could not be saved. Request a fresh review."},409);
   }
