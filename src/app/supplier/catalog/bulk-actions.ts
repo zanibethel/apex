@@ -8,7 +8,7 @@ import {parseProductTags} from "@/lib/catalog/product-tags.mjs";
 
 type Row={
  key:string;id?:string;name:string;sku:string;description:string;
- price:string;comparePrice:string;sourceCost?:string;categoryId:string;isActive:boolean;tags?:string[];
+ price:string;comparePrice:string;sourceCost?:string;categoryId:string;isActive:boolean;tags?:string[];tagsText?:string;
 };
 type Outcome={key:string;ok:boolean;name:string;message:string;id?:string;sku?:string};
 type BulkResult={ok:boolean;message:string;results:Outcome[]};
@@ -56,7 +56,8 @@ function validateRow(r:Row){
   typeof r.categoryId!=="string"||
   (r.categoryId!==""&&!isValidId(r.categoryId))||
   typeof r.isActive!=="boolean"||
-  (r.tags!==undefined&&(!Array.isArray(r.tags)||!parseProductTags(r.tags).ok)))return false;
+  (r.tags!==undefined&&(!Array.isArray(r.tags)||!parseProductTags(r.tags).ok))||
+  (r.tagsText!==undefined&&(typeof r.tagsText!=="string"||!parseProductTags(r.tagsText).ok)))return false;
  return r.id?r.sku.length>0:true;
 }
 export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):Promise<BulkResult>{
@@ -80,7 +81,8 @@ export async function saveBulkProductDrafts(_previous:BulkResult,form:FormData):
   rowForm.set("name",row.name.trim());
   rowForm.set("sku",row.sku);
   rowForm.set("description",row.description);
-  if(row.tags!==undefined)rowForm.set("tags",row.tags.join("|"));
+  if(row.tagsText!==undefined)rowForm.set("tags",row.tagsText);
+  else if(row.tags!==undefined)rowForm.set("tags",row.tags.join("|"));
   rowForm.set("price",row.price);
   rowForm.set("comparePrice",row.comparePrice);
   rowForm.set("categoryId",row.categoryId);
