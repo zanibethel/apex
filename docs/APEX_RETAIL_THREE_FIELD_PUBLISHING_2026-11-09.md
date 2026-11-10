@@ -1,4 +1,4 @@
-# Apex — three-field retail publishing (proposed, 2026-11-09)
+# Apex — three-field retail publishing (production schema applied 2026-11-09 CT)
 
 ## Supplier experience
 
@@ -18,15 +18,17 @@ Existing CSV headers remain backwards-compatible. Chat CSV import still requests
 - The retail showcase global gate still controls public visibility.
 - The retail showcase continues to return `can_checkout=false`; no purchase, payment, invoice, payout, or shipment changes.
 
-## Database changes
+## Database changes — applied to production
 
-1. Apply `20261110024500_apex_public_product_tags_v1.sql` after review.
-2. Apply `20261110032000_apex_retail_minimum_listing_fields.sql` after review.
-3. Apply `20261110040000_apex_admin_retail_product_visibility_restrictions.sql` after review.
+All three migrations were applied successfully to production Supabase project `fhqpkpztercadcxspdkg` on November 9, 2026 (Central time), in this order:
 
-All three migrations must be verified on disposable/staging infrastructure before production. The second migration replaces the existing supplier-intent and public retail-showcase functions, preserving authorization and gating while allowing null category and no inventory ledger. The third migration removes category-label restrictions and introduces an admin-only product-visibility restriction table/RPC with append-only events. It updates supplier publish admission and public feed eligibility atomically. The public projection returns null category fields for uncategorized products and Sold Out when no valid stock record is present.
+1. `20261110024500_apex_public_product_tags_v1.sql` — Supabase history name `apex_public_product_tags_v1`
+2. `20261110032000_apex_retail_minimum_listing_fields.sql` — history name `apex_retail_minimum_listing_fields`
+3. `20261110040000_apex_admin_retail_product_visibility_restrictions.sql` — history name `apex_admin_retail_product_visibility_restrictions`
 
-## Required verification before merge/deploy
+All three migrations passed disposable PostgreSQL verification in PR #326 before production application. The second migration replaces the existing supplier-intent and public retail-showcase functions, preserving authorization and gating while allowing null category and no inventory ledger. The third migration removes category-label restrictions and introduces an admin-only product-visibility restriction table/RPC with append-only events. It updates supplier publish admission and public feed eligibility atomically. The public projection returns null category fields for uncategorized products and Sold Out when no valid stock record is present.
+
+## Verification after production migration
 
 - Create ordinary product with name + price + description, no category/image/quantity, and generated SKU
 - Confirm supplier publish makes it visible publicly as Sold Out, with checkout unavailable
@@ -40,4 +42,14 @@ All three migrations must be verified on disposable/staging infrastructure befor
 - Confirm old and new CSV templates and tag search continue working
 - Verify migration ordering and run full CI plus protected preview/mobile checks
 
-**Status:** proposed code on PR #326. Not applied to production automatically. The existing isolated PostgreSQL workflow does not yet exercise the three new retail migrations end-to-end; separate disposable-DB migration verification is still needed before rollout.
+**Production database verification completed:**
+- Tags column and valid-length/lowercase check constraint installed and validated; all five existing products initially have empty tags.
+- Supplier intent and public showcase RPCs retain role gates, review/identity holds and regulated-content checks.
+- Category and inventory joins are optional in the public RPC; products without valid inventory display Sold Out.
+- Admin restrictions and audit event tables are private, RLS-enabled, with no anonymous/signed-in direct table privileges.
+- Admin restriction RPC is signed-in only; anonymous invocation not granted.
+- Category-name screening is no longer present; selected categories must belong to the product's store.
+- Public catalog currently returns `[]` because **zero suppliers have selected Publish**. No listing was automatically exposed.
+- Checkout remains `can_checkout=false`, and no live payment flags or credentials were changed.
+
+**Still requiring interactive acceptance testing:** Use authorized supplier and platform-admin sessions to create a neutral ordinary product (three fields), publish it, confirm Sold Out on the public catalog, add/remove tags, restrict/unrestrict display from Admin → Catalog release, test chat update confirmations and check audit events. Do not create synthetic commerce test orders or regulated product listings in the live storefront. Regulated-product content checks remain separate. No browser-based authenticated write test was performed as part of the schema deployment.
