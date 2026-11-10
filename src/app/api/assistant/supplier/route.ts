@@ -174,12 +174,12 @@ export async function POST(request:NextRequest){
     listing?.admin_gate==="hold"||listing?.admin_gate==="review_required"||
     (listing?.republish_approval_required&&!listing.republish_approved)))
    return respond({error:"Inactive products and admin-held items cannot request publication."},409);
-  const {data:retailCategory,error:retailCategoryError}=product.category_id
-   ?await client.from("categories")
-     .select("slug").eq("store_id",store.id).eq("id",product.category_id).maybeSingle()
-   :{data:null,error:null};
-  if(retailCategoryError)return respond({error:"Unable to verify this product category."},503);
-  const retailShowcase=retailCategory?.slug==="sample-apparel"||retailCategory?.slug==="sample-accessories";
+  const {data:retailAllowed,error:retailAllowedError}=await client.rpc(
+   "get_supplier_retail_eligible_categories",{p_store_id:store.id}
+  );
+  if(retailAllowedError||!Array.isArray(retailAllowed))
+   return respond({error:"Unable to verify product category eligibility."},503);
+  const retailShowcase=retailAllowed.includes(product.category_id);
   const result=await client.rpc("set_supplier_listing_intent",{
    p_store_id:store.id,p_product_id:product.id,p_action:body.action,
   });
@@ -220,18 +220,20 @@ export async function POST(request:NextRequest){
  if(productError||count===null||count!==products?.length)
   return respond({error:"The complete saved-product list could not be verified."},503);
  const [{data:controls,error:controlError},{data:stock,error:stockError},
-        {data:categories,error:categoryError}]=await Promise.all([
+        {data:categories,error:categoryError},{data:retailAllowed,error:retailAllowedError}]=await Promise.all([
   client.from("supplier_listing_controls").select("product_id,supplier_wants_listing,changed_at,admin_gate,republish_approval_required,republish_approved")
    .eq("store_id",store.id).limit(100),
   client.from("inventory_items").select("product_id,quantity_on_hand,quantity_reserved")
    .eq("store_id",store.id).limit(100),
   client.from("categories").select("id,name,slug").eq("store_id",store.id).limit(100),
+  client.rpc("get_supplier_retail_eligible_categories",{p_store_id:store.id}),
  ]);
- if(controlError||stockError||categoryError)return respond({error:"Supplier catalog status is temporarily unavailable."},503);
+ if(controlError||stockError||categoryError||retailAllowedError||!Array.isArray(retailAllowed))
+  return respond({error:"Supplier catalog status is temporarily unavailable."},503);
  const controlsById=new Map((controls??[]).map(x=>[x.product_id,x]));
  const stockById=new Map((stock??[]).map(x=>[x.product_id,x]));
  const categoryById=new Map((categories??[]).map(x=>[x.id,x.name]));
- const retailCategories=new Set((categories??[]).filter(x=>x.slug==="sample-apparel"||x.slug==="sample-accessories").map(x=>x.id));
+ const retailCategories=new Set(retailAllowed);
  const projection=(products??[]).map(p=>{
   const control=controlsById.get(p.id);
   const inventory=stockById.get(p.id);
