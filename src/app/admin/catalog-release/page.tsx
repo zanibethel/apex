@@ -7,6 +7,7 @@ import {classifyAdminRelease,summarizeAdminRelease}
 import {draftSetupSteps} from "@/lib/catalog/draft-content-checklist.mjs";
 import {privateInventoryState} from "@/lib/catalog/private-inventory-state.mjs";
 import {AdminProductDisplayRestrictionForm} from "./restriction-form";
+import {AdminOfflineProductReviewForm,type OfflineReviewRecord} from "./offline-review-form";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Catalog Release | Apex",robots:{index:false,follow:false}};
@@ -27,7 +28,7 @@ export default async function CatalogReleaseDashboard({searchParams}:{
  const {data:auth,error:authError}=await client.auth.getUser();
  if(authError||!isVerifiedPlatformAdmin(auth.user))redirect("/admin/sign-in");
 
- const [productsResult,controlsResult,categoriesResult,stockResult,restrictionResult]=await Promise.all([
+ const [productsResult,controlsResult,categoriesResult,stockResult,restrictionResult,offlineResult]=await Promise.all([
   client.from("products")
    .select("id,store_id,category_id,sku,name,description,price_cents,is_active,is_published,image_path")
    .order("name",{ascending:true}).range(from,from+PAGE_LIMIT-1),
@@ -38,6 +39,7 @@ export default async function CatalogReleaseDashboard({searchParams}:{
   client.from("inventory_items")
    .select("store_id,product_id,quantity_on_hand,quantity_reserved").limit(250),
   client.rpc("get_admin_retail_product_restrictions"),
+  client.rpc("get_admin_offline_product_reviews"),
  ]);
  const products=productsResult.error?[]:productsResult.data??[];
  type DisplayRestriction={
@@ -54,6 +56,18 @@ export default async function CatalogReleaseDashboard({searchParams}:{
   Array.isArray(restrictionResult.data)&&restrictionRows.length===restrictionResult.data.length;
  const restrictionsByProduct=new Map(restrictionRows.map(r=>
   [r.store_id+":"+r.product_id,r]));
+ type OfflineRow=OfflineReviewRecord&{store_id:string;product_id:string};
+ const offlineRows:OfflineRow[]=!offlineResult.error&&Array.isArray(offlineResult.data)&&
+  offlineResult.data.every((r:unknown)=>Boolean(r)&&typeof r==="object"&&
+   typeof (r as OfflineRow).store_id==="string"&&
+   typeof (r as OfflineRow).product_id==="string"&&
+   ["approved","follow_up","revoked"].includes(String((r as OfflineRow).status))&&
+   typeof (r as OfflineRow).current_product==="boolean"&&
+   typeof (r as OfflineRow).expired==="boolean")
+  ?offlineResult.data as OfflineRow[]:[];
+ const offlineAvailable=!offlineResult.error&&Array.isArray(offlineResult.data)&&
+  offlineRows.length===offlineResult.data.length;
+ const offlineByProduct=new Map(offlineRows.map(r=>[r.store_id+":"+r.product_id,r]));
  const controls=new Map((controlsResult.error?[]:controlsResult.data??[])
   .map(c=>[c.store_id+":"+c.product_id,c]));
  const categories=new Map((categoriesResult.error?[]:categoriesResult.data??[])
@@ -112,6 +126,8 @@ export default async function CatalogReleaseDashboard({searchParams}:{
     Products cannot be read with the current admin session.
     No release status is asserted.</p>:
    <>
+    {!offlineAvailable&&<p role="alert" className="notice">
+     External review records are unavailable; do not assume any approval has been recorded.</p>}
     {!restrictionsAvailable&&<p role="alert" className="notice">
      Admin restriction status is unavailable. No product should be assumed unrestricted until this readback is restored.</p>}
     {extrasUnavailable&&<p role="status" className="notice">
@@ -147,6 +163,9 @@ export default async function CatalogReleaseDashboard({searchParams}:{
         {restriction&&<p className="apex-review-note"><strong>Reason:</strong> {restriction.reason}</p>}
         {restrictionsAvailable&&<AdminProductDisplayRestrictionForm
          storeId={p.store_id} productId={p.id} restricted={Boolean(restriction)}/>}
+        {offlineAvailable&&<AdminOfflineProductReviewForm
+         storeId={p.store_id} productId={p.id}
+         record={offlineByProduct.get(p.store_id+":"+p.id)}/>} 
         <p><strong>Customer visibility:</strong> {status.visible?"Visible · Sold Out":"Not visible"}</p>
         <p className="notice"><strong>Category:</strong> {row.category?.name??"Unavailable"}{" · "}
          {row.category?.is_published===true?"Published":"Not published or unavailable"}</p>
@@ -181,6 +200,9 @@ export default async function CatalogReleaseDashboard({searchParams}:{
        productId={r.product_id} restricted={true}/>
      </article>)}</div>}
    </section>}
+  <p className="notice">External reviews are recorded by authorized platform administrators
+   with a reference and optional expiration. Approval is a private administrative record,
+   not a legal certification, public release, or checkout authorization.</p>
   <div className="actions">
    <Link className="button secondary" href="/admin/categories">
     Category controls</Link>
