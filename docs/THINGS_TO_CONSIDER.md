@@ -2,7 +2,7 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-11
+Last reviewed: 2026-11-12
 
 ## November 10, 2026 — Catalog row-count discontinuity and payment release gates
 
@@ -113,3 +113,5 @@ Last reviewed: 2026-11-11
 
 
 **2026-11-11 catalog correction / payment release review (existing catalog and signing considerations):** Owner confirmed Nov 10 that the reduction from **63 saved products to 5** was **intentional**, not a data-loss incident; connected database confirms **5 products** Nov 11. **Status:** Catalog-count discrepancy Resolved / intentional; do not reopen or recommend restoration absent contradictory evidence. Supplier publishing/fulfillment acceptance and BTCPay/Prism live signing/settlement verification remain separate open release gates. **Possible solution:** verify current main and nonproduction payout, webhook replay, supplier-scoped fulfillment and signing-isolation evidence before activation. **Recommendation:** no catalog recovery, live payment, signing, deployment or shipping changes. Sources: explicit owner confirmation Nov 10; connected Apex products query Nov 11.
+
+**2026-11-12 supplier publishing and BTCPay release review (existing catalog/payment considerations):** Connected database still has **5 saved products**, consistent with owner-confirmed intentional reduction; **catalog discrepancy remains Resolved**. Current GitHub main-related evidence: PR #330 (direct retail Publish with inline blocker details) and #332 (read-only admin checkout/BTCPay readiness board) are **merged**; #332 explicitly leaves customer payment endpoint disabled and does not enable live checkout or change catalog rules. **Status:** Catalog count Resolved; retail publish UX Implemented per merged PR, production acceptance not independently verified; BTCPay live settlement/fulfillment release gate Evaluate / pending. **Possible solution:** inspect deployed state and exercise retail publishing, order handoff, signed webhooks, payout reconciliation and supplier fulfillment in isolated tests. **Recommendation:** no catalog restoration, wallet activation, live payment or deployment without approval. Sources: https://github.com/zanibethel/apex/pull/330 ; https://github.com/zanibethel/apex/pull/332 ; connected products count.
