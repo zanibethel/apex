@@ -27,16 +27,43 @@ begin
     p->>'id'='50000000-0000-4000-8000-000000000003')
  then raise exception 'Unrequested regulated product leaked publicly';end if;
 end $$;
--- Product-level regulatory content remains denied even without a category.
+-- A cosmetic name containing "peptide" must not be rejected solely by a keyword.
+-- This is a display-only catalog test; it does not authorize medicine claims or sales.
+do $$
+declare v_result text;v_feed jsonb;
+begin
+ v_result:=public.set_supplier_listing_intent(
+  '10000000-0000-4000-8000-000000000001',
+  '50000000-0000-4000-8000-000000000005','publish');
+ if v_result not like 'Live retail display enabled%' then
+  raise exception 'Topical serum was not accepted for display: %',v_result;end if;
+ v_feed:=public.get_public_retail_showcase_catalog(0,24);
+ if not exists(select 1 from jsonb_array_elements(v_feed) p where
+  p->>'id'='50000000-0000-4000-8000-000000000005' and
+  p->>'availability'='sold_out' and p->>'can_checkout'='false')
+ then raise exception 'Expected checkout-disabled topical serum listing';end if;
+end $$;
+
+-- Explicit administrator product restrictions remain binding, independent of
+-- product wording, even when a supplier tries to publish.
+select set_config('test.actor','60000000-0000-4000-8000-000000000001',false);
+select set_config('test.jwt','{"app_metadata":{"apex_role":"platform_admin"}}',false);
+select public.set_admin_retail_product_restriction(
+ '10000000-0000-4000-8000-000000000001',
+ '50000000-0000-4000-8000-000000000003',true,
+ 'Require product-specific authorization review');
+select set_config('test.actor','40000000-0000-4000-8000-000000000001',false);
+select set_config('test.jwt','{"app_metadata":{"apex_role":"supplier"}}',false);
 do $$
 begin
  begin
   perform public.set_supplier_listing_intent(
-  '10000000-0000-4000-8000-000000000001',
-  '50000000-0000-4000-8000-000000000003','publish');
-  raise exception 'Expected regulated product content denial';
+   '10000000-0000-4000-8000-000000000001',
+   '50000000-0000-4000-8000-000000000003','publish');
+  raise exception 'Expected explicit admin restriction denial';
  exception when others then
-  if SQLERRM='Expected regulated product content denial' then raise;end if;
+  if SQLERRM='Expected explicit admin restriction denial' then raise;end if;
+  if SQLERRM not like '%administrator visibility restriction list%' then raise;end if;
  end;
 end $$;
 -- No cross-tenant supplier publishing, even if the caller guesses IDs.
@@ -143,8 +170,8 @@ do $$
 declare v_feed jsonb;
 begin
  v_feed:=public.get_public_retail_showcase_catalog(0,24);
- if jsonb_array_length(v_feed)<>1
- then raise exception 'Expected exactly one eligible retail product; got %',v_feed;end if;
+ if jsonb_array_length(v_feed)<>2
+ then raise exception 'Expected exactly two eligible retail products; got %',v_feed;end if;
  if v_feed->0->>'can_checkout'<>'false'
  then raise exception 'Checkout flag changed';end if;
 end $$;
