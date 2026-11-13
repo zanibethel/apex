@@ -95,7 +95,8 @@ insert into public.products(id,store_id,category_id,name,description,sku,price_c
  ('50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001','Cotton Workout Shirt','Ordinary comfortable cotton gym t-shirt','SHIRT-001',2499),
  ('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001',null,'Everyday Cap','Ordinary cotton cap for commuters','CAP-001',1299),
  ('50000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000001',null,'Anabolic Research Product','Testosterone therapy material','REG-001',999),
- ('50000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000002','30000000-0000-4000-8000-000000000002','Other Supplier Shirt','Ordinary athletic T-shirt','SHIRT-002',1500);
+ ('50000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000002','30000000-0000-4000-8000-000000000002','Other Supplier Shirt','Ordinary athletic T-shirt','SHIRT-002',1500),
+ ('50000000-0000-4000-8000-000000000005','10000000-0000-4000-8000-000000000001',null,'Copper Peptide Hair Serum','Topical copper peptide serum for hair care.','SERUM-001',3999);
 -- Simulate protected RLS by not exposing application tables directly to
 -- authenticated/anonymous users in the synthetic fixture.
 revoke all on all tables in schema public from public,anon,authenticated;
