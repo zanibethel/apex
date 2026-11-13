@@ -2,7 +2,17 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-12
+Last reviewed: 2026-11-13
+
+
+## November 13, 2026 — Intentional catalog baseline and payment release controls
+
+**Status:** Catalog reduction **Resolved / intentional**; payment release **Evaluate / approval gated**  
+**Last reviewed:** 2026-11-13
+
+**Evidence:** Connected Apex database contains **5 products**; the owner explicitly confirmed the earlier 63-to-5 reduction was intentional. Any earlier note describing that reduction as an urgent discrepancy is **superseded**. Nonproduction BTCPay/Prism three-way payout evidence does not establish live signing, settlement, webhook replay safety, or fulfillment acceptance. No new production release verification performed.
+
+**Possible solution / recommendation:** No catalog recovery or discrepancy investigation. Continue separate nonproduction supplier publication, checkout handoff, payout reconciliation, and fulfillment acceptance tests. Require explicit approval for live payment activation or deployment.
 
 ## November 10, 2026 — Catalog row-count discontinuity and payment release gates
 
