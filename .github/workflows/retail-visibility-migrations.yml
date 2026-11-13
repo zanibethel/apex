@@ -5,6 +5,7 @@ on:
       - 'supabase/migrations/20261110024500_apex_public_product_tags_v1.sql'
       - 'supabase/migrations/20261110032000_apex_retail_minimum_listing_fields.sql'
       - 'supabase/migrations/20261110040000_apex_admin_retail_product_visibility_restrictions.sql'
+      - 'supabase/migrations/20261113234500_apex_content_neutral_retail_display.sql'
       - 'tests/retail-visibility-migrations/**'
       - '.github/workflows/retail-visibility-migrations.yml'
   workflow_dispatch:
@@ -40,5 +41,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261110032000_apex_retail_minimum_listing_fields.sql
       - name: Apply admin visibility restriction migration
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261110040000_apex_admin_retail_product_visibility_restrictions.sql
+      - name: Apply content-neutral retail display migration
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261113234500_apex_content_neutral_retail_display.sql
       - name: Verify anonymous and supplier visibility, admin restrictions, audited changes and RLS
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/assertions.sql
