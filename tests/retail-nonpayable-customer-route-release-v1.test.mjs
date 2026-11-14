@@ -75,12 +75,15 @@ test("new route refuses early and cannot run without approved release",()=>{
  const earlyReturn=route.indexOf("return unavailable();");
  const csrf=route.indexOf("if(!isTrustedNonpayableCheckoutEnvelopeV1(request))");
  const auth=route.indexOf("await createSupplierServerClient()");
- const pool=route.indexOf("createRetailCheckoutServerPoolV1(process.env,pg.Pool)");
+ const pool=route.indexOf("createNonpayableRetailProductionRuntimeV1(process.env)");
  const admission=route.indexOf("admitPrivateNonpayableRetailOrderV1({");
  assert.ok(release>=0&&earlyReturn>release&&csrf>earlyReturn&&
   auth>csrf&&pool>auth&&admission>pool);
  assert.match(route,/user\.email_confirmed_at/);
- assert.match(route,/createRetailPostgresAdmissionDependenciesV1/);
+ const runtime=readFileSync("src/lib/checkout/retail-nonpayable-production-runtime-v1.mjs","utf8");
+ assert.match(runtime,/createRetailPostgresAdmissionDependenciesV1/);
+ assert.match(runtime,/createRetailCheckoutServerPoolV1\(env,pg\.Pool\)/);
+ assert.match(runtime,/import "server-only"/);
  assert.match(route,/maxDuration=20/);
  assert.doesNotMatch(route,/NEXT_PUBLIC_|createInvoice|sendPayout|service_role|console\.|\.rpc\(/);
 });
