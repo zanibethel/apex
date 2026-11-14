@@ -75,7 +75,11 @@ test("private schema privilege checks use pg_catalog OIDs, not inaccessible sche
  assert.match(source,/pg_catalog\.pg_namespace/);
  assert.match(source,/n\.nspname='apex_internal'/);
  assert.match(source,/c\.relname='retail_order_holds'/);
- assert.doesNotMatch(source,/has_table_privilege\(current_user,'apex_internal\.retail_order_holds'/);
+ // The executor has schema USAGE, so only the *first* app-login query
+ // must avoid qualified private relation name resolution.
+ const firstQuery=source.slice(source.indexOf("const first=await client.query"),
+  source.indexOf("const initial=first.rows"));
+ assert.doesNotMatch(firstQuery,/has_table_privilege\(current_user,'apex_internal\.retail_order_holds'/);
  // The login's schema USAGE stays revoked. This is a diagnostic-only
  // change; never grant private-schema access just to make a test pass.
  assert.doesNotMatch(source,/\bGRANT\s+USAGE\s+ON\s+SCHEMA\s+apex_internal/i);
