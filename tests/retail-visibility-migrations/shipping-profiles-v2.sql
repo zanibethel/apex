@@ -2,6 +2,9 @@
 -- The product measurements are synthetic fixtures; never apply to production.
 begin;
 set local statement_timeout='20s';
+create temp table shipping_inventory_before on commit drop as
+ select store_id,product_id,quantity_on_hand,quantity_reserved
+ from public.inventory_items;
 do $guard$
 begin
  if current_database()<>'retail_test' then
@@ -124,8 +127,20 @@ begin
   where entity_type='supplier_product_shipping_profiles'
    and operation='INSERT')<>2 then
   raise exception 'Shipping updates were not audited';end if;
- if (select count(*) from public.inventory_items where quantity_reserved<>0)<>0
- then raise exception 'Shipping quote changed reserved inventory';end if;
+ if exists(
+  (select store_id,product_id,quantity_on_hand,quantity_reserved
+   from public.inventory_items
+   except
+   select store_id,product_id,quantity_on_hand,quantity_reserved
+   from shipping_inventory_before)
+ ) or exists(
+  (select store_id,product_id,quantity_on_hand,quantity_reserved
+   from shipping_inventory_before
+   except
+   select store_id,product_id,quantity_on_hand,quantity_reserved
+   from public.inventory_items)
+ )
+ then raise exception 'Shipping quote changed inventory or reserved counts';end if;
 end $audit$;
 rollback;
 
