@@ -56,7 +56,8 @@ test("email callback accepts hashed OTP and PKCE; no open redirect or secrets",(
  assert.match(route,/verifyOtp\(\{type:"email",token_hash:tokenHash\}\)/);
  assert.match(route,/exchangeCodeForSession\(code!\)/);
  assert.match(route,/const BASE="https:\/\/apexanabolics\.co"/);
- assert.match(route,/getUser\(\)/);
+ assert.match(route,/if\(!tokenHash&&!code\)return finish\("check"\)/);
+ assert.match(route,/result\.error\?"invalid":"confirmed"/);
  assert.match(route,/Referrer-Policy","no-referrer"/);
  assert.match(route,/Cache-Control","private, no-store"/);
  assert.match(route,/if\(\(tokenHash&&code\)/);
@@ -137,4 +138,32 @@ test("only the single reviewed pilot address may use the customer signup and res
  assert.ok(gateIndexes[0]<signup&&gateIndexes[1]<resend);
  const cart=read("src/app/api/checkout/nonpayable/v1/route.ts");
  assert.doesNotMatch(cart,/APEX_CUSTOMER_REGISTRATION_TEST_EMAIL/);
+});
+
+test("provider-side verification redirects without a token produce honest cross-browser guidance",()=>{
+ const route=read("src/app/account/confirm/route.ts");
+ const page=read("src/app/account/verified/page.tsx");
+ assert.match(route,/if\(!tokenHash&&!code\)return finish\("check"\)/);
+ assert.match(route,/Cache-Control","private, no-store"/);
+ assert.match(route,/Referrer-Policy","no-referrer"/);
+ assert.match(route,/X-Robots-Tag","noindex, nofollow"/);
+ assert.match(page,/status==="check"/);
+ assert.match(page,/Supabase may already have confirmed your email/);
+ assert.match(page,/status==="confirmed"/);
+ assert.match(page,/await client\.auth\.getUser\(\)/);
+ assert.match(page,/status==="confirmed"\?"Confirmation accepted"/);
+ assert.match(page,/Account sign in/);
+ assert.doesNotMatch(route,/params\.get\("next"\)|request\.headers\.get\("host"\)/);
+});
+test("branded Apex email uses direct one-time token confirmation and no secret templates",()=>{
+ const html=read("docs/email/apex-confirm-signup.html");
+ const guide=read("docs/email/APEX_AUTH_EMAIL_SETUP_20261114.md");
+ assert.match(html,/APEX ANABOLICS/);
+ assert.match(html,/Confirm your email/);
+ assert.match(html,/https:\/\/apexanabolics\.co\/apex-logo\.png/);
+ assert.match(html,/account\/confirm\?token_hash=\{\{ \.TokenHash \}\}&amp;type=email/);
+ assert.doesNotMatch(html,/\{\{ \.ConfirmationURL \}\}|http:\/\/localhost|supabase\.co\/auth\/v1\/verify/);
+ assert.match(guide,/accounts@apexanabolics\.co/);
+ assert.match(guide,/smtp\.resend\.com/);
+ assert.match(guide,/new, send-only Resend API key/);
 });
