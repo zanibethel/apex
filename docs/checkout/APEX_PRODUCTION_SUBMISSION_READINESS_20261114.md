@@ -1,5 +1,59 @@
 # Apex nonpayable production submission readiness (after PR #348)
 
+> **Operational update — November 14, 2026 (after PR #349 merge)**
+>
+> This file originally documented the *proposal*. The production status has
+> since advanced. The historical proposal and test plan remain below, but
+> statements such as "not applied" refer to the earlier review stage.
+>
+> - **Encrypted delivery minimization deployed to Apex Supabase** using
+>   migration `20261114062105_apex_terminal_retail_delivery_purge_v1`,
+>   sourced from `20261114090500_apex_terminal_retail_delivery_purge_v1.sql`
+>   at blob `233e72cf816b0915dec5c6258e4aa69a2ba8382a`.
+>   Existing expiry job remains scheduled every minute. The new private
+>   delivery purge runs every 5 minutes as `postgres`, with a 100-row bound.
+> - Postmigration readback confirmed the private order-engine gate **false**,
+>   no active or overdue holds, no encrypted delivery rows, exactly one active
+>   delivery-purge cron and one active unpaid-hold expiry cron. The new purge
+>   first ran successfully at 2026-11-14 06:25:00 UTC with zero failures
+>   at readback. A guarded direct smoke call returned zero rows purged and
+>   left the engine OFF with zero stored delivery. All anon/authenticated/service_role
+>   DELETE grants on encrypted delivery, and EXECUTE on the purge function,
+>   were denied; the checkout executor also lacked EXECUTE.
+> - **Vercel WAF custom rule independently read back ACTIVE**, rule ID
+>   `rule_apex_nonpayable_order_submission_ip_limit_kmcxVg`. It matches
+>   production **POST /api/checkout/nonpayable/v1**, limiting to **20 requests
+>   per IP every 600 seconds** using a fixed window, with `rate_limit`
+>   mitigation (429). **Behavior verified 2026-11-14 06:38 UTC** using a
+>   bounded same-runner GitHub Actions smoke check (PR #351, run
+>   `43567331199`): production GET returned 405, disabled POST returned
+>   503, and the **21st** POST returned 429. No customer identity, cookies,
+>   or buyer details were sent. PR #351 also passed quality checks.
+> - Apex Vercel environment inventory readback had **none of the six**
+>   nonpayable submission/review flags set. No customer submission or payment
+>   release has been authorized.
+> - **Auth provider review is still pending.** Application code enforces
+>   network-verified `getUser()`, confirmed email and nonanonymous
+>   sessions and has no public signup UI; the connected Supabase app does
+>   **not expose hosted** Confirm Email, Allow Signups, anonymous login, SMTP,
+>   or Auth attack-protection settings. Inspect them in the Supabase
+>   Authentication dashboard rather than treating application behavior
+>   as confirmation of hosted settings. Supabase's password-breach check
+>   was reported as a paid-plan option; do not claim it is enabled.
+> - The existing hourly `Apex Checkout Expiry Watch` was extended to check
+>   the new cleanup job and overdue terminal retention, without modifying
+>   the production order engine.
+>
+> **Remaining release gates:** hosted Auth provider settings and
+> signup/recovery email flow, ongoing purge-job operations alert readback,
+> final isolated E2E acceptance, and independent approval for any future
+> checkout or payment activation. WAF 429 behavior is now verified, but
+> the WAF review acknowledgment and all other supplemental release flags
+> stay unset until a separately reviewed production release. The four supplemental acknowledgment
+> variables must remain unset until each review is complete.
+>
+---
+
 **Proposal only. No live submission, checkout, invoice, postage or payouts.**
 
 ## Verified preflight on 2026-11-14
