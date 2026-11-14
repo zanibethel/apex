@@ -12,6 +12,8 @@ on:
       - 'supabase/migrations/20261114041000_apex_retail_order_hold_expiry_schedule.sql'
       - 'supabase/migrations/20261114052000_apex_private_retail_checkout_execution_role.sql'
       - 'supabase/migrations/20261114061000_apex_retail_checkout_connection_identity.sql'
+      - 'supabase/migrations/20261114074500_apex_private_retail_admission_guards.sql'
+      - 'src/lib/checkout/retail-postgres-admission-dependencies-v1.mjs'
       - 'src/lib/checkout/retail-restricted-db-probe-v1.mjs'
       - 'scripts/test-retail-postgres-connection.mjs'
       - 'tests/retail-visibility-migrations/**'
@@ -80,6 +82,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114061000_apex_retail_checkout_connection_identity.sql
       - name: Verify role noninheritance, SET LOCAL ROLE and checkout gate
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/connection-identity.sql
+      - name: Apply private admission budget and approved store scope guards, gate OFF
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114074500_apex_private_retail_admission_guards.sql
+      - name: Verify durable per-subject limit, private ACL and cross-store denial
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/private-admission-guards.sql
       - name: Install pinned node-postgres runtime for isolated integration
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Enable dedicated login and hold engine in disposable database ONLY
