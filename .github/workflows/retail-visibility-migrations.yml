@@ -27,6 +27,10 @@ on:
       - 'src/lib/checkout/retail-nonpayable-request-boundary-v1.mjs'
       - 'src/lib/checkout/verified-customer-session-v1.mjs'
       - 'src/app/api/checkout/nonpayable/v1/route.ts'
+      - 'src/lib/cart/customer-cart.mjs'
+      - 'src/lib/cart/controlled-cart-qa.mjs'
+      - 'src/app/api/admin/cart-qa/quote/route.ts'
+      - 'src/app/admin/cart-qa/**'
       - 'tests/retail-visibility-migrations/**'
       - '.github/workflows/retail-visibility-migrations.yml'
   workflow_dispatch:
@@ -76,6 +80,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114010000_apex_retail_cart_quote_bridge.sql
       - name: Verify retail cart pricing, inventory, cross-store, admin holds, gate and privileges
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/cart-quote-assertions.sql
+      - name: Verify five-unit stock boundary, discount and shipping sources in disposable in-stock fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/controlled-instock-cart-qa.sql
 
       - name: Apply default-OFF private atomic order hold engine
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114022000_apex_private_retail_order_hold_engine.sql
