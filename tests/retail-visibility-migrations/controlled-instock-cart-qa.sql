@@ -48,7 +48,8 @@ begin
   '[{"product_id":"50000000-0000-4000-8000-000000000001","quantity":1}]','BADCODE');
  if v->'promotion'<>'null'::jsonb
  then raise exception 'Unknown promotion was treated as valid';end if;
-end $test$;
+end;
+$test$;
 reset role;
 do $stock$
 begin
@@ -57,5 +58,6 @@ begin
     (select quantity_reserved from public.inventory_items
      where product_id='50000000-0000-4000-8000-000000000001')<>0
  then raise exception 'Read-only cart QA changed synthetic inventory';end if;
-end $stock$;
+end;
+$stock$;
 rollback;
