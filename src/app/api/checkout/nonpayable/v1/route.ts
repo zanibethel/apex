@@ -1,10 +1,7 @@
 import {NextResponse} from "next/server";
-import pg from "pg";
 import {createSupplierServerClient} from "@/lib/supabase/server";
-import {createRetailCheckoutServerPoolV1}
- from "@/lib/checkout/retail-db-server-config-v1.mjs";
-import {createRetailPostgresAdmissionDependenciesV1}
- from "@/lib/checkout/retail-postgres-admission-dependencies-v1.mjs";
+import {createNonpayableRetailProductionRuntimeV1}
+ from "@/lib/checkout/retail-nonpayable-production-runtime-v1.mjs";
 import {admitPrivateNonpayableRetailOrderV1}
  from "@/lib/checkout/retail-nonpayable-admission-controller-v1.mjs";
 import {isTrustedNonpayableCheckoutEnvelopeV1}
@@ -52,13 +49,12 @@ export async function POST(request:Request){
  if(!user||user.is_anonymous===true||user.aud!=="authenticated"||
   !user.email_confirmed_at)return deny(401,"CUSTOMER_AUTH_REQUIRED");
 
- let pool:pg.Pool|undefined;
+ let closePool:(()=>Promise<void>)|undefined;
  try{
-  const configured=createRetailCheckoutServerPoolV1(process.env,pg.Pool);
-  pool=configured.pool;
-  const dependencies=createRetailPostgresAdmissionDependenciesV1({pool});
+  const configured=createNonpayableRetailProductionRuntimeV1(process.env);
+  closePool=()=>configured.pool.end();
   const result=await admitPrivateNonpayableRetailOrderV1({
-   request,authClient,pool,...dependencies,
+   request,authClient,pool:configured.pool,...configured.dependencies,
    fingerprintKey:configured.fingerprintKey,
    deliveryKeyReference:configured.deliveryKeyReference,
    deliveryKey:configured.deliveryKey,
@@ -87,8 +83,8 @@ export async function POST(request:Request){
   // material, protected customer data or server-only keys.
   return unavailable();
  }finally{
-  if(pool){
-   try{await pool.end();}catch{}
+  if(closePool){
+   try{await closePool();}catch{}
   }
  }
 }
