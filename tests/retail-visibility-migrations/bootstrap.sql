@@ -2,6 +2,7 @@
 -- Never execute against a connected/production Supabase project.
 create role anon nologin;
 create role authenticated nologin;
+create role service_role nologin;
 create schema auth;
 create schema apex_internal;
 create or replace function auth.uid() returns uuid language sql stable as $$
