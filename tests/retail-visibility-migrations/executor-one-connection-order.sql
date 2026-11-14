@@ -79,8 +79,8 @@ select (apex_internal.checkout_worker_attach_retail_delivery(
 
 select (apex_internal.checkout_worker_get_retail_receipt(
  '10000000-0000-4000-8000-000000000001',
- :'synthetic_order_id'::uuid)->>'total_cents') as synthetic_total \gset
-\if :synthetic_total
+ :'synthetic_order_id'::uuid)->>'total_cents')='4700' as synthetic_total_verified \gset
+\if :synthetic_total_verified
 \else
  \echo 'FAIL: missing private checkout receipt'
  \quit 1
