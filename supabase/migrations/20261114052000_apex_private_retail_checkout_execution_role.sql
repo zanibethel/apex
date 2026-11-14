@@ -19,6 +19,17 @@ begin
  then raise exception 'Private checkout executor cannot be provisioned with active or missing prerequisites';end if;
 end $preflight$;
 
+-- At COMMIT a deferred constraint trigger runs in the caller's context.
+-- Keep the worker unable to SELECT encrypted delivery directly; run only
+-- this fixed-purpose existence check as the owner. The trigger has no
+-- caller-supplied SQL, and its function remains non-executable by API roles.
+alter function apex_internal.require_retail_delivery_at_commit()
+ security definer;
+alter function apex_internal.require_retail_delivery_at_commit()
+ set search_path=pg_catalog;
+revoke all on function apex_internal.require_retail_delivery_at_commit()
+ from public,anon,authenticated,service_role;
+
 create role apex_retail_checkout_executor
  NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 grant usage on schema apex_internal to apex_retail_checkout_executor;
