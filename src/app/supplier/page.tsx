@@ -15,7 +15,7 @@ export default async function SupplierWorkspace() {
 
   // Verify the current Supabase Auth identity on every protected render.
   const { data: auth, error: authError } = await client.auth.getUser();
-  if (authError || !auth.user || auth.user.is_anonymous) redirect("/supplier/sign-in");
+  if (authError || !auth.user || auth.user.is_anonymous || !auth.user.email_confirmed_at) redirect("/supplier/sign-in");
 
   const { data: memberships, error: membershipError } = await client
     .from("supplier_memberships").select("supplier_id,role").limit(20);
