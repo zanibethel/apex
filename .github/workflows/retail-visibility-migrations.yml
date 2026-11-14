@@ -95,6 +95,36 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/private-admission-guards.sql
       - name: Install pinned node-postgres runtime for isolated integration
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Reset only the two approved synthetic cart fixtures with independent stock
+        run: |
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          do $fixture$
+          begin
+            if current_database()<>'retail_test' or
+               (select enabled from apex_internal.retail_order_engine_gate
+                where singleton=true) is distinct from false or
+               exists(select 1 from apex_internal.retail_order_holds
+                where state='held_no_payment')
+            then raise exception 'Refusing synthetic inventory fixture outside locked retail_test';end if;
+            update public.inventory_items
+              set quantity_on_hand=3,quantity_reserved=0
+              where store_id='10000000-0000-4000-8000-000000000001'
+               and product_id in (
+                '50000000-0000-4000-8000-000000000001',
+                '50000000-0000-4000-8000-000000000005');
+            if (select count(*) from public.inventory_items
+                where store_id='10000000-0000-4000-8000-000000000001'
+                 and product_id in (
+                  '50000000-0000-4000-8000-000000000001',
+                  '50000000-0000-4000-8000-000000000005')
+                 and quantity_on_hand=3 and quantity_reserved=0)<>2 or
+               (select price_cents from public.products
+                where id='50000000-0000-4000-8000-000000000001')<>3200 or
+               (select price_cents from public.products
+                where id='50000000-0000-4000-8000-000000000005')<>3999
+            then raise exception 'Synthetic two-line stock/price fixtures unavailable';end if;
+          end $fixture$;
+          SQL
       - name: Enable dedicated login and hold engine in disposable database ONLY
         run: |
           test "$PGDATABASE" = "retail_test"
