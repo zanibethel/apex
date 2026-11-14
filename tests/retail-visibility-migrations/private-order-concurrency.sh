@@ -100,4 +100,20 @@ begin
  then raise exception 'Two concurrent orders oversold the one-unit serum';end if;
 end $verify$;
 SQL
+# Leave zero active fixture holds for the next migration preflight. The
+# cancellation routine also verifies reservations are restored once.
+psql -X -v ON_ERROR_STOP=1 -qAt <<'SQL'
+select apex_internal.end_retail_order_hold(id,'cancel','Fixture completed')
+from apex_internal.retail_order_holds
+where request_id in (
+ '80000000-0000-4000-8000-000000000701',
+ '80000000-0000-4000-8000-000000000702') and state='held_no_payment';
+do $verify$
+begin
+ if exists(select 1 from apex_internal.retail_order_holds
+   where state='held_no_payment') or
+  exists(select 1 from public.inventory_items where quantity_reserved>0)
+ then raise exception 'Private order concurrency fixture left active holds';end if;
+end $verify$;
+SQL
 echo "Atomic same-key and independent-key inventory races verified"
