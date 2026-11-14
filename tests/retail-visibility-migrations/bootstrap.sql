@@ -97,6 +97,34 @@ insert into public.products(id,store_id,category_id,name,description,sku,price_c
  ('50000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000001',null,'Anabolic Research Product','Testosterone therapy material','REG-001',999),
  ('50000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000002','30000000-0000-4000-8000-000000000002','Other Supplier Shirt','Ordinary athletic T-shirt','SHIRT-002',1500),
  ('50000000-0000-4000-8000-000000000005','10000000-0000-4000-8000-000000000001',null,'Copper Peptide Hair Serum','Topical copper peptide serum for hair care.','SERUM-001',3999);
+-- Supplier shipping configuration and discount lookup fixtures for the
+-- new nonpayable retail cart quote. Product prices remain authoritative.
+create table public.apex_store_shipping_settings(
+ store_id uuid primary key references public.stores(id),
+ charge_shipping boolean not null,
+ flat_shipping_cents bigint not null,
+ medium_flat_shipping_cents bigint not null,
+ free_shipping_min_subtotal_cents bigint,
+ envelope_max_items integer not null
+);
+create table public.supplier_discount_codes(
+ id uuid primary key,
+ store_id uuid not null references public.stores(id),
+ code text not null,
+ discount_kind text not null,
+ discount_value integer not null,
+ min_subtotal_cents bigint not null default 0,
+ starts_at timestamptz,ends_at timestamptz,
+ usage_limit integer,redemption_count integer not null default 0,
+ is_active boolean not null default true
+);
+insert into public.apex_store_shipping_settings values
+ ('10000000-0000-4000-8000-000000000001',true,1500,2580,20001,4),
+ ('10000000-0000-4000-8000-000000000002',false,0,0,null,4);
+insert into public.supplier_discount_codes
+(id,store_id,code,discount_kind,discount_value,min_subtotal_cents)
+values('70000000-0000-4000-8000-000000000001',
+ '10000000-0000-4000-8000-000000000001','TEST10','percentage',10,0);
 -- Simulate protected RLS by not exposing application tables directly to
 -- authenticated/anonymous users in the synthetic fixture.
 revoke all on all tables in schema public from public,anon,authenticated;

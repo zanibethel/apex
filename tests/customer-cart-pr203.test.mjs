@@ -110,16 +110,21 @@ test("invalid or unverified stock, pricing, privileges and codes are rejected",(
 test("public cart code exposes no private credentials or order creation",()=>{
  const api=read("src/app/api/cart/quote/route.ts");
  const migration=read("supabase/migrations/20261104090000_apex_public_cart_quote_source.sql");
+ const retailMigration=read("supabase/migrations/20261114010000_apex_retail_cart_quote_bridge.sql");
  const page=read("src/app/cart/customer-cart-page.tsx");
  const layout=read("src/app/layout.tsx");
  const shelf=read("src/app/catalog/approved-sold-out-shelf.tsx");
  const workflow=read(".github/workflows/payout-rls.yml");
  assert.match(api,/normalizeCartSelections/);
  assert.match(api,/buildCartReview/);
- assert.match(api,/APEX_PUBLIC_SOLD_OUT_CATALOG/);
+ assert.match(api,/get_public_retail_cart_quote_source/);
+ assert.doesNotMatch(api,/APEX_PUBLIC_SOLD_OUT_CATALOG/);
  assert.match(api,/cache:"no-store"/);
  assert.doesNotMatch(api,/service_role|createInvoice|insertOrder|createOrderIntent/);
  assert.match(migration,/private_release_gate/);
+ assert.match(retailMigration,/retail_showcase_gate/);
+ assert.match(retailMigration,/get_public_retail_cart_quote_source/);
+ assert.match(retailMigration,/can_place_order\x27,false/);
  assert.match(migration,/inv.quantity_on_hand=0 and inv.quantity_reserved=0/);
  assert.match(migration,/can_place_order',false/);
  assert.match(migration,/revoke all on function public.get_public_cart_quote_source/);

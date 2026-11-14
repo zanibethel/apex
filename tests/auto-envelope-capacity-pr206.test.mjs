@@ -107,7 +107,7 @@ test("saved rule and GUI are available to both admin and supplier",()=>{
  assert.doesNotMatch(cart,/type="radio" name="package"/);
  assert.match(adminCart,/envelope_max_items/);
  assert.match(adminUI,/Automatic packaging/);
- assert.match(api,/get_public_cart_quote_source/);
+ assert.match(api,/get_public_retail_cart_quote_source/);
  assert.match(migration,/alter table public.apex_store_shipping_settings/);
  assert.match(migration,/create function public.save_private_store_usps_shipping_capacity/);
  assert.match(migration,/revoke execute on function public.save_private_store_usps_shipping_settings/);

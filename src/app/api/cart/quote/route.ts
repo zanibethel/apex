@@ -10,8 +10,8 @@ const fail=(reason:string,status=409)=>NextResponse.json(
  {status,headers:HEADERS});
 
 export async function POST(request:NextRequest){
- if(process.env.APEX_PUBLIC_SOLD_OUT_CATALOG!=="enabled")
-  return fail("Catalog items or inventory are currently unavailable",503);
+ // Catalog admission is decided by the database retail-showcase gate.
+ // The older private-release quote is intentionally not used here.
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
  const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
  if(url!==APEX_ORIGIN||!key?.startsWith("sb_publishable_"))
@@ -37,7 +37,7 @@ export async function POST(request:NextRequest){
   return fail("Invalid cart selection",400);
  const items=normalizeCartSelections(values.items);
  try{
-  const result=await fetch(APEX_ORIGIN+"/rest/v1/rpc/get_public_cart_quote_source",{
+  const result=await fetch(APEX_ORIGIN+"/rest/v1/rpc/get_public_retail_cart_quote_source",{
    method:"POST",cache:"no-store",signal:AbortSignal.timeout(6000),
    headers:{"apikey":key,"Content-Type":"application/json",Accept:"application/json"},
    body:JSON.stringify({p_items:items,p_code:values.code}),
