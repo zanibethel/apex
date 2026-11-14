@@ -12,6 +12,8 @@ on:
       - 'supabase/migrations/20261114041000_apex_retail_order_hold_expiry_schedule.sql'
       - 'supabase/migrations/20261114052000_apex_private_retail_checkout_execution_role.sql'
       - 'supabase/migrations/20261114061000_apex_retail_checkout_connection_identity.sql'
+      - 'src/lib/checkout/retail-restricted-db-probe-v1.mjs'
+      - 'scripts/test-retail-postgres-connection.mjs'
       - 'tests/retail-visibility-migrations/**'
       - '.github/workflows/retail-visibility-migrations.yml'
   workflow_dispatch:
@@ -85,7 +87,7 @@ jobs:
           test "$PGDATABASE" = "retail_test"
           psql -X -v ON_ERROR_STOP=1 -c "alter role apex_retail_checkout_app login password 'postgres';"
           psql -X -v ON_ERROR_STOP=1 -c "update apex_internal.retail_order_engine_gate set enabled=true where singleton=true;"
-      - name: Prove actual Node PostgreSQL transaction and private encrypted order hold
+      - name: Prove real restricted Node role diagnostics, PostgreSQL transaction and encrypted order hold
         env:
           PGUSER: apex_retail_checkout_app
           CI: "true"
