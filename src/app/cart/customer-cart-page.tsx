@@ -4,6 +4,7 @@ import {useEffect,useMemo,useState,type FormEvent} from "react";
 import Link from "next/link";
 import {useCustomerCart} from "./cart-provider";
 import {DeliveryDetailsForm} from "./delivery-details-form";
+import {NonpayableOrderPanel} from "./nonpayable-order-panel";
 import "./customer-cart.css";
 
 type QuoteLine={productId:string;name:string;quantity:number;
@@ -21,9 +22,21 @@ const usd=(n:number)=>new Intl.NumberFormat("en-US",{
  style:"currency",currency:"USD",
 }).format(n/100);
 
-export function CustomerCartPage(){
+type DeliveryDetails={
+ firstName:string;lastName:string;email:string;phone:string;address1:string;
+ address2:string;city:string;state:string;postalCode:string;
+};
+export function CustomerCartPage({
+ nonpayableEnabled=false,signedIn=false,
+}:{nonpayableEnabled?:boolean;signedIn?:boolean}={}){
  const {items,count,ready,setQuantity,remove,clear}=useCustomerCart();
  const boxSize="auto" as const;
+ const [deliveryReview,setDeliveryReview]=useState<{
+  cartKey:string;details:DeliveryDetails;
+ }|null>(null);
+ const cartKey=JSON.stringify(items);
+ const confirmedDelivery=deliveryReview?.cartKey===cartKey?
+  deliveryReview.details:null;
  const [enteredCode,setEnteredCode]=useState("");
  const [code,setCode]=useState("");
  const [codeError,setCodeError]=useState("");
@@ -120,7 +133,8 @@ export function CustomerCartPage(){
        <strong>{verified?usd(verified.lineTotalCents):"—"}</strong>
       </article>;
      })}
-     <DeliveryDetailsForm items={items} shippingMethod={selectedBox==="medium"?"medium":selectedBox==="small"?"small":null}/>
+     <DeliveryDetailsForm items={items} shippingMethod={selectedBox==="medium"?"medium":selectedBox==="small"?"small":null}
+      onReviewed={details=>setDeliveryReview(details?{cartKey,details}:null)}/>
     </section>
     <aside className="apex-customer-summary" aria-label="Cart summary">
      <div className="apex-customer-summary-head">
@@ -170,6 +184,13 @@ export function CustomerCartPage(){
          more merchandise after discounts for free shipping.</p>}
        <p className="apex-cart-validation">Checkout is not yet available. Inventory and prices must be rechecked before any future order.</p>
       </div>}
+     <NonpayableOrderPanel enabled={nonpayableEnabled} signedIn={signedIn}
+      items={items} code={code} delivery={confirmedDelivery}
+      verifiedStock={Boolean(review?.ok&&items.length>0&&
+       review.items?.length===items.length&&
+       review.items.every(line=>line.availability==="in_stock")&&
+       Number.isSafeInteger(review.totalCents)&&
+       (review.totalCents??0)>0)}/>
      <button type="button" className="apex-customer-checkout" disabled>
       Checkout unavailable
      </button>

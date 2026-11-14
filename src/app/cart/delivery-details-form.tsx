@@ -20,8 +20,9 @@ const FIELD_LIST:ReadonlyArray<{
  {key:"postalCode",label:"ZIP code",autoComplete:"postal-code"},
 ];
 
-export function DeliveryDetailsForm({items,shippingMethod}:{
+export function DeliveryDetailsForm({items,shippingMethod,onReviewed}:{
  items:{product_id:string;quantity:number}[];shippingMethod:"small"|"medium"|null;
+ onReviewed?:(details:Contact|null)=>void;
 }){
  const [fields,setFields]=useState<Contact>({...EMPTY_DELIVERY_DETAILS});
  const [errors,setErrors]=useState<Record<string,string>>({});
@@ -30,13 +31,16 @@ export function DeliveryDetailsForm({items,shippingMethod}:{
   setFields(previous=>({...previous,[key]:value}));
   setErrors(previous=>({...previous,[key]:"",form:""}));
   setConfirmed(null);
+  onReviewed?.(null);
  };
  const submit=(e:FormEvent<HTMLFormElement>)=>{
   e.preventDefault();
   const result=summarizeDeliveryPreparation(fields,items);
   setErrors(result.errors as Record<string,string>);
-  setConfirmed(result.contactFormatValid&&result.cartStructureValid?
-   result.deliveryDetails as Contact:null);
+  const validated=result.contactFormatValid&&result.cartStructureValid?
+   result.deliveryDetails as Contact:null;
+  setConfirmed(validated);
+  onReviewed?.(validated);
  };
  return <section className="apex-delivery-panel" aria-labelledby="delivery-details-heading">
   <p className="eyebrow">DELIVERY INFORMATION</p>
