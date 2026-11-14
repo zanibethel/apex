@@ -71,7 +71,7 @@ secrets, delivery PII or customer identifiers are logged.
 - Node unit tests exercise both callback contracts, deny paths,
   read-only resolver transaction, rollback and sanitized failures.
 - Real PG integration concurrently calls the rate limiter 20 times
-  with 6 pooled connections to assert **exactly ten accepted and ten
+  with 2 pooled connections to assert **exactly ten accepted and ten
   denied** requests; it uses the actual resolver in a synthetic
   nonpayable order replay, never mocks the two dependencies.
 - CI fixture cleans up and relocks its own disposable login/gate.
