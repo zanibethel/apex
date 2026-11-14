@@ -10,7 +10,7 @@ test("product detail route uses only exact released public catalog page",()=>{
  assert.match(page,/result\.products\.find\(item=>item\.id===id\)/);
  assert.match(page,/notFound\(\)/);
  assert.match(page,/Number\(raw\)>417/);
- assert.match(page,/product\.availability==="in_stock"/);
+ assert.match(page,/availability=\{product\.availability\}/);
  assert.match(page,/Checkout is currently unavailable/);
  assert.doesNotMatch(page,/service_role|inventory_items|supabaseAdmin|createInvoice|fetch\(/);
  assert.match(projection,/get_public_retail_showcase_catalog/);
@@ -19,6 +19,11 @@ test("catalog tile links to verified product details and preserves sold-out hand
  const shelf=read("src/app/catalog/approved-sold-out-shelf.tsx");
  assert.match(shelf,/\/catalog\/product\/\$\{p\.id\}\?page=\$\{result\.page\}/);
  assert.match(shelf,/View full details/);
- assert.match(shelf,/p\.availability==="in_stock"/);
- assert.match(shelf,/disabled className="apex-approved-disabled"/);
+ assert.match(shelf,/availability=\{p\.availability\}/);
+ const cartAction=read("src/app/cart/cart-provider.tsx");
+ assert.match(cartAction,/if\(availability!=="in_stock"\)return/);
+ assert.match(cartAction,/aria-label=\{"Sold out: "\+name\}/);
+ assert.match(cartAction,/onClick=\{\(\)=>setStockError\(true\)\}/);
+ assert.match(cartAction,/Out of stock —/);
+ assert.match(cartAction,/role="alert"/);
 });

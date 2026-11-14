@@ -2,6 +2,8 @@
 
 import {useEffect,useMemo,useState,type FormEvent} from "react";
 import Link from "next/link";
+import {usePathname} from "next/navigation";
+import {normalizeDiscountEntry} from "@/lib/cart/customer-cart.mjs";
 import {useCustomerCart} from "./cart-provider";
 import {DeliveryDetailsForm} from "./delivery-details-form";
 import {NonpayableOrderPanel} from "./nonpayable-order-panel";
@@ -29,7 +31,8 @@ type DeliveryDetails={
 export function CustomerCartPage({
  nonpayableEnabled=false,signedIn=false,
 }:{nonpayableEnabled?:boolean;signedIn?:boolean}={}){
- const {items,count,ready,setQuantity,remove,clear}=useCustomerCart();
+ const {items,count,ready,setQuantity,remove,clear,discountCode:code,setDiscountCode}=useCustomerCart();
+ const checkoutView=usePathname()==="/checkout";
  const boxSize="auto" as const;
  const [deliveryReview,setDeliveryReview]=useState<{
   cartKey:string;details:DeliveryDetails;
@@ -38,7 +41,7 @@ export function CustomerCartPage({
  const confirmedDelivery=deliveryReview?.cartKey===cartKey?
   deliveryReview.details:null;
  const [enteredCode,setEnteredCode]=useState("");
- const [code,setCode]=useState("");
+
  const [codeError,setCodeError]=useState("");
  const [refreshRevision,setRefreshRevision]=useState(0);
  const [response,setResponse]=useState<{key:string;review:Review}|null>(null);
@@ -79,13 +82,13 @@ export function CustomerCartPage({
  },[ready,key,items,boxSize,code]);
  const applyCode=(event:FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
-  const cleaned=enteredCode.trim().toUpperCase();
-  if(cleaned&&!/^[A-Z0-9_-]{3,24}$/.test(cleaned)){
+  const cleaned=normalizeDiscountEntry(enteredCode);
+  if(cleaned===null){
    setCodeError("Enter a valid code (3–24 letters, numbers, dashes or underscores).");
    return;
   }
   setCodeError("");
-  setCode(cleaned);
+  setDiscountCode(cleaned);
   setRefreshRevision(current=>current+1);
  };
  const lines=review?.ok?review.items??[]:[];
@@ -93,8 +96,8 @@ export function CustomerCartPage({
  return <main className="container apex-customer-cart">
   <Link href="/catalog" className="back">← Continue shopping</Link>
   <p className="eyebrow">APEX ANABOLICS / CART</p>
-  <h1>Your cart</h1>
-  <p className="apex-cart-note">Your selections are saved on this device.
+  <h1>{checkoutView?"Checkout review":"Your cart"}</h1>
+  <p className="apex-cart-note">{checkoutView?"Review your items and delivery information. ":""}Your selections are saved on this device.
    Prices, promotion eligibility and availability are checked against saved catalog records.
    Checkout is currently unavailable.</p>
   {!ready?<p role="status">Loading cart…</p>:items.length===0?
@@ -168,8 +171,9 @@ export function CustomerCartPage({
        onChange={e=>{setEnteredCode(e.target.value);setCodeError("");}}/>
        <button type="submit">Apply</button></div>
       {codeError&&<p id="apex-cart-code-error" role="alert" className="apex-cart-validation">{codeError}</p>}
+      {code&&<p className="apex-cart-note">Applied code: <strong>{code}</strong></p>}
       {code&&<button className="apex-customer-remove" type="button"
-       onClick={()=>{setCode("");setEnteredCode("");setCodeError("");}}>Remove code</button>}
+       onClick={()=>{setDiscountCode("");setEnteredCode("");setCodeError("");setRefreshRevision(v=>v+1);}}>Remove code</button>}
      </form>
      {review===null?<p role="status" className="apex-cart-note">Checking current catalog and prices…</p>:
       !review.ok?<p role="status" className="apex-cart-validation">{review.reason??"Cart verification unavailable."}</p>:

@@ -12,9 +12,8 @@ const money=(cents:number)=>new Intl.NumberFormat("en-US",{
  style:"currency",currency:"USD",
 }).format(cents/100);
 
-// This component has NO cart hook, order action, invoice, form, wallet or
-// individual product link. The current preview has no public product media
-// feed, so it never leaks private image paths or signed supplier URLs.
+// Public supplier-published product cards show only released product details.
+// The cart button saves selections locally; live quote and checkout are gated.
 export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
  const [query,setQuery]=useState("");
  const [availability,setAvailability]=useState("all");
@@ -69,17 +68,13 @@ export function ApprovedSoldOutShelf({result}:{result:SoldOutCatalogResult}){
       <p className="eyebrow">{p.categoryName??"APEX COLLECTION"}</p>
       <h3>{p.name}</h3>
       <Link className="apex-approved-details-link" href={`/catalog/product/${p.id}?page=${result.page}`}>View full details</Link>
-      <details className="apex-approved-description">
-       <summary>Product details</summary>
-       <p>{p.description}</p>
-      </details>
+      <p className="apex-approved-excerpt">{p.description}</p>
       <div className="apex-approved-price">
        <strong>{money(p.priceCents)}</strong>
        <span>USD · Listed price</span>
       </div>
-      {p.availability==="in_stock"
-       ?<SaveCatalogItem id={p.id} name={p.name} actionLabel="Add to cart"/>
-       :<button type="button" disabled className="apex-approved-disabled">Sold out</button>}
+      <SaveCatalogItem id={p.id} name={p.name}
+       availability={p.availability} actionLabel="Add to cart"/>
       <p className="apex-approved-meta">{p.availability==="in_stock"
        ?"Available stock confirmed at last refresh · checkout unavailable"
        :"Currently unavailable to order"}</p>

@@ -65,7 +65,13 @@ test("only the bounded public projection is rendered; private demo fixture data 
  assert.match(page,/Checkout is currently unavailable/);
  assert.match(shelf,/result\.state==="connected"&&result\.products\.length>0/);
  assert.match(shelf,/availability|SOLD OUT/);
- assert.match(shelf,/type="button" disabled/);
+ const cartAction=read("src/app/cart/cart-provider.tsx");
+ assert.match(shelf,/availability=\{p\.availability\}/);
+ assert.match(cartAction,/if\(availability!=="in_stock"\)return/);
+ assert.match(cartAction,/onClick=\{\(\)=>setStockError\(true\)\}/);
+ assert.match(cartAction,/Out of stock —/);
+ assert.match(cartAction,/role="alert"/);
+ assert.match(cartAction,/onClick=\{\(\)=>\{setStockError\(false\);add\(id\);\}\}/);
  assert.doesNotMatch(shelf,/useDemoCart|createInvoice|href="\/checkout|<s>|% OFF|sourceCost|imageUrl|createSignedUrl/);
  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
