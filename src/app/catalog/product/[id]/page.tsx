@@ -41,12 +41,11 @@ export default async function ProductDetails({
      <strong>{money(product.priceCents)}</strong>
      <span>USD · Current listed price</span>
     </div>
-    {product.availability==="in_stock"?
-     <SaveCatalogItem id={product.id} name={product.name} actionLabel="Add to cart"/>:
-     <button type="button" disabled className="apex-approved-disabled">Sold out</button>}
+    <SaveCatalogItem id={product.id} name={product.name}
+     availability={product.availability} actionLabel="Add to cart"/>
     <p className="apex-approved-meta">Prices and inventory are rechecked in your cart.
      Checkout is currently unavailable.</p>
-    <Link className="apex-approved-details-link" href="/cart">View cart</Link>
+    <Link className="apex-approved-details-link" href="/checkout">Review checkout</Link>
    </div>
   </article>
  </main>;
