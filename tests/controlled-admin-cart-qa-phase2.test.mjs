@@ -108,8 +108,8 @@ test("production admin QA page is role-guarded, read-only and never accesses che
  assert.match(ui,/Decrease test quantity/);
  const qaQuote=read("src/lib/cart/controlled-cart-qa.mjs");
  for(const valid of ["TEST10","SHIPFREE"])assert.ok(qaQuote.includes(valid));
- assert.match(ui,/\[enteredCode,setEnteredCode\]=useState\("")/);
- assert.match(ui,/\[codeError,setCodeError\]=useState\("")/);
+ assert.ok(ui.includes('const [enteredCode,setEnteredCode]=useState("");'));
+ assert.ok(ui.includes('const [codeError,setCodeError]=useState("");'));
  assert.match(ui,/enteredCode\.trim\(\)\.toUpperCase\(\)/);
  assert.ok(ui.includes('/^[A-Z0-9_-]{3,24}$/.test(cleaned)'));
  assert.match(ui,/onSubmit=\{applyCode\}/);
