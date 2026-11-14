@@ -1,16 +1,27 @@
 # Apex checkout safety monitor rollout
 
-The monitor in `scripts/checkout-safety-monitor.mjs` is read-only and fails closed. It checks the private order gate, overdue unpaid holds (>3 minutes after expiry), terminal delivery envelopes retained >75 minutes, and both required pg_cron jobs (owner, schedule, active state, success age and failures).
+## What is installed
 
-## Deployment gate
+Apex Supabase production now contains two **schema-only** migrations (no checkout activation, payment, shipping, inventory or order changes):
 
-**Do not merge or retire the existing hourly monitor yet.** Before activating GitHub Actions:
+- `20261114234344_apex_checkout_monitor_aggregate_v1.sql`: a private, `SECURITY DEFINER` aggregate-only snapshot function `apex_internal.checkout_monitor_snapshot_v1()` and a NOLOGIN permission role. Explicit EXECUTE access is limited to `apex_checkout_monitor`; `PUBLIC`, `anon`, `authenticated`, and `service_role` are denied.
+- `20261114234546_apex_checkout_monitor_login_identity_v1.sql`: `apex_checkout_monitor_login`, a low-privilege LOGIN identity that inherits **only** the snapshot function permission. It has `PASSWORD NULL` so it cannot authenticate yet. Read-only transactions are the default, and timeouts are set.
 
-1. Provision a dedicated monitor database identity, **not** the existing production checkout login, `postgres`, `service_role`, or a role with BYPASSRLS. Prefer a tightly scoped private aggregate-only database function/view with explicit permissions rather than granting general SELECT access to customer tables. The code now reads only `apex_internal.checkout_monitor_snapshot_v1()`, staged in `database/sql/apex_checkout_monitor_aggregate_grants_REVIEW_ONLY.sql`. Review and apply that script separately after database security review; it is not deployed. The script creates a NOLOGIN permission role; a separate dedicated LOGIN role and secret still need provisioning. Never grant the login direct SELECT on private order tables.
-2. Provide TLS-verified credentials in the GitHub Actions secret `APEX_MONITOR_DATABASE_URL`; never commit credentials or print connection errors.
-3. Verify the workflow can read only safe aggregate counts and cron metadata, and cannot retrieve individual orders, addresses, ciphertext, or identifiers.
-4. Run `npm test`, run the workflow manually, confirm healthy runs are silent and a deliberate isolated test failure creates a GitHub Actions failure notification. Scheduled GitHub Actions runs may be delayed and are not a hard real-time SLA.
-5. Confirm the expiry job (`* * * * *`) and purge job (`*/5 * * * *`) remain owned by `postgres`, active and successful. Missing purge is an incident.
-6. Only after live end-to-end verification and reliable alert delivery, retire the ChatGPT hourly monitor.
+Verification against live Apex Supabase: gate disabled; two scheduled pg_cron jobs active and owned by postgres; no overdue unpaid holds or retained terminal delivery envelopes at the observation; monitor can execute the snapshot but cannot directly SELECT private orders/deliveries. Public roles cannot execute it.
 
-No checkout activation, payments, order mutation, shipping, or payout operations are part of this rollout.
+## Activation gate — manual credential step remains
+
+1. **Set a unique password privately** for `apex_checkout_monitor_login` in Supabase using a secure supported database-role management flow. If using the SQL Editor, be aware that SQL history may retain the statement and password; do not paste credentials into issues or this repository. Do **not** reuse the production checkout or postgres credentials.
+2. In GitHub repository **Settings → Secrets and variables → Actions**, add repository secret `APEX_MONITOR_DATABASE_URL`. Use the exact Supabase-provided **TLS-verified** connection URI for the newly credentialed role, with a host reachable from GitHub-hosted runners (check Supavisor if direct IPv6 cannot be reached). Do not put this URI in any repository file, PR, chat message or logs.
+3. Once the PR is approved and merged, run the `Apex checkout safety monitor` workflow using **Actions → Run workflow**, or confirm its first scheduled execution. It reads only the private aggregate function. The workflow fails closed if credentials or database access are missing.
+4. Verify a healthy run exits successfully without creating an issue. Test failure notification against an isolated, non-production fixture or simulate a missing monitor credential in an isolated environment. The workflow creates **one deduplicated GitHub incident issue** and closes it on recovery; actual mobile/email notifications depend on GitHub notification settings.
+5. Confirm scheduled runs continue at the intended ~5-minute cadence (GitHub Actions scheduling is best-effort, not an exact five-minute SLA). Validate the checkout gate remains disabled.
+6. **Only after end-to-end healthy and incident-recovery verification, disable the existing hourly ChatGPT monitor.**
+
+The connected GitHub application currently does **not** provide repository secret write actions, so it cannot set `APEX_MONITOR_DATABASE_URL` automatically.
+
+## Checks
+
+`scripts/checkout-safety-monitor.mjs` checks the private gate; overdue unpaid holds (>3 minutes past expiry); terminal delivery envelopes retained >75 minutes; and pg_cron job schedules, ownership, activity, recent failures, and stale success (`expiry>10m`, `purge>15m`). Alerts contain no order IDs, ciphertext, PII, connection strings, or SQL error details.
+
+No production checkout, BTCPay payments, shipping, supplier payout, or inventory mutations are introduced.
