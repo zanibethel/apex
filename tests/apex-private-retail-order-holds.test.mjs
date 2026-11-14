@@ -46,7 +46,7 @@ test("saved pricing, shipping, discount checks and admin holds are independent o
   "retail_showcase_gate","supplier_wants_listing",
   "retail_product_visibility_restrictions","listing_identity_holds",
   "private_product_review_states","supplier_candidate_drafts",
-  "retail_showcase_category_allowed","p.price_cents between 1 and 999999999",
+  "retail_showcase_category_allowed","v_product.price_cents not between 1 and 999999999",
   "v_product.price_cents*v_qty","promotion_code",
   "min_subtotal_cents","redemption_count","envelope_max_items",
   "medium_flat_shipping_cents","Stale cart total",
