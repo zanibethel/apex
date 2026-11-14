@@ -8,6 +8,7 @@ on:
       - 'supabase/migrations/20261113234500_apex_content_neutral_retail_display.sql'
       - 'supabase/migrations/20261114010000_apex_retail_cart_quote_bridge.sql'
       - 'supabase/migrations/20261114022000_apex_private_retail_order_hold_engine.sql'
+      - 'supabase/migrations/20261114031000_apex_retail_order_delivery_atomic_boundary.sql'
       - 'tests/retail-visibility-migrations/**'
       - '.github/workflows/retail-visibility-migrations.yml'
   workflow_dispatch:
@@ -58,3 +59,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/private-order-holds.sql
       - name: Verify two-session hold replay and stock race
         run: bash tests/retail-visibility-migrations/private-order-concurrency.sh
+      - name: Apply private encrypted retail delivery boundary with default-OFF gate
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114031000_apex_retail_order_delivery_atomic_boundary.sql
+      - name: Verify delivery is sealed atomically or stock reservation rolls back
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/private-delivery-envelope.sql
