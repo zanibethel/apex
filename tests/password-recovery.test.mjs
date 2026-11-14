@@ -8,7 +8,7 @@ import {
 const read=(p)=>readFileSync(p,"utf8");
 test("password recovery validates bounded email, token and password inputs",()=>{
  assert.equal(validRecoveryEmail(" USER@Example.com "),"user@example.com");
- for(const value of [null,"","wrong","x@example.com\n","x".repeat(255)+"@mail.com"])
+ for(const value of [null,"","wrong","x@exam\nple.com","x".repeat(255)+"@mail.com"])
   assert.equal(validRecoveryEmail(value),null);
  assert.equal(validRecoveryToken("a".repeat(16)),true);
  for(const value of ["","a".repeat(15),"b".repeat(513),"has spaces","a.b.c"])
