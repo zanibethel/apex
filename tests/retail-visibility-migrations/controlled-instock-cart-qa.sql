@@ -26,7 +26,8 @@ begin
   if v->>'state'<>'rechecked_inventory_cart'
     or v->'items'->0->>'unit_price_cents'<>'5999'
     or v->'items'->0->>'quantity'<>q::text
-    or v->'items'->0->>'availability'<>case when q<=4 then 'in_stock' else 'insufficient_stock' end
+    or (v#>>'{items,0,availability}') is distinct from
+      (case when q<=4 then 'in_stock' else 'insufficient_stock' end)
     or v->>'can_place_order'<>'false'
     or v->>'can_pay'<>'false'
     or v->>'can_create_invoice'<>'false'
