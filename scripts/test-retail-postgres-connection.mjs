@@ -112,10 +112,23 @@ try{
  // lists, customer identifiers or private server error messages.
  const guardedPool={
   async connect(){
-   const c=await pool.connect();
+   let c;
+   try{c=await pool.connect();}
+   catch(e){
+    process.stderr.write("CI guard pool acquire SQLSTATE "+String(e?.code??"unknown")+"\\n");
+    throw e;
+   }
    return {
     async query(sql,params){
-     try{return await c.query(sql,params);}
+     try{
+      const answer=await c.query(sql,params);
+      if(sql.includes("consume_retail_budget"))
+       process.stderr.write("CI budget response type="+
+        typeof answer.rows?.[0]?.payload+" value="+
+        String(answer.rows?.[0]?.payload)+" rows="+
+        String(answer.rows?.length)+"\\n");
+      return answer;
+     }
      catch(e){
       const stage=sql.includes("consume_retail_budget")?"budget":
        sql.includes("resolve_retail_store")?"store":
