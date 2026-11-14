@@ -71,6 +71,21 @@ test("signup page never invokes an Auth write while flags are OFF",()=>{
  assert.match(form,/resendCustomerConfirmation/);
  assert.match(read("src/app/account/verified/page.tsx"),/client\.auth\.getUser\(\)/);
 });
+test("signup password visibility toggle is accessible and never submits the form",()=>{
+ const signup=read("src/app/account/sign-up/form.tsx");
+ assert.match(signup,/useActionState,useState/);
+ assert.match(signup,/useState\(false\)/);
+ assert.match(signup,/name="password" type=\{showPasswords\?"text":"password"\}/);
+ assert.match(signup,/name="confirmPassword" type=\{showPasswords\?"text":"password"\}/);
+ assert.match(signup,/type="button" className="button secondary"/);
+ assert.match(signup,/aria-pressed=\{showPasswords\}/);
+ assert.match(signup,/aria-controls="register-password register-confirm"/);
+ assert.match(signup,/onClick=\{\(\)=>setShowPasswords\(value=>!value\)\}/);
+ assert.match(signup,/Show passwords/);
+ assert.match(signup,/Hide passwords/);
+ assert.match(signup,/type="submit" className="button primary"/);
+ assert.doesNotMatch(signup,/localStorage|sessionStorage|console\.log|fetch\(/);
+});
 test("existing admin/supplier/customer login and order release gates untouched",()=>{
  const login=read("src/app/account/sign-in/actions.ts");
  assert.match(login,/isVerifiedPlatformAdmin\(data\.user\)/);
