@@ -24,8 +24,11 @@
 >   `rule_apex_nonpayable_order_submission_ip_limit_kmcxVg`. It matches
 >   production **POST /api/checkout/nonpayable/v1**, limiting to **20 requests
 >   per IP every 600 seconds** using a fixed window, with `rate_limit`
->   mitigation (429). No abuse-load or true edge 429 exercise has been
->   conducted; mark the WAF release acknowledgment pending validation.
+>   mitigation (429). **Behavior verified 2026-11-14 06:38 UTC** using a
+>   bounded same-runner GitHub Actions smoke check (PR #351, run
+>   `43567331199`): production GET returned 405, disabled POST returned
+>   503, and the **21st** POST returned 429. No customer identity, cookies,
+>   or buyer details were sent. PR #351 also passed quality checks.
 > - Apex Vercel environment inventory readback had **none of the six**
 >   nonpayable submission/review flags set. No customer submission or payment
 >   release has been authorized.
@@ -41,10 +44,12 @@
 >   the new cleanup job and overdue terminal retention, without modifying
 >   the production order engine.
 >
-> **Remaining release gates:** hosted Auth settings and delivery tests,
-> WAF 429 behavioral verification, ongoing purge-job operations alert
-> readback, and independent approval for any future
-> checkout or payment activation. The four supplemental acknowledgment
+> **Remaining release gates:** hosted Auth provider settings and
+> signup/recovery email flow, ongoing purge-job operations alert readback,
+> final isolated E2E acceptance, and independent approval for any future
+> checkout or payment activation. WAF 429 behavior is now verified, but
+> the WAF review acknowledgment and all other supplemental release flags
+> stay unset until a separately reviewed production release. The four supplemental acknowledgment
 > variables must remain unset until each review is complete.
 >
 ---
