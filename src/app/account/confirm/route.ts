@@ -5,11 +5,11 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export const revalidate=0;
 const BASE="https://apexanabolics.co";
-function finish(success:boolean){
- // Never redirect using caller-controlled host, next/redirect query, or
- // request headers. Strip one-time secrets from the next URL.
- const url=BASE+(success?"/account/verified?status=confirmed":
-  "/account/verified?status=invalid");
+type ConfirmationResult="confirmed"|"check"|"invalid";
+function finish(status:ConfirmationResult){
+ // The status is informational only, never a substitute for getUser()
+ // on protected routes. Keep token hashes and session codes off redirects.
+ const url=BASE+"/account/verified?status="+status;
  const response=NextResponse.redirect(url,{status:303});
  response.headers.set("Cache-Control","private, no-store");
  response.headers.set("Referrer-Policy","no-referrer");
@@ -22,20 +22,24 @@ export async function GET(request:NextRequest){
  const tokenHash=params.get("token_hash");
  const code=params.get("code");
  const type=params.get("type");
- // Support email template's token_hash (cross-browser) and Supabase's
- // standard PKCE ?code callback (same browser). Never accept arbitrary next.
- if((tokenHash&&code)||(!tokenHash&&!code)||
+
+ // Supabase's default {{ .ConfirmationURL }} confirms the user *before*
+ // redirecting here, often with no token or code, especially when Gmail
+ // opens in a different browser. That is not proof of a failed confirmation.
+ // Ask the user to sign in; never claim verification without an Auth session.
+ if(!tokenHash&&!code)return finish("check");
+ if((tokenHash&&code)||
     (tokenHash&&(type!=="email"||!HASH.test(tokenHash)))||
-    (code&&!HASH.test(code)))return finish(false);
+    (code&&!HASH.test(code)))return finish("invalid");
  const client=await createSupplierServerClient();
- if(!client)return finish(false);
+ if(!client)return finish("invalid");
  try{
   const result=tokenHash?
    await client.auth.verifyOtp({type:"email",token_hash:tokenHash}):
    await client.auth.exchangeCodeForSession(code!);
-  if(result.error)return finish(false);
-  const {data,error}=await client.auth.getUser();
-  return finish(!error&&Boolean(data.user&&
-   data.user.is_anonymous!==true&&data.user.email_confirmed_at));
- }catch{return finish(false);}
+  // Successful Auth verification must not be labeled invalid merely because
+  // the browser receiving the email does not yet have a signed-in cookie.
+  // /account/verified checks getUser before granting a profile link.
+  return finish(result.error?"invalid":"confirmed");
+ }catch{return finish("invalid");}
 }
