@@ -1,13 +1,10 @@
 import "server-only";
 import Link from "next/link";
 import {redirect} from "next/navigation";
-import pg from "pg";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
-import {createRetailCheckoutServerPoolV1}
- from "@/lib/checkout/retail-db-server-config-v1.mjs";
-import {verifyRestrictedRetailConnectionV1}
- from "@/lib/checkout/retail-restricted-db-probe-v1.mjs";
+import {probeProductionRetailConnectionV1}
+ from "@/lib/checkout/retail-production-db-readiness-v1.mjs";
 
 export const dynamic="force-dynamic";
 export const revalidate=0;
@@ -16,12 +13,6 @@ export const maxDuration=20;
 export const metadata={
  title:"Database Connection Check | Apex Admin",
  robots:{index:false,follow:false},
-};
-type Check={
- connected:boolean;
- scopedRoleSwitchVerified:boolean;
- privateTableAccessDenied:boolean;
- orderWritesPerformed:boolean;
 };
 const noStore="Read-only checkout connection verification. No customer orders, inventory reservations or payment requests can be created here.";
 
@@ -36,26 +27,9 @@ export default async function CheckoutDatabaseConnectionPage(){
  if(error||!isVerifiedPlatformAdmin(data.user))
   redirect("/admin/sign-in");
 
- let check:Check|null=null;
- let failed=false;
- let pool:pg.Pool|undefined;
- try{
-  const configured=createRetailCheckoutServerPoolV1(process.env,pg.Pool);
-  pool=configured.pool;
-  check=await verifyRestrictedRetailConnectionV1(pool);
- }catch{
-  // Do not log a PG exception, URL, database password, TLS certificate,
-  // query parameters or any customer data. Return only a generic failure.
-  failed=true;
- }finally{
-  if(pool){
-   try{await pool.end();}catch{failed=true;check=null;}
-  }
- }
- const verified=Boolean(!failed&&check?.connected===true&&
-  check.scopedRoleSwitchVerified===true&&
-  check.privateTableAccessDenied===true&&
-  check.orderWritesPerformed===false);
+ // The imported server-only module owns credentials and releases the
+ // actual PostgreSQL client before returning an opaque Boolean.
+ const verified=await probeProductionRetailConnectionV1(process.env);
 
  return <main className="container supplier-shell apex-branded-dashboard"
   style={{minWidth:0,overflowWrap:"anywhere"}}>
