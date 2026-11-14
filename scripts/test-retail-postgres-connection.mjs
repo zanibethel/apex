@@ -7,6 +7,8 @@
 import assert from "node:assert/strict";
 import {randomBytes} from "node:crypto";
 import pg from "pg";
+import {verifyRestrictedRetailConnectionV1}
+ from "../src/lib/checkout/retail-restricted-db-probe-v1.mjs";
 import {createRetailPostgresTransactionV1}
  from "../src/lib/checkout/retail-postgres-transaction-v1.mjs";
 import {verifyPrivateRetailCustomerSessionV1}
@@ -39,6 +41,42 @@ const pool=new pg.Pool({
  ssl:false,max:1,idleTimeoutMillis:1000,connectionTimeoutMillis:3500,
 });
 try{
+ // Real restricted-login connection verifies private schema is inaccessible
+ // while role membership and transaction-local executor checks still work.
+ // CI fixture-only observation of nonsecret permission Booleans. The
+ // production verifier still returns no SQL errors and never logs secrets.
+ // This wrapper ensures failures are attributable to the first privilege
+ // SELECT, transaction-local role change, or executor privilege SELECT.
+ const diagnosisPool={
+  async connect(){
+   const c=await pool.connect();
+   return {
+    async query(sql){
+     const stage=sql.includes("current_database()")?"app_privileges":
+       sql.includes("may_execute_restricted_reserve")?"executor_privileges":
+       sql==="SET LOCAL ROLE apex_retail_checkout_executor"?"role_switch":
+       sql==="BEGIN READ ONLY"?"begin_read_only":"rollback";
+     try{
+      const answer=await c.query(sql);
+      if(stage==="app_privileges"||stage==="executor_privileges")
+       process.stdout.write("CI "+stage+" "+JSON.stringify(answer.rows)+"\\n");
+      return answer;
+     }catch(e){
+      process.stderr.write("CI restricted role "+stage+" SQLSTATE "+String(e?.code??"unknown")+"\\n");
+      throw e;
+     }
+    },
+    release(){c.release();},
+   };
+  },
+ };
+ const permissionCheck=await verifyRestrictedRetailConnectionV1(diagnosisPool,{
+  expectedDatabase:"retail_test",
+ });
+ assert.equal(permissionCheck.connected,true);
+ assert.equal(permissionCheck.scopedRoleSwitchVerified,true);
+ assert.equal(permissionCheck.privateTableAccessDenied,true);
+ assert.equal(permissionCheck.orderWritesPerformed,false);
  const session=await verifyPrivateRetailCustomerSessionV1({
   auth:{getUser:async()=>({data:{user:{
    id:USER,aud:"authenticated",created_at:"2026-11-01T00:00:00Z",

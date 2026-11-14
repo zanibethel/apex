@@ -13,8 +13,16 @@ const fail=()=>new Error("Restricted checkout connection could not be verified")
 const appRole="apex_retail_checkout_app";
 const executorRole="apex_retail_checkout_executor";
 
-export async function verifyRestrictedRetailConnectionV1(pool){
- if(!pool||typeof pool.connect!=="function")throw fail();
+export async function verifyRestrictedRetailConnectionV1(pool,{
+ expectedDatabase="postgres",
+}={}){
+ // Production always verifies the Supabase "postgres" database. A separately
+ // named database is supported only by the disposable CI fixture; never by
+ // the live admin diagnostic or public input.
+ const fixture=expectedDatabase==="retail_test"&&
+  process.env.CI==="true"&&process.env.PGDATABASE==="retail_test";
+ if(!pool||typeof pool.connect!=="function"||
+  (expectedDatabase!=="postgres"&&!fixture))throw fail();
  let client;
  let inTransaction=false;
  try{
@@ -30,15 +38,26 @@ export async function verifyRestrictedRetailConnectionV1(pool){
        as inherits_executor,
      has_table_privilege(current_user,'public.inventory_items','UPDATE')
        as may_update_inventory,
-     has_table_privilege(current_user,'apex_internal.retail_order_holds','SELECT')
-       as may_read_private_orders,
+     -- Do not resolve apex_internal.retail_order_holds by qualified name:
+     -- the deliberately restricted app login has NO USAGE on apex_internal.
+     -- PostgreSQL checks schema USAGE during text-to-regclass lookup, raising
+     -- 42501 before has_table_privilege can report false. Resolve OID via
+     -- pg_catalog, which grants no schema access or table-data access.
+     has_table_privilege(current_user,(
+       select c.oid
+       from pg_catalog.pg_class c
+       join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+       where n.nspname='apex_internal'
+         and c.relname='retail_order_holds'
+         and c.relkind in ('r','p')
+     ),'SELECT') as may_read_private_orders,
      (select rolcanlogin and not rolsuper and not rolbypassrls
         and not rolinherit from pg_roles where rolname=current_user)
        as restricted_login
   `);
   if(first?.rows?.length!==1)throw fail();
   const initial=first.rows[0];
-  if(initial.role_name!==appRole||initial.database_name!=="postgres"||
+  if(initial.role_name!==appRole||initial.database_name!==expectedDatabase||
     initial.may_set_executor!==true||
     initial.inherits_executor!==false||
     initial.may_update_inventory!==false||
