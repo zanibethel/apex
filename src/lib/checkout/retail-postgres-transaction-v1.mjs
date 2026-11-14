@@ -5,8 +5,8 @@
  * The adapter does not create a pool, read secrets, or expose a web endpoint.
  * Never pass a Supabase REST client here: four independent REST calls are NOT
  * one transaction. The client must use a dedicated least-privilege DB identity
- * authorized to execute the internal order functions and only the tables they
- * require. Customer checkout remains HTTP 503.
+ * authorized only to execute the three scoped private worker wrappers.
+ * No table-level grants or public/private API-role privileges are required. Customer checkout remains HTTP 503.
  *
  * No payload, SQL parameters or returned PII may be logged.
  */
@@ -52,15 +52,15 @@ export function createRetailPostgresTransactionV1({pool}={}){
      [JSON.stringify(items),code]),
     reserve:({storeId,requestId,requestFingerprint,items,
       code,boxSize,expectedTotalCents})=>rows(client,
-     "select apex_internal.reserve_retail_order_hold($1::uuid,$2::uuid,$3::text,$4::jsonb,$5::text,$6::text,$7::bigint) as payload",
+     "select apex_internal.checkout_worker_reserve_retail_hold($1::uuid,$2::uuid,$3::text,$4::jsonb,$5::text,$6::text,$7::bigint) as payload",
      [storeId,requestId,requestFingerprint,JSON.stringify(items),
       code,boxSize,expectedTotalCents]),
     attachDelivery:({storeId,orderId,keyReference,nonce,ciphertext,
       authTag})=>rows(client,
-     "select apex_internal.attach_retail_delivery_envelope($1::uuid,$2::uuid,$3::text,$4::bytea,$5::bytea,$6::bytea) as payload",
+     "select apex_internal.checkout_worker_attach_retail_delivery($1::uuid,$2::uuid,$3::text,$4::bytea,$5::bytea,$6::bytea) as payload",
      [storeId,orderId,keyReference,nonce,ciphertext,authTag]),
     receipt:({storeId,orderId})=>rows(client,
-     "select apex_internal.get_retail_order_hold_receipt($1::uuid,$2::uuid) as payload",
+     "select apex_internal.checkout_worker_get_retail_receipt($1::uuid,$2::uuid) as payload",
      [storeId,orderId]),
    });
    const value=await work(tx);

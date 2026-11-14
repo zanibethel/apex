@@ -44,16 +44,16 @@ function stubPool({failOperation="",invalidReceipt=false}={}){
    if(failOperation&&sql.includes(failOperation))throw Error("SQL internal detail cannot be returned");
    let payload=null;
    if(sql.includes("get_public_retail_cart_quote_source"))payload=source;
-   if(sql.includes("reserve_retail_order_hold"))payload={
+   if(sql.includes("checkout_worker_reserve_retail_hold"))payload={
     schema_version:1,order_id:ORDER,status:"held_no_payment",
     replayed:false,total_cents:"4700",can_pay:false,
     can_ship:false,invoice_created:false,
    };
-   if(sql.includes("attach_retail_delivery_envelope"))payload={
+   if(sql.includes("checkout_worker_attach_retail_delivery"))payload={
     schema_version:1,order_id:ORDER,sealed:true,replayed:false,
     can_pay:false,can_ship:false,
    };
-   if(sql.includes("get_retail_order_hold_receipt"))payload={
+   if(sql.includes("checkout_worker_get_retail_receipt"))payload={
     schema_version:1,order_id:ORDER,store_id:STORE,
     created_at:timestamp,expires_at:"2026-11-14T01:15:00.000Z",
     status:"held_no_payment",currency:"USD",
@@ -93,9 +93,9 @@ test("four DB steps share exactly one connection and one explicit transaction",a
   "SET LOCAL lock_timeout = '3s'",
   "SET LOCAL idle_in_transaction_session_timeout = '8s'",
   "select public.get_public_retail_cart_quote_source($1::jsonb,$2::text) as payload",
-  "select apex_internal.reserve_retail_order_hold($1::uuid,$2::uuid,$3::text,$4::jsonb,$5::text,$6::text,$7::bigint) as payload",
-  "select apex_internal.attach_retail_delivery_envelope($1::uuid,$2::uuid,$3::text,$4::bytea,$5::bytea,$6::bytea) as payload",
-  "select apex_internal.get_retail_order_hold_receipt($1::uuid,$2::uuid) as payload",
+  "select apex_internal.checkout_worker_reserve_retail_hold($1::uuid,$2::uuid,$3::text,$4::jsonb,$5::text,$6::text,$7::bigint) as payload",
+  "select apex_internal.checkout_worker_attach_retail_delivery($1::uuid,$2::uuid,$3::text,$4::bytea,$5::bytea,$6::bytea) as payload",
+  "select apex_internal.checkout_worker_get_retail_receipt($1::uuid,$2::uuid) as payload",
   "COMMIT",
  ]);
  assert.ok(env.calls.every(c=>c.client===env.connections[0]));
@@ -108,8 +108,8 @@ test("four DB steps share exactly one connection and one explicit transaction",a
  assert.ok(!JSON.stringify(receipt).includes("123 Example Street"));
 });
 test("failed database step rolls back on same connection, releases, never commits",async()=>{
- for(const failOperation of ["reserve_retail_order_hold",
-  "attach_retail_delivery_envelope","get_retail_order_hold_receipt"]){
+ for(const failOperation of ["checkout_worker_reserve_retail_hold",
+  "checkout_worker_attach_retail_delivery","checkout_worker_get_retail_receipt"]){
   const env=stubPool({failOperation});
   const runner=createRetailPostgresTransactionV1({pool:env.pool});
   await assert.rejects(

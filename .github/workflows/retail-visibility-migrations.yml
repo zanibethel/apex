@@ -10,6 +10,7 @@ on:
       - 'supabase/migrations/20261114022000_apex_private_retail_order_hold_engine.sql'
       - 'supabase/migrations/20261114031000_apex_retail_order_delivery_atomic_boundary.sql'
       - 'supabase/migrations/20261114041000_apex_retail_order_hold_expiry_schedule.sql'
+      - 'supabase/migrations/20261114052000_apex_private_retail_checkout_execution_role.sql'
       - 'tests/retail-visibility-migrations/**'
       - '.github/workflows/retail-visibility-migrations.yml'
   workflow_dispatch:
@@ -68,3 +69,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114041000_apex_retail_order_hold_expiry_schedule.sql
       - name: Verify one-minute cleanup job and private permissions
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/expiry-schedule.sql
+      - name: Install default-locked retail checkout executor role
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114052000_apex_private_retail_checkout_execution_role.sql
+      - name: Verify scoped executor, atomic order, replay and expiry as real role
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/executor-one-connection-order.sql
