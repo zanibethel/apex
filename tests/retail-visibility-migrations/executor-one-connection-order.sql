@@ -133,16 +133,26 @@ update apex_internal.retail_order_holds set
  created_at=now()-interval '1 hour',
  expires_at=now()-interval '1 minute'
 where request_id='80000000-0000-4000-8000-000000000901';
-do $$
+do $
+declare
+ v_first integer;
+ v_retry integer;
+ v_reserved integer;
+ v_status text;
 begin
- if apex_internal.expire_due_retail_order_holds(20)<>1 or
-    apex_internal.expire_due_retail_order_holds(20)<>0 or
-    (select quantity_reserved from public.inventory_items where
-     product_id='50000000-0000-4000-8000-000000000001')<>0 or
-    (select state from apex_internal.retail_order_holds
-     where request_id='80000000-0000-4000-8000-000000000901')<>'expired_no_payment'
- then raise exception 'Expired held order failed to restore stock exactly once';end if;
-end $$;
+ -- Evaluate state-changing functions in a defined sequence, not as
+ -- unordered Boolean expression operands.
+ v_first:=apex_internal.expire_due_retail_order_holds(20);
+ v_retry:=apex_internal.expire_due_retail_order_holds(20);
+ select quantity_reserved into v_reserved from public.inventory_items where
+  product_id='50000000-0000-4000-8000-000000000001';
+ select state into v_status from apex_internal.retail_order_holds
+  where request_id='80000000-0000-4000-8000-000000000901';
+ if v_first<>1 or v_retry<>0 or v_reserved<>0 or
+  v_status<>'expired_no_payment'
+ then raise exception 'Expiry mismatch: first %, retry %, reserved %, status %',
+  v_first,v_retry,v_reserved,v_status;end if;
+end $;
 update apex_internal.retail_order_engine_gate set enabled=false where singleton=true;
 do $$
 begin
