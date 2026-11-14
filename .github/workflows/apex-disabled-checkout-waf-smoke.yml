@@ -1,0 +1,32 @@
+name: Apex disabled checkout WAF boundary smoke
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/apex-disabled-checkout-waf-smoke.yml'
+      - 'scripts/test-apex-disabled-checkout-waf.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apex-disabled-checkout-waf-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.repository == 'zanibethel/apex' && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == 'zanibethel/apex')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Assert disabled admission and bounded edge WAF mitigation
+        env:
+          APEX_DISABLED_WAF_SMOKE: 'nonpayable-only-max-22'
+        run: node scripts/test-apex-disabled-checkout-waf.mjs
