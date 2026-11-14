@@ -60,3 +60,25 @@ test("accepts only explicit correct direct TLS identity, not a derived pooler ho
   ...base,APEX_RETAIL_DB_URL:valid.replace(":5432",":6543"),
  }),/Retail database configuration unavailable/);
 });
+
+test("password-only secret builds the pinned Apex pooler identity, requiring no URL in Vercel",()=>{
+ const password="ab".repeat(40);
+ const env={...base,APEX_RETAIL_DB_URL:undefined,
+  APEX_RETAIL_DB_PASSWORD:password};
+ const config=validateRetailCheckoutServerConfigV1(env);
+ const url=new URL(config.connectionString);
+ assert.equal(url.hostname,HOST);
+ assert.equal(url.port,"6543");
+ assert.equal(url.pathname,"/postgres");
+ assert.equal(url.username,"apex_retail_checkout_app."+ID);
+ assert.equal(url.password,password);
+ assert.equal(config.ssl.rejectUnauthorized,true);
+ assert.throws(()=>validateRetailCheckoutServerConfigV1({
+  ...env,APEX_RETAIL_DB_URL:base.APEX_RETAIL_DB_URL,
+ }),/Retail database configuration unavailable/);
+ for(const weak of ["short","x".repeat(64),"0".repeat(63),"abcd".repeat(100)]){
+  assert.throws(()=>validateRetailCheckoutServerConfigV1({
+   ...env,APEX_RETAIL_DB_PASSWORD:weak,
+  }),/Retail database configuration unavailable/);
+ }
+});
