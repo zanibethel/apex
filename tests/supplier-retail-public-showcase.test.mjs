@@ -61,7 +61,8 @@ test("customer catalog displays eligible neutral products with cart-only actions
  assert.match(shelf,/PUBLIC RETAIL SHOWCASE/);
  assert.match(shelf,/Checkout is currently unavailable/);
  assert.match(media,/retailShowcase\?:boolean/);
- assert.match(media,/!failed&&!retailShowcase&&<Image/);
+ assert.match(media,/!failed&&<Image/);
+ assert.match(media,/retailShowcase\?"\/api\/catalog\/retail-media\/v1\/":/);
  assert.match(detail,/retailShowcase/);
  assert.doesNotMatch(page+shelf+detail,/createInvoice|createPayment|purchaseLabel|BTCPay/);
 });
