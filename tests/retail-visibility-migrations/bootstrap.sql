@@ -5,6 +5,22 @@ create role authenticated nologin;
 create role service_role nologin;
 create schema auth;
 create schema apex_internal;
+create schema cron;
+create table cron.job(
+ jobid bigint generated always as identity primary key,
+ jobname text not null unique,schedule text not null,
+ command text not null,active boolean not null default true
+);
+-- Synthetic pg_cron API used ONLY in the disposable PostgreSQL CI fixture.
+create function cron.schedule(p_name text,p_schedule text,p_command text)
+ returns bigint language plpgsql as $cron$
+declare v_jobid bigint;
+begin
+ insert into cron.job(jobname,schedule,command) values
+ (p_name,p_schedule,p_command) returning jobid into v_jobid;
+ return v_jobid;
+end $cron$;
+
 create or replace function auth.uid() returns uuid language sql stable as $$
  select nullif(current_setting('test.actor',true),'')::uuid
 $$;
