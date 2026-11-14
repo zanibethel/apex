@@ -14,6 +14,10 @@ on:
       - 'supabase/migrations/20261114061000_apex_retail_checkout_connection_identity.sql'
       - 'supabase/migrations/20261114074500_apex_private_retail_admission_guards.sql'
       - 'supabase/migrations/20261114090500_apex_terminal_retail_delivery_purge_v1.sql'
+      - 'supabase/migrations/20261114193500_apex_retail_showcase_published_image_source_v1.sql'
+      - 'supabase/functions/apex-media-v1/index.ts'
+      - 'src/app/api/catalog/retail-media/v1/**'
+      - 'src/app/catalog/approved-product-media.tsx'
       - 'src/lib/checkout/retail-postgres-admission-dependencies-v1.mjs'
       - 'src/lib/checkout/retail-restricted-db-probe-v1.mjs'
       - 'scripts/test-retail-postgres-connection.mjs'
@@ -62,6 +66,12 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261113234500_apex_content_neutral_retail_display.sql
       - name: Verify anonymous and supplier visibility, admin restrictions, audited changes and RLS
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/assertions.sql
+      - name: Add private image field to disposable fixture and install service-only media resolver
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -c 'alter table public.products add column if not exists image_path text'
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114193500_apex_retail_showcase_published_image_source_v1.sql
+      - name: Verify approved publication automatically displays images and immediate revocation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/auto-published-media.sql
       - name: Install nonpayable retail-cart quote RPC
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114010000_apex_retail_cart_quote_bridge.sql
       - name: Verify retail cart pricing, inventory, cross-store, admin holds, gate and privileges
