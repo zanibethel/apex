@@ -108,7 +108,28 @@ try{
  assert.equal(replay.replayed,true);
  // The real executor-only durable budget and one-store resolver are now
  // both exercised via separate transactions over the actual NOINHERIT pool.
- const guards=createRetailPostgresAdmissionDependenciesV1({pool});
+ // CI-only SQLSTATE instrumentation: never emit SQL values, parameter
+ // lists, customer identifiers or private server error messages.
+ const guardedPool={
+  async connect(){
+   const c=await pool.connect();
+   return {
+    async query(sql,params){
+     try{return await c.query(sql,params);}
+     catch(e){
+      const stage=sql.includes("consume_retail_budget")?"budget":
+       sql.includes("resolve_retail_store")?"store":
+       sql==="BEGIN"?"begin":sql.startsWith("SET LOCAL")?"set_local":"other";
+      process.stderr.write("CI guarded pool "+stage+" SQLSTATE "+
+       String(e?.code??"unknown")+"\\n");
+      throw e;
+     }
+    },
+    release(){c.release();},
+   };
+  },
+ };
+ const guards=createRetailPostgresAdmissionDependenciesV1({pool:guardedPool});
  const allowed=await guards.consumeDurableAdmissionBudget({
   subjectId:USER,operation:"nonpayable_retail_order_v1",
  });
