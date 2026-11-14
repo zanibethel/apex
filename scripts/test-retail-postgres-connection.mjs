@@ -13,6 +13,8 @@ import {createRetailPostgresTransactionV1}
  from "../src/lib/checkout/retail-postgres-transaction-v1.mjs";
 import {verifyPrivateRetailCustomerSessionV1}
  from "../src/lib/checkout/verified-customer-session-v1.mjs";
+import {admitPrivateNonpayableRetailOrderV1}
+ from "../src/lib/checkout/retail-nonpayable-admission-controller-v1.mjs";
 import {preparePrivateRetailHoldWithDeliveryV1}
  from "../src/lib/checkout/private-retail-hold-coordinator-v1.mjs";
 
@@ -102,6 +104,37 @@ try{
  const replay=await preparePrivateRetailHoldWithDeliveryV1(raw,options);
  assert.equal(replay.orderId,receipt.orderId);
  assert.equal(replay.replayed,true);
+ // Traverse the new real HTTP-body parser and authenticated admission
+ // controller using disposable fixtures only. An identical request must
+ // replay the existing durable hold without a second inventory reservation.
+ const httpRequest=new Request("https://apexanabolics.co/api/checkout/handoff/v1",{
+  method:"POST",
+  headers:{"Origin":"https://apexanabolics.co",
+   "Content-Type":"application/json","Sec-Fetch-Site":"same-origin"},
+  body:JSON.stringify(raw),
+ });
+ const admitted=await admitPrivateNonpayableRetailOrderV1({
+  request:httpRequest,
+  authClient:{auth:{getUser:async()=>({data:{user:{
+   id:USER,aud:"authenticated",created_at:"2026-11-01T00:00:00Z",
+   is_anonymous:false,
+  }},error:null})}},
+  pool,consumeDurableAdmissionBudget:async()=>({allowed:true,durable:true}),
+  resolveTrustedRetailStore:async()=>({verified:true,storeId:STORE}),
+  fingerprintKey:options.fingerprintKey,
+  deliveryKeyReference:options.deliveryKeyReference,
+  deliveryKey:options.deliveryKey,
+ });
+ assert.equal(admitted.ok,true);
+ assert.equal(admitted.accepted,true);
+ assert.equal(admitted.orderId,receipt.orderId);
+ assert.equal(admitted.replayed,true);
+ assert.equal(admitted.canPay,false);
+ assert.equal(admitted.canShip,false);
+ assert.equal(admitted.invoiceCreated,false);
+ assert.equal(admitted.paymentConfirmed,false);
+ assert.ok(!JSON.stringify(admitted).includes("Fictional Lane"));
+
  assert.equal(replay.totalCents,4700);
  assert.equal(replay.canPay,false);
  assert.ok(!JSON.stringify(receipt).includes("Fictional Lane"));
