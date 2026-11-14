@@ -16,7 +16,7 @@ test("private-only atomic checkout foundation has a separate default-off commerc
  assert.match(sql,/create function apex_internal\.expire_due_retail_order_holds/);
  assert.match(sql,/security invoker/);
  assert.doesNotMatch(sql,/create(?: or replace)? function public\.reserve_retail_order_hold/);
- assert.match(sql,/revoke all on function apex_internal\.reserve_retail_order_hold/[0]);
+ assert.match(sql,/revoke all on function apex_internal\.reserve_retail_order_hold/);
  assert.match(sql,/from public,anon,authenticated,service_role/);
  assert.match(route,/CHECKOUT_UNAVAILABLE/);
  assert.match(route,/status:503/);
@@ -49,8 +49,8 @@ test("saved pricing, shipping, discount checks and admin holds are independent o
   "retail_showcase_category_allowed","p.price_cents between 1 and 999999999",
   "v_product.price_cents*v_qty","promotion_code",
   "min_subtotal_cents","redemption_count","envelope_max_items",
-  "medium_flat_shipping_cents","v_expected_total","Stale cart total",
- ])if(value!=="v_expected_total")assert.ok(sql.includes(value),value);
+  "medium_flat_shipping_cents","Stale cart total",
+ ])assert.ok(sql.includes(value),value);
  assert.doesNotMatch(sql,/\(peptide\|anabolic\|steroid|research use only/);
  assert.match(ci,/private-order-holds.sql/);
  assert.match(ci,/apex_private_retail_order_hold_engine.sql/);
