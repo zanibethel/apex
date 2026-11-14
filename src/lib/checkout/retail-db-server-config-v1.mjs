@@ -4,6 +4,8 @@
  * interpolate or guess a pooler cluster index from the project region.
  * Public customer checkout and the private order gate stay disabled.
  */
+import {X509Certificate} from "node:crypto";
+
 const PROJECT="fhqpkpztercadcxspdkg";
 const ROLE="apex_retail_checkout_app";
 // Exact shared transaction pooler host verified from the Apex Connect screen.
@@ -12,8 +14,6 @@ const fail=()=>new Error("Retail database configuration unavailable");
 const HEX=/^[0-9a-f]+$/i;
 const REF=/^[A-Za-z0-9_-]{5,80}$/;
 const ALLOWED_PROVIDERS=new Set(["postgres:","postgresql:"]);
-import {X509Certificate} from "node:crypto";
-
 export function validateRetailCheckoutServerConfigV1(env){
  if(!env||typeof env!=="object"||
   typeof env.APEX_RETAIL_DB_URL!=="string"||
