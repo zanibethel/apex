@@ -120,7 +120,7 @@ try{
     {product_id:PRODUCT,quantity:2},{product_id:SERUM,quantity:1},
    ]},
   },options),
-  /Private checkout hold unavailable/,
+  /Retail transaction unavailable/,
  );
  // The real executor-only durable budget and one-store resolver are now
  // both exercised via separate transactions over the actual NOINHERIT pool.
