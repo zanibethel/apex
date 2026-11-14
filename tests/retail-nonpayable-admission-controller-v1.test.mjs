@@ -81,7 +81,8 @@ function dependencies(overrides={}){
  const seen={limits:[],stores:[]};
  const authClient={auth:{getUser:async()=>({
   data:{user:{id:USER,aud:"authenticated",
-   created_at:"2026-11-01T00:00:00Z",is_anonymous:false}},
+   created_at:"2026-11-01T00:00:00Z",is_anonymous:false,
+   email_confirmed_at:"2026-11-01T00:00:00Z"}},
   error:null,
  })}};
  const consumeDurableAdmissionBudget=async arg=>{

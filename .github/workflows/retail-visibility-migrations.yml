@@ -13,6 +13,7 @@ on:
       - 'supabase/migrations/20261114052000_apex_private_retail_checkout_execution_role.sql'
       - 'supabase/migrations/20261114061000_apex_retail_checkout_connection_identity.sql'
       - 'supabase/migrations/20261114074500_apex_private_retail_admission_guards.sql'
+      - 'supabase/migrations/20261114090500_apex_terminal_retail_delivery_purge_v1.sql'
       - 'src/lib/checkout/retail-postgres-admission-dependencies-v1.mjs'
       - 'src/lib/checkout/retail-restricted-db-probe-v1.mjs'
       - 'scripts/test-retail-postgres-connection.mjs'
@@ -132,3 +133,7 @@ jobs:
         run: |
           psql -X -v ON_ERROR_STOP=1 -c "update apex_internal.retail_order_engine_gate set enabled=false where singleton=true;" || true
           psql -X -v ON_ERROR_STOP=1 -c "alter role apex_retail_checkout_app nologin;" || true
+      - name: Apply proposed terminal-delivery purge in disposable PostgreSQL only
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114090500_apex_terminal_retail_delivery_purge_v1.sql
+      - name: Verify one-hour retention, no double delete, preserved order ledger and ACLs
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/terminal-delivery-purge.sql

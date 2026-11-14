@@ -84,6 +84,7 @@ try{
  const session=await verifyPrivateRetailCustomerSessionV1({
   auth:{getUser:async()=>({data:{user:{
    id:USER,aud:"authenticated",created_at:"2026-11-01T00:00:00Z",
+   email_confirmed_at:"2026-11-01T00:00:00Z",
    is_anonymous:false,
   }},error:null})},
  });
@@ -151,6 +152,7 @@ try{
   request:httpRequest,
   authClient:{auth:{getUser:async()=>({data:{user:{
    id:USER,aud:"authenticated",created_at:"2026-11-01T00:00:00Z",
+   email_confirmed_at:"2026-11-01T00:00:00Z",
    is_anonymous:false,
   }},error:null})}},
   pool,...guards,
