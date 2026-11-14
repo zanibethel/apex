@@ -42,6 +42,9 @@ export function createRetailPostgresTransactionV1({pool}={}){
   try{
    await client.query("BEGIN ISOLATION LEVEL READ COMMITTED");
    began=true;
+   // NOINHERIT application login can only assume the dedicated worker role
+   // inside this transaction; the role resets automatically after COMMIT.
+   await client.query("SET LOCAL ROLE apex_retail_checkout_executor");
    // Constant statements. No browser-controlled SQL identifiers or strings.
    await client.query("SET LOCAL statement_timeout = '8s'");
    await client.query("SET LOCAL lock_timeout = '3s'");

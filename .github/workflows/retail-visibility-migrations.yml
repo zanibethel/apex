@@ -11,6 +11,7 @@ on:
       - 'supabase/migrations/20261114031000_apex_retail_order_delivery_atomic_boundary.sql'
       - 'supabase/migrations/20261114041000_apex_retail_order_hold_expiry_schedule.sql'
       - 'supabase/migrations/20261114052000_apex_private_retail_checkout_execution_role.sql'
+      - 'supabase/migrations/20261114061000_apex_retail_checkout_connection_identity.sql'
       - 'tests/retail-visibility-migrations/**'
       - '.github/workflows/retail-visibility-migrations.yml'
   workflow_dispatch:
@@ -73,3 +74,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114052000_apex_private_retail_checkout_execution_role.sql
       - name: Verify scoped executor, atomic order, replay and expiry as real role
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/executor-one-connection-order.sql
+      - name: Apply isolated NOLOGIN checkout application identity
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114061000_apex_retail_checkout_connection_identity.sql
+      - name: Verify role noninheritance, SET LOCAL ROLE and checkout gate
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/connection-identity.sql
