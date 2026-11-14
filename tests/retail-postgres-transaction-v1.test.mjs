@@ -89,6 +89,7 @@ test("four DB steps share exactly one connection and one explicit transaction",a
  const sql=env.calls.map(x=>x.sql);
  assert.deepEqual(sql,[
   "BEGIN ISOLATION LEVEL READ COMMITTED",
+  "SET LOCAL ROLE apex_retail_checkout_executor",
   "SET LOCAL statement_timeout = '8s'",
   "SET LOCAL lock_timeout = '3s'",
   "SET LOCAL idle_in_transaction_session_timeout = '8s'",
@@ -99,10 +100,10 @@ test("four DB steps share exactly one connection and one explicit transaction",a
   "COMMIT",
  ]);
  assert.ok(env.calls.every(c=>c.client===env.connections[0]));
- assert.equal(env.calls[5].params.at(-1),4700);
- assert.ok(Buffer.isBuffer(env.calls[6].params[3]));
- assert.ok(Buffer.isBuffer(env.calls[6].params[4]));
- assert.ok(Buffer.isBuffer(env.calls[6].params[5]));
+ assert.equal(env.calls[6].params.at(-1),4700);
+ assert.ok(Buffer.isBuffer(env.calls[7].params[3]));
+ assert.ok(Buffer.isBuffer(env.calls[7].params[4]));
+ assert.ok(Buffer.isBuffer(env.calls[7].params[5]));
  assert.ok(!env.calls.some(c=>c.sql.includes(delivery.address1)||c.sql.includes(USER)));
  assert.ok(!JSON.stringify(receipt).includes("test@example.invalid"));
  assert.ok(!JSON.stringify(receipt).includes("123 Example Street"));
