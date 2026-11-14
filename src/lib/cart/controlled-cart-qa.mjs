@@ -26,7 +26,10 @@ const promo=(code)=>{
  };
 };
 
-/** No external caller may supply a price, stock count, or shipping fee. */
+/**
+ * No external caller may supply a price, stock count, or shipping fee.
+ * @param {{items?:unknown,code?:string,boxSize?:string}} [request]
+ */
 export function buildControlledCartQaReview({items,code="",boxSize="auto"}={}){
  const selected=normalizeCartSelections(items);
  if(selected.length!==1||selected[0].product_id!==QA_PRODUCT_ID||
