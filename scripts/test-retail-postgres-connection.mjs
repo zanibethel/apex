@@ -7,6 +7,8 @@
 import assert from "node:assert/strict";
 import {randomBytes} from "node:crypto";
 import pg from "pg";
+import {verifyRestrictedRetailConnectionV1}
+ from "../src/lib/checkout/retail-restricted-db-probe-v1.mjs";
 import {createRetailPostgresTransactionV1}
  from "../src/lib/checkout/retail-postgres-transaction-v1.mjs";
 import {verifyPrivateRetailCustomerSessionV1}
@@ -39,6 +41,13 @@ const pool=new pg.Pool({
  ssl:false,max:1,idleTimeoutMillis:1000,connectionTimeoutMillis:3500,
 });
 try{
+ // Real restricted-login connection verifies private schema is inaccessible
+ // while role membership and transaction-local executor checks still work.
+ const permissionCheck=await verifyRestrictedRetailConnectionV1(pool);
+ assert.equal(permissionCheck.connected,true);
+ assert.equal(permissionCheck.scopedRoleSwitchVerified,true);
+ assert.equal(permissionCheck.privateTableAccessDenied,true);
+ assert.equal(permissionCheck.orderWritesPerformed,false);
  const session=await verifyPrivateRetailCustomerSessionV1({
   auth:{getUser:async()=>({data:{user:{
    id:USER,aud:"authenticated",created_at:"2026-11-01T00:00:00Z",
