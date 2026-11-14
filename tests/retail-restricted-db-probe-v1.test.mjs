@@ -69,6 +69,18 @@ test("worker role denied or SQL failure rolls back with secret-free error",async
   assert.equal(state.released,1);
  }
 });
+test("private schema privilege checks use pg_catalog OIDs, not inaccessible schema lookup",()=>{
+ const source=readFileSync("src/lib/checkout/retail-restricted-db-probe-v1.mjs","utf8");
+ assert.match(source,/pg_catalog\.pg_class/);
+ assert.match(source,/pg_catalog\.pg_namespace/);
+ assert.match(source,/n\.nspname='apex_internal'/);
+ assert.match(source,/c\.relname='retail_order_holds'/);
+ assert.doesNotMatch(source,/has_table_privilege\(current_user,'apex_internal\.retail_order_holds'/);
+ // The login's schema USAGE stays revoked. This is a diagnostic-only
+ // change; never grant private-schema access just to make a test pass.
+ assert.doesNotMatch(source,/\bGRANT\s+USAGE\s+ON\s+SCHEMA\s+apex_internal/i);
+});
+
 test("missing pool refuses before any database operation",async()=>{
  await assert.rejects(verifyRestrictedRetailConnectionV1(null),
   /Restricted checkout connection could not be verified/);
