@@ -18,8 +18,9 @@ test("all Apex sign-in forms share the same inline password visibility toggle",(
  assert.match(component,/onClick=\{\(\)=>setVisible\(value=>!value\)\}/);
  assert.match(component,/aria-hidden="true" focusable="false"/);
  assert.match(component,/minWidth|className=\{styles\.field\}/);
- assert.ok(component.includes('<path d="M2 12s3.6-7 10-7 10 7-3.6 7-10 7-10-7-10-7Z"/>'));
- assert.ok(signup.includes('<path d="M2 12s3.6-7 10-7 10 7-3.6 7-10 7-10-7-10-7Z"/>'));
+ const existingEye=signup.match(/<path d="(M2 12s[^"]+)"\/>/)?.[1];
+ assert.ok(existingEye,"Signup must include the original eye icon");
+ assert.ok(component.includes(`<path d="${existingEye}"/>`),"Sign-in must exactly match signup eye geometry");
  assert.match(styles,/position:relative/);
  assert.match(styles,/padding-right:64px/);
  assert.match(styles,/width:48px;height:48px/);
