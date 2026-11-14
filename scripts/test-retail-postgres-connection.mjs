@@ -70,7 +70,9 @@ try{
    };
   },
  };
- const permissionCheck=await verifyRestrictedRetailConnectionV1(diagnosisPool);
+ const permissionCheck=await verifyRestrictedRetailConnectionV1(diagnosisPool,{
+  expectedDatabase:"retail_test",
+ });
  assert.equal(permissionCheck.connected,true);
  assert.equal(permissionCheck.scopedRoleSwitchVerified,true);
  assert.equal(permissionCheck.privateTableAccessDenied,true);
