@@ -100,7 +100,13 @@ begin
 
  -- Quote validation rejects duplicate IDs, malformed quantities and
  -- mixed-store carts and applies the existing current display rules.
- v_quote:=public.get_public_retail_cart_quote_source(p_items,'');
+ begin
+  v_quote:=public.get_public_retail_cart_quote_source(p_items,'');
+ exception when invalid_parameter_value then
+  -- Existing public quote raises SQLSTATE 22023 on malformed/duplicate
+  -- cart items. Return an opaque denial, never a runtime exception.
+  return jsonb_build_object('verified',false);
+ end;
  if v_quote->>'state' is distinct from 'rechecked_inventory_cart' or
     jsonb_typeof(v_quote->'items') is distinct from 'array' or
     jsonb_array_length(v_quote->'items')<>jsonb_array_length(p_items) or
