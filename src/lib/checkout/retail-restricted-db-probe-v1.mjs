@@ -13,8 +13,16 @@ const fail=()=>new Error("Restricted checkout connection could not be verified")
 const appRole="apex_retail_checkout_app";
 const executorRole="apex_retail_checkout_executor";
 
-export async function verifyRestrictedRetailConnectionV1(pool){
- if(!pool||typeof pool.connect!=="function")throw fail();
+export async function verifyRestrictedRetailConnectionV1(pool,{
+ expectedDatabase="postgres",
+}={}){
+ // Production always verifies the Supabase "postgres" database. A separately
+ // named database is supported only by the disposable CI fixture; never by
+ // the live admin diagnostic or public input.
+ const fixture=expectedDatabase==="retail_test"&&
+  process.env.CI==="true"&&process.env.PGDATABASE==="retail_test";
+ if(!pool||typeof pool.connect!=="function"||
+  (expectedDatabase!=="postgres"&&!fixture))throw fail();
  let client;
  let inTransaction=false;
  try{
@@ -49,7 +57,7 @@ export async function verifyRestrictedRetailConnectionV1(pool){
   `);
   if(first?.rows?.length!==1)throw fail();
   const initial=first.rows[0];
-  if(initial.role_name!==appRole||initial.database_name!=="postgres"||
+  if(initial.role_name!==appRole||initial.database_name!==expectedDatabase||
     initial.may_set_executor!==true||
     initial.inherits_executor!==false||
     initial.may_update_inventory!==false||
