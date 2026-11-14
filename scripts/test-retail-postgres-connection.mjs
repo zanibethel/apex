@@ -15,6 +15,8 @@ import {verifyPrivateRetailCustomerSessionV1}
  from "../src/lib/checkout/verified-customer-session-v1.mjs";
 import {admitPrivateNonpayableRetailOrderV1}
  from "../src/lib/checkout/retail-nonpayable-admission-controller-v1.mjs";
+import {createRetailPostgresAdmissionDependenciesV1}
+ from "../src/lib/checkout/retail-postgres-admission-dependencies-v1.mjs";
 import {preparePrivateRetailHoldWithDeliveryV1}
  from "../src/lib/checkout/private-retail-hold-coordinator-v1.mjs";
 
@@ -40,7 +42,7 @@ const raw={
 const pool=new pg.Pool({
  host:"127.0.0.1",port:5432,database:"retail_test",
  user:process.env.PGUSER,password:process.env.PGPASSWORD,
- ssl:false,max:1,idleTimeoutMillis:1000,connectionTimeoutMillis:3500,
+ ssl:false,max:6,idleTimeoutMillis:1000,connectionTimeoutMillis:3500,
 });
 try{
  // Real restricted-login connection verifies private schema is inaccessible
@@ -104,6 +106,38 @@ try{
  const replay=await preparePrivateRetailHoldWithDeliveryV1(raw,options);
  assert.equal(replay.orderId,receipt.orderId);
  assert.equal(replay.replayed,true);
+ // The real executor-only durable budget and one-store resolver are now
+ // both exercised via separate transactions over the actual NOINHERIT pool.
+ const guards=createRetailPostgresAdmissionDependenciesV1({pool});
+ const allowed=await guards.consumeDurableAdmissionBudget({
+  subjectId:USER,operation:"nonpayable_retail_order_v1",
+ });
+ assert.deepEqual(allowed,{allowed:true,durable:true});
+ const scope=await guards.resolveTrustedRetailStore({
+  subjectId:USER,items:raw.cart.items,
+ });
+ assert.deepEqual(scope,{verified:true,storeId:STORE});
+ const mixedStore=await guards.resolveTrustedRetailStore({
+  subjectId:USER,
+  items:[
+   {product_id:PRODUCT,quantity:1},
+   {product_id:"50000000-0000-4000-8000-000000000004",quantity:1},
+  ],
+ });
+ assert.equal(mixedStore.verified,false);
+
+ // Twenty parallel requests for one distinct subject must yield *exactly*
+ // ten accepted attempts over the shared PostgreSQL row, even with 6
+ // simultaneous connections and no per-instance in-memory counters.
+ const competingSubject="f1c93598-ed11-470e-aa1a-0c497644a981";
+ const contention=await Promise.all(Array.from({length:20},()=>
+  guards.consumeDurableAdmissionBudget({
+   subjectId:competingSubject,operation:"nonpayable_retail_order_v1",
+  })));
+ assert.equal(contention.filter(x=>x.allowed===true).length,10);
+ assert.equal(contention.filter(x=>x.allowed===false).length,10);
+ assert.ok(contention.every(x=>x.durable===true));
+
  // Traverse the new real HTTP-body parser and authenticated admission
  // controller using disposable fixtures only. An identical request must
  // replay the existing durable hold without a second inventory reservation.
@@ -119,8 +153,7 @@ try{
    id:USER,aud:"authenticated",created_at:"2026-11-01T00:00:00Z",
    is_anonymous:false,
   }},error:null})}},
-  pool,consumeDurableAdmissionBudget:async()=>({allowed:true,durable:true}),
-  resolveTrustedRetailStore:async()=>({verified:true,storeId:STORE}),
+  pool,...guards,
   fingerprintKey:options.fingerprintKey,
   deliveryKeyReference:options.deliveryKeyReference,
   deliveryKey:options.deliveryKey,
