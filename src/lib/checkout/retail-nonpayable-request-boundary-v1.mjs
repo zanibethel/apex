@@ -10,6 +10,10 @@ import {parseCustomerCheckoutHandoffV1} from "./customer-handoff-v1.mjs";
 export const APEX_CHECKOUT_ORIGIN_V1="https://apexanabolics.co";
 export const APEX_CHECKOUT_MAX_BODY_BYTES_V1=8192;
 const deny=()=>Object.freeze({ok:false,code:"INVALID_CHECKOUT_REQUEST"});
+const ALLOWED_NONPAYABLE_PATHS=new Set([
+ "/api/checkout/handoff/v1", // Reserved legacy boundary, still HTTP 503.
+ "/api/checkout/nonpayable/v1", // Separately approved nonpayable-only path.
+]);
 const goodHeaders=(headers)=>{
  if(!headers||typeof headers.get!=="function")return false;
  const origin=headers.get("origin");
@@ -30,15 +34,20 @@ const goodHeaders=(headers)=>{
  return true;
 };
 
-export async function readNonpayableCheckoutRequestV1(request){
+export function isTrustedNonpayableCheckoutEnvelopeV1(request){
  if(!request||request.method!=="POST"||
-  !goodHeaders(request.headers)||request.bodyUsed===true)return deny();
- let reader;
+  !goodHeaders(request.headers)||request.bodyUsed===true)return false;
  try{
   const url=new URL(request.url);
-  if(url.origin!==APEX_CHECKOUT_ORIGIN_V1||
-   url.pathname!=="/api/checkout/handoff/v1"||
-   url.search!==""||url.hash!=="")return deny();
+  return url.origin===APEX_CHECKOUT_ORIGIN_V1&&
+   ALLOWED_NONPAYABLE_PATHS.has(url.pathname)&&
+   url.search===""&&url.hash==="";
+ }catch{return false;}
+}
+export async function readNonpayableCheckoutRequestV1(request){
+ if(!isTrustedNonpayableCheckoutEnvelopeV1(request))return deny();
+ let reader;
+ try{
   if(!request.body||typeof request.body.getReader!=="function")
    return deny();
   reader=request.body.getReader();
