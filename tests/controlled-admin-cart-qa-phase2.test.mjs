@@ -97,7 +97,7 @@ test("production admin QA page is role-guarded, read-only and never accesses che
  for(const section of [page,api])assert.match(section,/isVerifiedPlatformAdmin\(data\.user\)/);
  assert.match(page,/redirect\("\/admin\/sign-in"\)/);
  assert.match(api,/buildControlledCartQaReview/);
- assert.match(api,/method/,{message:"Admin QA request contract must remain safe"});
+ assert.match(api,/export async function POST\(request:NextRequest\)/);
  assert.match(api,/credentials|createSupplierServerClient/);
  assert.match(api,/raw\.length>700/);
  assert.match(api,/Cache-Control":"no-store, private/);
