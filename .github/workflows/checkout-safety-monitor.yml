@@ -5,10 +5,14 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  issues: write
+concurrency:
+  group: apex-checkout-safety-monitor
+  cancel-in-progress: false
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,3 +24,34 @@ jobs:
         env:
           APEX_MONITOR_DATABASE_URL: ${{ secrets.APEX_MONITOR_DATABASE_URL }}
         run: node scripts/checkout-safety-monitor.mjs
+      - name: Open incident issue on monitoring failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const title = "[Apex] Checkout safety monitor incident";
+            const open = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: "open", per_page: 100 });
+            const existing = open.find(i => !i.pull_request && i.title === title);
+            if (!existing) {
+              const url = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+              await github.rest.issues.create({
+                owner, repo, title,
+                body: `Checkout monitoring failed or became unavailable at ${new Date().toISOString()}.\n\n[Inspect the failed workflow run](${url}).\n\nDo not post customer details or credentials here.`
+              });
+            }
+      - name: Resolve incident after successful check
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const title = "[Apex] Checkout safety monitor incident";
+            const open = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: "open", per_page: 100 });
+            for (const issue of open.filter(i => !i.pull_request && i.title === title)) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issue.number,
+                body: `Monitoring recovered at ${new Date().toISOString()}. [Successful run](${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}).`
+              });
+              await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: "closed", state_reason: "completed" });
+            }
