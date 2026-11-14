@@ -8,6 +8,8 @@ test("protected workspace requires verified Auth user and RLS-visible membership
   assert.ok(existsSync(join(process.cwd(), "src/proxy.ts")));
   const page = read("src/app/supplier/page.tsx");
   assert.match(page, /auth\.getUser\(\)/);
+  assert.match(page, /auth\.user\.email_confirmed_at/);
+  assert.match(page, /auth\.user\.is_anonymous/);
   assert.match(page, /supplier_memberships/);
   assert.match(page, /redirect\("\/supplier\/sign-in"\)/);
   assert.doesNotMatch(page, /getSession\(\)|service_role|user_metadata/);
