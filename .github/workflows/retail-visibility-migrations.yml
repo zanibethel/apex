@@ -98,6 +98,11 @@ jobs:
             operation text not null,before_state jsonb,after_state jsonb,
             created_at timestamptz not null default now()
           );
+          -- Disposable bootstrap intentionally revokes all table grants.
+          -- Synthetic authenticated fixture needs read access to the RLS
+          -- membership predicates; production already has scoped RLS.
+          grant select on public.products,public.stores,public.supplier_memberships
+            to authenticated;
           SQL
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114214000_apex_supplier_dimensional_shipping_profiles_v2.sql
       - name: Verify shipping profiles RLS and v2 read-only projection
