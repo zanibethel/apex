@@ -45,6 +45,10 @@ test("disposable CI checks immutable line snapshots and exact stock hold/release
  assert.match(workflow,/l\.sku_snapshot='SHIRT-001'/);
  assert.match(workflow,/l\.sku_snapshot='SERUM-001'/);
  assert.match(workflow,/event_type='hold_expired'/);
+ const purge=read("tests/retail-visibility-migrations/terminal-delivery-purge.sql");
+ assert.match(purge,/where order_id=v_order\)<>2/);
+ assert.match(purge,/where product_id='50000000-0000-4000-8000-000000000005'\)<>0/);
+ assert.match(purge,/purge_terminal_retail_delivery_v1\(100\)/);
  assert.match(workflow,/v_first<>1 or v_again<>0/);
  assert.match(workflow,/where product_id='50000000-0000-4000-8000-000000000005'\)<>0/);
  assert.match(workflow,/where product_id='50000000-0000-4000-8000-000000000001'\)<>0/);
