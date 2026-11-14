@@ -6,6 +6,7 @@ on:
       - 'supabase/migrations/20261110032000_apex_retail_minimum_listing_fields.sql'
       - 'supabase/migrations/20261110040000_apex_admin_retail_product_visibility_restrictions.sql'
       - 'supabase/migrations/20261113234500_apex_content_neutral_retail_display.sql'
+      - 'supabase/migrations/20261114010000_apex_retail_cart_quote_bridge.sql'
       - 'tests/retail-visibility-migrations/**'
       - '.github/workflows/retail-visibility-migrations.yml'
   workflow_dispatch:
@@ -45,3 +46,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261113234500_apex_content_neutral_retail_display.sql
       - name: Verify anonymous and supplier visibility, admin restrictions, audited changes and RLS
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/assertions.sql
+      - name: Install nonpayable retail-cart quote RPC
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114010000_apex_retail_cart_quote_bridge.sql
+      - name: Verify retail cart pricing, inventory, cross-store, admin holds, gate and privileges
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/cart-quote-assertions.sql
+
