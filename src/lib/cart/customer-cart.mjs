@@ -84,13 +84,15 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
   (code!==""&&!/^[A-Z0-9_-]{3,24}$/.test(code))||
   !["auto","small","medium"].includes(boxSize))return {ok:false,reason:"Invalid cart selection"};
  if(!source||typeof source!=="object"||Array.isArray(source)||
-   source.schema_version!==1||source.can_place_order!==false||
+   ![1,2].includes(source.schema_version)||source.can_place_order!==false||
    source.can_pay!==false)return {ok:false,reason:"Cart verification unavailable"};
  if(source.state==="catalog_unavailable"||source.state==="cart_unavailable")
   return {ok:false,reason:"Catalog items or inventory are currently unavailable"};
- if(!exactKeys(source,["schema_version","state","items","shipping",
+ const sourceKeys=["schema_version","state","items","shipping",
    "requested_code","promotion","can_place_order","can_create_invoice",
-   "can_reserve_stock","can_pay"])||
+   "can_reserve_stock","can_pay"];
+ if(source.schema_version===2)sourceKeys.push("shipping_profiles");
+ if(!exactKeys(source,sourceKeys)||
   source.state!=="rechecked_inventory_cart"||
   source.can_create_invoice!==false||source.can_reserve_stock!==false||
   source.requested_code!==code||!Array.isArray(source.items)||
@@ -137,8 +139,12 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
  if(promo===false||(code!==""&&promo?.code!==code)||
   (code===""&&promo!==null))
   return {ok:false,reason:"Discount code unavailable"};
+ const shippingProfiles=source.schema_version===2?source.shipping_profiles:undefined;
+ if(source.schema_version===2&&(!Array.isArray(shippingProfiles)||
+  shippingProfiles.length!==lines.length))
+  return {ok:false,reason:"Product shipping measurements unavailable"};
  const result=previewCheckoutCharges({lines,shippingPolicy:shipping,
-  discountCode:promo,boxSize,now});
+  discountCode:promo,boxSize,now,shippingProfiles});
  if(!result.ok)return {ok:false,reason:code?"Discount code unavailable":result.reason};
  if(result.canPlaceOrder!==false||result.canPay!==false||
   result.canCreateInvoice!==false||result.quoteFinalized!==false)
@@ -155,6 +161,9 @@ export function buildCartReview(source,{items,code="",boxSize="small",now=new Da
   shippingBoxSize:result.shippingBoxSize,
   envelopeMaxItems:result.envelopeMaxItems,
   shippingCents:result.shippingCents,
+  shippingPackages:result.shippingPackages??[],
+  shippingPackageCount:result.packageCount??null,
+  shippingEstimateStatus:result.shippingEstimateStatus??"legacy_quantity_estimate",
   freeShippingMinimumCents:result.freeShippingMinimumCents,
   amountUntilFreeShippingCents:result.amountUntilFreeShippingCents,
   freeShippingReason:result.freeShippingReason,totalCents:result.totalCents,
