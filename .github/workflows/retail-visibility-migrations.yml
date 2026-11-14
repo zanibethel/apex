@@ -27,6 +27,12 @@ on:
       - 'src/lib/checkout/retail-nonpayable-request-boundary-v1.mjs'
       - 'src/lib/checkout/verified-customer-session-v1.mjs'
       - 'src/app/api/checkout/nonpayable/v1/route.ts'
+      - 'supabase/migrations/20261114214000_apex_supplier_dimensional_shipping_profiles_v2.sql'
+      - 'src/lib/commerce/flat-rate-package-estimate.mjs'
+      - 'src/lib/commerce/checkout-charge-rules.mjs'
+      - 'src/lib/cart/customer-cart.mjs'
+      - 'src/app/api/cart/quote/route.ts'
+      - 'src/app/supplier/shipping/**'
       - 'src/lib/cart/customer-cart.mjs'
       - 'src/lib/cart/controlled-cart-qa.mjs'
       - 'src/app/api/admin/cart-qa/quote/route.ts'
@@ -82,6 +88,25 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/cart-quote-assertions.sql
       - name: Verify five-unit stock boundary, discount and shipping sources in disposable in-stock fixture
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/controlled-instock-cart-qa.sql
+      - name: Install audited supplier shipping profile v2 in disposable database
+        run: |
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          create table public.supplier_catalog_audit(
+            id bigint generated always as identity primary key,
+            store_id uuid not null,actor_id uuid,
+            entity_type text not null,entity_id text not null,
+            operation text not null,before_state jsonb,after_state jsonb,
+            created_at timestamptz not null default now()
+          );
+          -- Disposable bootstrap intentionally revokes all table grants.
+          -- Synthetic authenticated fixture needs read access to the RLS
+          -- membership predicates; production already has scoped RLS.
+          grant select on public.products,public.stores,public.supplier_memberships
+            to authenticated;
+          SQL
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114214000_apex_supplier_dimensional_shipping_profiles_v2.sql
+      - name: Verify shipping profiles RLS and v2 read-only projection
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/shipping-profiles-v2.sql
 
       - name: Apply default-OFF private atomic order hold engine
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114022000_apex_private_retail_order_hold_engine.sql

@@ -16,6 +16,8 @@ type Review={
  items?:QuoteLine[];merchandiseSubtotalCents?:number;
  merchandiseDiscountCents?:number;discountedMerchandiseCents?:number;
  shippingBoxSize?:string;shippingCents?:number;envelopeMaxItems?:number;
+ shippingPackageCount?:number|null;shippingEstimateStatus?:string;
+ shippingPackages?:{kind:string;variant:string;units:number;feeCents:number}[];
  freeShippingMinimumCents?:number|null;
  amountUntilFreeShippingCents?:number|null;freeShippingReason?:string;
  totalCents?:number;canPlaceOrder?:false;canPay?:false;
@@ -151,12 +153,22 @@ export function CustomerCartPage({
      <section className="apex-customer-shipping" aria-label="Automatic USPS shipping">
       <strong>USPS Priority Mail shipping</strong>
       <p className="apex-cart-note" aria-live="polite">
-       {selectedBox==="medium"?"Medium Flat Rate Box (automatically selected)":
-        selectedBox==="small"?"Padded Flat Rate Envelope (automatically selected)":
+       {review?.shippingEstimateStatus==="dimensional_estimate"?
+        "Estimated "+review.shippingPackageCount+" package(s) based on packed dimensions and weight.":
+       selectedBox==="medium"?"Medium Flat Rate Box (automatically selected)":
+       selectedBox==="small"?"Padded Flat Rate Envelope (automatically selected)":
         "Packaging is selected automatically after inventory and pricing verification."}
       </p>
-      {review?.ok&&<p className="apex-cart-note">Up to {review.envelopeMaxItems} items:
-       padded envelope; above that: Medium box.</p>}
+      {review?.ok&&review.shippingEstimateStatus==="dimensional_estimate"&&
+       <p className="apex-cart-note">Estimated {review.shippingPackageCount} USPS packages:
+        {" "+(review.shippingPackages??[]).map(p=>p.kind==="medium_box"?"Medium box":"Padded envelope").join(", ")}.
+        Physical fit and final label charges must be confirmed before dispatch.</p>}
+      {review?.ok&&review.shippingEstimateStatus==="provisional_missing_dimensions"&&
+       <p role="status" className="apex-cart-validation">Provisional shipping total based on item count.
+        The supplier must enter packed dimensions and weight for every product before final shipping can be confirmed.</p>}
+      {review?.ok&&review.shippingEstimateStatus!=="dimensional_estimate"&&
+       <p className="apex-cart-note">Up to {review.envelopeMaxItems} items:
+        provisional padded envelope; above that: Medium box.</p>}
      </section>
      <p className="apex-cart-note">Packaging is subject to fit confirmation.
       {review?.ok&&review.freeShippingMinimumCents!=null?

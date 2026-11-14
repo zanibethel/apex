@@ -26,7 +26,7 @@ export function ShippingSettingsForm({storeId,initial,enabled=true}:{
   <h2>USPS Priority Mail Flat Rate</h2>
   <p className="notice">Configure Padded Flat Rate Envelope and Medium Flat Rate Box charges.
    Free shipping applies when merchandise after discounts exceeds $200.
-   Shipping charges are waived by an eligible free-shipping code.</p>
+   Shipping charges are waived by an eligible free-shipping code. When packed measurements exist for all cart items, Apex estimates the required number of packages and sums the configured charge for each.</p>
   <form action={action} className="supplier-form">
    <input type="hidden" name="storeId" value={storeId}/>
    <label htmlFor="charge-shipping">Charge shipping?</label>
@@ -46,15 +46,12 @@ export function ShippingSettingsForm({storeId,initial,enabled=true}:{
     min=".01" max="9999999.99" step=".01"
     defaultValue={money(initial.charge_shipping?initial.medium_flat_shipping_cents:2580)}
     disabled={!charge||!enabled||pending} required={charge}/>
-   <label htmlFor="envelope-max-items">Maximum items in padded envelope</label>
+   <label htmlFor="envelope-max-items">Fallback maximum items (unmeasured products only)</label>
    <input id="envelope-max-items" name="envelopeMaxItems" type="number"
     min={1} max={50} step={1}
     defaultValue={initial.envelope_max_items}
     disabled={!enabled||pending} required/>
-   <p className="notice">At or below this number of items, shipping defaults to the
-    padded envelope. Larger carts automatically use the Medium box. The limit
-    is a packing estimate, not a USPS quantity rule. Confirm actual fit
-    before dispatching.</p>
+   <p className="notice">This item limit applies only while product measurements are missing. Once all cart items have packed dimensions and weight, the package estimator checks fit and weight, selects padded envelopes or Medium boxes, and may charge for multiple packages. Confirm physical fit before purchasing labels.</p>
    <label htmlFor="free-shipping-min">Free shipping at merchandise subtotal (USD)</label>
    <input id="free-shipping-min" name="freeShippingMinimum" type="number"
     min=".01" max="9999999.99" step=".01"
@@ -62,8 +59,7 @@ export function ShippingSettingsForm({storeId,initial,enabled=true}:{
     disabled={!charge||!enabled||pending} required={charge}/>
    <p className="notice">For orders over $200, set this amount to 200.01.
     Qualification uses merchandise after any product discount, excluding shipping.
-    Use the padded envelope for standard shipments and the Medium box when items do not fit.
-    The fulfillment team must confirm that each packed order fits its packaging.
+    The fulfillment team must confirm every packed order fits its calculated parcels.
     USPS prices can be changed here when carrier rates change.</p>
    <button type="submit" className="button secondary"
     disabled={!enabled||pending}>{pending?"Saving…":"Save shipping settings"}</button>

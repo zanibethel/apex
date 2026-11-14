@@ -59,7 +59,9 @@ type MiniQuoteLine={productId:string;name:string;quantity:number;
 type MiniQuote={ok:boolean;reason?:string;status?:string;
  items?:MiniQuoteLine[];merchandiseSubtotalCents?:number;
  merchandiseDiscountCents?:number;shippingCents?:number;
- totalCents?:number;canPlaceOrder?:false;canPay?:false};
+ totalCents?:number;canPlaceOrder?:false;canPay?:false;
+ shippingPackageCount?:number|null;shippingEstimateStatus?:string;
+ shippingPackages?:{kind:string;variant:string;units:number;feeCents:number}[]};
 const money=(cents:number)=>new Intl.NumberFormat("en-US",{
  style:"currency",currency:"USD",
 }).format(cents/100);
@@ -198,6 +200,17 @@ export function CustomerCartLink(){
        <div><span>Merchandise</span><strong>{money(quote.merchandiseSubtotalCents??0)}</strong></div>
        <div><span>Discount</span><strong>−{money(quote.merchandiseDiscountCents??0)}</strong></div>
        <div><span>Shipping</span><strong>{quote.shippingCents===0?"Free":money(quote.shippingCents??0)}</strong></div>
+       {quote.shippingEstimateStatus==="dimensional_estimate"&&
+        <p className="apex-mini-cart-muted" role="status">
+         Estimated {quote.shippingPackageCount} USPS {quote.shippingPackageCount===1?"package":"packages"}
+         {quote.shippingPackages?.length?" · "+quote.shippingPackages.map(p=>
+          p.kind==="medium_box"?"Medium box":"Padded envelope").join(", "):""}.
+         Physical fit and label cost require confirmation.
+        </p>}
+       {quote.shippingEstimateStatus==="provisional_missing_dimensions"&&
+        <p className="apex-mini-cart-error" role="status">
+         Provisional item-count shipping estimate. The supplier still needs to enter packed dimensions and weight.
+        </p>}
        <div className="apex-mini-cart-total"><span>Estimated total</span>
         <strong>{money(quote.totalCents??0)}</strong></div>
        {missingStock&&<p role="alert" className="apex-mini-cart-error">
