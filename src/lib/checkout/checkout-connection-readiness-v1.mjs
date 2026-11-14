@@ -15,7 +15,7 @@ const step=(id,label,state,detail,href)=>Object.freeze({
  id,label,state,detail,href,
 });
 export function buildCheckoutConnectionReportV1({
- retailShowcase,quoteFlag,journal,btcpay,
+ retailShowcase,quoteFlag,journal,btcpay,nonpayableReadiness,
 }={}){
  const providerStatus=typeof btcpay?.storeStatus==="string"?
   btcpay.storeStatus:"unavailable";
@@ -79,9 +79,19 @@ export function buildCheckoutConnectionReportV1({
    "incomplete",
    "Real provider rule sync, wallet verification, reconciliation and recovery are not connected.",
    "/admin/splits/configure"),
-  step("checkout","Live order and payment endpoints",
+  step("nonpayable","Temporary nonpayable order submission",
+   nonpayableReadiness?.requested===true&&nonpayableReadiness?.reviewed===true?
+    "configured":
+    nonpayableReadiness?.requested===true?"incomplete":"disabled",
+   nonpayableReadiness?.requested===true&&nonpayableReadiness?.reviewed===true?
+    "Server-only acknowledgments are present, but independent database order-engine, firewall, Auth and maintenance evidence is required; neither payment nor shipping is authorized.":
+    nonpayableReadiness?.requested===true?
+     "An operator requested nonpayable submission but supplemental reviews are incomplete; submission stays unavailable.":
+     "Temporary inventory-hold submission remains gated off. Existing price and stock previews do not create orders.",
+   "/admin/checkout-production-readiness"),
+  step("checkout","Legacy payable checkout and invoices",
    "disabled",
-   "Customer endpoint intentionally returns HTTP 503. No order or invoice creation.",
+   "The legacy payable checkout route always returns HTTP 503. No BTCPay invoices or payments can be created.",
    "/admin/checkout-readiness"),
  ];
  return Object.freeze({
