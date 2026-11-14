@@ -13,20 +13,21 @@ import {verifyRestrictedRetailConnectionV1}
 
 export async function probeProductionRetailConnectionV1(env){
  let pool;
+ let verified=false;
  try{
   const configured=createRetailCheckoutServerPoolV1(env,pg.Pool);
   pool=configured.pool;
   const result=await verifyRestrictedRetailConnectionV1(pool);
-  return Boolean(result?.connected===true&&
+  verified=Boolean(result?.connected===true&&
    result?.scopedRoleSwitchVerified===true&&
    result?.privateTableAccessDenied===true&&
    result?.orderWritesPerformed===false);
  }catch{
-  return false;
+  verified=false;
  }finally{
   if(pool){
-   // Session termination never turns a failure into a success.
-   try{await pool.end();}catch{}
+   try{await pool.end();}catch{verified=false;}
   }
  }
+ return verified;
 }
