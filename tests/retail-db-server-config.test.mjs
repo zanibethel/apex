@@ -1,19 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {rootCertificates} from "node:tls";
 import {validateRetailCheckoutServerConfigV1,createRetailCheckoutServerPoolV1}
  from "../src/lib/checkout/retail-db-server-config-v1.mjs";
 const ID="fhqpkpztercadcxspdkg";
-const HOST="aws-0-us-east-1.pooler.supabase.com"; // Fixture, NOT an asserted project endpoint.
+const HOST="aws-0-us-east-1.pooler.supabase.com"; // Verified from the Apex Supabase Connect panel.
 const base={
  APEX_RETAIL_DB_URL:"postgresql://apex_retail_checkout_app."+ID+":not-a-real-password@"+HOST+":6543/postgres",
  APEX_RETAIL_FINGERPRINT_KEY:"ab".repeat(32),
  APEX_RETAIL_DELIVERY_KEY_HEX:"ef".repeat(32),
  APEX_RETAIL_DELIVERY_KEY_REF:"2026_11_v1",
+ // Valid public CA fixture for parser testing only; NOT the Supabase production CA.
+ APEX_RETAIL_DB_CA_PEM:rootCertificates[0],
 };
 test("validates only the scoped custom role, TLS and protected encryption keys",()=>{
  const v=validateRetailCheckoutServerConfigV1(base);
  assert.equal(v.max,2);
  assert.equal(v.ssl.rejectUnauthorized,true);
+ assert.equal(v.ssl.ca,rootCertificates[0]);
  assert.equal(v.deliveryKey.length,32);
  assert.equal(v.deliveryKeyReference,"2026_11_v1");
  class Pool{
@@ -39,6 +43,9 @@ test("rejects all admin, unverified pooler, other project and weak TLS settings"
   {APEX_RETAIL_FINGERPRINT_KEY:"guessable"},
   {APEX_RETAIL_DELIVERY_KEY_HEX:"ff"},
   {APEX_RETAIL_DELIVERY_KEY_REF:"!invalid"},
+  {APEX_RETAIL_DB_CA_PEM:""},
+  {APEX_RETAIL_DB_CA_PEM:"-----BEGIN CERTIFICATE-----garbage-----END CERTIFICATE-----"},
+  {APEX_RETAIL_DB_URL:"postgresql://apex_retail_checkout_app."+ID+":pw@aws-1-us-east-1.pooler.supabase.com:6543/postgres"},
  ];
  for(const override of overrides){
   assert.throws(()=>validateRetailCheckoutServerConfigV1({...base,...override}),
