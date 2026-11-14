@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
-import {useActionState} from "react";
+import {useActionState,useState} from "react";
 import {registerCustomer,resendCustomerConfirmation}
  from "./actions";
 
 export function CustomerSignupForm(){
+ const [showPasswords,setShowPasswords]=useState(false);
  const [state,action,pending]=useActionState(registerCustomer,
   {ok:false,message:""});
  const [resendState,resendAction,resending]=useActionState(
@@ -19,11 +20,17 @@ export function CustomerSignupForm(){
    <input id="register-email" name="email" type="email" required
     maxLength={254} autoComplete="email"/>
    <label htmlFor="register-password">Password</label>
-   <input id="register-password" name="password" type="password"
+   <input id="register-password" name="password" type={showPasswords?"text":"password"}
     autoComplete="new-password" required minLength={12} maxLength={128}/>
    <label htmlFor="register-confirm">Confirm password</label>
-   <input id="register-confirm" name="confirmPassword" type="password"
+   <input id="register-confirm" name="confirmPassword" type={showPasswords?"text":"password"}
     autoComplete="new-password" required minLength={12} maxLength={128}/>
+   <button type="button" className="button secondary"
+    aria-pressed={showPasswords} aria-controls="register-password register-confirm"
+    style={{alignSelf:"flex-start",minHeight:44}}
+    onClick={()=>setShowPasswords(value=>!value)}>
+    {showPasswords?"Hide passwords":"Show passwords"}
+   </button>
    <button type="submit" className="button primary" disabled={pending}>
     {pending?"Creating account…":"Create account"}</button>
   </form>}
