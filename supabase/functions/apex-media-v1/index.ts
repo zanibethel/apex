@@ -82,6 +82,50 @@ async function getAsset(req:Request,productId:string){
    "Content-Security-Policy":"default-src 'none'; sandbox"},
  });
 }
+
+// No extra approval: the server-only RPC must attest that this exact product
+// is currently displayed in the public retail showcase. The source bucket
+// remains private and no storage URLs or paths are sent to the browser.
+async function getRetailImage(req:Request,productId:string){
+ if(!service||!validId(productId)||req.method!=="GET")return denied();
+ const resolve=()=>service!.rpc("apex_retail_showcase_image_source_v1",{
+  p_product:productId,
+ });
+ const first=await resolve();
+ if(first.error||!first.data||typeof first.data!=="object"||
+  Array.isArray(first.data))return denied();
+ const record=first.data as Record<string,unknown>;
+ const path=record.source_image_path;
+ if(Object.keys(record).length!==1||typeof path!=="string"||
+  path.length>180)return denied();
+ const prefix=/^[0-9a-f-]{36}\/[0-9a-f-]{36}\//;
+ const segments=path.split("/");
+ if(!prefix.test(path)||segments.length!==3||
+  !validId(segments[0])||segments[1]!==productId)return denied();
+ const match=segments[2].match(
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.(png|jpg|webp)$/,
+ );
+ if(!match||!validId(match[1]))return denied();
+ const mime=mimeFor(match[2]);
+ if(!mime)return denied();
+ const object=await service.storage.from(SRC_BUCKET).download(path);
+ if(object.error||!object.data)return denied();
+ const bytes=await readBytes(object.data);
+ if(!bytes||!fileIsValid(bytes,mime))return denied();
+ // Recheck after downloading: an unpublish, admin hold or image replacement
+ // during the request must not serve an older private image.
+ const current=await resolve();
+ if(current.error||!current.data||
+  (current.data as Record<string,unknown>).source_image_path!==path)return denied();
+ return new Response(bytes,{
+  status:200,headers:{"Content-Type":mime,
+   "Content-Length":String(bytes.length),
+   "Cache-Control":"private, no-store, max-age=0",
+   "X-Content-Type-Options":"nosniff",
+   "Content-Security-Policy":"default-src 'none'; sandbox"},
+ });
+}
+
 async function issue(req:Request){
  if(!service||req.method!=="POST")return denied(404);
  const bearer=req.headers.get("authorization")??"";
@@ -185,6 +229,8 @@ Deno.serve(async req=>{
   const suffix=parts.slice(-2);
   if(suffix[0]==="asset"&&validId(suffix[1])&&req.method==="GET")
    return await getAsset(req,suffix[1]);
+  if(suffix[0]==="retail"&&validId(suffix[1])&&req.method==="GET")
+   return await getRetailImage(req,suffix[1]);
   if(parts.at(-1)==="issue"&&req.method==="POST")return await issue(req);
   if(parts.at(-1)==="revoke"&&req.method==="POST")return await revoke(req);
   return denied();
