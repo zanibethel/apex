@@ -15,8 +15,9 @@
 > - Postmigration readback confirmed the private order-engine gate **false**,
 >   no active or overdue holds, no encrypted delivery rows, exactly one active
 >   delivery-purge cron and one active unpaid-hold expiry cron. The new purge
->   had not executed for the first time at the last readback; next job history
->   verification is still outstanding. All anon/authenticated/service_role
+>   first ran successfully at 2026-11-14 06:25:00 UTC with zero failures
+>   at readback. A guarded direct smoke call returned zero rows purged and
+>   left the engine OFF with zero stored delivery. All anon/authenticated/service_role
 >   DELETE grants on encrypted delivery, and EXECUTE on the purge function,
 >   were denied; the checkout executor also lacked EXECUTE.
 > - **Vercel WAF custom rule independently read back ACTIVE**, rule ID
@@ -41,8 +42,8 @@
 >   the production order engine.
 >
 > **Remaining release gates:** hosted Auth settings and delivery tests,
-> WAF 429 behavioral verification, first real purge cron success and
-> operations alert readback, and independent approval for any future
+> WAF 429 behavioral verification, ongoing purge-job operations alert
+> readback, and independent approval for any future
 > checkout or payment activation. The four supplemental acknowledgment
 > variables must remain unset until each review is complete.
 >
