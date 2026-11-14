@@ -6,6 +6,13 @@ export const CUSTOMER_CART_STORAGE_KEY="apex_customer_cart_v1";
 export const CART_LIMIT=20;
 export const CART_UNITS_LIMIT=50;
 
+/** Customer-facing promotion code entry; server quote remains authoritative. */
+export function normalizeDiscountEntry(value){
+ if(typeof value!=="string")return null;
+ const code=value.trim().toUpperCase();
+ return code===""||/^[A-Z0-9_-]{3,24}$/.test(code)?code:null;
+}
+
 export function normalizeCartSelections(value){
  if(!Array.isArray(value)||value.length>CART_LIMIT)return [];
  const ids=new Set();
