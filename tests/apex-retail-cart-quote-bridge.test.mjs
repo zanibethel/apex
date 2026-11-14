@@ -6,7 +6,7 @@ import {buildCartReview} from "../src/lib/cart/customer-cart.mjs";
 const read=p=>readFileSync(p,"utf8");
 const sql=read("supabase/migrations/20261114010000_apex_retail_cart_quote_bridge.sql");
 // Test executable statements, not explanatory references in comments.
-const executableSql=sql.replace(/^\\s*--.*$/gm,"");
+const executableSql=sql.replace(/^\s*--.*$/gm,"");
 const route=read("src/app/api/cart/quote/route.ts");
 const workflow=read(".github/workflows/retail-visibility-migrations.yml");
 const item="50000000-0000-4000-8000-000000000005";
@@ -35,7 +35,7 @@ test("public price feed checks actual supplier publish, holds, ownership, and fr
   "'can_create_invoice',false","'can_reserve_stock',false","'can_pay',false",
  ])assert.ok(sql.includes(part),part);
  assert.doesNotMatch(sql,/\(peptide\|anabolic\|steroid|research use only|not for human consumption/);
- assert.doesNotMatch(sql,/update\s+public\.products|insert\s+into|delete\s+from|createInvoice|btcpay/i);
+ assert.doesNotMatch(executableSql,/update\s+public\.products|insert\s+into|delete\s+from|createInvoice|btcpay/i);
  assert.match(sql,/revoke all on function public\.get_public_retail_cart_quote_source/);
  assert.match(sql,/grant execute on function public\.get_public_retail_cart_quote_source/);
 });
