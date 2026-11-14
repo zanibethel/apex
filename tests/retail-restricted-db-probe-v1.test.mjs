@@ -85,6 +85,29 @@ test("private schema privilege checks use pg_catalog OIDs, not inaccessible sche
  assert.doesNotMatch(source,/\bGRANT\s+USAGE\s+ON\s+SCHEMA\s+apex_internal/i);
 });
 
+test("production database name remains strictly pinned and fixture cannot be spoofed",async()=>{
+ const original=process.env.CI;
+ const originalDb=process.env.PGDATABASE;
+ const role=harness();
+ try{
+  delete process.env.CI;
+  delete process.env.PGDATABASE;
+  await assert.rejects(
+   verifyRestrictedRetailConnectionV1(role.pool,{expectedDatabase:"retail_test"}),
+   /Restricted checkout connection could not be verified/
+  );
+  assert.equal(role.calls.length,0,"unexpected production fixture connection");
+  const standard=harness();
+  const pass=await verifyRestrictedRetailConnectionV1(standard.pool);
+  assert.equal(pass.connected,true);
+ }finally{
+  if(original===undefined)delete process.env.CI;
+  else process.env.CI=original;
+  if(originalDb===undefined)delete process.env.PGDATABASE;
+  else process.env.PGDATABASE=originalDb;
+ }
+});
+
 test("missing pool refuses before any database operation",async()=>{
  await assert.rejects(verifyRestrictedRetailConnectionV1(null),
   /Restricted checkout connection could not be verified/);
