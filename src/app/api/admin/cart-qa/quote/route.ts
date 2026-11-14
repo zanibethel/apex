@@ -34,6 +34,8 @@ export async function POST(request:NextRequest){
  if(Object.keys(fields).length!==3||
   Object.keys(fields).some(k=>!["items","code","boxSize"].includes(k)))
   return deny(400,"Invalid test cart");
+ if(typeof fields.code!=="string"||fields.boxSize!=="auto")
+  return deny(400,"Invalid test cart");
  const review=buildControlledCartQaReview({
   items:fields.items,code:fields.code,boxSize:fields.boxSize,
  });
