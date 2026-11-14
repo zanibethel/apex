@@ -6,17 +6,21 @@
  */
 const PROJECT="fhqpkpztercadcxspdkg";
 const ROLE="apex_retail_checkout_app";
+// Exact shared transaction pooler host verified from the Apex Connect screen.
+const POOLER_HOST="aws-0-us-east-1.pooler.supabase.com";
 const fail=()=>new Error("Retail database configuration unavailable");
 const HEX=/^[0-9a-f]+$/i;
 const REF=/^[A-Za-z0-9_-]{5,80}$/;
 const ALLOWED_PROVIDERS=new Set(["postgres:","postgresql:"]);
+import {X509Certificate} from "node:crypto";
 
 export function validateRetailCheckoutServerConfigV1(env){
  if(!env||typeof env!=="object"||
   typeof env.APEX_RETAIL_DB_URL!=="string"||
   typeof env.APEX_RETAIL_FINGERPRINT_KEY!=="string"||
   typeof env.APEX_RETAIL_DELIVERY_KEY_HEX!=="string"||
-  typeof env.APEX_RETAIL_DELIVERY_KEY_REF!=="string")throw fail();
+  typeof env.APEX_RETAIL_DELIVERY_KEY_REF!=="string"||
+  typeof env.APEX_RETAIL_DB_CA_PEM!=="string")throw fail();
  let url;
  try{url=new URL(env.APEX_RETAIL_DB_URL);}catch{throw fail();}
  if(!ALLOWED_PROVIDERS.has(url.protocol)||
@@ -24,12 +28,19 @@ export function validateRetailCheckoutServerConfigV1(env){
   url.pathname!=="/postgres"||
   (url.port!=="5432"&&url.port!=="6543"))throw fail();
  const host=url.hostname.toLowerCase();
- const shared=host.endsWith(".pooler.supabase.com")&&
-  /^aws-[0-9]+-[a-z0-9-]+\.pooler\.supabase\.com$/.test(host);
+ const shared=host===POOLER_HOST&&url.port==="6543";
  const direct=host==="db."+PROJECT+".supabase.co"&&url.port==="5432";
  if(!(shared||direct)||
    decodeURIComponent(url.username)!==(shared?ROLE+"."+PROJECT:ROLE))
   throw fail();
+ // Supabase poolers use a private CA, not necessarily an OS trust root.
+ // Reject invalid/missing project CA instead of silently disabling TLS verification.
+ let ca;
+ try{
+  ca=env.APEX_RETAIL_DB_CA_PEM.trim();
+  const cert=new X509Certificate(ca);
+  if(!cert.ca)throw fail();
+ }catch{throw fail();}
  const fp=env.APEX_RETAIL_FINGERPRINT_KEY;
  const aes=env.APEX_RETAIL_DELIVERY_KEY_HEX;
  if(!HEX.test(fp)||fp.length<64||fp.length>128||fp.length%2!==0||
@@ -38,7 +49,7 @@ export function validateRetailCheckoutServerConfigV1(env){
  // Return only runtime options. Do not serialize, log or expose to clients.
  return Object.freeze({
   connectionString:env.APEX_RETAIL_DB_URL,
-  ssl:Object.freeze({rejectUnauthorized:true}),
+  ssl:Object.freeze({ca,rejectUnauthorized:true}),
   max:2,
   idleTimeoutMillis:1000,
   connectionTimeoutMillis:3500,
