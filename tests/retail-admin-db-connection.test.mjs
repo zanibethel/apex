@@ -10,7 +10,7 @@ const checkout=readFileSync("src/app/api/checkout/handoff/v1/route.ts","utf8");
 test("admin auth must be verified before production pool is created",()=>{
  const getUser=page.indexOf("authClient.auth.getUser()");
  const auth=page.indexOf("isVerifiedPlatformAdmin(data.user)");
- const call=page.indexOf("await probeProductionRetailConnectionV1(process.env)");
+ const call=page.indexOf("await checkProductionRetailConnectionV1(process.env)");
  assert.ok(getUser>=0&&auth>getUser&&call>auth,
   "Read-only check must execute strictly after verified platform admin auth");
  assert.match(page,/redirect\("\/admin\/sign-in"\)/);
@@ -20,12 +20,14 @@ test("admin auth must be verified before production pool is created",()=>{
  assert.doesNotMatch(page,/NEXT_PUBLIC_APEX_RETAIL|\bdatabasePassword\b|\bcreateInvoice\b/);
 });
 
-test("private probe uses only the server runtime and returns safe Boolean status",()=>{
+test("private probe uses only the server runtime and returns safe status",()=>{
  assert.match(probe,/import "server-only"/);
  assert.match(probe,/createRetailCheckoutServerPoolV1\(env,pg\.Pool\)/);
- assert.match(probe,/verifyRestrictedRetailConnectionV1\(pool\)/);
- assert.match(probe,/verified=false/);
- assert.match(probe,/await pool\.end\(\)/);
+ assert.match(probe,/runRestrictedRetailDiagnosticStagesV1/);
+ assert.match(probe,/verifyRestrictedRetailConnectionV1/);
+ const stages=readFileSync("src/lib/checkout/retail-db-diagnostic-stages-v1.mjs","utf8");
+ assert.match(stages,/verified:false/);
+ assert.match(stages,/await pool\.end\(\)/);
  assert.doesNotMatch(probe,/console\.|fetch\(|process\.stdout|service_role|postgres\s*password/i);
  assert.doesNotMatch(page,/\bJSON\.stringify\(process\.env\)|\bBuffer\.from\(process\.env/);
 });
