@@ -1,0 +1,22 @@
+name: Apex checkout safety monitor
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Read-only checkout safety check
+        env:
+          APEX_MONITOR_DATABASE_URL: ${{ secrets.APEX_MONITOR_DATABASE_URL }}
+        run: node scripts/checkout-safety-monitor.mjs
