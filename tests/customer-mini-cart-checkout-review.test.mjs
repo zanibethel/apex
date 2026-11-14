@@ -123,3 +123,12 @@ test("server quote remains informational when items become sold out",()=>{
  assert.equal(review.canPay,false);
  assert.equal(review.canPlaceOrder,false);
 });
+
+test("product tiles use a compact plus for another cart unit",()=>{
+ const source=read("src/app/cart/cart-provider.tsx");
+ assert.ok(source.includes('saved?"In cart — +":"+ "+actionLabel'));
+ assert.doesNotMatch(source,/In cart — add another/);
+ assert.match(source,/onClick=\{\(\)=>\{setStockError\(false\);add\(id\);\}\}/);
+ assert.match(source,/disabled=\{saved&&items\.find\(item=>item\.product_id===id\)\?\.quantity===10\}/);
+ assert.match(source,/if\(availability!=="in_stock"\)return/);
+});
