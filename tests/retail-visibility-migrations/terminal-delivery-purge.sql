@@ -42,13 +42,17 @@ begin
  if apex_internal.purge_terminal_retail_delivery_v1(100)<>0
  then raise exception 'Repeat purge changed records';end if;
 
+ -- The two original purchased lines remain immutable even after
+ -- transient encrypted delivery is removed. Both stock holds stay released.
  if (select count(*) from apex_internal.retail_order_hold_lines
-     where order_id=v_order)<>1 or
+     where order_id=v_order)<>2 or
     (select state from apex_internal.retail_order_holds where id=v_order)
       <> 'expired_no_payment' or
     (select quantity_reserved from public.inventory_items
-      where product_id='50000000-0000-4000-8000-000000000001')<>0
- then raise exception 'Immutable order/stock audit changed';end if;
+      where product_id='50000000-0000-4000-8000-000000000001')<>0 or
+    (select quantity_reserved from public.inventory_items
+      where product_id='50000000-0000-4000-8000-000000000005')<>0
+ then raise exception 'Immutable two-line order or stock audit changed';end if;
 
  if (select count(*) from cron.job
    where jobname='apex-retail-delivery-purge-v1' and active
