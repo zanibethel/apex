@@ -3,7 +3,7 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {isVerifiedPlatformAdmin} from "@/lib/auth/admin-access";
-import {probeProductionRetailConnectionV1}
+import {checkProductionRetailConnectionV1}
  from "@/lib/checkout/retail-production-db-readiness-v1.mjs";
 
 export const dynamic="force-dynamic";
@@ -28,8 +28,19 @@ export default async function CheckoutDatabaseConnectionPage(){
   redirect("/admin/sign-in");
 
  // The imported server-only module owns credentials and releases the
- // actual PostgreSQL client before returning an opaque Boolean.
- const verified=await probeProductionRetailConnectionV1(process.env);
+ // actual PostgreSQL client before returning safe stage-only diagnostics.
+ const result=await checkProductionRetailConnectionV1(process.env);
+ const verified=result.verified===true;
+ const configOkay=result.stage!=="configuration";
+ const connected=["permission_checks","connection_verified","pool_cleanup"]
+  .includes(result.stage);
+ const failureHint=({
+  configuration:"Server settings failed validation. Check the Production-only credential format, CA certificate and checkout keys in Vercel; do not share their values.",
+  postgres_connection:"The Vercel server could not complete a PostgreSQL connection. Check TLS/network access and confirm the protected Production password matches your working iPhone login. Redeploy after editing secrets.",
+  permission_checks:"Database connection succeeded, but the restricted role permission checks did not pass. Do not reset the database password; review the checkout executor grants.",
+  pool_cleanup:"The connection was opened, but the pool did not close cleanly. No checkout action was performed.",
+  connection_verified:"",
+ })[result.stage]??"Private read-only verification did not finish.";
 
  return <main className="container supplier-shell apex-branded-dashboard"
   style={{minWidth:0,overflowWrap:"anywhere"}}>
@@ -42,12 +53,12 @@ export default async function CheckoutDatabaseConnectionPage(){
    <p role="status" className="notice">
     {verified?
      "Apex's deployed Vercel server authenticated as the restricted database role using verified TLS.":
-     "The private read-only test could not complete. Checkout stays disabled. Check the production database credential, role permissions and CA configuration."}
+     failureHint}
    </p>
    <ul className="supplier-stores">
-    <li><span>PostgreSQL connection</span><strong>{verified?"Verified":"Not verified"}</strong></li>
-    <li><span>Restricted login identity</span><strong>{verified?"Verified":"Not verified"}</strong></li>
-    <li><span>Transaction-local executor permission</span><strong>{verified?"Verified":"Not verified"}</strong></li>
+    <li><span>Server-only configuration</span><strong>{configOkay?"Validated":"Needs review"}</strong></li>
+    <li><span>PostgreSQL connection</span><strong>{connected?"Connected":configOkay?"Failed":"Not checked"}</strong></li>
+    <li><span>Restricted login and executor permissions</span><strong>{verified?"Verified":connected?"Needs review":"Not checked"}</strong></li>
     <li><span>Direct order and stock table permissions</span><strong>{verified?"Denied":"Not verified"}</strong></li>
     <li><span>Order, stock or payment writes by this check</span><strong>None</strong></li>
     <li><span>Customer checkout</span><strong>Still disabled</strong></li>
