@@ -42,7 +42,7 @@ const raw={
 const pool=new pg.Pool({
  host:"127.0.0.1",port:5432,database:"retail_test",
  user:process.env.PGUSER,password:process.env.PGPASSWORD,
- ssl:false,max:6,idleTimeoutMillis:1000,connectionTimeoutMillis:3500,
+ ssl:false,max:2,idleTimeoutMillis:1000,connectionTimeoutMillis:3500,
 });
 try{
  // Real restricted-login connection verifies private schema is inaccessible
@@ -108,41 +108,7 @@ try{
  assert.equal(replay.replayed,true);
  // The real executor-only durable budget and one-store resolver are now
  // both exercised via separate transactions over the actual NOINHERIT pool.
- // CI-only SQLSTATE instrumentation: never emit SQL values, parameter
- // lists, customer identifiers or private server error messages.
- const guardedPool={
-  async connect(){
-   let c;
-   try{c=await pool.connect();}
-   catch(e){
-    process.stderr.write("CI guard pool acquire SQLSTATE "+String(e?.code??"unknown")+"\\n");
-    throw e;
-   }
-   return {
-    async query(sql,params){
-     try{
-      const answer=await c.query(sql,params);
-      if(sql.includes("consume_retail_budget"))
-       process.stderr.write("CI budget response type="+
-        typeof answer.rows?.[0]?.payload+" value="+
-        String(answer.rows?.[0]?.payload)+" rows="+
-        String(answer.rows?.length)+"\\n");
-      return answer;
-     }
-     catch(e){
-      const stage=sql.includes("consume_retail_budget")?"budget":
-       sql.includes("resolve_retail_store")?"store":
-       sql==="BEGIN"?"begin":sql.startsWith("SET LOCAL")?"set_local":"other";
-      process.stderr.write("CI guarded pool "+stage+" SQLSTATE "+
-       String(e?.code??"unknown")+"\\n");
-      throw e;
-     }
-    },
-    release(){c.release();},
-   };
-  },
- };
- const guards=createRetailPostgresAdmissionDependenciesV1({pool:guardedPool});
+ const guards=createRetailPostgresAdmissionDependenciesV1({pool});
  const allowed=await guards.consumeDurableAdmissionBudget({
   subjectId:USER,operation:"nonpayable_retail_order_v1",
  });
@@ -161,8 +127,8 @@ try{
  assert.equal(mixedStore.verified,false);
 
  // Twenty parallel requests for one distinct subject must yield *exactly*
- // ten accepted attempts over the shared PostgreSQL row, even with 6
- // simultaneous connections and no per-instance in-memory counters.
+ // ten accepted attempts over the shared PostgreSQL row, using the same
+ // two-connection limit as the production worker and no memory counters.
  const competingSubject="f1c93598-ed11-470e-aa1a-0c497644a981";
  const contention=await Promise.all(Array.from({length:20},()=>
   guards.consumeDurableAdmissionBudget({
