@@ -8,6 +8,8 @@ import {isTrustedNonpayableCheckoutEnvelopeV1}
  from "@/lib/checkout/retail-nonpayable-request-boundary-v1.mjs";
 import {isRetailNonpayableSubmissionEnabledV1}
  from "@/lib/checkout/retail-nonpayable-route-release-v1.mjs";
+import {isRetailProductionReviewApprovedV1}
+ from "@/lib/checkout/retail-production-readiness-v1.mjs";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -30,7 +32,8 @@ const unavailable=()=>deny(503,"NONPAYABLE_CHECKOUT_UNAVAILABLE");
 // operator-owned server-only release settings. DB order engine is also OFF
 // independently; this code does not set its state or activate BTCPay.
 export async function POST(request:Request){
- if(!isRetailNonpayableSubmissionEnabledV1(process.env))
+ if(!isRetailNonpayableSubmissionEnabledV1(process.env)||
+    !isRetailProductionReviewApprovedV1(process.env))
   return unavailable(); // Do not read buyer body or open a DB connection.
 
  // Reject CSRF/cross-origin/oversized/unsafe metadata before touching user

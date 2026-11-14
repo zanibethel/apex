@@ -151,6 +151,7 @@ test("Supabase getUser is network-verified and user_metadata is never an authori
  const session=await verifyPrivateRetailCustomerSessionV1({
   auth:{getUser:async()=>({data:{user:{
    id:USER,aud:"authenticated",created_at:"2026-11-01T00:00:00Z",
+   email_confirmed_at:"2026-11-01T00:00:00Z",
    user_metadata:{apex_role:"platform_admin",subjectId:"attacker"},
   }},error:null})},
  });

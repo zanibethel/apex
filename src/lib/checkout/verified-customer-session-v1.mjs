@@ -21,6 +21,8 @@ export async function verifyPrivateRetailCustomerSessionV1(authClient){
  if(result?.error||!user||
   typeof user.id!=="string"||!UUID.test(user.id)||
   user.is_anonymous===true||user.aud!=="authenticated"||
+  typeof user.email_confirmed_at!=="string"||
+  !Number.isFinite(Date.parse(user.email_confirmed_at))||
   typeof user.created_at!=="string"||!Number.isFinite(Date.parse(user.created_at)))
   throw deny();
  // Return only one immutable identifier, with NO contact or role claims.
