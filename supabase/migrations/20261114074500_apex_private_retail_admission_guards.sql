@@ -105,8 +105,8 @@ begin
     jsonb_typeof(v_quote->'items') is distinct from 'array' or
     jsonb_array_length(v_quote->'items')<>jsonb_array_length(p_items) or
     exists(
-     select 1 from jsonb_array_elements(v_quote->'items') as line
-     where line->>'availability' is distinct from 'in_stock'
+     select 1 from jsonb_array_elements(v_quote->'items') as line(value)
+     where line.value->>'availability' is distinct from 'in_stock'
     )
  then return jsonb_build_object('verified',false);end if;
 
@@ -115,8 +115,8 @@ begin
  -- count and single store again using the database's canonical relation.
  select p.store_id into v_store
  from public.products p
- join jsonb_array_elements(p_items) as supplied
-   on p.id=(supplied->>'product_id')::uuid
+ join jsonb_array_elements(p_items) as supplied(value)
+   on p.id=(supplied.value->>'product_id')::uuid
  group by p.store_id
  having count(*)=v_count;
  if v_store is null then
