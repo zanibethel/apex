@@ -17,6 +17,12 @@ on:
       - 'src/lib/checkout/retail-postgres-admission-dependencies-v1.mjs'
       - 'src/lib/checkout/retail-restricted-db-probe-v1.mjs'
       - 'scripts/test-retail-postgres-connection.mjs'
+      - 'src/lib/checkout/private-retail-hold-coordinator-v1.mjs'
+      - 'src/lib/checkout/retail-postgres-transaction-v1.mjs'
+      - 'src/lib/checkout/retail-nonpayable-admission-controller-v1.mjs'
+      - 'src/lib/checkout/retail-nonpayable-request-boundary-v1.mjs'
+      - 'src/lib/checkout/verified-customer-session-v1.mjs'
+      - 'src/app/api/checkout/nonpayable/v1/route.ts'
       - 'tests/retail-visibility-migrations/**'
       - '.github/workflows/retail-visibility-migrations.yml'
   workflow_dispatch:
@@ -89,6 +95,36 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/private-admission-guards.sql
       - name: Install pinned node-postgres runtime for isolated integration
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Reset only the two approved synthetic cart fixtures with independent stock
+        run: |
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          do $fixture$
+          begin
+            if current_database()<>'retail_test' or
+               (select enabled from apex_internal.retail_order_engine_gate
+                where singleton=true) is distinct from false or
+               exists(select 1 from apex_internal.retail_order_holds
+                where state='held_no_payment')
+            then raise exception 'Refusing synthetic inventory fixture outside locked retail_test';end if;
+            update public.inventory_items
+              set quantity_on_hand=3,quantity_reserved=0
+              where store_id='10000000-0000-4000-8000-000000000001'
+               and product_id in (
+                '50000000-0000-4000-8000-000000000001',
+                '50000000-0000-4000-8000-000000000005');
+            if (select count(*) from public.inventory_items
+                where store_id='10000000-0000-4000-8000-000000000001'
+                 and product_id in (
+                  '50000000-0000-4000-8000-000000000001',
+                  '50000000-0000-4000-8000-000000000005')
+                 and quantity_on_hand=3 and quantity_reserved=0)<>2 or
+               (select price_cents from public.products
+                where id='50000000-0000-4000-8000-000000000001')<>3200 or
+               (select price_cents from public.products
+                where id='50000000-0000-4000-8000-000000000005')<>3999
+            then raise exception 'Synthetic two-line stock/price fixtures unavailable';end if;
+          end $fixture$;
+          SQL
       - name: Enable dedicated login and hold engine in disposable database ONLY
         run: |
           test "$PGDATABASE" = "retail_test"
@@ -99,11 +135,14 @@ jobs:
           PGUSER: apex_retail_checkout_app
           CI: "true"
         run: node scripts/test-retail-postgres-connection.mjs
-      - name: Verify actual Node order replays once and expiry restores stock
+      - name: Verify two-line Node order snapshots, reservations, replay and idempotent expiry
         run: |
           psql -X -v ON_ERROR_STOP=1 <<'SQL'
           do $verify$
-          declare v_id uuid;
+          declare
+            v_id uuid;
+            v_first integer;
+            v_again integer;
           begin
             select id into v_id from apex_internal.retail_order_holds
               where request_id='ea1f01bf-85b0-4d78-8ed8-af3eb620eae1';
@@ -111,21 +150,47 @@ jobs:
               (select count(*) from apex_internal.retail_order_holds
                where request_id='ea1f01bf-85b0-4d78-8ed8-af3eb620eae1')<>1 or
               (select count(*) from apex_internal.retail_order_hold_lines
-               where order_id=v_id)<>1 or
+               where order_id=v_id)<>2 or
               (select count(*) from apex_internal.retail_order_delivery_envelopes
-               where order_id=v_id)<>1 or
+               where order_id=v_id and delivery_verified=false
+                and shipping_authorized=false and octet_length(ciphertext)>0)<>1 or
+              not exists(select 1 from apex_internal.retail_order_holds o
+                where o.id=v_id and o.state='held_no_payment' and
+                 o.line_count=2 and o.unit_count=2 and
+                 o.merchandise_cents=7199 and
+                 o.merchandise_discount_cents=720 and
+                 o.shipping_cents=1500 and o.total_cents=7979) or
+              not exists(select 1 from apex_internal.retail_order_hold_lines l
+                where l.order_id=v_id and l.sku_snapshot='SHIRT-001' and
+                 l.quantity=1 and l.unit_price_cents=3200 and
+                 l.line_subtotal_cents=3200) or
+              not exists(select 1 from apex_internal.retail_order_hold_lines l
+                where l.order_id=v_id and l.sku_snapshot='SERUM-001' and
+                 l.quantity=1 and l.unit_price_cents=3999 and
+                 l.line_subtotal_cents=3999) or
               (select quantity_reserved from public.inventory_items
-               where product_id='50000000-0000-4000-8000-000000000001')<>1
-            then raise exception 'Node checkout transaction did not persist exactly once';end if;
+               where product_id='50000000-0000-4000-8000-000000000001')<>1 or
+              (select quantity_reserved from public.inventory_items
+               where product_id='50000000-0000-4000-8000-000000000005')<>1
+            then raise exception 'Node multiline checkout did not persist exactly once';end if;
             update apex_internal.retail_order_holds
               set created_at=now()-interval '1 hour',
                   expires_at=now()-interval '1 minute'
               where id=v_id;
-            if apex_internal.expire_due_retail_order_holds(20)<>1 then
-              raise exception 'Node checkout test hold did not expire';end if;
-            if (select quantity_reserved from public.inventory_items
-               where product_id='50000000-0000-4000-8000-000000000001')<>0
-            then raise exception 'Stock was not released';end if;
+            v_first:=apex_internal.expire_due_retail_order_holds(20);
+            v_again:=apex_internal.expire_due_retail_order_holds(20);
+            if v_first<>1 or v_again<>0 or
+              (select state from apex_internal.retail_order_holds
+               where id=v_id)<>'expired_no_payment' or
+              (select count(*) from apex_internal.retail_order_hold_events
+               where order_id=v_id and event_type='hold_expired')<>1 or
+              (select quantity_reserved from public.inventory_items
+               where product_id='50000000-0000-4000-8000-000000000001')<>0 or
+              (select quantity_reserved from public.inventory_items
+               where product_id='50000000-0000-4000-8000-000000000005')<>0 or
+              (select count(*) from apex_internal.retail_order_hold_lines
+               where order_id=v_id)<>2
+            then raise exception 'Node multiline expiry did not release both items once';end if;
           end $verify$;
           SQL
       - name: Restore test-only identity and order gate
