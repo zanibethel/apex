@@ -30,8 +30,19 @@ export async function verifyRestrictedRetailConnectionV1(pool){
        as inherits_executor,
      has_table_privilege(current_user,'public.inventory_items','UPDATE')
        as may_update_inventory,
-     has_table_privilege(current_user,'apex_internal.retail_order_holds','SELECT')
-       as may_read_private_orders,
+     -- Do not resolve apex_internal.retail_order_holds by qualified name:
+     -- the deliberately restricted app login has NO USAGE on apex_internal.
+     -- PostgreSQL checks schema USAGE during text-to-regclass lookup, raising
+     -- 42501 before has_table_privilege can report false. Resolve OID via
+     -- pg_catalog, which grants no schema access or table-data access.
+     has_table_privilege(current_user,(
+       select c.oid
+       from pg_catalog.pg_class c
+       join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+       where n.nspname='apex_internal'
+         and c.relname='retail_order_holds'
+         and c.relkind in ('r','p')
+     ),'SELECT') as may_read_private_orders,
      (select rolcanlogin and not rolsuper and not rolbypassrls
         and not rolinherit from pg_roles where rolname=current_user)
        as restricted_login
