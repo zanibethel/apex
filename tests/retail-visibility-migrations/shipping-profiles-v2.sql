@@ -58,16 +58,31 @@ begin
   or v->>'can_reserve_stock'<>'false'
  then raise exception 'V2 photo/public projection and private shipping measurement quote were incorrect: %',v;end if;
  v:=public.get_public_retail_cart_quote_source_v2(
- '[{"product_id":"50000000-0000-4000-8000-000000000002","quantity":1}]','');
- if v->>'state'<>'rechecked_inventory_cart'
-   or v#>'{shipping_profiles,0}'<>'null'::jsonb
- then raise exception 'Unprofiled item should return explicit null profile';end if;
- v:=public.get_public_retail_cart_quote_source_v2(
  '[{"product_id":"50000000-0000-4000-8000-000000000001","quantity":1},
    {"product_id":"50000000-0000-4000-8000-000000000004","quantity":1}]','');
  if v->>'state'<>'cart_unavailable' then
   raise exception 'V2 cross-store cart visibility not enforced';end if;
 end $anon$;
+reset role;
+
+-- P2 is deliberately unpublished in the existing fixture. To exercise a
+-- true unprofiled *published* product, owner A removes P5's profile.
+select set_config('test.actor','40000000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+delete from public.supplier_product_shipping_profiles
+ where store_id='10000000-0000-4000-8000-000000000001'
+   and product_id='50000000-0000-4000-8000-000000000005';
+reset role;
+set local role anon;
+do $unprofiled$
+declare v jsonb;
+begin
+ v:=public.get_public_retail_cart_quote_source_v2(
+ '[{"product_id":"50000000-0000-4000-8000-000000000005","quantity":1}]','');
+ if v->>'state'<>'rechecked_inventory_cart'
+   or v#>'{shipping_profiles,0}'<>'null'::jsonb
+ then raise exception 'Unprofiled published product must return explicit null profile';end if;
+end $unprofiled$;
 reset role;
 
 -- A different supplier cannot read or mutate A's profile rows.
