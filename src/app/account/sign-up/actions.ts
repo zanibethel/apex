@@ -1,7 +1,8 @@
 "use server";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {CUSTOMER_CONFIRM_URL_V1,isCustomerRegistrationEnabledV1,
- validateCustomerSignupV1,validEmailForResendV1}
+ validateCustomerSignupV1,validEmailForResendV1,
+ isApprovedCustomerPilotEmailV1}
  from "@/lib/auth/customer-registration-v1.mjs";
 
 export type CustomerSignupState={ok:boolean;message:string};
@@ -18,6 +19,9 @@ export async function registerCustomer(
   form.get("email"),form.get("password"),form.get("confirmPassword"));
  if(!checked.valid||!checked.email)
   return {ok:false,message:checked.message??"Check your email and password."};
+ // Test-only allowlist: deny unmatched email BEFORE Supabase network/Auth calls.
+ if(!isApprovedCustomerPilotEmailV1(process.env,checked.email))
+  return {ok:false,message:"Customer registration is currently in a private test."};
  const client=await createSupplierServerClient();
  if(!client)return {ok:false,message:unavailable};
  try{
@@ -51,6 +55,8 @@ export async function resendCustomerConfirmation(
   return {ok:false,message:unavailable};
  const email=validEmailForResendV1(form.get("email"));
  if(!email)return {ok:false,message:"Enter a valid email address."};
+ if(!isApprovedCustomerPilotEmailV1(process.env,email))
+  return {ok:false,message:"Customer registration is currently in a private test."};
  const client=await createSupplierServerClient();
  if(!client)return {ok:false,message:unavailable};
  try{

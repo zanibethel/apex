@@ -3,18 +3,22 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {
  CUSTOMER_CONFIRM_URL_V1,isCustomerRegistrationEnabledV1,
- validateCustomerSignupV1,validEmailForResendV1
+ validateCustomerSignupV1,validEmailForResendV1,
+ isApprovedCustomerPilotEmailV1
 } from "../src/lib/auth/customer-registration-v1.mjs";
 const read=(path)=>readFileSync(path,"utf8");
 const flags={
  APEX_CUSTOMER_REGISTRATION_ENABLED:"true",
  APEX_CUSTOMER_REGISTRATION_OPERATOR_APPROVAL:"confirmed-email-flow-v1",
+ APEX_CUSTOMER_REGISTRATION_TEST_EMAIL:"pilot@example.com",
 };
 test("customer signup is independently default off and not a checkout release",()=>{
  for(const v of [undefined,null,{},[],{APEX_CUSTOMER_REGISTRATION_ENABLED:"true"},
   {APEX_CUSTOMER_REGISTRATION_OPERATOR_APPROVAL:flags.APEX_CUSTOMER_REGISTRATION_OPERATOR_APPROVAL},
   {...flags,APEX_CUSTOMER_REGISTRATION_ENABLED:true},
-  {...flags,APEX_CUSTOMER_REGISTRATION_OPERATOR_APPROVAL:"wrong"}])
+  {...flags,APEX_CUSTOMER_REGISTRATION_OPERATOR_APPROVAL:"wrong"},
+  {...flags,APEX_CUSTOMER_REGISTRATION_TEST_EMAIL:""},
+  {...flags,APEX_CUSTOMER_REGISTRATION_TEST_EMAIL:"not-an-email"}])
   assert.equal(isCustomerRegistrationEnabledV1(v),false);
  assert.equal(isCustomerRegistrationEnabledV1(flags),true);
  assert.equal(CUSTOMER_CONFIRM_URL_V1,
@@ -75,4 +79,22 @@ test("existing admin/supplier/customer login and order release gates untouched",
  const order=read("src/app/api/checkout/nonpayable/v1/route.ts");
  assert.match(order,/isRetailNonpayableSubmissionEnabledV1\(process.env\)/);
  assert.match(order,/isRetailProductionReviewApprovedV1\(process.env\)/);
+});
+
+test("only the single reviewed pilot address may use the customer signup and resend actions",()=>{
+ assert.equal(isApprovedCustomerPilotEmailV1(flags,"PILOT@EXAMPLE.COM"),true);
+ for(const v of ["wrong@example.com","pilot+alias@example.com","pilot@example.net","",null]){
+  assert.equal(isApprovedCustomerPilotEmailV1(flags,v),false);
+ }
+ assert.equal(isApprovedCustomerPilotEmailV1({...flags,
+  APEX_CUSTOMER_REGISTRATION_TEST_EMAIL:" Pilot@Example.Com "},"pilot@example.com"),true);
+ assert.equal(isApprovedCustomerPilotEmailV1({},"pilot@example.com"),false);
+ const actions=read("src/app/account/sign-up/actions.ts");
+ const gateIndexes=[...actions.matchAll(/isApprovedCustomerPilotEmailV1\(process\.env,[^)]+\)/g)].map(v=>v.index);
+ assert.equal(gateIndexes.length,2,"must guard both initial signup and resend");
+ const signup=actions.indexOf("await client.auth.signUp(");
+ const resend=actions.indexOf("await client.auth.resend(");
+ assert.ok(gateIndexes[0]<signup&&gateIndexes[1]<resend);
+ const cart=read("src/app/api/checkout/nonpayable/v1/route.ts");
+ assert.doesNotMatch(cart,/APEX_CUSTOMER_REGISTRATION_TEST_EMAIL/);
 });

@@ -65,3 +65,41 @@ Node tests: `node --test tests/customer-registration-email-flow.test.mjs`.
 Full CI: lint, types, tests and production build. After merging, the signup
 page may be visible, but account creation remains OFF until operator flips
 both registration flags after actual SMTP/verification rehearsal.
+
+## Private single-address customer-email pilot (after saved Site URL)
+
+The current operator is preparing a **single test-customer pilot**. Production
+Vercel must require ALL THREE server-only settings before the signup form or
+signup/resend server action is accessible:
+
+- `APEX_CUSTOMER_REGISTRATION_ENABLED=true`
+- `APEX_CUSTOMER_REGISTRATION_OPERATOR_APPROVAL=confirmed-email-flow-v1`
+- `APEX_CUSTOMER_REGISTRATION_TEST_EMAIL=<approved test email>`
+
+The third value is a *single full email* (no wildcards, plus-alias matching,
+lists or public keys). Initial requested test identity is controlled by the
+site operator and is not hardcoded into source control. Backend rejects all
+other address entries before calling Supabase Auth. Existing supplier/admin
+sign-in and all checkout/payment gates remain independent and unchanged.
+
+**Critical limit**: This is only an Apex *application form/server-action*
+allowlist. Hosted Supabase's **Allow new users to sign up** setting is globally
+ON, so its public Auth API is still independently reachable. Do not claim this
+enforces a provider-level invite-only policy. For strict provider-wide
+restriction, add/approve a Supabase Before User Created Auth hook or disable
+the hosted provider signup setting. Never use frontend-only filtering to
+promise signup isolation.
+
+To run the pilot after code/CI/deployment verification:
+1. Confirm the saved Supabase Site URL is `https://apexanabolics.co` and
+   the exact `https://apexanabolics.co/account/confirm` redirect exists.
+2. Test provider confirmation templates/SMTP using the operator's own inbox.
+   Supabase rate limits apply. Cross-device verification requires the
+   correct token_hash email template (see earlier steps).
+3. Set all three production-only Vercel vars, redeploy the tested `main` SHA,
+   inspect release flags and ensure no checkout admission flag was set.
+4. The operator opens the live signup form, supplies their own 12+ character
+   password privately, follows the confirmation link and signs in.
+5. Verify `auth.users.email_confirmed_at` and that no admin role or supplier
+   membership was added. If email fails or provider misroutes, close the
+   registration gate again without touching existing customer sessions.
