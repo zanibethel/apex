@@ -1,4 +1,5 @@
 import {quoteDiscount} from "./discount-quote.mjs";
+import {estimateFlatRatePackages} from "./flat-rate-package-estimate.mjs";
 
 // Shipping-only checkout math. Source amounts must come from the server.
 // Legacy tier key "small" means the padded envelope; "medium" means the box.
@@ -59,7 +60,7 @@ export function quoteOptionalShipping(policy,discountedSubtotalCents,freeShippin
 // Prices, quantities, shipping settings and promotions MUST be read from the
 // database on the server. No tax service is contacted in this flow.
 export function previewCheckoutCharges({
- lines,shippingPolicy,discountCode=null,now=new Date(),boxSize="small",
+ lines,shippingPolicy,discountCode=null,now=new Date(),boxSize="small",shippingProfiles=undefined,
 }){
  const fail=(reason)=>Object.freeze({ok:false,reason,canPlaceOrder:false,
   canCreateInvoice:false,canPay:false});
@@ -89,9 +90,36 @@ export function previewCheckoutCharges({
  const merchandiseDiscountCents=promo?.discountCents??0;
  const discountedMerchandiseCents=merchandiseSubtotalCents-
   merchandiseDiscountCents;
- const shipping=quoteOptionalShipping(shippingPolicy,
+ let shipping=quoteOptionalShipping(shippingPolicy,
   discountedMerchandiseCents,promo?.freeShipping===true,boxSize,units);
  if(!shipping)return fail("Shipping configuration unavailable");
+ if(shippingProfiles!==undefined){
+  const plan=estimateFlatRatePackages(lines,shippingProfiles,shippingPolicy);
+  if(!plan.ok&&plan.reason!=="missing_profiles")
+   return fail(plan.reason==="oversize"
+    ?"An item needs a different shipping package. Ask the supplier to review its dimensions."
+    :"Invalid product shipping measurements.");
+  if(plan.ok){
+   const originalShippingCents=shippingPolicy.charge_shipping?
+    plan.originalShippingCents:0;
+   const shippingFree=!shippingPolicy.charge_shipping||
+    promo?.freeShipping===true||
+    shipping.freeShippingReason==="subtotal_threshold";
+   const shippingCents=shippingFree?0:originalShippingCents;
+   shipping={...shipping,
+    shippingBoxSize:plan.shippingBoxSize,
+    originalShippingCents,shippingCents,
+    shippingDiscountCents:originalShippingCents-shippingCents,
+    shippingPackages:plan.shippingPackages,
+    packageCount:plan.packageCount,
+    shippingEstimateStatus:"dimensional_estimate"};
+  }else{
+   // Existing unmapped products retain only the clearly marked legacy
+   // quantity-based quote. No checkout route may trust this as a final rate.
+   shipping={...shipping,shippingPackages:[],packageCount:null,
+    shippingEstimateStatus:"provisional_missing_dimensions"};
+  }
+ }
  const totalCents=discountedMerchandiseCents+shipping.shippingCents;
  if(!validCents(totalCents))return fail("Total exceeds limit");
  return Object.freeze({
