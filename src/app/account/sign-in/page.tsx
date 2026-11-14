@@ -19,7 +19,7 @@ export default function AccountSignInPage() {
         <button className="button primary" type="submit" disabled={pending}>{pending ? "Signing in…" : "Sign in"}</button>
         {state.error && <p role="alert" className="supplier-error">{state.error}</p>}
       </form>
-      <p className="notice">Accounts and workspace access are invitation-only in this preview.</p>
+      <p className="notice">Supplier and administrator access is invitation-only. Customer registration requires email verification.</p>\n      <p className="notice"><Link href="/account/sign-up">New customer? Create an account</Link></p>
     </section>
   </main>;
 }

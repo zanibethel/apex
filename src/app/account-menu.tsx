@@ -35,7 +35,7 @@ export function AccountMenu({ signedIn, admin, supplier }: { signedIn: boolean; 
       {signedIn && <Link href="/account/profile" onClick={() => setOpen(false)}>My profile</Link>}
       {admin && <Link href="/admin" onClick={() => setOpen(false)}>Admin dashboard</Link>}
       {supplier && <Link href="/supplier" onClick={() => setOpen(false)}>Supplier workspace</Link>}
-      {signedIn ? <form action={signOutAccount}><button type="submit" className="apex-menu-signout">Sign out</button></form> : <Link href="/account/sign-in" onClick={() => setOpen(false)}>Account sign in</Link>}
+      {signedIn ? <form action={signOutAccount}><button type="submit" className="apex-menu-signout">Sign out</button></form> : <><Link href="/account/sign-in" onClick={() => setOpen(false)}>Account sign in</Link><Link href="/account/sign-up" onClick={() => setOpen(false)}>Create account</Link></>}
     </div>}
   </div>;
 }
