@@ -21,8 +21,11 @@ end $$;
 set role apex_retail_checkout_app;
 do $$
 begin
- if has_function_privilege(current_user,
-  'apex_internal.checkout_worker_reserve_retail_hold(uuid,uuid,text,jsonb,text,text,bigint)','EXECUTE')
+ if exists(select 1 from pg_catalog.pg_proc p
+  join pg_catalog.pg_namespace n on n.oid=p.pronamespace
+  where n.nspname='apex_internal'
+   and p.proname='checkout_worker_reserve_retail_hold'
+   and has_function_privilege(current_user,p.oid,'EXECUTE'))
  then raise exception 'NOINHERIT app login gained direct checkout privilege';end if;
 end $$;
 reset role;
