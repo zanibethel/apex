@@ -7,6 +7,7 @@ import {parseAdminCategoryStores} from "@/lib/catalog/admin-category-publication
 import {parseAdminCheckoutJournalSummary} from "@/lib/checkout/admin-private-order-journal.mjs";
 import {inspectSharedBtcpayReadinessV1} from "@/lib/btcpay/shared-store-readiness-v1.mjs";
 import {buildCheckoutConnectionReportV1} from "@/lib/checkout/checkout-connection-readiness-v1.mjs";
+import {evaluateRetailProductionReadinessV1} from "@/lib/checkout/retail-production-readiness-v1.mjs";
 
 export const dynamic="force-dynamic";
 export const metadata={title:"Checkout Integration | Apex Admin",
@@ -31,10 +32,11 @@ export default async function CheckoutIntegrationPage(){
  });
  const journal=journalResult.error?null:
   parseAdminCheckoutJournalSummary(journalResult.data);
+ const nonpayableReadiness=evaluateRetailProductionReadinessV1(process.env);
  const report=buildCheckoutConnectionReportV1({
   retailShowcase:retailResult.error?null:retailResult.data,
   quoteFlag:process.env.APEX_PUBLIC_SOLD_OUT_CATALOG==="enabled",
-  journal,btcpay,
+  journal,btcpay,nonpayableReadiness,
  });
  const label=(state:string)=>report.legend[state as keyof typeof report.legend]??"Unknown";
  return <main className="container supplier-shell apex-branded-dashboard"
@@ -55,6 +57,37 @@ export default async function CheckoutIntegrationPage(){
     <Link className="button secondary" href="/admin/checkout-readiness">Order readiness</Link>
     <Link className="button secondary" href="/admin/checkout-db-connection">Verify checkout database</Link>
     <Link className="button secondary" href="/admin/checkout-production-readiness">Production release checks</Link>
+   </div>
+  </section>
+  <section className="supplier-panel" style={{marginTop:20}}
+   aria-labelledby="apex-nonpayable-release">
+   <h2 id="apex-nonpayable-release">Temporary nonpayable submission</h2>
+   <p role="status" className="notice"><strong>
+    {nonpayableReadiness.requested&&nonpayableReadiness.reviewed?
+     "Operator flags acknowledged — independent verification still required":
+     nonpayableReadiness.requested?
+     "Requested, but supplemental release reviews are incomplete":
+     "Not requested — submission disabled"}
+   </strong></p>
+   <ul className="supplier-stores">
+    <li><span>Server-only submission approval</span>
+     <strong>{nonpayableReadiness.requested?"Requested":"Off"}</strong></li>
+    <li><span>Four supplemental review acknowledgments</span>
+     <strong>{nonpayableReadiness.missing===0?
+      "All set":nonpayableReadiness.missing+" missing"}</strong></li>
+    <li><span>Independent PostgreSQL order-engine gate</span>
+     <strong>Not verified here</strong></li>
+    <li><span>Payments, Bitcoin invoices, Prism payouts</span>
+     <strong>Not authorized</strong></li>
+   </ul>
+   <p className="notice">This diagnostic reads only server environment flags.
+    It cannot verify live firewall rules, Supabase Auth provider settings,
+    database engine state, or scheduled-job history. No customer order,
+    inventory hold, payment or shipment can be triggered from this page.</p>
+   <div className="actions">
+    <Link className="button secondary" href="/admin/checkout-production-readiness">
+     Review production prerequisites</Link>
+    <Link className="button secondary" href="/cart">Review customer cart</Link>
    </div>
   </section>
   <section className="supplier-panel" style={{marginTop:20}}
