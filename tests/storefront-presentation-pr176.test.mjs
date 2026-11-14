@@ -22,8 +22,12 @@ test("public storefront shows normal catalog navigation, no test-payment promoti
  assert.doesNotMatch(home+menu,/href="\/checkout\/preview"/);
  assert.doesNotMatch(layout,/DEMO ONLY/);
  assert.doesNotMatch(layout,/DemoCartProvider|DemoCartToggle|APEX_CHECKOUT_MODE/);
- assert.match(shelf,/type="button" disabled/);
- assert.match(shelf,/p.availability==="in_stock"/);
+ const cartAction=read("src/app/cart/cart-provider.tsx");
+ assert.match(shelf,/availability=\{p\.availability\}/);
+ assert.match(cartAction,/if\(availability!=="in_stock"\)return/);
+ assert.match(cartAction,/onClick=\{\(\)=>setStockError\(true\)\}/);
+ assert.match(cartAction,/Out of stock —/);
+ assert.match(shelf,/availability=\{p\.availability\}/);
  assert.match(shelf,/No products available right now/);
 });
 test("retired checkout route is admin-only and never exposes simulated payments",()=>{
