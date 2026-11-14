@@ -71,13 +71,14 @@ test("legacy payment checkout route remains an unconditional 503",()=>{
 });
 test("new route refuses early and cannot run without approved release",()=>{
  const route=readFileSync("src/app/api/checkout/nonpayable/v1/route.ts","utf8");
- const release=route.indexOf("if(!isRetailNonpayableSubmissionEnabledV1(process.env))");
+ const release=route.indexOf("if(!isRetailNonpayableSubmissionEnabledV1(process.env)||");
+ const security=route.indexOf("!isRetailProductionReviewApprovedV1(process.env)");
  const earlyReturn=route.indexOf("return unavailable();");
  const csrf=route.indexOf("if(!isTrustedNonpayableCheckoutEnvelopeV1(request))");
  const auth=route.indexOf("await createSupplierServerClient()");
  const pool=route.indexOf("createNonpayableRetailProductionRuntimeV1(process.env)");
  const admission=route.indexOf("admitPrivateNonpayableRetailOrderV1({");
- assert.ok(release>=0&&earlyReturn>release&&csrf>earlyReturn&&
+ assert.ok(release>=0&&security>release&&earlyReturn>security&&csrf>earlyReturn&&
   auth>csrf&&pool>auth&&admission>pool);
  assert.match(route,/user\.email_confirmed_at/);
  const runtime=readFileSync("src/lib/checkout/retail-nonpayable-production-runtime-v1.mjs","utf8");
