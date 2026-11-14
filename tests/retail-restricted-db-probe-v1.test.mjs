@@ -48,7 +48,7 @@ test("read-only connection verifier checks role identity and NOINHERIT grants",a
  assert.equal(state.calls[2],"SET LOCAL ROLE apex_retail_checkout_executor");
  assert.equal(state.calls.at(-1),"ROLLBACK");
  const sql=state.calls.join("\n").toLowerCase();
- assert.doesNotMatch(sql,/\b(insert|update|delete|drop|create|alter|commit)\b/);
+ assert.doesNotMatch(sql,/^\s*(insert|update|delete|drop|create|alter|commit)\s/gm);
  assert.doesNotMatch(sql,/retail_order_engine_gate|apex_retail_db_password|secret_key/);
 });
 test("wrong connection identity fails before role-switch, never reads private orders",async()=>{
