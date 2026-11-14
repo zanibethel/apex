@@ -52,7 +52,7 @@ begin
   or v#>>'{shipping_profiles,0,length_mm}'<>'270'
   or v#>>'{shipping_profiles,0,weight_g}'<>'1700'
   or v#>>'{shipping_profiles,1,flexible}'<>'true'
-  or v#>>'{items,0,unit_price_cents}' !~ '^[1-9][0-9]{0,8}
+  or v#>>'{items,0,unit_price_cents}' !~ '^[1-9][0-9]{0,8}$'
   or v->>'can_pay'<>'false'
   or v->>'can_place_order'<>'false'
   or v->>'can_reserve_stock'<>'false'
