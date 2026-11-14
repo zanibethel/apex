@@ -78,3 +78,49 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114061000_apex_retail_checkout_connection_identity.sql
       - name: Verify role noninheritance, SET LOCAL ROLE and checkout gate
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/connection-identity.sql
+      - name: Install pinned node-postgres runtime for isolated integration
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Enable dedicated login and hold engine in disposable database ONLY
+        run: |
+          test "$PGDATABASE" = "retail_test"
+          psql -X -v ON_ERROR_STOP=1 -c "alter role apex_retail_checkout_app login password 'postgres';"
+          psql -X -v ON_ERROR_STOP=1 -c "update apex_internal.retail_order_engine_gate set enabled=true where singleton=true;"
+      - name: Prove actual Node PostgreSQL transaction and private encrypted order hold
+        env:
+          PGUSER: apex_retail_checkout_app
+          CI: "true"
+        run: node scripts/test-retail-postgres-connection.mjs
+      - name: Verify actual Node order replays once and expiry restores stock
+        run: |
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          do $verify$
+          declare v_id uuid;
+          begin
+            select id into v_id from apex_internal.retail_order_holds
+              where request_id='ea1f01bf-85b0-4d78-8ed8-af3eb620eae1';
+            if v_id is null or
+              (select count(*) from apex_internal.retail_order_holds
+               where request_id='ea1f01bf-85b0-4d78-8ed8-af3eb620eae1')<>1 or
+              (select count(*) from apex_internal.retail_order_hold_lines
+               where order_id=v_id)<>1 or
+              (select count(*) from apex_internal.retail_order_delivery_envelopes
+               where order_id=v_id)<>1 or
+              (select quantity_reserved from public.inventory_items
+               where product_id='50000000-0000-4000-8000-000000000001')<>1
+            then raise exception 'Node checkout transaction did not persist exactly once';end if;
+            update apex_internal.retail_order_holds
+              set created_at=now()-interval '1 hour',
+                  expires_at=now()-interval '1 minute'
+              where id=v_id;
+            if apex_internal.expire_due_retail_order_holds(20)<>1 then
+              raise exception 'Node checkout test hold did not expire';end if;
+            if (select quantity_reserved from public.inventory_items
+               where product_id='50000000-0000-4000-8000-000000000001')<>0
+            then raise exception 'Stock was not released';end if;
+          end $verify$;
+          SQL
+      - name: Restore test-only identity and order gate
+        if: always()
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -c "update apex_internal.retail_order_engine_gate set enabled=false where singleton=true;" || true
+          psql -X -v ON_ERROR_STOP=1 -c "alter role apex_retail_checkout_app nologin;" || true
