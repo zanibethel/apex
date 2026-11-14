@@ -94,6 +94,23 @@ test("signup uses independent inline eye icons, never a separate submit control"
  assert.match(css,/width:48px;height:48px/);
  assert.match(css,/:focus-visible/);
 });
+test("existing sessions offer deliberate sign-out before registration",()=>{
+ const page=read("src/app/account/sign-up/page.tsx");
+ const actions=read("src/app/account/sign-up/actions.ts");
+ const signIn=read("src/app/account/sign-in/page.tsx");
+ assert.ok(page.includes("await client.auth.getUser()"));
+ assert.ok(page.includes("alreadySignedIn=!error&&Boolean(data.user)"));
+ assert.ok(page.includes("enabled&&alreadySignedIn?"));
+ assert.ok(page.includes("<form action={signOutForCustomerRegistration}>"));
+ assert.ok(page.includes("Sign out and create account"));
+ assert.ok(page.includes("enabled?<CustomerSignupForm/>"));
+ assert.ok(actions.includes("export async function signOutForCustomerRegistration()"));
+ assert.ok(actions.includes("await client.auth.signOut()"));
+ assert.ok(actions.includes('redirect("/account/sign-up")'));
+ assert.equal(signIn.includes("</p>\\n      <p"),false);
+ assert.ok(signIn.includes("New customer? Create an account"));
+});
+
 test("existing admin/supplier/customer login and order release gates untouched",()=>{
  const login=read("src/app/account/sign-in/actions.ts");
  assert.match(login,/isVerifiedPlatformAdmin\(data\.user\)/);

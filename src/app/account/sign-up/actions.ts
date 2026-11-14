@@ -1,4 +1,5 @@
 "use server";
+import {redirect} from "next/navigation";
 import {createSupplierServerClient} from "@/lib/supabase/server";
 import {CUSTOMER_CONFIRM_URL_V1,isCustomerRegistrationEnabledV1,
  validateCustomerSignupV1,validEmailForResendV1,
@@ -69,4 +70,15 @@ export async function resendCustomerConfirmation(
   // Account existence and provider responses are never exposed to a caller.
  }
  return {ok:true,message:received};
+}
+
+/**
+ * Explicit account switch, never automatic sign-out during registration.
+ * No new user is created by this action; the normal one-address pilot
+ * restriction remains active on the registration submission.
+ */
+export async function signOutForCustomerRegistration(){
+ const client=await createSupplierServerClient();
+ if(client)await client.auth.signOut();
+ redirect("/account/sign-up");
 }
