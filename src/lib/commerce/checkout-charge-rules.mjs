@@ -125,7 +125,8 @@ export function previewCheckoutCharges({
  return Object.freeze({
   ok:true,reason:"",currency:"USD",
   merchandiseSubtotalCents,merchandiseDiscountCents,
-  discountedMerchandiseCents,...shipping,totalCents,
+  discountedMerchandiseCents,...shipping,
+  shippingBoxSize:shipping.shippingBoxSize??"medium",totalCents,
   // This is an informational total only, not order admission.
   canPlaceOrder:false,canCreateInvoice:false,canPay:false,
   quoteFinalized:false,
