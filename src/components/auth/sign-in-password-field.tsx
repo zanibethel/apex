@@ -34,7 +34,7 @@ export function SignInPasswordField({id}:SignInPasswordFieldProps){
       <path d="M19.75 16.17a10.8 10.8 0 0 0 2.24-3.51"/>
       <path d="m2 2 20 20"/>
      </>:<>
-      <path d="M2 12s3.6-7 10-7 10 7-3.6 7-10 7-10-7-10-7Z"/>
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/>
       <circle cx="12" cy="12" r="3"/>
      </>}
     </svg>
