@@ -37,7 +37,7 @@ export async function readNonpayableCheckoutRequestV1(request){
  try{
   const url=new URL(request.url);
   if(url.origin!==APEX_CHECKOUT_ORIGIN_V1||
-   !url.pathname.startsWith("/api/checkout/handoff/v1")||
+   url.pathname!=="/api/checkout/handoff/v1"||
    url.search!==""||url.hash!=="")return deny();
   if(!request.body||typeof request.body.getReader!=="function")
    return deny();
