@@ -29,26 +29,14 @@ async function main() {
   try {
     await client.connect();
     await client.query("BEGIN READ ONLY");
-    const { rows: [counts] } = await client.query(`
-      select
-       (select count(*)::int from apex_internal.retail_order_engine_gate) as gate_rows,
-       (select count(*)::int from apex_internal.retail_order_engine_gate where enabled) as enabled_gates,
-       (select count(*)::int from apex_internal.retail_order_holds where state='held_no_payment' and expires_at < now()-interval '3 minutes') as overdue_holds,
-       (select count(*)::int from apex_internal.retail_order_delivery_envelopes e join apex_internal.retail_order_holds h on h.id=e.order_id and h.store_id=e.store_id where h.state in ('cancelled_no_payment','expired_no_payment') and h.ended_at < now()-interval '75 minutes') as stale_envelopes
-    `);
-    const { rows: jobs } = await client.query(`
-      select j.jobname, j.schedule, j.active, j.username,
-       max(d.end_time) filter(where d.status='succeeded') as last_success,
-       count(d.runid) filter(where d.status is distinct from 'succeeded' and d.start_time >= now()-interval '30 minutes')::int as recent_failures
-      from cron.job j left join cron.job_run_details d on d.jobid=j.jobid
-      where j.jobname=any($1::text[])
-      group by j.jobid,j.jobname,j.schedule,j.active,j.username
-    `, [names.map(n=>n[0])]);
+    const { rows: [row] } = await client.query("select apex_internal.checkout_monitor_snapshot_v1() as snapshot");
+    if (!row || !row.snapshot || !Array.isArray(row.snapshot.jobs)) throw Error("Invalid aggregate snapshot");
+    const { gate_rows, enabled_gates, overdue_holds, stale_envelopes, jobs } = row.snapshot;
     await client.query("ROLLBACK");
-    const alerts = assess({...counts, jobs}, observed);
+    const alerts = assess({gate_rows, enabled_gates, overdue_holds, stale_envelopes, jobs}, observed);
     if (alerts.length) {
       process.stderr.write("APEX CHECKOUT SAFETY INCIDENT " + observed.toISOString() + "\n" + alerts.join("\n") + "\n" +
-        "Aggregate counts: overdue=" + counts.overdue_holds + ", stale_delivery=" + counts.stale_envelopes + "\n");
+        "Aggregate counts: overdue=" + overdue_holds + ", stale_delivery=" + stale_envelopes + "\n");
       process.exitCode = 1;
     }
   } finally { await client.end(); }
