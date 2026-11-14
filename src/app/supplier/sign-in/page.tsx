@@ -18,6 +18,7 @@ export default function SupplierSignIn() {
           <input id="supplier-email" name="email" type="email" autoComplete="username" maxLength={254} required />
           <label htmlFor="supplier-password">Password</label>
           <input id="supplier-password" name="password" type="password" autoComplete="current-password" required />
+          <p className="notice"><Link href="/account/forgot-password">Forgot password?</Link></p>
           <button className="button primary" type="submit" disabled={pending}>{pending ? "Checking access…" : "Sign in securely"}</button>
           {state.error && <p role="alert" className="supplier-error">{state.error}</p>}
         </form>
