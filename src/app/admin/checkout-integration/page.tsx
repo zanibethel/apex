@@ -53,6 +53,7 @@ export default async function CheckoutIntegrationPage(){
    <div className="actions">
     <Link className="button secondary" href="/admin/btcpay">BTCPay setup</Link>
     <Link className="button secondary" href="/admin/checkout-readiness">Order readiness</Link>
+    <Link className="button secondary" href="/admin/checkout-db-connection">Verify checkout database</Link>
    </div>
   </section>
   <section className="supplier-panel" style={{marginTop:20}}
