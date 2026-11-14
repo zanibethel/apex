@@ -210,12 +210,25 @@ export function CustomerCartLink(){
   </section>}
  </div>;
 }
-export function SaveCatalogItem({id,name,actionLabel="Save to cart"}:{id:string;name:string;actionLabel?:string}){
+export function SaveCatalogItem({id,name,availability="in_stock",
+ actionLabel="Add to cart"}:{id:string;name:string;
+ availability?:"in_stock"|"sold_out";actionLabel?:string}){
  const {items,add}=useCustomerCart();
+ const [stockError,setStockError]=useState(false);
  const saved=items.some(item=>item.product_id===id);
+ if(availability!=="in_stock")return <>
+  <button type="button" className="apex-approved-disabled"
+   aria-label={"Sold out: "+name} onClick={()=>setStockError(true)}>
+   Sold out
+  </button>
+  {stockError&&<p role="alert" className="apex-approved-stock-error">
+   Out of stock — {name} cannot be added to your cart.
+  </p>}
+ </>;
  return <button type="button" className="apex-approved-save"
-   onClick={()=>add(id)} disabled={saved&&items.find(item=>item.product_id===id)?.quantity===10}
-   aria-label={`Save ${name} to cart`}>
+   onClick={()=>{setStockError(false);add(id);}}
+   disabled={saved&&items.find(item=>item.product_id===id)?.quantity===10}
+   aria-label={"Add "+name+" to cart"}>
   {saved?"In cart — add another":"+ "+actionLabel}
  </button>;
 }
