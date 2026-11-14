@@ -16,6 +16,7 @@ export default function AccountSignInPage() {
         <input id="account-email" name="email" type="email" autoComplete="username" maxLength={254} required />
         <label htmlFor="account-password">Password</label>
         <input id="account-password" name="password" type="password" autoComplete="current-password" required />
+        <p className="notice"><Link href="/account/forgot-password">Forgot password?</Link></p>
         <button className="button primary" type="submit" disabled={pending}>{pending ? "Signing in…" : "Sign in"}</button>
         {state.error && <p role="alert" className="supplier-error">{state.error}</p>}
       </form>
