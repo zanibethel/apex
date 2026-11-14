@@ -17,7 +17,7 @@ type Props={
  enabled:boolean;signedIn:boolean;items:Item[];code:string;
  verifiedStock:boolean;delivery:Delivery|null;
 };
-const UUID=/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const currency=(cents:number)=>new Intl.NumberFormat("en-US",{
  style:"currency",currency:"USD",
 }).format(cents/100);
@@ -59,7 +59,8 @@ export function NonpayableOrderPanel({
     "accepted" in data&&data.accepted===true&&
     "orderId" in data&&typeof data.orderId==="string"&&UUID.test(data.orderId)&&
     "status" in data&&data.status==="held_no_payment"&&
-    "totalCents" in data&&Number.isSafeInteger(data.totalCents)&&
+    "totalCents" in data&&typeof data.totalCents==="number"&&
+    Number.isSafeInteger(data.totalCents)&&
     "currency" in data&&data.currency==="USD"&&
     "expiresAt" in data&&typeof data.expiresAt==="string"&&
     "canPay" in data&&data.canPay===false&&
