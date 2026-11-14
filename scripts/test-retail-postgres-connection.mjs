@@ -29,11 +29,13 @@ if(process.env.PGHOST!=="localhost"||
 
 const STORE="10000000-0000-4000-8000-000000000001";
 const PRODUCT="50000000-0000-4000-8000-000000000001";
+const SERUM="50000000-0000-4000-8000-000000000005";
 const REQUEST="ea1f01bf-85b0-4d78-8ed8-af3eb620eae1";
 const USER="f1c93598-ed11-470e-aa1a-0c497644a980";
 const raw={
  schemaVersion:1,requestId:REQUEST,
- cart:{items:[{product_id:PRODUCT,quantity:1}],code:"",boxSize:"auto"},
+ cart:{items:[{product_id:PRODUCT,quantity:1},
+  {product_id:SERUM,quantity:1}],code:"TEST10",boxSize:"auto"},
  delivery:{firstName:"Synthetic",lastName:"Buyer",
   email:"test-person@example.invalid",phone:"",
   address1:"99 Fictional Lane",address2:"",
@@ -98,7 +100,9 @@ try{
  };
  const receipt=await preparePrivateRetailHoldWithDeliveryV1(raw,options);
  assert.equal(receipt.status,"held_no_payment");
- assert.equal(receipt.totalCents,4700);
+ assert.equal(receipt.totalCents,7979);
+ // 3200 shirt + 3999 serum - 720 (10% discount) + 1500 shipping.
+ // The durable PostgreSQL readback independently verifies both line prices.
  assert.equal(receipt.canPay,false);
  assert.equal(receipt.canShip,false);
  assert.equal(receipt.invoiceCreated,false);
@@ -107,6 +111,17 @@ try{
  const replay=await preparePrivateRetailHoldWithDeliveryV1(raw,options);
  assert.equal(replay.orderId,receipt.orderId);
  assert.equal(replay.replayed,true);
+ assert.equal(replay.totalCents,7979);
+ // Reusing the exact request ID with a changed cart is never permitted to
+ // attach to an existing order or silently alter its immutable lines.
+ await assert.rejects(
+  preparePrivateRetailHoldWithDeliveryV1({
+   ...raw,cart:{...raw.cart,items:[
+    {product_id:PRODUCT,quantity:2},{product_id:SERUM,quantity:1},
+   ]},
+  },options),
+  /Private checkout hold unavailable/,
+ );
  // The real executor-only durable budget and one-store resolver are now
  // both exercised via separate transactions over the actual NOINHERIT pool.
  const guards=createRetailPostgresAdmissionDependenciesV1({pool});
@@ -118,6 +133,8 @@ try{
   subjectId:USER,items:raw.cart.items,
  });
  assert.deepEqual(scope,{verified:true,storeId:STORE});
+ // Two eligible products must remain scoped to the one canonical seller;
+ // a cart containing a second seller is still rejected below.
  const mixedStore=await guards.resolveTrustedRetailStore({
   subjectId:USER,
   items:[
@@ -142,7 +159,7 @@ try{
  // Traverse the new real HTTP-body parser and authenticated admission
  // controller using disposable fixtures only. An identical request must
  // replay the existing durable hold without a second inventory reservation.
- const httpRequest=new Request("https://apexanabolics.co/api/checkout/handoff/v1",{
+ const httpRequest=new Request("https://apexanabolics.co/api/checkout/nonpayable/v1",{
   method:"POST",
   headers:{"Origin":"https://apexanabolics.co",
    "Content-Type":"application/json","Sec-Fetch-Site":"same-origin"},
@@ -164,13 +181,14 @@ try{
  assert.equal(admitted.accepted,true);
  assert.equal(admitted.orderId,receipt.orderId);
  assert.equal(admitted.replayed,true);
+ assert.equal(admitted.totalCents,7979);
  assert.equal(admitted.canPay,false);
  assert.equal(admitted.canShip,false);
  assert.equal(admitted.invoiceCreated,false);
  assert.equal(admitted.paymentConfirmed,false);
  assert.ok(!JSON.stringify(admitted).includes("Fictional Lane"));
 
- assert.equal(replay.totalCents,4700);
+ assert.equal(replay.totalCents,7979);
  assert.equal(replay.canPay,false);
  assert.ok(!JSON.stringify(receipt).includes("Fictional Lane"));
  assert.ok(!JSON.stringify(replay).includes("test-person@example.invalid"));
@@ -185,7 +203,7 @@ try{
   );
   assert.equal(roles.rows[0].stock_write,false);
  }finally{client.release();}
- process.stdout.write("Private checkout PostgreSQL+AES transaction, retry and role isolation passed\n");
+ process.stdout.write("Disposable two-line cart: quoted, held, sealed, replay-safe, and role-isolated\n");
 }finally{
  await pool.end();
 }
