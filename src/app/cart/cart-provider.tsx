@@ -229,6 +229,6 @@ export function SaveCatalogItem({id,name,availability="in_stock",
    onClick={()=>{setStockError(false);add(id);}}
    disabled={saved&&items.find(item=>item.product_id===id)?.quantity===10}
    aria-label={"Add "+name+" to cart"}>
-  {saved?"In cart — add another":"+ "+actionLabel}
+  {saved?"In cart — +":"+ "+actionLabel}
  </button>;
 }
