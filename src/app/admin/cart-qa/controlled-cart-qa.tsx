@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useState,type FormEvent} from "react";
 
 type Line={productId:string;name:string;quantity:number;unitPriceCents:number;
  lineTotalCents:number;availability:"in_stock"|"insufficient_stock"|"sold_out"};
@@ -17,7 +17,9 @@ const money=(cents:number)=>new Intl.NumberFormat("en-US",{
 
 export function ControlledCartQa(){
  const [quantity,setQuantity]=useState(0);
+ const [enteredCode,setEnteredCode]=useState("");
  const [code,setCode]=useState("");
+ const [codeError,setCodeError]=useState("");
  const [revision,setRevision]=useState(0);
  const [response,setResponse]=useState<{key:string;review:Review}|null>(null);
  const key=useMemo(()=>JSON.stringify({quantity,code,revision}),[quantity,code,revision]);
@@ -41,6 +43,23 @@ export function ControlledCartQa(){
  },[key,quantity,code]);
  const line=review?.ok?review.items?.[0]:null;
  const inStock=line?.availability==="in_stock";
+ const applyCode=(event:FormEvent<HTMLFormElement>)=>{
+  event.preventDefault();
+  const cleaned=enteredCode.trim().toUpperCase();
+  if(cleaned&&!/^[A-Z0-9_-]{3,24}$/.test(cleaned)){
+   setCodeError("Enter a valid code (3–24 letters, numbers, dashes or underscores).");
+   return;
+  }
+  setCodeError("");
+  setCode(cleaned);
+  setRevision(current=>current+1);
+ };
+ const removeCode=()=>{
+  setEnteredCode("");
+  setCode("");
+  setCodeError("");
+  setRevision(current=>current+1);
+ };
  return <div className="apex-cart-qa-layout">
   <section className="supplier-panel apex-cart-qa-product" aria-label="Controlled synthetic product">
    <p className="eyebrow">FIXTURE · IN STOCK UP TO FOUR UNITS</p>
@@ -71,14 +90,28 @@ export function ControlledCartQa(){
   </section>
   <aside className="supplier-panel apex-cart-qa-summary" aria-label="Synthetic cart quote">
    <h2>Test order summary</h2>
-   <label htmlFor="qa-discount">Test discount code
-    <select id="qa-discount" value={code} onChange={e=>setCode(e.target.value)}>
-     <option value="">No discount</option>
-     <option value="TEST10">TEST10 — 10% off</option>
-     <option value="SHIPFREE">SHIPFREE — free shipping</option>
-     <option value="BADCODE">BADCODE — invalid code test</option>
-    </select>
-   </label>
+   <form className="apex-cart-qa-code" onSubmit={applyCode}>
+    <label htmlFor="qa-discount">Test discount code</label>
+    <div className="apex-cart-qa-code-entry">
+     <input id="qa-discount" type="text" name="discountCode"
+      placeholder="Enter discount code" value={enteredCode}
+      maxLength={24} autoCapitalize="characters" autoComplete="off"
+      autoCorrect="off" spellCheck={false}
+      aria-invalid={Boolean(codeError)}
+      aria-describedby={codeError?"qa-discount-error":undefined}
+      onChange={event=>{
+       setEnteredCode(event.target.value);
+       setCodeError("");
+      }}/>
+     <button type="submit" className="button secondary" disabled={quantity===0}>Apply</button>
+    </div>
+    {codeError&&<p id="qa-discount-error" role="alert" className="apex-cart-qa-warning">
+     {codeError}</p>}
+    {code&&<div className="apex-cart-qa-applied">
+     <span>Applied code: <strong>{code}</strong></span>
+     <button type="button" className="button secondary" onClick={removeCode}>Remove code</button>
+    </div>}
+   </form>
    <button type="button" className="button secondary" disabled={quantity===0}
     onClick={()=>setRevision(v=>v+1)}>Recheck price &amp; inventory</button>
    {quantity===0?<p className="notice">Add the test product to begin.</p>:
