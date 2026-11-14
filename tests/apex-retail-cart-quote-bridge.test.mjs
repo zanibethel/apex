@@ -5,6 +5,8 @@ import {buildCartReview} from "../src/lib/cart/customer-cart.mjs";
 
 const read=p=>readFileSync(p,"utf8");
 const sql=read("supabase/migrations/20261114010000_apex_retail_cart_quote_bridge.sql");
+// Test executable statements, not explanatory references in comments.
+const executableSql=sql.replace(/^\\s*--.*$/gm,"");
 const route=read("src/app/api/cart/quote/route.ts");
 const workflow=read(".github/workflows/retail-visibility-migrations.yml");
 const item="50000000-0000-4000-8000-000000000005";
@@ -16,7 +18,7 @@ test("cart API routes only to the current retail display gate, not the legacy pr
  assert.match(route,/cache:"no-store"/);
  assert.doesNotMatch(route,/service_role|console\.|createInvoice|\.insert\(/);
  assert.match(sql,/apex_internal\.retail_showcase_gate/);
- assert.doesNotMatch(sql,/private_release_gate|supplier_release_authorizations|product_release_authorizations/);
+ assert.doesNotMatch(executableSql,/private_release_gate|supplier_release_authorizations|product_release_authorizations/);
  assert.match(sql,/create or replace function public\.get_public_retail_cart_quote_source/);
  assert.match(workflow,/cart-quote-assertions.sql/);
 });
