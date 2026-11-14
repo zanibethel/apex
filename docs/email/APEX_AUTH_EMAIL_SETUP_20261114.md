@@ -41,3 +41,9 @@ Use `https://apexanabolics.co` as the Site URL and retain the existing exact red
 - Untrusted status query strings only affect copy. Protected profile, order and supplier routes still call server-verified `auth.getUser()` and enforce permissions independently.
 - Some mail systems prefetch one-time links. If this becomes an issue, move to a two-step confirmation button or OTP entry page before broader release; never put raw tokens in telemetry.
 - Keep sender configuration and template edits restricted to Apex's hosted Supabase project; no changes to unrelated brands.
+
+## Email logo artifact remediation (2026-11-14)
+- The iPhone/Gmail confirmation screenshot exposed two opaque black patches at the upper corners of the transparent Apex PNG. The build now runs `scripts/clean-apex-logo.mjs` before Next.js to clear only nearly-black fully opaque pixels in those empty corners. The central silver/crimson mark is preserved, and the source PNG remains in version control.
+- **The repository email template is not automatically pushed into hosted Supabase.** After the corrected logo asset deploys, copy the updated `docs/email/apex-confirm-signup.html` into Supabase Auth → Email Templates → Confirm sign up. It uses `?v=20261114-clean` to avoid Gmail's cached old image.
+- Re-send a confirmation email to an *unverified* owned test user, inspect the received email on mobile, and verify its OTP link still works. Do not expose a one-time confirmation URL. Existing emails may remain cached and unchanged.
+- No SMTP credentials, existing identities, checkout release flags, payments, or payout settings are touched by this change.
