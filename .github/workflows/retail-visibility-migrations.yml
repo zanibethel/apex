@@ -56,3 +56,5 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261114022000_apex_private_retail_order_hold_engine.sql
       - name: Verify order snapshots, stock rollback, replay, admin holds, cancellation, expiry and private RLS
         run: psql -X -v ON_ERROR_STOP=1 -f tests/retail-visibility-migrations/private-order-holds.sql
+      - name: Verify two-session hold replay and stock race
+        run: bash tests/retail-visibility-migrations/private-order-concurrency.sh
