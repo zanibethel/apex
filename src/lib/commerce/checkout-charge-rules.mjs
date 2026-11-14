@@ -126,7 +126,8 @@ export function previewCheckoutCharges({
   ok:true,reason:"",currency:"USD",
   merchandiseSubtotalCents,merchandiseDiscountCents,
   discountedMerchandiseCents,...shipping,
-  shippingBoxSize:shipping.shippingBoxSize??"medium",totalCents,
+  shippingBoxSize:shipping.shippingBoxSize??"medium",
+  freeShippingReason:shipping.freeShippingReason??"none",totalCents,
   // This is an informational total only, not order admission.
   canPlaceOrder:false,canCreateInvoice:false,canPay:false,
   quoteFinalized:false,
