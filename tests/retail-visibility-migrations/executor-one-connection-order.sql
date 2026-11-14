@@ -133,7 +133,7 @@ update apex_internal.retail_order_holds set
  created_at=now()-interval '1 hour',
  expires_at=now()-interval '1 minute'
 where request_id='80000000-0000-4000-8000-000000000901';
-do $
+do $$
 declare
  v_first integer;
  v_retry integer;
@@ -152,7 +152,7 @@ begin
   v_status<>'expired_no_payment'
  then raise exception 'Expiry mismatch: first %, retry %, reserved %, status %',
   v_first,v_retry,v_reserved,v_status;end if;
-end $;
+end $$;
 update apex_internal.retail_order_engine_gate set enabled=false where singleton=true;
 do $$
 begin
