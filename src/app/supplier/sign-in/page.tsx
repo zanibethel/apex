@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { signInSupplier, type SignInState } from "./actions";
+import { SignInPasswordField } from "@/components/auth/sign-in-password-field";
 
 const initialState: SignInState = { error: "" };
 export default function SupplierSignIn() {
@@ -16,8 +17,7 @@ export default function SupplierSignIn() {
         <form action={action} className="supplier-form">
           <label htmlFor="supplier-email">Email</label>
           <input id="supplier-email" name="email" type="email" autoComplete="username" maxLength={254} required />
-          <label htmlFor="supplier-password">Password</label>
-          <input id="supplier-password" name="password" type="password" autoComplete="current-password" required />
+          <SignInPasswordField id="supplier-password" />
           <p className="notice"><Link href="/account/forgot-password">Forgot password?</Link></p>
           <button className="button primary" type="submit" disabled={pending}>{pending ? "Checking access…" : "Sign in securely"}</button>
           {state.error && <p role="alert" className="supplier-error">{state.error}</p>}
