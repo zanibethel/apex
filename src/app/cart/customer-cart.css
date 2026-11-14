@@ -71,3 +71,30 @@
 .apex-customer-recheck{font:inherit;font-size:11px;min-height:34px;padding:6px 9px;border-radius:8px;color:#ffd0df;background:#36212d;border:1px solid #995a70;cursor:pointer}
 .apex-customer-recheck:disabled{opacity:.55;cursor:wait}
 .apex-customer-recheck:focus-visible{outline:2px solid #ff7ba3;outline-offset:2px}
+
+
+/* Customer-facing nonpayable temporary hold, inactive unless signed-in and
+   explicitly released. Mobile layouts must not split short status labels. */
+.apex-nonpayable-panel{border-top:1px solid #4b3545;margin-top:24px;padding-top:22px;min-width:0}
+.apex-nonpayable-panel h2{font-size:18px;line-height:1.35;margin:0 0 12px}
+.apex-nonpayable-panel .apex-cart-note{font-size:12px;line-height:1.65}
+.apex-nonpayable-consent{display:grid;gap:12px;margin-top:15px}
+.apex-nonpayable-consent label{display:flex;align-items:flex-start;gap:11px;color:#f3d6e0;font-size:12px;line-height:1.6}
+.apex-nonpayable-consent input{width:18px;height:18px;min-width:18px;margin:3px 0 0;accent-color:#d12a60}
+.apex-nonpayable-consent .apex-customer-checkout:not(:disabled){
+ background:#ad2451;border-color:#e05c84;color:#fff;cursor:pointer
+}
+.apex-nonpayable-consent .apex-customer-checkout:disabled{opacity:.6}
+.apex-nonpayable-consent :is(input,button):focus-visible{outline:2px solid #ff84ac;outline-offset:2px}
+.apex-nonpayable-success{background:#23292a;border:1px solid #5d9b89;border-radius:9px;
+ color:#e5fff2;font-size:12px;line-height:1.5;padding:13px;overflow-wrap:anywhere}
+.apex-nonpayable-receipt{display:grid;gap:10px;margin:15px 0}
+.apex-nonpayable-receipt>div{display:flex;justify-content:space-between;gap:10px;
+ align-items:flex-start;min-width:0;border-bottom:1px solid #463641;padding:8px 0}
+.apex-nonpayable-receipt dt{font-size:12px;color:#cfb4c1;flex:0 1 40%}
+.apex-nonpayable-receipt dd{font-size:12px;color:#f4e9ee;margin:0;text-align:right;
+ overflow-wrap:anywhere;word-break:break-word;min-width:0;flex:1}
+@media(max-width:420px){
+ .apex-nonpayable-receipt>div{flex-wrap:wrap}
+ .apex-nonpayable-receipt dt,.apex-nonpayable-receipt dd{flex-basis:100%;text-align:left}
+}
