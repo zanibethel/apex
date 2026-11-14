@@ -337,7 +337,8 @@ declare
  v_line apex_internal.retail_order_hold_lines%rowtype;
  v_state text;
 begin
- if p_order_id is null or p_action not in ('cancel','expire') or
+ if p_order_id is null or p_action is null or
+  p_action not in ('cancel','expire') or
   p_reason is null or length(btrim(p_reason)) not between 3 and 200
  then raise exception 'Invalid hold termination' using errcode='22023';end if;
  select * into v_order from apex_internal.retail_order_holds
