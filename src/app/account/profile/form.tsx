@@ -24,6 +24,6 @@ export function ProfileForm() {
     {codeState.message && <p role="status" className={codeState.ok ? "notice" : "supplier-error"}>{codeState.message}</p>}
     {state.message && <p role="status" className={state.ok ? "notice" : "supplier-error"}>{state.message}</p>}
     {state.ok && <Link className="button primary" href="/account/sign-in">Sign in again</Link>}
-    <p className="notice">Changing your password signs you out of Apex. Password recovery by email will be added after SMTP configuration.</p>
+    <p className="notice">Changing your password signs you out of Apex. Forgot your current password? <Link href="/account/forgot-password">Reset it by email</Link>.</p>
   </section>;
 }
