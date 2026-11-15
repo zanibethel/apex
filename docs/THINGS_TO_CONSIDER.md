@@ -2,7 +2,7 @@
 
 Review-only external intelligence. Not approved code, wallet, payment, security-policy, or production changes. Keep partner identities, keys, addresses, and private terms out of this public repository.
 
-Last reviewed: 2026-11-14
+Last reviewed: 2026-11-15
 
 
 ## November 13, 2026 — Intentional catalog baseline and payment release controls
@@ -133,3 +133,11 @@ Last reviewed: 2026-11-14
 **Evidence:** Owner confirmed Nov 10 reduction to five products was intentional; connected hosted DB today confirms **5 saved / 5 active / 0 published**. Prior regtest three-way payout evidence is not live signing or settlement approval. Current production payment and fulfillment acceptance were not independently audited in this review.
 
 **Possible solution / recommendation:** Keep catalog recovery closed; separately verify deployed supplier publishing, signed webhook replay, immutable split reconciliation, signer isolation and supplier fulfillment in nonproduction. No live checkout, wallet, payout, shipping or deployment activation without explicit approval.
+
+## 2026-11-15 — Intentional catalog baseline and existing payment release gates
+
+**Status:** Catalog reduction Resolved / intentional; supplier publication and BTCPay/Prism release acceptance Evaluate / pending. **Last reviewed:** 2026-11-15.
+
+**Evidence:** Connected database **5 saved, 5 active, 0 published**; owner-confirmed 63-to-5 reduction remains intentional. No newly verified live payment settlement or signer readiness; existing regtest payout evidence cannot authorize live activation. Crypto volatility does not itself establish a BTCPay/Prism defect.
+
+**Possible solution / recommendation:** Do not reopen catalog recovery. Verify actual deployed supplier publishing, immutable allocation versioning, signed webhook replay, signer isolation, recipient reconciliation and supplier-scoped fulfillment in nonproduction. No live wallet, checkout, payout or deployment changes without approval.
